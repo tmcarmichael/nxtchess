@@ -1,0 +1,6 @@
+.piece {
+  width: 90px;
+  height: 90px;
+  user-select: none;
+  cursor: grab;
+}
