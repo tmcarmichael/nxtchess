@@ -1,5 +1,5 @@
 import styles from "./Piece.module.css";
-import { PieceType } from "../../types/interfaces";
+import { PieceType } from "../../types/chessboard";
 
 const Piece = (props: { type: PieceType }) => {
   const pieceSrc = `/assets/${props.type}.svg`;
