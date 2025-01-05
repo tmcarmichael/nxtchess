@@ -35,9 +35,6 @@ The frontend is built with **SolidJS**, a modern JavaScript library known for it
 
    - The reactive core of SolidJS allows the app to scale seamlessly without introducing complexity. This will be critical as we implement multiplayer features, live spectating, and analysis tools.
 
-4. **Developer Experience**:
-   - SolidJS embraces a JSX-based syntax, making it approachable for developers familiar with React, while delivering a more responsive and performant UI.
-
 ### Styling
 
 - **CSS Modules** are used for scoped, maintainable styling, ensuring that each component has its own isolated styles.

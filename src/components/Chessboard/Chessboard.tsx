@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 import Piece from "../Piece/Piece";
 import styles from "./Chessboard.module.css";
-import { PieceType, Square } from "../../types/interfaces";
+import { PieceType, Square } from "../../types/chessboard";
 
 const initialBoardState = (): (PieceType | null)[][] => [
   ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
