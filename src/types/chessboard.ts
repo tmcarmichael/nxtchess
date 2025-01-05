@@ -20,3 +20,5 @@ export type Square = {
 export interface PieceProps {
   type: PieceType;
 }
+
+export type Board = (PieceType | null)[][];

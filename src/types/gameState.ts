@@ -1,10 +1,8 @@
-import { PieceType } from "./chessboard";
-
-export type Board = (PieceType | null)[][];
+import { Board } from "./chessboard";
 
 export interface GameState {
   board: Board;
-  turn: "white" | "black";
+  turn: "w" | "b";
   castling: {
     whiteKingSide: boolean;
     whiteQueenSide: boolean;
@@ -14,4 +12,10 @@ export interface GameState {
   enPassantTarget: string | null;
   halfmoveClock: number;
   fullmoveNumber: number;
+  isGameOver: boolean;
+  hasKingMoved: {
+    w: boolean;
+    b: boolean;
+  };
+  hasRookMoved: Record<"wKingSide" | "wQueenSide" | "bKingSide" | "bQueenSide", boolean>;
 }
