@@ -4,6 +4,7 @@ import { GameState } from "../../types/gameState";
 import { getPieceMoveGenerator } from "./pieceMoves";
 import { isKingInCheck, getAttackingMoves } from "./check";
 import { kingHasMoved, rookHasMoved } from "../gameState";
+import { applyMoveInPlace, undoMoveInPlace, findKing } from "./utils";
 
 export const validateMove = (
   board: Board,
@@ -85,30 +86,6 @@ const validatePromotion = (board: Board, move: Move, color: "w" | "b"): boolean 
 
   const promotionRank = color === "w" ? 0 : 7;
   return to[0] === promotionRank && ["Q", "R", "B", "N"].includes(promotion || "");
-};
-
-const findKing = (board: Board, color: "w" | "b"): [number, number] => {
-  for (let x = 0; x < 8; x++) {
-    for (let y = 0; y < 8; y++) {
-      const piece = board[x][y];
-      if (piece?.[1] === "K" && piece[0] === color) return [x, y];
-    }
-  }
-  throw new Error(`King for ${color} not found`);
-};
-
-const applyMoveInPlace = (board: Board, move: Move): Board => {
-  const { from, to } = move;
-  board[to[0]][to[1]] = board[from[0]][from[1]];
-  board[from[0]][from[1]] = null;
-  return board;
-};
-
-const undoMoveInPlace = (board: Board, move: Move): Board => {
-  const { from, to, captured } = move;
-  board[from[0]][from[1]] = board[to[0]][to[1]];
-  board[to[0]][to[1]] = captured || null;
-  return board;
 };
 
 const isCastlingMove = (board: Board, move: Move): boolean => {
