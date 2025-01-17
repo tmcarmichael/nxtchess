@@ -2,34 +2,35 @@ import { createSignal } from "solid-js";
 import Piece from "../Piece/Piece";
 import styles from "./Chessboard.module.css";
 import { PieceType, Square } from "../../types/chessboard";
-
-const initialBoardState = (): (PieceType | null)[][] => [
-  ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
-  ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
-  ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
-];
+import { Move } from "../../types/pieceMoves";
+import { GameState } from "../../types/gameState";
+import { updateGameState, initializeBoard, initializeGame } from "../../logic/gameState";
+import { applyMoveInPlace } from "../../logic/moveValidation/utils";
+import { getPieceMoveGenerator, validateMove } from "../../logic/moveValidation";
 
 const Chessboard = () => {
-  const [board, setBoard] = createSignal<(PieceType | null)[][]>(initialBoardState());
+  const [board, setBoard] = createSignal<(PieceType | null)[][]>(initializeBoard());
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
+  const [highlightedMoves, setHighlightedMoves] = createSignal<Move[]>([]);
+  const [gameState, setGameState] = createSignal<GameState>(initializeGame());
 
-  // TODO: handleSquareClick actions
   const handleSquareClick = (row: number, col: number) => {
     const piece = board()[row][col];
+    const currentSelection = selectedSquare();
 
-    if (selectedSquare()) {
-      const newBoard = board().map((r) => [...r]);
-      newBoard[row][col] = newBoard[selectedSquare()!.row][selectedSquare()!.col];
-      newBoard[selectedSquare()!.row][selectedSquare()!.col] = null;
-      setBoard(newBoard);
+    if (currentSelection) {
+      const move: Move = { from: [currentSelection.row, currentSelection.col], to: [row, col] };
+      if (validateMove(board(), move, gameState().turn, gameState())) {
+        const newBoard = applyMoveInPlace(board(), move);
+        setBoard(newBoard);
+        setGameState(updateGameState(gameState(), move));
+      }
       setSelectedSquare(null);
-    } else if (piece) {
+      setHighlightedMoves([]);
+    } else if (piece?.[0] === gameState().turn) {
       setSelectedSquare({ row, col });
+      const moveGenerator = getPieceMoveGenerator(piece);
+      setHighlightedMoves(moveGenerator(board(), row, col, piece));
     }
   };
 
@@ -40,7 +41,12 @@ const Chessboard = () => {
           <div
             class={`${styles.square} ${
               (rowIndex + colIndex) % 2 === 0 ? styles.light : styles.dark
+            } ${
+              highlightedMoves().some((m) => m.to[0] === rowIndex && m.to[1] === colIndex)
+                ? styles.highlight
+                : ""
             }`}
+            onClick={() => handleSquareClick(rowIndex, colIndex)}
           >
             {piece && <Piece type={piece} />}
           </div>
