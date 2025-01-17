@@ -1,12 +1,26 @@
 import styles from "./Piece.module.css";
-import { PieceType } from "../../types/chessboard";
-import { debugLog } from "../../utils";
+import { PieceType } from "../../types";
 
-const Piece = (props: { type: PieceType }) => {
-  // debugLog("Rendering Piece:", props.type);
-  const pieceSrc = `/assets/${props.type}.svg`;
+const Piece = ({
+  type,
+  draggable = false,
+  onDragStart,
+}: {
+  type: PieceType;
+  draggable?: boolean;
+  onDragStart?: (event: DragEvent) => void;
+}) => {
+  const pieceSrc = `/assets/${type}.svg`;
 
-  return <img src={pieceSrc} alt={props.type} class={styles.piece} />;
+  return (
+    <img
+      src={pieceSrc}
+      alt={type}
+      class={styles.piece}
+      draggable={draggable}
+      onDragStart={onDragStart}
+    />
+  );
 };
 
 export default Piece;

@@ -51,27 +51,36 @@ What’s planned?
 - [x] Chessboard rendering.
 - [x] Responsive design.
 - [x] Implement full chess rules (move validation, checkmate detection, etc.).
-- [ ] Add drag-and-drop functionality for intuitive piece movement.
+- [x] Add drag-and-drop functionality for intuitive piece movement.
 - [x] Highlight squares for legal moves when clicking pieces.
+- [ ] Checkmate, game end, and game restart logic
 
-### Phase 2: Multiplayer 1
+### Phase 2: Core Non-Gameplay elements
 
+- [x] Game Panel initial implementation
+- [ ] Implement basic AI for dev testing, 1500 ELO
+- [ ] Game Panel functional for AI play with time controls 3min, 5min, 10min
+
+### Phase 3: Multiplayer 1
+
+- [ ] Game Panel functional for human websocket play
+- [ ] Landing page for site and joining queue for websocket play
 - [ ] Account creation and sign in.
 - [ ] Database for accounts, played games, rating system and more.
 - [ ] Caching layer for database.
 - [ ] Integrate WebSocket-based real-time communication for multiplayer gameplay.
 
-### Phase 3: Multiplayer 2
+### Phase 4: Multiplayer 2
 
 - [ ] Spectator mode for watching live games.
 - [ ] Rating system and matchmaking.
 
-### Phase 4: AI and Analysis
+### Phase 5: AI and Analysis
 
 - [ ] Integrate an AI engine (e.g., Stockfish) for single-player games and post-game analysis.
 - [ ] Allow users to explore opening libraries and endgames.
 
-### Phase 5: Community Features
+### Phase 6: Community Features
 
 - [ ] Tournament system.
 - [ ] Player profiles and statistics.

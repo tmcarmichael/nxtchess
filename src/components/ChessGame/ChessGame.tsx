@@ -1,15 +1,24 @@
-import { createSignal, createMemo } from "solid-js";
+import { createSignal, createMemo, batch } from "solid-js";
 import ChessBoard from "../ChessBoard/ChessBoard";
 import { initializeGame, getLegalMoves, updateGameState } from "../../logic/gameState";
 import { Square } from "../../types";
 import { fenToBoard } from "../../logic/fenLogic";
-import { debugLog } from "../../utils";
+// import { debugLog } from "../../utils";
 
 const ChessGame = () => {
   const [fen, setFen] = createSignal(initializeGame().fen);
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
+  const [draggedPiece, setDraggedPiece] = createSignal<{ square: Square; piece: string } | null>(
+    null
+  );
+  const [cursorPosition, setCursorPosition] = createSignal<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
+
   const board = createMemo(() => fenToBoard(fen()));
+
   const isPlayerTurn = (square: Square) => {
     const currentTurn = fen().split(" ")[1];
     const piece = board().find(({ square: sq }) => sq === square)?.piece;
@@ -18,60 +27,95 @@ const ChessGame = () => {
 
   const handleSquareClick = (square: Square) => {
     const currentSelection = selectedSquare();
-    debugLog(isPlayerTurn(square));
-    if (currentSelection === square) {
-      deselectSquare();
+
+    if (!currentSelection) {
+      const piece = board().find(({ square: sq }) => sq === square)?.piece;
+      if (piece && isPlayerTurn(square)) {
+        selectSquare(square);
+      }
       return;
     }
-    if (isPlayerTurn(square)) {
-      selectSquare(square);
-      return;
-    }
-    if (currentSelection && highlightedMoves().includes(square)) {
+
+    if (highlightedMoves().includes(square)) {
       executeMove(currentSelection, square);
-      return;
+    } else {
+      clearDraggingState();
     }
-    clearSelection();
   };
 
-  const deselectSquare = () => {
-    setSelectedSquare(null);
-    setHighlightedMoves([]);
+  const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
+    if (!isPlayerTurn(square)) return;
+
+    setDraggedPiece({ square, piece });
+    setCursorPosition({ x: event.clientX, y: event.clientY });
+    setHighlightedMoves(getLegalMoves(fen(), square));
+    setSelectedSquare(square);
+
+    event.dataTransfer?.setDragImage(new Image(), 0, 0);
+  };
+
+  const handleMouseMove = (event: MouseEvent) => {
+    if (draggedPiece()) {
+      setCursorPosition({ x: event.clientX, y: event.clientY });
+    }
+  };
+
+  const handleMouseUp = (targetSquare: Square) => {
+    const dragState = draggedPiece();
+    if (!dragState) return;
+
+    if (highlightedMoves().includes(targetSquare)) {
+      executeMove(dragState.square, targetSquare);
+    }
+    clearDraggingState();
+  };
+
+  const clearDraggingState = () => {
+    batch(() => {
+      setDraggedPiece(null);
+      clearSelection();
+    });
   };
 
   const selectSquare = (square: Square) => {
-    debugLog("Prior selected square: ", selectedSquare());
-    setSelectedSquare(square);
-    debugLog("Selected square:", selectedSquare());
-    const legalMoves = getLegalMoves(fen(), square);
-    debugLog("Legal Moves for", square, ":", legalMoves);
-    setHighlightedMoves(legalMoves);
+    batch(() => {
+      setSelectedSquare(square);
+      setHighlightedMoves(getLegalMoves(fen(), square));
+    });
   };
 
   const executeMove = (from: Square, to: Square) => {
-    debugLog("Move Attempt:", from, "to", to);
     try {
       const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to);
-      debugLog("Updated FEN:", updatedState.fen);
-      setFen(updatedState.fen);
-      clearSelection();
+      batch(() => {
+        setFen(updatedState.fen);
+        clearDraggingState();
+      });
     } catch (error: any) {
       console.error("Invalid move:", error.message);
     }
   };
 
   const clearSelection = () => {
-    setSelectedSquare(null);
-    setHighlightedMoves([]);
+    batch(() => {
+      setSelectedSquare(null);
+      setHighlightedMoves([]);
+    });
   };
 
   return (
-    <ChessBoard
-      board={board}
-      highlightedMoves={highlightedMoves}
-      selectedSquare={selectedSquare}
-      onSquareClick={handleSquareClick}
-    />
+    <div onMouseMove={handleMouseMove}>
+      <ChessBoard
+        board={board}
+        highlightedMoves={highlightedMoves}
+        selectedSquare={selectedSquare}
+        draggedPiece={draggedPiece}
+        cursorPosition={cursorPosition}
+        onSquareClick={handleSquareClick}
+        onSquareMouseUp={handleMouseUp}
+        onDragStart={handleDragStart}
+      />
+    </div>
   );
 };
 
