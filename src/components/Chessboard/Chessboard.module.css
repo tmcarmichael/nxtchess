@@ -3,23 +3,34 @@
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
   border: 2px solid #333;
-  user-select: none;
+  user-select: none; /* Prevent text selection on click */
 }
 
 .square {
-  width: 90px;
-  height: 90px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  user-select: none;
+  width: 100%;
+  height: 100%;
+  position: relative; /* Allows for absolute positioning of the highlightDot */
 }
 
-.light {
-  background-color: #f0d9b5;
+.square.light {
+  background-color: #f0d9b5; /* Light square color */
 }
 
-.dark {
-  background-color: #b58863;
+.square.dark {
+  background-color: #b58863; /* Dark square color */
+}
+
+.square.selected {
+  background-color: #77dd77 !important; /* Green highlight for the selected square */
+}
+
+.highlightDot {
+  width: 22%;
+  height: 22%;
+  background-color: rgba(16, 117, 195, 0.467);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }

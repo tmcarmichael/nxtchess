@@ -1,33 +1,35 @@
 import styles from "./ChessBoard.module.css";
 import Piece from "../Piece/Piece";
-import { fenToBoard } from "../../logic/fenLogic";
-import { Square } from "../../types";
+import { Square, PieceType } from "../../types";
+import { debugLog } from "../../utils";
 
 const ChessBoard = ({
-  fen,
+  board,
   highlightedMoves,
+  selectedSquare,
   onSquareClick,
 }: {
-  fen: string;
-  highlightedMoves: Square[];
+  board: () => { square: Square; piece: string | null }[];
+  highlightedMoves: () => Square[];
+  selectedSquare: Square | null;
   onSquareClick: (square: Square) => void;
 }) => {
-  const board = fenToBoard(fen);
-
   return (
     <div class={styles.board}>
-      {board.map(({ square, piece }) => {
-        const isHighlighted = highlightedMoves.includes(square);
+      {board().map(({ square, piece }) => {
+        const isHighlightedMove = highlightedMoves().includes(square);
+        const isSelected = selectedSquare === square;
         const [file, rank] = square;
-
+        // debugLog("Rendering square:", square, "Is Selected:", isSelected);
         return (
           <div
             class={`${styles.square} ${
               (file.charCodeAt(0) - 97 + parseInt(rank)) % 2 === 0 ? styles.light : styles.dark
-            } ${isHighlighted ? styles.highlight : ""}`}
+            } ${isSelected ? styles.selected : ""}`}
             onClick={() => onSquareClick(square)}
           >
-            {piece && <Piece type={piece} />}
+            {isHighlightedMove && <div class={styles.highlightDot}></div>}{" "}
+            {piece && <Piece type={piece as PieceType} />}
           </div>
         );
       })}

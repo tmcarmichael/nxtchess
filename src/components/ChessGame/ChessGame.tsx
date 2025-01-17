@@ -1,39 +1,82 @@
-import { createSignal } from "solid-js";
+import { createSignal, createMemo } from "solid-js";
 import ChessBoard from "../ChessBoard/ChessBoard";
 import { initializeGame, getLegalMoves, updateGameState } from "../../logic/gameState";
 import { Square } from "../../types";
+import { fenToBoard } from "../../logic/fenLogic";
 import { debugLog } from "../../utils";
 
 const ChessGame = () => {
-  const [gameState, setGameState] = createSignal(initializeGame());
-  const [selectedSquare, setSelectedSquare] = createSignal<string | null>(null);
+  const [fen, setFen] = createSignal(initializeGame().fen);
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
+  const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
+  const board = createMemo(() => fenToBoard(fen()));
+  const isPlayerTurn = (square: Square) => {
+    const currentTurn = fen().split(" ")[1];
+    const piece = board().find(({ square: sq }) => sq === square)?.piece;
+    return piece && piece[0] === currentTurn;
+  };
 
   const handleSquareClick = (square: Square) => {
     const currentSelection = selectedSquare();
-
-    if (currentSelection) {
-      debugLog("Current FEN:", gameState().fen);
-      debugLog("Move Attempt:", currentSelection, "to", square);
-      try {
-        const updatedState = updateGameState(gameState(), currentSelection, square);
-        setGameState(updatedState);
-        setSelectedSquare(null);
-        setHighlightedMoves([]);
-      } catch (error: any) {
-        console.error("Invalid move:", error.message);
-      }
-    } else {
-      setSelectedSquare(square);
-      const legalMoves = getLegalMoves(gameState().fen, square);
-      setHighlightedMoves(legalMoves);
+    debugLog(isPlayerTurn(square));
+    if (currentSelection === square) {
+      deselectSquare();
+      return;
     }
+    if (isPlayerTurn(square)) {
+      selectSquare(square);
+      return;
+    }
+    if (currentSelection && highlightedMoves().includes(square)) {
+      executeMove(currentSelection, square);
+      return;
+    }
+    clearSelection();
+  };
+
+  const deselectSquare = () => {
+    setSelectedSquare(null);
+    setHighlightedMoves([]);
+  };
+
+  const selectSquare = (square: Square) => {
+    debugLog("Current selected square: ", selectedSquare());
+    setSelectedSquare(square);
+    debugLog(
+      "Selected Square:",
+      selectedSquare,
+      "Rendering Square:",
+      square,
+      "Is Selected:",
+      selectedSquare() === square
+    );
+    const legalMoves = getLegalMoves(fen(), square);
+    debugLog("Legal Moves for", square, ":", legalMoves);
+    setHighlightedMoves(legalMoves);
+  };
+
+  const executeMove = (from: Square, to: Square) => {
+    debugLog("Move Attempt:", from, "to", to);
+    try {
+      const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to);
+      debugLog("Updated FEN:", updatedState.fen);
+      setFen(updatedState.fen);
+      clearSelection();
+    } catch (error: any) {
+      console.error("Invalid move:", error.message);
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedSquare(null);
+    setHighlightedMoves([]);
   };
 
   return (
     <ChessBoard
-      fen={gameState().fen}
-      highlightedMoves={highlightedMoves()}
+      board={board}
+      highlightedMoves={highlightedMoves}
+      selectedSquare={selectedSquare()}
       onSquareClick={handleSquareClick}
     />
   );
