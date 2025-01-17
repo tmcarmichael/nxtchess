@@ -3,25 +3,25 @@
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
   border: 2px solid #333;
-  user-select: none; /* Prevent text selection on click */
+  user-select: none;
 }
 
 .square {
   width: 100%;
   height: 100%;
-  position: relative; /* Allows for absolute positioning of the highlightDot */
+  position: relative;
 }
 
 .square.light {
-  background-color: #f0d9b5; /* Light square color */
+  background-color: #f0d9b5;
 }
 
 .square.dark {
-  background-color: #b58863; /* Dark square color */
+  background-color: #b58863;
 }
 
 .square.selected {
-  background-color: #77dd77 !important; /* Green highlight for the selected square */
+  background-color: rgba(67, 132, 182, 0.253) !important;
 }
 
 .highlightDot {

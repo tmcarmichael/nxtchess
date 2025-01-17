@@ -40,16 +40,9 @@ const ChessGame = () => {
   };
 
   const selectSquare = (square: Square) => {
-    debugLog("Current selected square: ", selectedSquare());
+    debugLog("Prior selected square: ", selectedSquare());
     setSelectedSquare(square);
-    debugLog(
-      "Selected Square:",
-      selectedSquare,
-      "Rendering Square:",
-      square,
-      "Is Selected:",
-      selectedSquare() === square
-    );
+    debugLog("Selected square:", selectedSquare());
     const legalMoves = getLegalMoves(fen(), square);
     debugLog("Legal Moves for", square, ":", legalMoves);
     setHighlightedMoves(legalMoves);
@@ -76,7 +69,7 @@ const ChessGame = () => {
     <ChessBoard
       board={board}
       highlightedMoves={highlightedMoves}
-      selectedSquare={selectedSquare()}
+      selectedSquare={selectedSquare}
       onSquareClick={handleSquareClick}
     />
   );
