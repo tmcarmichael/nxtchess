@@ -1,59 +1,82 @@
 import { createSignal } from "solid-js";
 import Piece from "../Piece/Piece";
 import styles from "./Chessboard.module.css";
-import { PieceType, Square } from "../../types/chessboard";
-import { Move } from "../../types/pieceMoves";
-import { GameState } from "../../types/gameState";
-import { updateGameState, initializeBoard, initializeGame } from "../../logic/gameState";
-import { applyMoveInPlace } from "../../logic/moveValidation/utils";
-import { getPieceMoveGenerator, validateMove } from "../../logic/moveValidation";
+import { initializeGame, getLegalMoves, updateGameState } from "../../logic/gameState";
+import { Square, PieceType } from "../../types";
+import { mapFenToPieceType } from "../../logic/fenLogic";
 
 const Chessboard = () => {
-  const [board, setBoard] = createSignal<(PieceType | null)[][]>(initializeBoard());
-  const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
-  const [highlightedMoves, setHighlightedMoves] = createSignal<Move[]>([]);
-  const [gameState, setGameState] = createSignal<GameState>(initializeGame());
+  const [gameState, setGameState] = createSignal(initializeGame());
+  const [selectedSquare, setSelectedSquare] = createSignal<string | null>(null);
+  const [highlightedMoves, setHighlightedMoves] = createSignal<string[]>([]);
 
-  const handleSquareClick = (row: number, col: number) => {
-    const piece = board()[row][col];
+  const handleSquareClick = (square: Square) => {
     const currentSelection = selectedSquare();
 
     if (currentSelection) {
-      const move: Move = { from: [currentSelection.row, currentSelection.col], to: [row, col] };
-      if (validateMove(board(), move, gameState().turn, gameState())) {
-        const newBoard = applyMoveInPlace(board(), move);
-        setBoard(newBoard);
-        setGameState(updateGameState(gameState(), move));
+      try {
+        const updatedState = updateGameState(gameState(), currentSelection, square);
+        setGameState(updatedState);
+        setSelectedSquare(null);
+        setHighlightedMoves([]);
+      } catch (error: any) {
+        console.error("Invalid move:", error.message);
       }
-      setSelectedSquare(null);
-      setHighlightedMoves([]);
-    } else if (piece?.[0] === gameState().turn) {
-      setSelectedSquare({ row, col });
-      const moveGenerator = getPieceMoveGenerator(piece);
-      setHighlightedMoves(moveGenerator(board(), row, col, piece));
+    } else {
+      setSelectedSquare(square);
+      const legalMoves = getLegalMoves(gameState().fen, square);
+      setHighlightedMoves(legalMoves);
     }
   };
 
-  return (
-    <div class={styles.board}>
-      {board().map((row, rowIndex) =>
-        row.map((piece, colIndex) => (
-          <div
-            class={`${styles.square} ${
-              (rowIndex + colIndex) % 2 === 0 ? styles.light : styles.dark
-            } ${
-              highlightedMoves().some((m) => m.to[0] === rowIndex && m.to[1] === colIndex)
-                ? styles.highlight
-                : ""
-            }`}
-            onClick={() => handleSquareClick(rowIndex, colIndex)}
-          >
-            {piece && <Piece type={piece} />}
-          </div>
-        ))
-      )}
-    </div>
-  );
+  const renderSquare = (square: Square, piece: PieceType | null) => {
+    const isHighlighted = highlightedMoves().includes(square);
+    const [file, rank] = square;
+
+    return (
+      <div
+        class={`${styles.square} ${
+          (file.charCodeAt(0) - 97 + parseInt(rank)) % 2 === 0 ? styles.light : styles.dark
+        } ${isHighlighted ? styles.highlight : ""}`}
+        onClick={() => handleSquareClick(square)}
+      >
+        {piece && <Piece type={piece} />}
+      </div>
+    );
+  };
+
+  const renderBoard = () => {
+    try {
+      const fen = gameState().fen.split(" ")[0];
+      const rows = fen.split("/");
+
+      return rows.flatMap((row, rankIndex) => {
+        let fileIndex = 0;
+        return row.split("").flatMap((char) => {
+          if (isNaN(Number(char))) {
+            const piece = mapFenToPieceType(char);
+            const square = `${String.fromCharCode(97 + fileIndex)}${8 - rankIndex}` as Square;
+            fileIndex += 1;
+            return renderSquare(square, piece);
+          } else {
+            const emptySquares = Array(Number(char))
+              .fill(null)
+              .map(() => {
+                const square = `${String.fromCharCode(97 + fileIndex)}${8 - rankIndex}` as Square;
+                fileIndex += 1;
+                return renderSquare(square, null);
+              });
+            return emptySquares;
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Error rendering board:", error);
+      return <div>Error rendering board</div>;
+    }
+  };
+
+  return <div class={styles.board}>{renderBoard()}</div>;
 };
 
 export default Chessboard;
