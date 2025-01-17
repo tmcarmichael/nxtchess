@@ -50,9 +50,9 @@ What’s planned?
 
 - [x] Chessboard rendering.
 - [x] Responsive design.
-- [ ] Implement full chess rules (move validation, checkmate detection, etc.).
+- [x] Implement full chess rules (move validation, checkmate detection, etc.).
 - [ ] Add drag-and-drop functionality for intuitive piece movement.
-- [ ] Highlight squares for legal moves when clicking pieces.
+- [x] Highlight squares for legal moves when clicking pieces.
 
 ### Phase 2: Multiplayer 1
 

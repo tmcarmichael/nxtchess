@@ -4,8 +4,9 @@ import { debugLog } from "../utils";
 
 export const initializeGame = (): GameState => {
   const chess = new Chess();
+  const fen = chess.fen();
   return {
-    fen: chess.fen(),
+    fen,
     isGameOver: false,
   };
 };
@@ -31,8 +32,12 @@ export const updateGameState = (state: GameState, from: string, to: string): Gam
     console.error(`Move failed with FEN: ${state.fen}`);
     throw new Error(`Invalid move from ${from} to ${to}`);
   }
+
+  const newFen = chess.fen();
+  debugLog("New FEN after move:", newFen);
+
   return {
-    fen: chess.fen(),
+    fen: newFen,
     isGameOver: chess.isGameOver(),
   };
 };

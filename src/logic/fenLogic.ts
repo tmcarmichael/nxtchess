@@ -1,19 +1,18 @@
 import { PieceType, Square } from "../types";
+import { debugLog } from "../utils";
 
-export const parseFenToBoard = (fen: string): (string | null)[][] => {
+export const parseFenToBoard = (fen: string): (PieceType | null)[][] => {
   const rows = fen.split(" ")[0].split("/");
   return rows.map((row) =>
     row
       .split("")
       .flatMap((char) =>
-        isNaN(Number(char))
-          ? [`${char === char.toUpperCase() ? "w" : "b"}${char.toUpperCase()}`]
-          : Array(Number(char)).fill(null)
+        isNaN(Number(char)) ? [mapFenToPieceType(char)] : Array(Number(char)).fill(null)
       )
   );
 };
 
-export const fenToBoard = (fen: string) => {
+export const fenToBoard = (fen: string): { square: Square; piece: PieceType | null }[] => {
   const rows = fen.split(" ")[0].split("/");
   const board: { square: Square; piece: PieceType | null }[] = [];
   rows.forEach((row, rankIndex) => {
@@ -33,6 +32,7 @@ export const fenToBoard = (fen: string) => {
       }
     });
   });
+  debugLog("Parsed Board from FEN:", board);
   return board;
 };
 
