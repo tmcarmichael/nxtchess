@@ -10,11 +10,17 @@ export const validateMove = (
   board: Board,
   move: Move,
   color: "w" | "b",
-  gameState: GameState
+  gameState: GameState,
+  visited: Set<string> = new Set()
 ): boolean => {
   const { from, to } = move;
   const piece = board[from[0]][from[1]];
   if (!piece || piece[0] !== color) return false; // No piece or wrong color
+
+  // Prevent recursion by checking visited moves
+  const moveKey = `${from[0]}-${from[1]}->${to[0]}-${to[1]}`;
+  if (visited.has(moveKey)) return false;
+  visited.add(moveKey);
 
   const moveGenerator = getPieceMoveGenerator(piece as PieceType);
   const legalMoves = moveGenerator(board, from[0], from[1], piece);
@@ -28,9 +34,11 @@ export const validateMove = (
   if (isPromotionMove(board, move, color)) return validatePromotion(board, move, color);
 
   // Simulate the move and ensure the king is safe
-  const newBoard = applyMoveInPlace(board, move);
-  const kingPosition = findKing(newBoard, color);
-  const kingSafe = !isKingInCheck(newBoard, color, kingPosition);
+  applyMoveInPlace(board, move);
+  const kingPosition = findKing(board, color);
+
+  // Check if king is in check
+  const kingSafe = !isKingInCheck(board, color, kingPosition, visited);
   undoMoveInPlace(board, move);
 
   return kingSafe;
