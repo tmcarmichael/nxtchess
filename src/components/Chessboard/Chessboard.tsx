@@ -11,16 +11,16 @@ const ChessBoard = ({
 }: {
   board: () => { square: Square; piece: string | null }[];
   highlightedMoves: () => Square[];
-  selectedSquare: Square | null;
+  selectedSquare: () => Square | null;
   onSquareClick: (square: Square) => void;
 }) => {
   return (
     <div class={styles.board}>
       {board().map(({ square, piece }) => {
         const isHighlightedMove = highlightedMoves().includes(square);
-        const isSelected = selectedSquare === square;
+        const isSelected = selectedSquare() === square;
         const [file, rank] = square;
-        // debugLog("Rendering square:", square, "Is Selected:", isSelected);
+        debugLog("Rendering square:", square, "Is Selected:", isSelected);
         return (
           <div
             class={`${styles.square} ${
