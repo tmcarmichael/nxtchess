@@ -21,7 +21,7 @@
 }
 
 .square.selected {
-  background-color: #0a5003c4 !important;
+  background-color: #0a5003c4;
 }
 
 .highlightDot {
@@ -44,4 +44,9 @@
   pointer-events: none;
   z-index: 1000;
   transform: translate(-50%, -50%);
+}
+
+.lastMove {
+  background-color: rgb(158, 171, 57) !important;
+  opacity: 90%;
 }

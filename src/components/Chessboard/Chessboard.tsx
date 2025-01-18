@@ -8,6 +8,7 @@ const ChessBoard = ({
   selectedSquare,
   draggedPiece,
   cursorPosition,
+  lastMove,
   onSquareClick,
   onSquareMouseUp,
   onDragStart,
@@ -17,6 +18,7 @@ const ChessBoard = ({
   selectedSquare: () => Square | null;
   draggedPiece: () => { square: Square; piece: string } | null;
   cursorPosition: () => { x: number; y: number };
+  lastMove: () => { from: Square; to: Square } | null;
   onSquareClick: (square: Square) => void;
   onSquareMouseUp: (square: Square) => void;
   onDragStart: (square: Square, piece: string, event: DragEvent) => void;
@@ -45,8 +47,7 @@ const ChessBoard = ({
         const isHighlightedMove = highlightedMoves().includes(square);
         const isSelected = selectedSquare() === square;
         const isDragging = draggedPiece()?.square === square;
-
-        // Check if the square contains an enemy piece
+        const isLastMove = lastMove() && (lastMove()?.from === square || lastMove()?.to === square);
         const isEnemyPiece = piece && draggedPiece()?.piece[0] !== piece[0];
 
         return (
@@ -55,7 +56,7 @@ const ChessBoard = ({
               (square[0].charCodeAt(0) - 97 + parseInt(square[1])) % 2 === 0
                 ? styles.light
                 : styles.dark
-            } ${isSelected ? styles.selected : ""}`}
+            } ${isSelected ? styles.selected : ""} ${isLastMove ? styles.lastMove : ""}`}
             onClick={() => onSquareClick(square)}
             onMouseUp={() => onSquareMouseUp(square)}
           >

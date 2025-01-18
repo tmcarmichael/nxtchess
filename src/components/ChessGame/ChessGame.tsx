@@ -3,7 +3,7 @@ import ChessBoard from "../ChessBoard/ChessBoard";
 import { initializeGame, getLegalMoves, updateGameState } from "../../logic/gameState";
 import { Square } from "../../types";
 import { fenToBoard } from "../../logic/fenLogic";
-// import { debugLog } from "../../utils";
+import { debugLog } from "../../utils";
 
 const ChessGame = () => {
   const [fen, setFen] = createSignal(initializeGame().fen);
@@ -16,6 +16,7 @@ const ChessGame = () => {
     x: 0,
     y: 0,
   });
+  const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
 
   const board = createMemo(() => fenToBoard(fen()));
 
@@ -89,6 +90,8 @@ const ChessGame = () => {
       const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to);
       batch(() => {
         setFen(updatedState.fen);
+        setLastMove({ from, to });
+        debugLog("Last Move Updated:", { from, to });
         clearDraggingState();
       });
     } catch (error: any) {
@@ -111,6 +114,7 @@ const ChessGame = () => {
         selectedSquare={selectedSquare}
         draggedPiece={draggedPiece}
         cursorPosition={cursorPosition}
+        lastMove={lastMove}
         onSquareClick={handleSquareClick}
         onSquareMouseUp={handleMouseUp}
         onDragStart={handleDragStart}
