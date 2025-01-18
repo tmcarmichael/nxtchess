@@ -44,6 +44,10 @@ const ChessBoard = ({
       {board().map(({ square, piece }) => {
         const isHighlightedMove = highlightedMoves().includes(square);
         const isSelected = selectedSquare() === square;
+        const isDragging = draggedPiece()?.square === square;
+
+        // Check if the square contains an enemy piece
+        const isEnemyPiece = piece && draggedPiece()?.piece[0] !== piece[0];
 
         return (
           <div
@@ -55,12 +59,17 @@ const ChessBoard = ({
             onClick={() => onSquareClick(square)}
             onMouseUp={() => onSquareMouseUp(square)}
           >
-            {isHighlightedMove && <div class={styles.highlightDot}></div>}
+            {isHighlightedMove && (
+              <div class={`${styles.highlightDot} ${isEnemyPiece ? styles.enemyDot : ""}`}></div>
+            )}
             {piece && (
               <Piece
                 type={piece as PieceType}
                 draggable={true}
                 onDragStart={(e) => onDragStart(square, piece!, e)}
+                style={{
+                  opacity: isDragging ? 0.5 : 1,
+                }}
               />
             )}
           </div>
