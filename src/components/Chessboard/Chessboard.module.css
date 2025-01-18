@@ -21,18 +21,22 @@
 }
 
 .square.selected {
-  background-color: #65aa65c4 !important;
+  background-color: #0a5003c4 !important;
 }
 
 .highlightDot {
-  width: 22%;
-  height: 22%;
-  background-color: rgba(187, 53, 53, 0.625);
+  width: 25%;
+  height: 23%;
+  background-color: rgba(62, 109, 28, 0.625);
   border-radius: 50%;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.enemyDot {
+  background-color: rgba(166, 52, 52, 0.902);
 }
 
 .draggedPiece {
