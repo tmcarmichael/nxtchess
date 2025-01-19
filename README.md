@@ -1,6 +1,8 @@
 # Next Generation Chess 'nxtchess' (Inspiration from Lichess.org)
 
-![Chessboard Demo](public/assets/early-demo.gif)
+<div style="text-align: center;">
+  <img src="public/assets/early-demo.gif" alt="Early demo" />
+</div>
 
 ## 🚀 Vision
 
