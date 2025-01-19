@@ -1,7 +1,6 @@
 # Next Generation Chess 'nxtchess' (Inspiration from Lichess.org)
 
-12/30/24:
-The initial steps of building a **high-performance multiplayer chess platform**. This project is inspired by **Lichess.org**, aiming to provide a **free-to-play**, **ad-free** chess experience. The platform will focus on delivering exceptional performance, intuitive gameplay, and scalability for real-time multiplayer interactions.
+![Chessboard Demo](public/assets/early-demo.gif)
 
 ## 🚀 Vision
 

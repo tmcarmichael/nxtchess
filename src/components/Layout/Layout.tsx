@@ -34,7 +34,6 @@ const Layout = (props: { children?: any }) => {
               Tools
             </button>
           </div>
-          <h1>UNDER DEVELOPMENT 🚧</h1>
         </div>
       </header>
 
