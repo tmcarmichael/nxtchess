@@ -42,41 +42,44 @@ const ChessBoard = ({
   };
 
   return (
-    <div class={styles.board}>
-      {board().map(({ square, piece }) => {
-        const isHighlightedMove = highlightedMoves().includes(square);
-        const isSelected = selectedSquare() === square;
-        const isDragging = draggedPiece()?.square === square;
-        const isLastMove = lastMove() && (lastMove()?.from === square || lastMove()?.to === square);
-        const isEnemyPiece = piece && draggedPiece()?.piece[0] !== piece[0];
+    <div class={styles["board-container"]}>
+      <div class={styles.board}>
+        {board().map(({ square, piece }) => {
+          const isHighlightedMove = highlightedMoves().includes(square);
+          const isSelected = selectedSquare() === square;
+          const isDragging = draggedPiece()?.square === square;
+          const isLastMove =
+            lastMove() && (lastMove()?.from === square || lastMove()?.to === square);
+          const isEnemyPiece = piece && draggedPiece()?.piece[0] !== piece[0];
 
-        return (
-          <div
-            class={`${styles.square} ${
-              (square[0].charCodeAt(0) - 97 + parseInt(square[1])) % 2 === 0
-                ? styles.light
-                : styles.dark
-            } ${isSelected ? styles.selected : ""} ${isLastMove ? styles.lastMove : ""}`}
-            onClick={() => onSquareClick(square)}
-            onMouseUp={() => onSquareMouseUp(square)}
-          >
-            {isHighlightedMove && (
-              <div class={`${styles.highlightDot} ${isEnemyPiece ? styles.enemyDot : ""}`}></div>
-            )}
-            {piece && (
-              <Piece
-                type={piece as PieceType}
-                draggable={true}
-                onDragStart={(e) => onDragStart(square, piece!, e)}
-                style={{
-                  opacity: isDragging ? 0.5 : 1,
-                }}
-              />
-            )}
-          </div>
-        );
-      })}
-      {renderDraggedPiece()}
+          return (
+            <div
+              class={`${styles.square} ${
+                (square[0].charCodeAt(0) - 97 + parseInt(square[1])) % 2 === 0
+                  ? styles.light
+                  : styles.dark
+              } ${isSelected ? styles.selected : ""} ${isLastMove ? styles.lastMove : ""}`}
+              onClick={() => onSquareClick(square)}
+              onMouseUp={() => onSquareMouseUp(square)}
+            >
+              {isHighlightedMove && (
+                <div class={`${styles.highlightDot} ${isEnemyPiece ? styles.enemyDot : ""}`}></div>
+              )}
+              {piece && (
+                <Piece
+                  type={piece as PieceType}
+                  draggable={true}
+                  onDragStart={(e) => onDragStart(square, piece!, e)}
+                  style={{
+                    opacity: isDragging ? 0.5 : 1,
+                  }}
+                />
+              )}
+            </div>
+          );
+        })}
+        {renderDraggedPiece()}
+      </div>
     </div>
   );
 };

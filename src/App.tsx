@@ -1,13 +1,19 @@
-import ChessGame from "./components/ChessGame/ChessGame";
-import GamePanel from "./components/GamePanel/GamePanel";
-import styles from "./App.module.css";
+import { Route } from "@solidjs/router";
+import Layout from "./components/Layout/Layout";
+import GameContainer from "./components/GameContainer/GameContainer";
 
 function App() {
   return (
-    <div class={styles.container}>
-      <ChessGame />
-      <GamePanel />
-    </div>
+    <Route
+      path="/"
+      component={Layout}
+      children={
+        <>
+          <Route path="/" />
+          <Route path="/game" component={GameContainer} />
+        </>
+      }
+    />
   );
 }
 

@@ -1,0 +1,18 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 20vh;
+  text-align: center;
+}
+
+.timer {
+  margin-bottom: 20px;
+}
+
+.chessboardContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

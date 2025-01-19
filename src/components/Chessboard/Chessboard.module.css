@@ -1,3 +1,10 @@
+.board-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
 .board {
   position: relative;
   display: grid;
