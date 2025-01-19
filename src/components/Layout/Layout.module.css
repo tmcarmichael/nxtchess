@@ -1,0 +1,59 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: transparent;
+  z-index: 1000;
+}
+
+.titleAndPanel {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.title {
+  margin: 0;
+  font-size: 2.2rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  cursor: pointer;
+  color: rgb(207, 207, 207);
+  transition: color 0.2s ease-in-out;
+}
+
+.title:hover {
+  color: #007bff;
+}
+
+.buttonPanel {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 5px 15px;
+  border: 1px solid #4a4a4a;
+  border-radius: 5px;
+  background-color: #4a4a4a;
+}
+
+.button {
+  padding: 5px 10px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  background-color: transparent;
+  color: black;
+  border: none;
+  border-radius: 3px;
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+.button:hover {
+  color: #2adeaeed;
+}
+
+.mainContent {
+  padding-top: 60px;
+}

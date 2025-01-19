@@ -4,8 +4,9 @@ import { initializeGame, getLegalMoves, updateGameState } from "../../logic/game
 import { Square } from "../../types";
 import { fenToBoard } from "../../logic/fenLogic";
 import { debugLog } from "../../utils";
+import styles from "./ChessGame.module.css";
 
-const ChessGame = () => {
+const ChessGame = ({ timeControl }: { timeControl: number }) => {
   const [fen, setFen] = createSignal(initializeGame().fen);
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
@@ -18,12 +19,37 @@ const ChessGame = () => {
   });
   const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
 
+  const [whiteTime, setWhiteTime] = createSignal(timeControl * 60);
+  const [blackTime, setBlackTime] = createSignal(timeControl * 60);
+  const [currentPlayer, setCurrentPlayer] = createSignal<"w" | "b">("w");
+
   const board = createMemo(() => fenToBoard(fen()));
 
   const isPlayerTurn = (square: Square) => {
     const currentTurn = fen().split(" ")[1];
     const piece = board().find(({ square: sq }) => sq === square)?.piece;
     return piece && piece[0] === currentTurn;
+  };
+
+  const startTimer = () => {
+    const timer = setInterval(() => {
+      if (currentPlayer() === "w") {
+        setWhiteTime((time) => Math.max(0, time - 1));
+      } else {
+        setBlackTime((time) => Math.max(0, time - 1));
+      }
+
+      if (whiteTime() === 0 || blackTime() === 0) {
+        clearInterval(timer);
+        console.log(`${currentPlayer() === "w" ? "Black" : "White"} wins on time!`);
+      }
+    }, 1000);
+    return timer;
+  };
+  startTimer();
+
+  const switchPlayer = () => {
+    setCurrentPlayer((player) => (player === "w" ? "b" : "w"));
   };
 
   const handleSquareClick = (square: Square) => {
@@ -39,6 +65,7 @@ const ChessGame = () => {
 
     if (highlightedMoves().includes(square)) {
       executeMove(currentSelection, square);
+      switchPlayer(); // Switch turns after a valid move
     } else {
       clearDraggingState();
     }
@@ -67,6 +94,7 @@ const ChessGame = () => {
 
     if (highlightedMoves().includes(targetSquare)) {
       executeMove(dragState.square, targetSquare);
+      switchPlayer();
     }
     clearDraggingState();
   };
@@ -107,18 +135,24 @@ const ChessGame = () => {
   };
 
   return (
-    <div onMouseMove={handleMouseMove}>
-      <ChessBoard
-        board={board}
-        highlightedMoves={highlightedMoves}
-        selectedSquare={selectedSquare}
-        draggedPiece={draggedPiece}
-        cursorPosition={cursorPosition}
-        lastMove={lastMove}
-        onSquareClick={handleSquareClick}
-        onSquareMouseUp={handleMouseUp}
-        onDragStart={handleDragStart}
-      />
+    <div onMouseMove={handleMouseMove} class={styles.container}>
+      <div class={styles.timer}>
+        <div>White Time: {whiteTime()} seconds</div>
+        <div>Black Time: {blackTime()} seconds</div>
+      </div>
+      <div class={styles.chessboardContainer}>
+        <ChessBoard
+          board={board}
+          highlightedMoves={highlightedMoves}
+          selectedSquare={selectedSquare}
+          draggedPiece={draggedPiece}
+          cursorPosition={cursorPosition}
+          lastMove={lastMove}
+          onSquareClick={handleSquareClick}
+          onSquareMouseUp={handleMouseUp}
+          onDragStart={handleDragStart}
+        />
+      </div>
     </div>
   );
 };
