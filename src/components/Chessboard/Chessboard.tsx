@@ -1,6 +1,6 @@
-import styles from "./ChessBoard.module.css";
-import Piece from "../Piece/Piece";
-import { Square, PieceType } from "../../types";
+import styles from './ChessBoard.module.css';
+import Piece from '../Piece/Piece';
+import { Square, PieceType } from '../../types';
 
 const ChessBoard = ({
   board,
@@ -42,7 +42,7 @@ const ChessBoard = ({
   };
 
   return (
-    <div class={styles["board-container"]}>
+    <div class={styles['board-container']}>
       <div class={styles.board}>
         {board().map(({ square, piece }) => {
           const isHighlightedMove = highlightedMoves().includes(square);
@@ -58,12 +58,12 @@ const ChessBoard = ({
                 (square[0].charCodeAt(0) - 97 + parseInt(square[1])) % 2 === 0
                   ? styles.light
                   : styles.dark
-              } ${isSelected ? styles.selected : ""} ${isLastMove ? styles.lastMove : ""}`}
+              } ${isSelected ? styles.selected : ''} ${isLastMove ? styles.lastMove : ''}`}
               onClick={() => onSquareClick(square)}
               onMouseUp={() => onSquareMouseUp(square)}
             >
               {isHighlightedMove && (
-                <div class={`${styles.highlightDot} ${isEnemyPiece ? styles.enemyDot : ""}`}></div>
+                <div class={`${styles.highlightDot} ${isEnemyPiece ? styles.enemyDot : ''}`}></div>
               )}
               {piece && (
                 <Piece

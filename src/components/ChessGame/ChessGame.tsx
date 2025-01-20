@@ -1,10 +1,10 @@
-import { createSignal, createMemo, batch } from "solid-js";
-import ChessBoard from "../ChessBoard/ChessBoard";
-import { initializeGame, getLegalMoves, updateGameState } from "../../logic/gameState";
-import { Square } from "../../types";
-import { fenToBoard } from "../../logic/fenLogic";
-import { debugLog } from "../../utils";
-import styles from "./ChessGame.module.css";
+import { createSignal, createMemo, batch } from 'solid-js';
+import ChessBoard from '../ChessBoard/ChessBoard';
+import { initializeGame, getLegalMoves, updateGameState } from '../../logic/gameState';
+import { Square } from '../../types';
+import { fenToBoard } from '../../logic/fenLogic';
+import { debugLog } from '../../utils';
+import styles from './ChessGame.module.css';
 
 const ChessGame = ({ timeControl }: { timeControl: number }) => {
   const [fen, setFen] = createSignal(initializeGame().fen);
@@ -21,19 +21,19 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
 
   const [whiteTime, setWhiteTime] = createSignal(timeControl * 60);
   const [blackTime, setBlackTime] = createSignal(timeControl * 60);
-  const [currentPlayer, setCurrentPlayer] = createSignal<"w" | "b">("w");
+  const [currentPlayer, setCurrentPlayer] = createSignal<'w' | 'b'>('w');
 
   const board = createMemo(() => fenToBoard(fen()));
 
   const isPlayerTurn = (square: Square) => {
-    const currentTurn = fen().split(" ")[1];
+    const currentTurn = fen().split(' ')[1];
     const piece = board().find(({ square: sq }) => sq === square)?.piece;
     return piece && piece[0] === currentTurn;
   };
 
   const startTimer = () => {
     const timer = setInterval(() => {
-      if (currentPlayer() === "w") {
+      if (currentPlayer() === 'w') {
         setWhiteTime((time) => Math.max(0, time - 1));
       } else {
         setBlackTime((time) => Math.max(0, time - 1));
@@ -41,7 +41,7 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
 
       if (whiteTime() === 0 || blackTime() === 0) {
         clearInterval(timer);
-        console.log(`${currentPlayer() === "w" ? "Black" : "White"} wins on time!`);
+        console.log(`${currentPlayer() === 'w' ? 'Black' : 'White'} wins on time!`);
       }
     }, 1000);
     return timer;
@@ -49,7 +49,7 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
   startTimer();
 
   const switchPlayer = () => {
-    setCurrentPlayer((player) => (player === "w" ? "b" : "w"));
+    setCurrentPlayer((player) => (player === 'w' ? 'b' : 'w'));
   };
 
   const handleSquareClick = (square: Square) => {
@@ -119,11 +119,11 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
       batch(() => {
         setFen(updatedState.fen);
         setLastMove({ from, to });
-        debugLog("Last Move Updated:", { from, to });
+        debugLog('Last Move Updated:', { from, to });
         clearDraggingState();
       });
     } catch (error: any) {
-      console.error("Invalid move:", error.message);
+      console.error('Invalid move:', error.message);
     }
   };
 
