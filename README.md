@@ -1,4 +1,9 @@
-# Next Generation Chess 'nxtchess' (Inspiration from Lichess.org)
+# nxtchess - Next Generation Chess
+
+![Development Status](https://img.shields.io/badge/status-under_development-orange)
+![License](https://img.shields.io/github/license/tmcarmichael/nxtchess)
+![Issues](https://img.shields.io/github/issues/tmcarmichael/nxtchess)
+![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4)
 
 <div style="text-align: center;">
   <img src="public/assets/early-demo.gif" alt="Early demo" />
@@ -6,14 +11,14 @@
 
 ## 🚀 Vision
 
-The long-term goal is to create a **community-driven chess platform** that prioritizes:
+The goal is to create a high-performance multiplayer chess platform that incorporates unique training modes and AI-driven features. Key objectives include:
 
-- **Accessibility**: Free for everyone, forever.
-- **Performance**: A seamless experience, even on low-end devices.
-- **Transparency**: Open-source with no ads or paywalls.
-- **Fair Play**: Incorporating anti-cheat mechanisms to ensure a fair environment for players of all skill levels.
+- **Real-time Multiplayer**: Delivering seamless, responsive gameplay.
+- **Personalized User Experience**: Supporting accounts with game histories and performance tracking.
+- **Comprehensive Game Database**: Enabling players to study and analyze past games.
+- **AI-Powered Tools**: Providing game reviews and training modes to help players improve their skills.
 
-This project is currently in its **early stages**, focusing on the frontend. Future iterations will include multiplayer capabilities, accounts, database of games, game analysis tools, and experimental AI integrations.
+**_The project is currently in early development, with a focus on building the frontend client and core game logic. Check out the Roadmap below for more details on our plans and progress._**
 
 ---
 
@@ -81,6 +86,14 @@ What’s planned?
 - [ ] Integrate an AI engine (e.g., Stockfish) for single-player games and post-game analysis.
 - [ ] Allow users to explore opening libraries and endgames.
 
+### Phase 6: Expanded Tools and Options
+
+- [ ] AI training modes.
+- [ ] AI game reviews.
+- [ ] Host public database of games.
+- [ ] Database explorer view with board moves.
+- [ ] Puzzles and Puzzle ELO.
+
 ### Phase 6: Community Features
 
 - [ ] Tournament system.
@@ -139,12 +152,6 @@ Contributions welcome!
    git push origin my-new-feature
    ```
 5. Open a pull request.
-
----
-
-## 🌟 Acknowledgments
-
-This project is inspired by the work of **Lichess.org**, a community-driven chess platform that sets the standard for free, ad-free, and open-source chess experiences.
 
 ---
 
