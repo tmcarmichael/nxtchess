@@ -1,2 +1,2 @@
-export * from "./chessboard";
-export * from "./gameState";
+export * from './chessboard';
+export * from './gameState';

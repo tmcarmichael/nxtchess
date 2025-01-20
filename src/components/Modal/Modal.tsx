@@ -1,4 +1,4 @@
-import styles from "./Modal.module.css";
+import styles from './Modal.module.css';
 
 const Modal = ({ children, onClose }: { children: any; onClose: () => void }) => {
   return (

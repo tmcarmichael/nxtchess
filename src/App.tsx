@@ -1,6 +1,6 @@
-import { Route } from "@solidjs/router";
-import Layout from "./components/Layout/Layout";
-import GameContainer from "./components/GameContainer/GameContainer";
+import { Route } from '@solidjs/router';
+import Layout from './components/Layout/Layout';
+import GameContainer from './components/GameContainer/GameContainer';
 
 function App() {
   return (

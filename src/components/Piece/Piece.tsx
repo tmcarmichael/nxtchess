@@ -1,6 +1,6 @@
-import styles from "./Piece.module.css";
-import { PieceType } from "../../types";
-import { JSX } from "solid-js";
+import styles from './Piece.module.css';
+import { PieceType } from '../../types';
+import { JSX } from 'solid-js';
 
 const Piece = ({
   type,

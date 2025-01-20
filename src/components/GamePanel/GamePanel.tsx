@@ -1,14 +1,14 @@
-import styles from "./GamePanel.module.css";
+import styles from './GamePanel.module.css';
 
 // TODO: Game Panel is under construction 🛠️
 
 const GamePanel = () => {
   const handleResign = () => {
-    alert("Resign button clicked! Placeholder functionality.");
+    alert('Resign button clicked! Placeholder functionality.');
   };
 
   const handleOfferDraw = () => {
-    alert("Offer Draw button clicked! Placeholder functionality.");
+    alert('Offer Draw button clicked! Placeholder functionality.');
   };
 
   return (

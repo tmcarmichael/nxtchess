@@ -1,16 +1,16 @@
-import { useNavigate } from "@solidjs/router";
-import { createSignal } from "solid-js";
-import styles from "./Layout.module.css";
-import Modal from "../Modal/Modal";
+import { useNavigate } from '@solidjs/router';
+import { createSignal } from 'solid-js';
+import styles from './Layout.module.css';
+import Modal from '../Modal/Modal';
 
 const Layout = (props: { children?: any }) => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
   const [timeControl, setTimeControl] = createSignal(5);
-  const [difficulty, setDifficulty] = createSignal("medium");
+  const [difficulty, setDifficulty] = createSignal('medium');
 
   const handleStartGame = () => {
-    navigate("/game", {
+    navigate('/game', {
       state: { timeControl: timeControl(), difficulty: difficulty() },
     });
     setIsModalOpen(false);
@@ -20,17 +20,17 @@ const Layout = (props: { children?: any }) => {
     <div>
       <header class={styles.header}>
         <div class={styles.titleAndPanel}>
-          <h1 class={styles.title} onClick={() => navigate("/")}>
+          <h1 class={styles.title} onClick={() => navigate('/')}>
             nxtchess
           </h1>
           <div class={styles.buttonPanel}>
             <button class={styles.button} onClick={() => setIsModalOpen(true)}>
               Play
             </button>
-            <button class={styles.button} onClick={() => alert("Sign In placeholder")}>
+            <button class={styles.button} onClick={() => alert('Sign In placeholder')}>
               Sign In
             </button>
-            <button class={styles.button} onClick={() => alert("Tools placeholder")}>
+            <button class={styles.button} onClick={() => alert('Tools placeholder')}>
               Tools
             </button>
           </div>

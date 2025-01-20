@@ -1,6 +1,6 @@
-import { GameState, VerboseMove, Square } from "../types";
-import { Chess } from "chess.js";
-import { debugLog } from "../utils";
+import { GameState, VerboseMove, Square } from '../types';
+import { Chess } from 'chess.js';
+import { debugLog } from '../utils';
 
 export const initializeGame = (): GameState => {
   const chess = new Chess();
@@ -14,18 +14,18 @@ export const initializeGame = (): GameState => {
 export const getLegalMoves = (fen: string, square: Square): Square[] => {
   const chess = new Chess(fen);
 
-  debugLog("Getting legal moves for square:", square);
+  debugLog('Getting legal moves for square:', square);
   const legalMoves = chess.moves({ square, verbose: true }) as VerboseMove[];
 
-  debugLog("Verbose Moves:", legalMoves);
+  debugLog('Verbose Moves:', legalMoves);
   return legalMoves.map((move) => move.to as Square);
 };
 
 export const updateGameState = (state: GameState, from: string, to: string): GameState => {
   const chess = new Chess(state.fen);
 
-  debugLog("Updating game state...");
-  debugLog("From:", from, "To:", to);
+  debugLog('Updating game state...');
+  debugLog('From:', from, 'To:', to);
 
   const chessMove = chess.move({ from, to });
   if (!chessMove) {
@@ -34,7 +34,7 @@ export const updateGameState = (state: GameState, from: string, to: string): Gam
   }
 
   const newFen = chess.fen();
-  debugLog("New FEN after move:", newFen);
+  debugLog('New FEN after move:', newFen);
 
   return {
     fen: newFen,
