@@ -1,10 +1,12 @@
-import { createSignal, createMemo, batch } from 'solid-js';
+import { createSignal, createMemo, batch, onMount, onCleanup, Show } from 'solid-js';
 import ChessBoard from '../ChessBoard/ChessBoard';
+import PlayModal from '../PlayModal/PlayModal';
 import { initializeGame, getLegalMoves, updateGameState } from '../../logic/gameState';
 import { Square } from '../../types';
 import { fenToBoard } from '../../logic/fenLogic';
 import { debugLog } from '../../utils';
 import styles from './ChessGame.module.css';
+import { Chess } from 'chess.js';
 
 const ChessGame = ({ timeControl }: { timeControl: number }) => {
   const [fen, setFen] = createSignal(initializeGame().fen);
@@ -18,41 +20,57 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     y: 0,
   });
   const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
-
   const [whiteTime, setWhiteTime] = createSignal(timeControl * 60);
   const [blackTime, setBlackTime] = createSignal(timeControl * 60);
   const [currentPlayer, setCurrentPlayer] = createSignal<'w' | 'b'>('w');
+  const [isGameOver, setIsGameOver] = createSignal(false);
+  const [gameOverReason, setGameOverReason] = createSignal<
+    'checkmate' | 'stalemate' | 'time' | null
+  >(null);
+  const [gameWinner, setGameWinner] = createSignal<'w' | 'b' | 'draw' | null>(null);
+  const [checkedKingSquare, setCheckedKingSquare] = createSignal<Square | null>(null);
 
   const board = createMemo(() => fenToBoard(fen()));
 
-  const isPlayerTurn = (square: Square) => {
-    const currentTurn = fen().split(' ')[1];
-    const piece = board().find(({ square: sq }) => sq === square)?.piece;
-    return piece && piece[0] === currentTurn;
-  };
-
+  let timerId: number | undefined;
   const startTimer = () => {
-    const timer = setInterval(() => {
+    if (timerId) clearInterval(timerId);
+    timerId = setInterval(() => {
+      if (isGameOver()) {
+        clearInterval(timerId);
+        return;
+      }
       if (currentPlayer() === 'w') {
         setWhiteTime((time) => Math.max(0, time - 1));
+        if (whiteTime() === 1) {
+          handleTimeOut('b');
+        }
       } else {
         setBlackTime((time) => Math.max(0, time - 1));
+        if (blackTime() === 1) {
+          handleTimeOut('w');
+        }
       }
+    }, 1000) as unknown as number;
 
-      if (whiteTime() === 0 || blackTime() === 0) {
-        clearInterval(timer);
-        console.log(`${currentPlayer() === 'w' ? 'Black' : 'White'} wins on time!`);
-      }
-    }, 1000);
-    return timer;
+    onCleanup(() => clearInterval(timerId));
   };
-  startTimer();
 
-  const switchPlayer = () => {
-    setCurrentPlayer((player) => (player === 'w' ? 'b' : 'w'));
+  const handleTimeOut = (winnerColor: 'w' | 'b') => {
+    clearInterval(timerId);
+    setIsGameOver(true);
+    setGameOverReason('time');
+    setGameWinner(winnerColor);
+    debugLog(`${winnerColor === 'w' ? 'White' : 'Black'} wins on time!`);
   };
+
+  onMount(() => startTimer());
+  onCleanup(() => {
+    if (timerId) clearInterval(timerId);
+  });
 
   const handleSquareClick = (square: Square) => {
+    if (isGameOver()) return;
     const currentSelection = selectedSquare();
 
     if (!currentSelection) {
@@ -65,13 +83,14 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
 
     if (highlightedMoves().includes(square)) {
       executeMove(currentSelection, square);
-      switchPlayer(); // Switch turns after a valid move
+      switchPlayer();
     } else {
       clearDraggingState();
     }
   };
 
   const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
+    if (isGameOver()) return;
     if (!isPlayerTurn(square)) return;
 
     setDraggedPiece({ square, piece });
@@ -99,10 +118,27 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     clearDraggingState();
   };
 
+  const isPlayerTurn = (square: Square) => {
+    const currentTurn = fen().split(' ')[1];
+    const piece = board().find(({ square: sq }) => sq === square)?.piece;
+    return piece && piece[0] === currentTurn;
+  };
+
+  const switchPlayer = () => {
+    setCurrentPlayer((player) => (player === 'w' ? 'b' : 'w'));
+  };
+
   const clearDraggingState = () => {
     batch(() => {
       setDraggedPiece(null);
       clearSelection();
+    });
+  };
+
+  const clearSelection = () => {
+    batch(() => {
+      setSelectedSquare(null);
+      setHighlightedMoves([]);
     });
   };
 
@@ -120,18 +156,58 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
         setFen(updatedState.fen);
         setLastMove({ from, to });
         debugLog('Last Move Updated:', { from, to });
-        clearDraggingState();
       });
+
+      const chess = new Chess(updatedState.fen);
+      if (chess.isCheck()) {
+        const sideInCheck = chess.turn();
+        const kingSquare = board().find(({ piece }) => piece === sideInCheck + 'K')?.square;
+        setCheckedKingSquare(kingSquare ?? null);
+      } else {
+        setCheckedKingSquare(null);
+      }
+
+      checkGameEnd(updatedState.fen);
     } catch (error: any) {
       console.error('Invalid move:', error.message);
+    } finally {
+      clearDraggingState();
     }
   };
 
-  const clearSelection = () => {
+  const checkGameEnd = (fen: string) => {
+    const chess = new Chess(fen);
+
+    if (chess.isCheckmate()) {
+      const winner = chess.turn() === 'w' ? 'b' : 'w';
+      setGameWinner(winner);
+      setIsGameOver(true);
+      setGameOverReason('checkmate');
+      clearInterval(timerId);
+      debugLog('Checkmate');
+    } else if (chess.isStalemate()) {
+      setGameWinner('draw');
+      setIsGameOver(true);
+      setGameOverReason('stalemate');
+      clearInterval(timerId);
+      debugLog('Stalemate!');
+    }
+  };
+
+  const resetGame = (newTimeControl?: number) => {
+    const finalTimeControl = newTimeControl ?? timeControl;
+
     batch(() => {
-      setSelectedSquare(null);
-      setHighlightedMoves([]);
+      setFen(initializeGame().fen);
+      setWhiteTime(finalTimeControl * 60);
+      setBlackTime(finalTimeControl * 60);
+      setCurrentPlayer('w');
+      setLastMove(null);
+      setIsGameOver(false);
+      setGameOverReason(null);
     });
+
+    startTimer();
   };
 
   return (
@@ -151,8 +227,24 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
           onSquareClick={handleSquareClick}
           onSquareMouseUp={handleMouseUp}
           onDragStart={handleDragStart}
+          checkedKingSquare={checkedKingSquare}
         />
       </div>
+
+      <Show when={isGameOver()}>
+        <PlayModal onClose={() => resetGame()}>
+          <h2>Game Over</h2>
+          <p>
+            {gameOverReason() === 'checkmate' &&
+              `Checkmate – ${gameWinner() === 'w' ? 'White' : 'Black'} wins!`}
+            {gameOverReason() === 'stalemate' && "Stalemate - it's a draw!"}
+            {gameOverReason() === 'time' &&
+              `Time – ${gameWinner() === 'w' ? 'White' : 'Black'} wins!`}
+          </p>
+
+          <button onClick={() => resetGame()}>Play Again</button>
+        </PlayModal>
+      </Show>
     </div>
   );
 };

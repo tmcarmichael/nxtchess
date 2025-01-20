@@ -54,6 +54,11 @@
 }
 
 .lastMove {
-  background-color: rgb(158, 171, 57) !important;
+  /* background-color: rgb(158, 171, 57) ; */
+  box-shadow: inset 0 0 0 3px rgb(58, 174, 69) !important;
   opacity: 90%;
+}
+
+.checkedKing {
+  box-shadow: inset 0 0 0 3px rgba(181, 0, 0, 0.6);
 }
