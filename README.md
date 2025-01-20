@@ -1,9 +1,9 @@
 # nxtchess - Next Generation Chess
 
-![Development Status](https://img.shields.io/badge/status-under_development-orange)
-![License](https://img.shields.io/github/license/tmcarmichael/nxtchess)
-![Issues](https://img.shields.io/github/issues/tmcarmichael/nxtchess)
-![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4)
+[![Development Status](https://img.shields.io/badge/status-under_development-orange)](#)
+[![License](https://img.shields.io/github/license/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/blob/main/LICENSE)
+[![Issues](https://img.shields.io/github/issues/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/issues)
+[![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4)](https://prettier.io/docs/en/why-prettier)
 
 <div style="text-align: center;">
   <img src="public/assets/early-demo.gif" alt="Early demo" />
