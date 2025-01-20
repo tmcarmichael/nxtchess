@@ -83,17 +83,3 @@ export interface PieceProps {
 }
 
 export type Board = (PieceType | null)[][];
-
-export interface VerboseMove {
-  color: 'w' | 'b';
-  from: string;
-  to: string;
-  piece: string;
-  san: string;
-  flags: string;
-  lan: string;
-  before: string;
-  after: string;
-  captured?: string;
-  promotion?: string;
-}

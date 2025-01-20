@@ -1,34 +1,24 @@
 import { PieceType, Square } from '../types';
 import { debugLog } from '../utils';
 
-export const parseFenToBoard = (fen: string): (PieceType | null)[][] => {
-  const rows = fen.split(' ')[0].split('/');
-  return rows.map((row) =>
-    row
-      .split('')
-      .flatMap((char) =>
-        isNaN(Number(char)) ? [mapFenToPieceType(char)] : Array(Number(char)).fill(null)
-      )
-  );
-};
-
 export const fenToBoard = (fen: string): { square: Square; piece: PieceType | null }[] => {
   const rows = fen.split(' ')[0].split('/');
   const board: { square: Square; piece: PieceType | null }[] = [];
   rows.forEach((row, rankIndex) => {
     let fileIndex = 0;
     row.split('').forEach((char) => {
-      if (isNaN(Number(char))) {
-        const piece = mapFenToPieceType(char);
-        const square = `${String.fromCharCode(97 + fileIndex)}${8 - rankIndex}` as Square;
-        board.push({ square, piece });
-        fileIndex += 1;
-      } else {
-        for (let i = 0; i < Number(char); i++) {
-          const square = `${String.fromCharCode(97 + fileIndex)}${8 - rankIndex}` as Square;
-          board.push({ square, piece: null });
-          fileIndex += 1;
+      const emptyCount = Number(char);
+      if (!isNaN(emptyCount)) {
+        for (let i = 0; i < emptyCount; i++) {
+          const sq = `${String.fromCharCode(97 + fileIndex)}${8 - rankIndex}` as Square;
+          board.push({ square: sq, piece: null });
+          fileIndex++;
         }
+      } else {
+        const piece = mapFenToPieceType(char);
+        const sq = `${String.fromCharCode(97 + fileIndex)}${8 - rankIndex}` as Square;
+        board.push({ square: sq, piece });
+        fileIndex++;
       }
     });
   });
@@ -36,7 +26,7 @@ export const fenToBoard = (fen: string): { square: Square; piece: PieceType | nu
   return board;
 };
 
-export const mapFenToPieceType = (char: string): PieceType | null => {
+export function mapFenToPieceType(char: string): PieceType | null {
   const pieceMap: Record<string, PieceType> = {
     p: 'bP',
     r: 'bR',
@@ -52,4 +42,4 @@ export const mapFenToPieceType = (char: string): PieceType | null => {
     K: 'wK',
   };
   return pieceMap[char] || null;
-};
+}
