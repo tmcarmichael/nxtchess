@@ -1,12 +1,19 @@
 import { createSignal, createMemo, batch, onMount, onCleanup, Show } from 'solid-js';
-import ChessBoard from '../ChessBoard/ChessBoard';
-import PlayModal from '../PlayModal/PlayModal';
-import { initializeGame, getLegalMoves, updateGameState } from '../../logic/gameState';
 import { Square } from '../../types';
 import { fenToBoard } from '../../logic/fenLogic';
+import {
+  initializeGame,
+  getLegalMoves,
+  updateGameState,
+  isInCheck,
+  isCheckmate,
+  isStalemate,
+} from '../../logic/gameState';
 import { debugLog } from '../../utils';
+import ChessBoard from '../ChessBoard/ChessBoard';
+import PlayModal from '../PlayModal/PlayModal';
+
 import styles from './ChessGame.module.css';
-import { Chess } from 'chess.js';
 
 const ChessGame = ({ timeControl }: { timeControl: number }) => {
   const [fen, setFen] = createSignal(initializeGame().fen);
@@ -63,7 +70,6 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     setGameWinner(winnerColor);
     debugLog(`${winnerColor === 'w' ? 'White' : 'Black'} wins on time!`);
   };
-
   onMount(() => startTimer());
   onCleanup(() => {
     if (timerId) clearInterval(timerId);
@@ -72,7 +78,6 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
   const handleSquareClick = (square: Square) => {
     if (isGameOver()) return;
     const currentSelection = selectedSquare();
-
     if (!currentSelection) {
       const piece = board().find(({ square: sq }) => sq === square)?.piece;
       if (piece && isPlayerTurn(square)) {
@@ -80,7 +85,6 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
       }
       return;
     }
-
     if (highlightedMoves().includes(square)) {
       executeMove(currentSelection, square);
       switchPlayer();
@@ -92,7 +96,6 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
   const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
     if (isGameOver()) return;
     if (!isPlayerTurn(square)) return;
-
     setDraggedPiece({ square, piece });
     setCursorPosition({ x: event.clientX, y: event.clientY });
     setHighlightedMoves(getLegalMoves(fen(), square));
@@ -125,7 +128,7 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
   };
 
   const switchPlayer = () => {
-    setCurrentPlayer((player) => (player === 'w' ? 'b' : 'w'));
+    setCurrentPlayer((p) => (p === 'w' ? 'b' : 'w'));
   };
 
   const clearDraggingState = () => {
@@ -157,16 +160,13 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
         setLastMove({ from, to });
         debugLog('Last Move Updated:', { from, to });
       });
-
-      const chess = new Chess(updatedState.fen);
-      if (chess.isCheck()) {
-        const sideInCheck = chess.turn();
+      if (isInCheck(updatedState.fen)) {
+        const sideInCheck = new Chess(updatedState.fen).turn();
         const kingSquare = board().find(({ piece }) => piece === sideInCheck + 'K')?.square;
         setCheckedKingSquare(kingSquare ?? null);
       } else {
         setCheckedKingSquare(null);
       }
-
       checkGameEnd(updatedState.fen);
     } catch (error: any) {
       console.error('Invalid move:', error.message);
@@ -176,16 +176,14 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
   };
 
   const checkGameEnd = (fen: string) => {
-    const chess = new Chess(fen);
-
-    if (chess.isCheckmate()) {
-      const winner = chess.turn() === 'w' ? 'b' : 'w';
+    if (isCheckmate(fen)) {
+      const winner = new Chess(fen).turn() === 'w' ? 'b' : 'w';
       setGameWinner(winner);
       setIsGameOver(true);
       setGameOverReason('checkmate');
       clearInterval(timerId);
       debugLog('Checkmate');
-    } else if (chess.isStalemate()) {
+    } else if (isStalemate(fen)) {
       setGameWinner('draw');
       setIsGameOver(true);
       setGameOverReason('stalemate');
@@ -205,6 +203,8 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
       setLastMove(null);
       setIsGameOver(false);
       setGameOverReason(null);
+      setGameWinner(null);
+      setCheckedKingSquare(null);
     });
 
     startTimer();
@@ -230,7 +230,6 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
           checkedKingSquare={checkedKingSquare}
         />
       </div>
-
       <Show when={isGameOver()}>
         <PlayModal onClose={() => resetGame()}>
           <h2>Game Over</h2>
@@ -241,7 +240,6 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
             {gameOverReason() === 'time' &&
               `Time – ${gameWinner() === 'w' ? 'White' : 'Black'} wins!`}
           </p>
-
           <button onClick={() => resetGame()}>Play Again</button>
         </PlayModal>
       </Show>
