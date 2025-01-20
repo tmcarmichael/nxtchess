@@ -1,7 +1,7 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal } from 'solid-js';
 import styles from './Layout.module.css';
-import Modal from '../Modal/Modal';
+import PlayModal from '../PlayModal/PlayModal';
 
 const Layout = (props: { children?: any }) => {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ const Layout = (props: { children?: any }) => {
       <main class={styles.mainContent}>{props.children}</main>
 
       {isModalOpen() && (
-        <Modal onClose={() => setIsModalOpen(false)}>
+        <PlayModal onClose={() => setIsModalOpen(false)}>
           <h2>Game Settings</h2>
           <div class={styles.settings}>
             <div>
@@ -67,7 +67,7 @@ const Layout = (props: { children?: any }) => {
             <button onClick={handleStartGame}>Start Game</button>
             <button onClick={() => setIsModalOpen(false)}>Cancel</button>
           </div>
-        </Modal>
+        </PlayModal>
       )}
     </div>
   );

@@ -12,6 +12,7 @@ const ChessBoard = ({
   onSquareClick,
   onSquareMouseUp,
   onDragStart,
+  checkedKingSquare,
 }: {
   board: () => { square: Square; piece: string | null }[];
   highlightedMoves: () => Square[];
@@ -22,6 +23,7 @@ const ChessBoard = ({
   onSquareClick: (square: Square) => void;
   onSquareMouseUp: (square: Square) => void;
   onDragStart: (square: Square, piece: string, event: DragEvent) => void;
+  checkedKingSquare: () => Square | null;
 }) => {
   const renderDraggedPiece = () => {
     const dragState = draggedPiece();
@@ -51,6 +53,7 @@ const ChessBoard = ({
           const isLastMove =
             lastMove() && (lastMove()?.from === square || lastMove()?.to === square);
           const isEnemyPiece = piece && draggedPiece()?.piece[0] !== piece[0];
+          const isCheckedKing = checkedKingSquare() === square;
 
           return (
             <div
@@ -58,7 +61,7 @@ const ChessBoard = ({
                 (square[0].charCodeAt(0) - 97 + parseInt(square[1])) % 2 === 0
                   ? styles.light
                   : styles.dark
-              } ${isSelected ? styles.selected : ''} ${isLastMove ? styles.lastMove : ''}`}
+              } ${isSelected ? styles.selected : ''} ${isLastMove ? styles.lastMove : ''} ${isCheckedKing ? styles.checkedKing : ''}`}
               onClick={() => onSquareClick(square)}
               onMouseUp={() => onSquareMouseUp(square)}
             >

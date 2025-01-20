@@ -1,11 +1,7 @@
 import { useLocation } from '@solidjs/router';
 import ChessGame from '../ChessGame/ChessGame';
 import styles from './GameContainer.module.css';
-
-type GameRouteState = {
-  timeControl: number;
-  difficulty: string;
-};
+import { GameRouteState } from '../../types';
 
 const GameContainer = () => {
   const location = useLocation<GameRouteState>();

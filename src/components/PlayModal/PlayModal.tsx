@@ -1,6 +1,6 @@
-import styles from './Modal.module.css';
+import styles from './PlayModal.module.css';
 
-const Modal = ({ children, onClose }: { children: any; onClose: () => void }) => {
+export const PlayModal = ({ children, onClose }: { children: any; onClose: () => void }) => {
   return (
     <div class={styles.modalOverlay} onClick={onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -13,4 +13,4 @@ const Modal = ({ children, onClose }: { children: any; onClose: () => void }) =>
   );
 };
 
-export default Modal;
+export default PlayModal;
