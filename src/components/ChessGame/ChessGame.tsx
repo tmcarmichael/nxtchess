@@ -12,7 +12,6 @@ import {
 import { debugLog } from '../../utils';
 import ChessBoard from '../ChessBoard/ChessBoard';
 import PlayModal from '../PlayModal/PlayModal';
-
 import styles from './ChessGame.module.css';
 
 const ChessGame = ({ timeControl }: { timeControl: number }) => {
@@ -22,10 +21,7 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
   const [draggedPiece, setDraggedPiece] = createSignal<{ square: Square; piece: string } | null>(
     null
   );
-  const [cursorPosition, setCursorPosition] = createSignal<{ x: number; y: number }>({
-    x: 0,
-    y: 0,
-  });
+  const [cursorPosition, setCursorPosition] = createSignal({ x: 0, y: 0 });
   const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
   const [whiteTime, setWhiteTime] = createSignal(timeControl * 60);
   const [blackTime, setBlackTime] = createSignal(timeControl * 60);
@@ -36,9 +32,13 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
   >(null);
   const [gameWinner, setGameWinner] = createSignal<'w' | 'b' | 'draw' | null>(null);
   const [checkedKingSquare, setCheckedKingSquare] = createSignal<Square | null>(null);
+  const [pendingPromotion, setPendingPromotion] = createSignal<{
+    from: Square;
+    to: Square;
+    color: 'w' | 'b';
+  } | null>(null);
 
   const board = createMemo(() => fenToBoard(fen()));
-
   let timerId: number | undefined;
   const startTimer = () => {
     if (timerId) clearInterval(timerId);
@@ -48,20 +48,23 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
         return;
       }
       if (currentPlayer() === 'w') {
-        setWhiteTime((time) => Math.max(0, time - 1));
-        if (whiteTime() === 1) {
+        setWhiteTime((t) => Math.max(0, t - 1));
+        if (whiteTime() <= 1) {
           handleTimeOut('b');
         }
       } else {
-        setBlackTime((time) => Math.max(0, time - 1));
-        if (blackTime() === 1) {
+        setBlackTime((t) => Math.max(0, t - 1));
+        if (blackTime() <= 1) {
           handleTimeOut('w');
         }
       }
     }, 1000) as unknown as number;
-
     onCleanup(() => clearInterval(timerId));
   };
+  onMount(() => startTimer());
+  onCleanup(() => {
+    if (timerId) clearInterval(timerId);
+  });
 
   const handleTimeOut = (winnerColor: 'w' | 'b') => {
     clearInterval(timerId);
@@ -70,10 +73,6 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     setGameWinner(winnerColor);
     debugLog(`${winnerColor === 'w' ? 'White' : 'Black'} wins on time!`);
   };
-  onMount(() => startTimer());
-  onCleanup(() => {
-    if (timerId) clearInterval(timerId);
-  });
 
   const handleSquareClick = (square: Square) => {
     if (isGameOver()) return;
@@ -87,7 +86,6 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     }
     if (highlightedMoves().includes(square)) {
       executeMove(currentSelection, square);
-      switchPlayer();
     } else {
       clearDraggingState();
     }
@@ -100,7 +98,6 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     setCursorPosition({ x: event.clientX, y: event.clientY });
     setHighlightedMoves(getLegalMoves(fen(), square));
     setSelectedSquare(square);
-
     event.dataTransfer?.setDragImage(new Image(), 0, 0);
   };
 
@@ -111,12 +108,11 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
   };
 
   const handleMouseUp = (targetSquare: Square) => {
+    if (isGameOver()) return;
     const dragState = draggedPiece();
     if (!dragState) return;
-
     if (highlightedMoves().includes(targetSquare)) {
       executeMove(dragState.square, targetSquare);
-      switchPlayer();
     }
     clearDraggingState();
   };
@@ -127,14 +123,10 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     return piece && piece[0] === currentTurn;
   };
 
-  const switchPlayer = () => {
-    setCurrentPlayer((p) => (p === 'w' ? 'b' : 'w'));
-  };
-
-  const clearDraggingState = () => {
+  const selectSquare = (square: Square) => {
     batch(() => {
-      setDraggedPiece(null);
-      clearSelection();
+      setSelectedSquare(square);
+      setHighlightedMoves(getLegalMoves(fen(), square));
     });
   };
 
@@ -145,14 +137,29 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     });
   };
 
-  const selectSquare = (square: Square) => {
+  const clearDraggingState = () => {
     batch(() => {
-      setSelectedSquare(square);
-      setHighlightedMoves(getLegalMoves(fen(), square));
+      setDraggedPiece(null);
+      clearSelection();
     });
   };
 
   const executeMove = (from: Square, to: Square) => {
+    const movingPiece = board().find((sq) => sq.square === from)?.piece;
+    if (!movingPiece) {
+      console.error(`No piece found at square ${from}`);
+      clearDraggingState();
+      return;
+    }
+    if (isPawnPromotion(movingPiece, to)) {
+      setPendingPromotion({
+        from,
+        to,
+        color: movingPiece[0] as 'w' | 'b',
+      });
+      clearDraggingState();
+      return;
+    }
     try {
       const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to);
       batch(() => {
@@ -160,9 +167,10 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
         setLastMove({ from, to });
         debugLog('Last Move Updated:', { from, to });
       });
+
+      switchPlayer();
       if (isInCheck(updatedState.fen)) {
-        const sideInCheck = new Chess(updatedState.fen).turn();
-        const kingSquare = board().find(({ piece }) => piece === sideInCheck + 'K')?.square;
+        const kingSquare = board().find(({ piece }) => piece === currentPlayer() + 'K')?.square;
         setCheckedKingSquare(kingSquare ?? null);
       } else {
         setCheckedKingSquare(null);
@@ -175,9 +183,47 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     }
   };
 
+  function isPawnPromotion(piece: string | null, to: Square): boolean {
+    if (!piece || !piece.endsWith('P')) return false;
+    const rank = parseInt(to[1], 10);
+    if (piece.startsWith('w') && rank === 8) return true;
+    if (piece.startsWith('b') && rank === 1) return true;
+    return false;
+  }
+
+  const finalizePromotion = (from: Square, to: Square, promotion: 'q' | 'r' | 'n' | 'b') => {
+    try {
+      const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to, promotion);
+      batch(() => {
+        setFen(updatedState.fen);
+        setLastMove({ from, to });
+        debugLog('Promotion Move Completed:', { from, to, promotion });
+      });
+      switchPlayer();
+      if (isInCheck(updatedState.fen)) {
+        const kingSquare = board().find(({ piece }) => piece === currentPlayer() + 'K')?.square;
+        setCheckedKingSquare(kingSquare ?? null);
+      } else {
+        setCheckedKingSquare(null);
+      }
+      checkGameEnd(updatedState.fen);
+    } catch (error: any) {
+      console.error('Invalid promotion move:', error.message);
+    } finally {
+      clearDraggingState();
+      setPendingPromotion(null);
+    }
+  };
+
+  const handlePromotionChoice = (pieceType: 'q' | 'r' | 'n' | 'b') => {
+    const promo = pendingPromotion();
+    if (!promo) return;
+    finalizePromotion(promo.from, promo.to, pieceType);
+  };
+
   const checkGameEnd = (fen: string) => {
     if (isCheckmate(fen)) {
-      const winner = new Chess(fen).turn() === 'w' ? 'b' : 'w';
+      const winner = currentPlayer() === 'w' ? 'b' : 'w';
       setGameWinner(winner);
       setIsGameOver(true);
       setGameOverReason('checkmate');
@@ -190,6 +236,10 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
       clearInterval(timerId);
       debugLog('Stalemate!');
     }
+  };
+
+  const switchPlayer = () => {
+    setCurrentPlayer((p) => (p === 'w' ? 'b' : 'w'));
   };
 
   const resetGame = (newTimeControl?: number) => {
@@ -235,12 +285,43 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
           <h2>Game Over</h2>
           <p>
             {gameOverReason() === 'checkmate' &&
-              `Checkmate – ${gameWinner() === 'w' ? 'White' : 'Black'} wins!`}
+              `Checkmate ${gameWinner() === 'w' ? 'White' : 'Black'} wins!`}
             {gameOverReason() === 'stalemate' && "Stalemate - it's a draw!"}
             {gameOverReason() === 'time' &&
-              `Time – ${gameWinner() === 'w' ? 'White' : 'Black'} wins!`}
+              `Time ${gameWinner() === 'w' ? 'White' : 'Black'} wins!`}
           </p>
           <button onClick={() => resetGame()}>Play Again</button>
+        </PlayModal>
+      </Show>
+      <Show when={pendingPromotion()}>
+        <PlayModal onClose={() => setPendingPromotion(null)}>
+          <h2>Promote Pawn</h2>
+          <div style="display: flex; gap: 1.2rem;">
+            <img
+              src={`/assets/${pendingPromotion()!.color}Q.svg`}
+              alt="Promote to Queen"
+              style="width: 90px; cursor: pointer;"
+              onClick={() => handlePromotionChoice('q')}
+            />
+            <img
+              src={`/assets/${pendingPromotion()!.color}R.svg`}
+              alt="Promote to Rook"
+              style="width: 90px; cursor: pointer;"
+              onClick={() => handlePromotionChoice('r')}
+            />
+            <img
+              src={`/assets/${pendingPromotion()!.color}B.svg`}
+              alt="Promote to Bishop"
+              style="width: 90px; cursor: pointer;"
+              onClick={() => handlePromotionChoice('b')}
+            />
+            <img
+              src={`/assets/${pendingPromotion()!.color}N.svg`}
+              alt="Promote to Knight"
+              style="width: 90px; cursor: pointer;"
+              onClick={() => handlePromotionChoice('n')}
+            />
+          </div>
         </PlayModal>
       </Show>
     </div>

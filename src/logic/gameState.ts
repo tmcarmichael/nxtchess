@@ -18,18 +18,17 @@ export const getLegalMoves = (fen: string, square: Square): Square[] => {
   return legalMoves.map((move) => move.to as Square);
 };
 
-export const updateGameState = (state: GameState, from: Square, to: Square): GameState => {
+export const updateGameState = (
+  state: GameState,
+  from: Square,
+  to: Square,
+  promotion?: 'q' | 'r' | 'n' | 'b'
+): GameState => {
   const chess = new Chess(state.fen);
-  debugLog('Updating game state...', 'From:', from, 'To:', to);
-  const chessMove = chess.move({ from, to });
-  if (!chessMove) {
-    console.error(`Invalid move from ${from} to ${to}, FEN: ${state.fen}`);
-    throw new Error(`Invalid move from ${from} to ${to}`);
-  }
-  const newFen = chess.fen();
-  debugLog('New FEN after move:', newFen);
+  const move = chess.move({ from, to, promotion });
+  if (!move) throw new Error(`Invalid move from ${from} to ${to} (promotion=${promotion})`);
   return {
-    fen: newFen,
+    fen: chess.fen(),
     isGameOver: chess.isGameOver(),
   };
 };
