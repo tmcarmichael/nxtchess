@@ -28,6 +28,9 @@ const SiteHeader = (props: { children?: any }) => {
             <button class={styles.button} onClick={() => alert('Puzzles placeholder')}>
               Puzzles
             </button>
+            <button class={styles.button} onClick={() => alert('Database placeholder')}>
+              Database
+            </button>
             <button class={styles.button} onClick={() => alert('Sign In placeholder')}>
               Sign In
             </button>
