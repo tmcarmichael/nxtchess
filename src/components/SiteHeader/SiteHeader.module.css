@@ -23,6 +23,7 @@
   cursor: pointer;
   color: rgb(207, 207, 207);
   transition: color 0.2s ease-in-out;
+  user-select: none;
 }
 
 .title:hover {
@@ -50,10 +51,27 @@
   transition:
     background-color 0.3s ease-in-out,
     color 0.3s ease-in-out;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .button:hover {
   color: #2adeaeed;
+  outline: none;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.button:focus,
+.button:active {
+  outline: none;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+button::-moz-focus-inner {
+  border: 0;
 }
 
 .mainContent {

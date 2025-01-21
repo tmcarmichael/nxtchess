@@ -1,5 +1,6 @@
 import { useLocation } from '@solidjs/router';
 import ChessGame from '../ChessGame/ChessGame';
+import GamePanel from '../GamePanel/GamePanel';
 import styles from './GameContainer.module.css';
 import { GameRouteState } from '../../types';
 
@@ -19,8 +20,13 @@ const GameContainer = () => {
         <p>Time Control: {timeControl} minutes</p>
         <p>Difficulty: {difficulty}</p>
       </div>
-      <div class={styles.chessboard}>
-        <ChessGame timeControl={timeControl} />
+      <div class={styles.gameLayout}>
+        <div class={styles.boardWrapper}>
+          <ChessGame timeControl={timeControl} />
+        </div>
+        <div class={styles.panelWrapper}>
+          <GamePanel />
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { createSignal, createMemo, batch, onMount, onCleanup, Show } from 'solid-js';
-import { Square } from '../../types';
+import { Square, PromotionPiece } from '../../types';
 import { fenToBoard } from '../../logic/fenLogic';
 import {
   initializeGame,
@@ -11,7 +11,8 @@ import {
 } from '../../logic/gameState';
 import { debugLog } from '../../utils';
 import ChessBoard from '../ChessBoard/ChessBoard';
-import PlayModal from '../PlayModal/PlayModal';
+import GameEndModal from '../GameEndModal/GameEndModal';
+import PromotionModal from '../PromotionModal/PromotionModal';
 import styles from './ChessGame.module.css';
 
 const ChessGame = ({ timeControl }: { timeControl: number }) => {
@@ -281,48 +282,23 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
         />
       </div>
       <Show when={isGameOver()}>
-        <PlayModal onClose={() => resetGame()}>
-          <h2>Game Over</h2>
-          <p>
-            {gameOverReason() === 'checkmate' &&
-              `Checkmate ${gameWinner() === 'w' ? 'White' : 'Black'} wins!`}
-            {gameOverReason() === 'stalemate' && "Stalemate - it's a draw!"}
-            {gameOverReason() === 'time' &&
-              `Time ${gameWinner() === 'w' ? 'White' : 'Black'} wins!`}
-          </p>
-          <button onClick={() => resetGame()}>Play Again</button>
-        </PlayModal>
+        <GameEndModal
+          onClose={() => resetGame()}
+          onRestart={() => resetGame()}
+          gameOverReason={gameOverReason()}
+          gameWinner={gameWinner()}
+        />
       </Show>
+
       <Show when={pendingPromotion()}>
-        <PlayModal onClose={() => setPendingPromotion(null)}>
-          <h2>Promote Pawn</h2>
-          <div style="display: flex; gap: 1.2rem;">
-            <img
-              src={`/assets/${pendingPromotion()!.color}Q.svg`}
-              alt="Promote to Queen"
-              style="width: 90px; cursor: pointer;"
-              onClick={() => handlePromotionChoice('q')}
-            />
-            <img
-              src={`/assets/${pendingPromotion()!.color}R.svg`}
-              alt="Promote to Rook"
-              style="width: 90px; cursor: pointer;"
-              onClick={() => handlePromotionChoice('r')}
-            />
-            <img
-              src={`/assets/${pendingPromotion()!.color}B.svg`}
-              alt="Promote to Bishop"
-              style="width: 90px; cursor: pointer;"
-              onClick={() => handlePromotionChoice('b')}
-            />
-            <img
-              src={`/assets/${pendingPromotion()!.color}N.svg`}
-              alt="Promote to Knight"
-              style="width: 90px; cursor: pointer;"
-              onClick={() => handlePromotionChoice('n')}
-            />
-          </div>
-        </PlayModal>
+        <PromotionModal
+          color={pendingPromotion()!.color}
+          onPromote={(piece: PromotionPiece) => {
+            handlePromotionChoice(piece);
+            setPendingPromotion(null);
+          }}
+          onClose={() => setPendingPromotion(null)}
+        />
       </Show>
     </div>
   );

@@ -1,12 +1,11 @@
 .container {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
   width: 100%;
-  height: calc(100vh - 60px);
+  min-height: 100vh;
   text-align: center;
-  padding-top: 20px;
+  padding-top: 10rem;
   box-sizing: border-box;
 }
 
@@ -15,15 +14,21 @@
 }
 
 .details {
-  margin-top: 200px;
   margin-bottom: 10px;
-  font-size: 1rem;
 }
 
-.chessboard {
+.gameLayout {
   display: flex;
   justify-content: center;
-  align-items: center;
-  margin: 0 auto;
-  max-width: 100%;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.boardWrapper {
+  display: flex;
+}
+
+.panelWrapper {
+  display: flex;
 }
