@@ -5,6 +5,7 @@
   height: 100vh;
   width: 100vw;
   background-color: #1e1e1e;
+  background: linear-gradient(350deg, rgb(60, 60, 60), rgb(30, 30, 30));
   gap: 15px;
   box-sizing: border-box;
   margin: 0;

@@ -8,24 +8,108 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  animation: fadeIn 0.25s forwards;
+  z-index: 9999;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modalContent {
-  background: rgb(117, 117, 117);
-  padding: 20px;
+  position: relative;
+  background: #2c2c2c;
+  color: #f0f0f0;
+  padding: 24px;
   border-radius: 8px;
   width: 90%;
   max-width: 400px;
-  text-align: center;
-  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transform: translateY(-15px);
+  animation: slideDown 0.25s forwards;
+}
+
+@keyframes slideDown {
+  to {
+    transform: translateY(0);
+  }
 }
 
 .closeButton {
   position: absolute;
   top: 10px;
-  right: 10px;
+  right: 12px;
   border: none;
   background: none;
   font-size: 1.5em;
+  color: #aaa;
   cursor: pointer;
+  transition: color 0.2s ease;
+}
+.closeButton:hover {
+  color: #fff;
+}
+
+.modalContent h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.settings > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.settings label {
+  font-weight: 600;
+}
+
+.settings select {
+  padding: 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #666;
+  background: #fff;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+}
+
+.settings select:focus {
+  border-color: #007bff;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.modalActions button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.modalActions button:hover {
+  background: #005bbd;
 }

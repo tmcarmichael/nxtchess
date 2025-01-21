@@ -83,3 +83,5 @@ export interface PieceProps {
 }
 
 export type Board = (PieceType | null)[][];
+
+export type PromotionPiece = 'q' | 'r' | 'b' | 'n';
