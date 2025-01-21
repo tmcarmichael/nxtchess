@@ -6,7 +6,7 @@
 [![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4)](https://prettier.io/docs/en/why-prettier)
 
 <div style="text-align: center;">
-  <img src="public/assets/early-demo.gif" alt="Early demo" />
+  <img src="public/assets/nxtchess-1-20-25.gif" alt="Early demo" />
 </div>
 
 ## 🚀 Vision
@@ -52,14 +52,14 @@ The frontend is built with **SolidJS**, a modern JavaScript library known for it
 
 What’s planned?
 
-### Phase 1: Core Gameplay
+### Phase 1: Core Gameplay ✅
 
 - [x] Chessboard rendering.
 - [x] Responsive design.
 - [x] Implement full chess rules (move validation, checkmate detection, etc.).
 - [x] Add drag-and-drop functionality for intuitive piece movement.
 - [x] Highlight squares for legal moves when clicking pieces.
-- [ ] Checkmate, game end, and game restart logic
+- [x] Checkmate, game end, and game restart logic
 
 ### Phase 2: Core Non-Gameplay elements
 

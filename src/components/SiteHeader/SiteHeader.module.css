@@ -51,7 +51,6 @@
   transition:
     background-color 0.3s ease-in-out,
     color 0.3s ease-in-out;
-  -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
