@@ -3,19 +3,7 @@ import styles from './ChessBoard.module.css';
 import Piece from '../Piece/Piece';
 import { Square, PieceType, BoardSquare, Side } from '../../types';
 
-const ChessBoard = ({
-  board,
-  highlightedMoves,
-  selectedSquare,
-  draggedPiece,
-  cursorPosition,
-  lastMove,
-  onSquareClick,
-  onSquareMouseUp,
-  onDragStart,
-  checkedKingSquare,
-  orientation,
-}: {
+interface ChessBoardProps {
   board: () => BoardSquare[];
   highlightedMoves: () => Square[];
   selectedSquare: () => Square | null;
@@ -27,18 +15,32 @@ const ChessBoard = ({
   onDragStart: (square: Square, piece: string, event: DragEvent) => void;
   checkedKingSquare: () => Square | null;
   orientation: () => Side;
-}) => {
+}
+
+const ChessBoard = (props: ChessBoardProps) => {
+  const {
+    board,
+    highlightedMoves,
+    selectedSquare,
+    draggedPiece,
+    cursorPosition,
+    lastMove,
+    onSquareClick,
+    onSquareMouseUp,
+    onDragStart,
+    checkedKingSquare,
+    orientation,
+  } = props;
   const renderDraggedPiece = () => {
     const dragState = draggedPiece();
     if (!dragState) return null;
-
-    const cursor = cursorPosition();
+    const { x, y } = cursorPosition();
     return (
       <div
         class={styles.draggedPiece}
         style={{
-          top: `${cursor.y}px`,
-          left: `${cursor.x}px`,
+          top: `${y}px`,
+          left: `${x}px`,
         }}
       >
         <Piece type={dragState.piece as PieceType} />
@@ -48,16 +50,13 @@ const ChessBoard = ({
 
   const squares = createMemo(() => {
     const squaresToRender = orientation() === 'b' ? [...board()].reverse() : board();
-
-    function buildSquare({ square, piece }: BoardSquare) {
+    return squaresToRender.map(({ square, piece }: BoardSquare) => {
       const file = square[0];
       const rank = square[1];
-      const isHighlightedMove = highlightedMoves().includes(square);
+      const isHighlighted = highlightedMoves().includes(square);
       const isSelected = selectedSquare() === square;
       const isDragging = draggedPiece()?.square === square;
-      const isLastMove = Boolean(
-        lastMove() && (lastMove()!.from === square || lastMove()!.to === square)
-      );
+      const isLastMove = lastMove() && (lastMove()!.from === square || lastMove()!.to === square);
       const isEnemyPiece = piece && draggedPiece()?.piece[0] !== piece[0];
       const isCheckedKing = checkedKingSquare() === square;
       const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
@@ -73,7 +72,7 @@ const ChessBoard = ({
             [styles.light]: isLightSquare,
             [styles.dark]: !isLightSquare,
             [styles.selected]: isSelected,
-            [styles.lastMove]: isLastMove,
+            [styles.lastMove]: Boolean(isLastMove),
             [styles.checkedKing]: isCheckedKing,
           }}
           onClick={() => onSquareClick(square)}
@@ -81,7 +80,7 @@ const ChessBoard = ({
         >
           {showFile && <span class={styles.fileLabel}>{file}</span>}
           {showRank && <span class={styles.rankLabel}>{rank}</span>}
-          {isHighlightedMove && (
+          {isHighlighted && (
             <div class={`${styles.highlightDot} ${isEnemyPiece ? styles.enemyDot : ''}`} />
           )}
           {piece && (
@@ -94,9 +93,7 @@ const ChessBoard = ({
           )}
         </div>
       );
-    }
-
-    return squaresToRender.map(buildSquare);
+    });
   });
 
   return (

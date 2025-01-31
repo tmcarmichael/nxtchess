@@ -11,9 +11,6 @@ const GamePanel = () => {
 
   return (
     <div class={styles.panel}>
-      {/* <div class={styles.clock}>
-        <p>Timer Placeholder</p>
-      </div> */}
       <div class={styles.info}>
         <p>Debug placeholder game text</p>
       </div>
