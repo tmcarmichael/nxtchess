@@ -1,13 +1,19 @@
+// SiteHeader.tsx
 import { useNavigate } from '@solidjs/router';
 import { createSignal, Show } from 'solid-js';
 import styles from './SiteHeader.module.css';
 import PlayModal from '../PlayModal/PlayModal';
+import { Side } from '../../types';
 
 const SiteHeader = (props: { children?: any }) => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
-  const handleStartGame = (timeControl: number, difficulty: string, side: 'w' | 'b') => {
-    navigate('/game', { state: { timeControl, difficulty, side } });
+
+  const handleStartGame = (timeControl: number, difficulty: string, side: Side) => {
+    navigate('/game', {
+      replace: true,
+      state: { timeControl, difficulty, side },
+    });
     setIsModalOpen(false);
   };
 
@@ -20,19 +26,19 @@ const SiteHeader = (props: { children?: any }) => {
           </h1>
           <div class={styles.buttonPanel}>
             <button class={styles.button} onClick={() => setIsModalOpen(true)}>
-              Play
+              <span>Play</span>
             </button>
             <button class={styles.button} onClick={() => alert('Tools placeholder')}>
-              Tools
+              <span>Tools</span>
             </button>
             <button class={styles.button} onClick={() => alert('Puzzles placeholder')}>
-              Puzzles
+              <span>Puzzles</span>
             </button>
             <button class={styles.button} onClick={() => alert('Database placeholder')}>
-              Database
+              <span>Database</span>
             </button>
             <button class={styles.button} onClick={() => alert('Sign In placeholder')}>
-              Sign In
+              <span>Sign In</span>
             </button>
           </div>
         </div>

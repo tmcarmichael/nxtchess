@@ -1,8 +1,7 @@
 import { createSignal, Show, For } from 'solid-js';
 import styles from './PlayModal.module.css';
+import { Difficulty, Side } from '../../types';
 
-type Difficulty = 'easy' | 'medium' | 'hard';
-type Side = 'w' | 'b';
 const TIME_CONTROL_OPTIONS = [3, 5, 10];
 const DIFFICULTY_OPTIONS: Difficulty[] = ['easy', 'medium', 'hard'];
 const SIDE_OPTIONS: { value: Side; label: string }[] = [

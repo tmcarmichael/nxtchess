@@ -1,11 +1,17 @@
+* {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  user-select: none;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
   width: 100%;
   height: 100%;
-  background-color: rgb(49, 49, 49);
-  box-sizing: border-box;
+  background-color: #1e1e1e;
+  background: linear-gradient(350deg, rgb(54, 52, 52), rgb(30, 30, 30));
 }

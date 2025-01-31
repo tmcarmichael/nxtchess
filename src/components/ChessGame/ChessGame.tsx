@@ -1,5 +1,5 @@
-import { createSignal, createMemo, batch, onMount, onCleanup, Show } from 'solid-js';
-import { Square, PromotionPiece } from '../../types';
+import { createSignal, createMemo, batch, onMount, onCleanup, Show, createEffect } from 'solid-js';
+import { Square, PromotionPiece, Difficulty, Side } from '../../types';
 import { fenToBoard } from '../../logic/fenLogic';
 import {
   initializeGame,
@@ -15,7 +15,15 @@ import GameEndModal from '../GameEndModal/GameEndModal';
 import PromotionModal from '../PromotionModal/PromotionModal';
 import styles from './ChessGame.module.css';
 
-const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b' }) => {
+const ChessGame = ({
+  timeControl,
+  difficulty,
+  side,
+}: {
+  timeControl: number;
+  difficulty: Difficulty;
+  side: Side;
+}) => {
   const [fen, setFen] = createSignal(initializeGame().fen);
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
@@ -26,20 +34,21 @@ const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b'
   const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
   const [whiteTime, setWhiteTime] = createSignal(timeControl * 60);
   const [blackTime, setBlackTime] = createSignal(timeControl * 60);
-  const [currentPlayer, setCurrentPlayer] = createSignal<'w' | 'b'>('w');
+  const [currentPlayer, setCurrentPlayer] = createSignal<Side>('w');
   const [isGameOver, setIsGameOver] = createSignal(false);
   const [gameOverReason, setGameOverReason] = createSignal<
     'checkmate' | 'stalemate' | 'time' | null
   >(null);
-  const [gameWinner, setGameWinner] = createSignal<'w' | 'b' | 'draw' | null>(null);
+  const [gameWinner, setGameWinner] = createSignal<Side | 'draw' | null>(null);
   const [checkedKingSquare, setCheckedKingSquare] = createSignal<Square | null>(null);
   const [pendingPromotion, setPendingPromotion] = createSignal<{
     from: Square;
     to: Square;
-    color: 'w' | 'b';
+    color: Side;
   } | null>(null);
-  const [orientation, setOrientation] = createSignal<'w' | 'b'>(side);
 
+  const [orientation, setOrientation] = createSignal<Side>(side);
+  const [aiDifficulty, setAiDifficulty] = createSignal<Difficulty>(difficulty);
   const board = createMemo(() => fenToBoard(fen()));
   let timerId: number | undefined;
 
@@ -52,26 +61,50 @@ const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b'
       }
       if (currentPlayer() === 'w') {
         setWhiteTime((t) => Math.max(0, t - 1));
-        if (whiteTime() <= 1) {
-          handleTimeOut('b');
-        }
+        if (whiteTime() <= 1) handleTimeOut('b');
       } else {
         setBlackTime((t) => Math.max(0, t - 1));
-        if (blackTime() <= 1) {
-          handleTimeOut('w');
-        }
+        if (blackTime() <= 1) handleTimeOut('w');
       }
     }, 1000) as unknown as number;
-    onCleanup(() => clearInterval(timerId));
   };
 
-  onMount(() => startTimer());
   onCleanup(() => {
     if (timerId) clearInterval(timerId);
   });
 
-  const handleTimeOut = (winnerColor: 'w' | 'b') => {
-    clearInterval(timerId);
+  onMount(() => {
+    startTimer();
+  });
+
+  createEffect(() => {
+    debugLog('Props changed => timeControl, difficulty, side', {
+      timeControl,
+      difficulty,
+      side,
+    });
+
+    if (timerId) clearInterval(timerId);
+
+    batch(() => {
+      setFen(initializeGame().fen);
+      setWhiteTime(timeControl * 60);
+      setBlackTime(timeControl * 60);
+      setOrientation(side);
+      setAiDifficulty(difficulty);
+
+      setCurrentPlayer('w');
+      setLastMove(null);
+      setIsGameOver(false);
+      setGameOverReason(null);
+      setGameWinner(null);
+      setCheckedKingSquare(null);
+    });
+    startTimer();
+  });
+
+  const handleTimeOut = (winnerColor: Side) => {
+    if (timerId) clearInterval(timerId);
     setIsGameOver(true);
     setGameOverReason('time');
     setGameWinner(winnerColor);
@@ -122,7 +155,7 @@ const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b'
   };
 
   const isPlayerTurn = (square: Square) => {
-    const currentTurn = fen().split(' ')[1];
+    const currentTurn = fen().split(' ')[1]; // "w" or "b"
     const piece = board().find(({ square: sq }) => sq === square)?.piece;
     return piece && piece[0] === currentTurn;
   };
@@ -156,11 +189,7 @@ const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b'
       return;
     }
     if (isPawnPromotion(movingPiece, to)) {
-      setPendingPromotion({
-        from,
-        to,
-        color: movingPiece[0] as 'w' | 'b',
-      });
+      setPendingPromotion({ from, to, color: movingPiece[0] as Side });
       clearDraggingState();
       return;
     }
@@ -187,15 +216,15 @@ const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b'
     }
   };
 
-  function isPawnPromotion(piece: string | null, to: Square): boolean {
+  const isPawnPromotion = (piece: string | null, to: Square): boolean => {
     if (!piece || !piece.endsWith('P')) return false;
     const rank = parseInt(to[1], 10);
     if (piece.startsWith('w') && rank === 8) return true;
     if (piece.startsWith('b') && rank === 1) return true;
     return false;
-  }
+  };
 
-  const finalizePromotion = (from: Square, to: Square, promotion: 'q' | 'r' | 'n' | 'b') => {
+  const finalizePromotion = (from: Square, to: Square, promotion: PromotionPiece) => {
     try {
       const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to, promotion);
       batch(() => {
@@ -219,25 +248,25 @@ const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b'
     }
   };
 
-  const handlePromotionChoice = (pieceType: 'q' | 'r' | 'n' | 'b') => {
+  const handlePromotionChoice = (pieceType: PromotionPiece) => {
     const promo = pendingPromotion();
     if (!promo) return;
     finalizePromotion(promo.from, promo.to, pieceType);
   };
 
-  const checkGameEnd = (fen: string) => {
-    if (isCheckmate(fen)) {
+  const checkGameEnd = (newFen: string) => {
+    if (isCheckmate(newFen)) {
       const winner = currentPlayer() === 'w' ? 'b' : 'w';
       setGameWinner(winner);
       setIsGameOver(true);
       setGameOverReason('checkmate');
-      clearInterval(timerId);
+      if (timerId) clearInterval(timerId);
       debugLog('Checkmate');
-    } else if (isStalemate(fen)) {
+    } else if (isStalemate(newFen)) {
       setGameWinner('draw');
       setIsGameOver(true);
       setGameOverReason('stalemate');
-      clearInterval(timerId);
+      if (timerId) clearInterval(timerId);
       debugLog('Stalemate!');
     }
   };
@@ -247,6 +276,7 @@ const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b'
   };
 
   const resetGame = (newTimeControl?: number) => {
+    if (timerId) clearInterval(timerId);
     const finalTimeControl = newTimeControl ?? timeControl;
 
     batch(() => {
@@ -264,20 +294,22 @@ const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b'
     startTimer();
   };
 
-  const flipOrientation = () => setOrientation((o) => (o === 'w' ? 'b' : 'w'));
+  const flipOrientation = () => {
+    setOrientation((o) => (o === 'w' ? 'b' : 'w'));
+  };
 
   return (
-    <div onMouseMove={handleMouseMove} class={styles.container}>
-      <div class={styles.timer}>
+    <div onMouseMove={handleMouseMove} class={styles.chessGameContainer}>
+      <div class={styles.gameInfoDebug}>
         <div>White Time: {whiteTime()} seconds</div>
         <div>Black Time: {blackTime()} seconds</div>
+        <div>Difficulty: {aiDifficulty()}</div>
+        <div>Side: {orientation() === 'w' ? 'white' : 'black'}</div>
       </div>
 
-      <div class={styles.flipButtonContainer}>
-        <button onClick={flipOrientation} class={styles.flipButton}>
-          Flip Board 🔄
-        </button>
-      </div>
+      <button onClick={flipOrientation} class={styles.flipButton}>
+        <span>Flip Board 🔄</span>
+      </button>
 
       <div class={styles.chessboardContainer}>
         <ChessBoard
@@ -307,10 +339,7 @@ const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b'
       <Show when={pendingPromotion()}>
         <PromotionModal
           color={pendingPromotion()!.color}
-          onPromote={(piece: PromotionPiece) => {
-            handlePromotionChoice(piece);
-            setPendingPromotion(null);
-          }}
+          onPromote={handlePromotionChoice}
           onClose={() => setPendingPromotion(null)}
         />
       </Show>
