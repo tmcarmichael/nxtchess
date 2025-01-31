@@ -15,7 +15,7 @@ import GameEndModal from '../GameEndModal/GameEndModal';
 import PromotionModal from '../PromotionModal/PromotionModal';
 import styles from './ChessGame.module.css';
 
-const ChessGame = ({ timeControl }: { timeControl: number }) => {
+const ChessGame = ({ timeControl, side }: { timeControl: number; side: 'w' | 'b' }) => {
   const [fen, setFen] = createSignal(initializeGame().fen);
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
@@ -38,9 +38,11 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     to: Square;
     color: 'w' | 'b';
   } | null>(null);
+  const [orientation, setOrientation] = createSignal<'w' | 'b'>(side);
 
   const board = createMemo(() => fenToBoard(fen()));
   let timerId: number | undefined;
+
   const startTimer = () => {
     if (timerId) clearInterval(timerId);
     timerId = setInterval(() => {
@@ -62,6 +64,7 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     }, 1000) as unknown as number;
     onCleanup(() => clearInterval(timerId));
   };
+
   onMount(() => startTimer());
   onCleanup(() => {
     if (timerId) clearInterval(timerId);
@@ -261,12 +264,21 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
     startTimer();
   };
 
+  const flipOrientation = () => setOrientation((o) => (o === 'w' ? 'b' : 'w'));
+
   return (
     <div onMouseMove={handleMouseMove} class={styles.container}>
       <div class={styles.timer}>
         <div>White Time: {whiteTime()} seconds</div>
         <div>Black Time: {blackTime()} seconds</div>
       </div>
+
+      <div class={styles.flipButtonContainer}>
+        <button onClick={flipOrientation} class={styles.flipButton}>
+          Flip Board 🔄
+        </button>
+      </div>
+
       <div class={styles.chessboardContainer}>
         <ChessBoard
           board={board}
@@ -279,8 +291,10 @@ const ChessGame = ({ timeControl }: { timeControl: number }) => {
           onSquareMouseUp={handleMouseUp}
           onDragStart={handleDragStart}
           checkedKingSquare={checkedKingSquare}
+          orientation={orientation}
         />
       </div>
+
       <Show when={isGameOver()}>
         <GameEndModal
           onClose={() => resetGame()}

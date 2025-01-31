@@ -6,8 +6,8 @@ import PlayModal from '../PlayModal/PlayModal';
 const SiteHeader = (props: { children?: any }) => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
-  const handleStartGame = (timeControl: number, difficulty: string) => {
-    navigate('/game', { state: { timeControl, difficulty } });
+  const handleStartGame = (timeControl: number, difficulty: string, side: 'w' | 'b') => {
+    navigate('/game', { state: { timeControl, difficulty, side } });
     setIsModalOpen(false);
   };
 

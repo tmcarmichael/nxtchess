@@ -106,8 +106,8 @@ What’s planned?
 
 ### Prerequisites
 
-- **Node.js** (v16 or later)
-- **npm** (v7 or later)
+- **Node.js** (>v16)
+- **pnpm**
 
 ### Installation
 
@@ -121,11 +121,11 @@ What’s planned?
    ```
 3. Install dependencies:
    ```bash
-   npm install
+   pnpm install
    ```
 4. Start the development server:
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 5. Open your browser and navigate to the localhost port suggested by Vite, such as:
    ```

@@ -6,4 +6,5 @@ export interface GameState {
 export interface GameRouteState {
   timeControl: number;
   difficulty: string;
+  side: 'w' | 'b';
 }
