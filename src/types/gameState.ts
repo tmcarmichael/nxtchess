@@ -5,6 +5,9 @@ export interface GameState {
 
 export interface GameRouteState {
   timeControl: number;
-  difficulty: string;
-  side: 'w' | 'b';
+  difficulty: Difficulty;
+  side: Side;
 }
+
+export type Difficulty = 'easy' | 'medium' | 'hard';
+export type Side = 'w' | 'b';

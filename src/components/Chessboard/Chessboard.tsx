@@ -1,15 +1,7 @@
 import { createMemo } from 'solid-js';
 import styles from './ChessBoard.module.css';
 import Piece from '../Piece/Piece';
-import { Square, PieceType, BoardSquare } from '../../types';
-
-function shouldShowFileLabel(rank: string, orientation: 'w' | 'b'): boolean {
-  return (orientation === 'w' && rank === '1') || (orientation === 'b' && rank === '8');
-}
-
-function shouldShowRankLabel(file: string, orientation: 'w' | 'b'): boolean {
-  return (orientation === 'w' && file === 'h') || (orientation === 'b' && file === 'a');
-}
+import { Square, PieceType, BoardSquare, Side } from '../../types';
 
 const ChessBoard = ({
   board,
@@ -34,7 +26,7 @@ const ChessBoard = ({
   onSquareMouseUp: (square: Square) => void;
   onDragStart: (square: Square, piece: string, event: DragEvent) => void;
   checkedKingSquare: () => Square | null;
-  orientation: () => 'w' | 'b';
+  orientation: () => Side;
 }) => {
   const renderDraggedPiece = () => {
     const dragState = draggedPiece();
@@ -69,8 +61,10 @@ const ChessBoard = ({
       const isEnemyPiece = piece && draggedPiece()?.piece[0] !== piece[0];
       const isCheckedKing = checkedKingSquare() === square;
       const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
-      const showFile = shouldShowFileLabel(rank, orientation());
-      const showRank = shouldShowRankLabel(file, orientation());
+      const showFile =
+        (orientation() === 'w' && rank === '1') || (orientation() === 'b' && rank === '8');
+      const showRank =
+        (orientation() === 'w' && file === 'h') || (orientation() === 'b' && file === 'a');
 
       return (
         <div

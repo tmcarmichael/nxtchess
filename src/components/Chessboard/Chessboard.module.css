@@ -1,13 +1,9 @@
-* {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  user-select: none;
-}
-
-.board-container {
+.boardContainer {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
+  height: auto;
+  min-height: 500px;
 }
 
 .board {
@@ -16,6 +12,7 @@
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
   border: 2px solid #333;
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
 }
 
 .square {
@@ -48,7 +45,7 @@
 }
 
 .enemyDot {
-  background-color: rgba(166, 52, 52, 0.902);
+  background-color: rgba(166, 52, 52, 0.9);
 }
 
 .draggedPiece {
@@ -69,20 +66,20 @@
 
 .fileLabel {
   position: absolute;
-  opacity: 70%;
   bottom: 2px;
   left: 2px;
   font-size: 0.8rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.6);
+  opacity: 0.7;
 }
 
 .rankLabel {
   position: absolute;
-  opacity: 70%;
   top: 2px;
   right: 2px;
   font-size: 0.8rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.6);
+  opacity: 0.7;
 }

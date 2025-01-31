@@ -11,15 +11,22 @@ const GamePanel = () => {
 
   return (
     <div class={styles.panel}>
-      <div class={styles.clock}>
+      {/* <div class={styles.clock}>
         <p>Timer Placeholder</p>
-      </div>
+      </div> */}
       <div class={styles.info}>
-        <p>You play the white pieces</p>
+        <p>Debug placeholder game text</p>
       </div>
-      <div class={styles.actions}>
-        <button onClick={handleResign}>Resign</button>
-        <button onClick={handleOfferDraw}>Offer Draw</button>
+      <div>
+        <button class={styles.panelButton} onClick={handleResign}>
+          <span>Resign</span>
+        </button>
+      </div>
+      <div class={styles.divider} />
+      <div>
+        <button class={styles.panelButton} onClick={handleOfferDraw}>
+          <span>Offer Draw</span>
+        </button>
       </div>
     </div>
   );

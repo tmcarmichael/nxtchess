@@ -1,4 +1,4 @@
-.container {
+.chessGameContainer {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -8,8 +8,13 @@
   position: relative;
 }
 
-.timer {
-  margin-bottom: 20px;
+.gameInfoDebug {
+  position: absolute;
+  top: -50px;
+  right: -265px;
+  z-index: 9999;
+  color: rgb(171, 109, 38);
+  font-size: 1rem;
 }
 
 .chessboardContainer {
@@ -20,19 +25,31 @@
 
 .flipButton {
   position: absolute;
-  top: -220px;
-  right: -140px;
+  top: -250px;
+  right: -160px;
   padding: 8px 18px;
   font-size: 1rem;
   cursor: pointer;
   border: none;
   border-radius: 6px;
-  background-color: #595959;
+  background-color: #4a4a4a;
   color: white;
-  transition: background-color 0.5s ease;
-  margin: 0;
+  transition:
+    background-color 0.3s ease,
+    transform 0.4s ease-in-out;
+  box-shadow: 8px 8px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
 .flipButton:hover {
   background-color: #434343;
+}
+
+.flipButton span {
+  display: inline-block;
+  transition: transform 0.4s ease-in-out;
+}
+
+.flipButton:hover span {
+  transform: scale(1.03);
 }
