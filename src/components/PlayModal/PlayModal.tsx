@@ -1,100 +1,95 @@
-import { createSignal, Show, For } from 'solid-js';
+import { createSignal, For } from 'solid-js';
 import styles from './PlayModal.module.css';
-import { Difficulty, Side } from '../../types';
+import { PlayModalProps, Difficulty, Side } from '../../types';
 
-const TIME_CONTROL_OPTIONS = [3, 5, 10];
-const DIFFICULTY_OPTIONS: Difficulty[] = ['easy', 'medium', 'hard'];
-const SIDE_OPTIONS: { value: Side; label: string }[] = [
-  { value: 'w', label: 'White' },
-  { value: 'b', label: 'Black' },
-];
-
-export interface PlayModalProps {
-  onClose: () => void;
-  onStartGame: (timeControl: number, difficulty: Difficulty, side: Side) => void;
-}
-
-export default function PlayModal(props: PlayModalProps) {
-  const [timeControl, setTimeControl] = createSignal<number>(5);
-  const [difficulty, setDifficulty] = createSignal<Difficulty>('medium');
-  const [side, setSide] = createSignal<Side>('w');
-
+export default function PlayModal({
+  onClose,
+  onStartGame,
+  initialSettings,
+  timeControlOptions = [3, 5, 10],
+  difficultyOptions = ['easy', 'medium', 'hard'],
+  sideOptions = [
+    { value: 'w', label: 'White' },
+    { value: 'b', label: 'Black' },
+  ],
+}: PlayModalProps) {
+  const [timeControl, setTimeControl] = createSignal(initialSettings.timeControl);
+  const [difficulty, setDifficulty] = createSignal<Difficulty>(initialSettings.difficulty);
+  const [side, setSide] = createSignal<Side>(initialSettings.side);
+  const isSelected = (val: unknown, current: unknown) => val === current;
   const handleStartGame = () => {
-    props.onStartGame(timeControl(), difficulty(), side());
-    props.onClose();
+    onStartGame({
+      timeControl: timeControl(),
+      difficulty: difficulty(),
+      side: side(),
+    });
+    onClose();
   };
-  const isSelected = (currentVal: any, signalVal: any) => currentVal === signalVal;
 
   return (
-    <div class={styles.modalOverlay} onClick={props.onClose}>
+    <div class={styles.modalOverlay} onClick={onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <button class={styles.closeButton} onClick={onClose} aria-label="Close Modal">
+          &times;
+        </button>
         <h2>Game Settings</h2>
-        <Show when={TIME_CONTROL_OPTIONS.length > 0}>
-          <div class={styles.settingRow}>
-            <label class={styles.label}>Time Control</label>
-            <div class={styles.optionRow}>
-              <For each={TIME_CONTROL_OPTIONS}>
-                {(option) => (
-                  <button
-                    classList={{
-                      [styles.optionButton]: true,
-                      [styles.selected]: isSelected(option, timeControl()),
-                    }}
-                    onClick={() => setTimeControl(option)}
-                  >
-                    {option} min
-                  </button>
-                )}
-              </For>
-            </div>
+        <div class={styles.settingRow}>
+          <label class={styles.label}>Time Control</label>
+          <div class={styles.optionRow}>
+            <For each={timeControlOptions}>
+              {(option) => (
+                <button
+                  classList={{
+                    [styles.optionButton]: true,
+                    [styles.selected]: isSelected(option, timeControl()),
+                  }}
+                  onClick={() => setTimeControl(option)}
+                >
+                  {option} min
+                </button>
+              )}
+            </For>
           </div>
-        </Show>
-        <Show when={DIFFICULTY_OPTIONS.length > 0}>
-          <div class={styles.settingRow}>
-            <label class={styles.label}>Difficulty</label>
-            <div class={styles.optionRow}>
-              <For each={DIFFICULTY_OPTIONS}>
-                {(option) => (
-                  <button
-                    classList={{
-                      [styles.optionButton]: true,
-                      [styles.selected]: isSelected(option, difficulty()),
-                    }}
-                    onClick={() => setDifficulty(option)}
-                  >
-                    {option[0].toUpperCase() + option.slice(1)}
-                  </button>
-                )}
-              </For>
-            </div>
+        </div>
+        <div class={styles.settingRow}>
+          <label class={styles.label}>Difficulty</label>
+          <div class={styles.optionRow}>
+            <For each={difficultyOptions}>
+              {(option) => (
+                <button
+                  classList={{
+                    [styles.optionButton]: true,
+                    [styles.selected]: isSelected(option, difficulty()),
+                  }}
+                  onClick={() => setDifficulty(option)}
+                >
+                  {option[0].toUpperCase() + option.slice(1)}
+                </button>
+              )}
+            </For>
           </div>
-        </Show>
-        <Show when={SIDE_OPTIONS.length > 0}>
-          <div class={styles.settingRow}>
-            <label class={styles.label}>Play As</label>
-            <div class={styles.optionRow}>
-              <For each={SIDE_OPTIONS}>
-                {(option) => (
-                  <button
-                    classList={{
-                      [styles.optionButton]: true,
-                      [styles.selected]: isSelected(option.value, side()),
-                    }}
-                    onClick={() => setSide(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                )}
-              </For>
-            </div>
+        </div>
+        <div class={styles.settingRow}>
+          <label class={styles.label}>Play As</label>
+          <div class={styles.optionRow}>
+            <For each={sideOptions}>
+              {(option) => (
+                <button
+                  classList={{
+                    [styles.optionButton]: true,
+                    [styles.selected]: isSelected(option.value, side()),
+                  }}
+                  onClick={() => setSide(option.value)}
+                >
+                  {option.label}
+                </button>
+              )}
+            </For>
           </div>
-        </Show>
+        </div>
         <div class={styles.modalActions}>
           <button onClick={handleStartGame}>Start Game</button>
         </div>
-        <button class={styles.closeButton} onClick={props.onClose}>
-          &times;
-        </button>
       </div>
     </div>
   );

@@ -1,101 +1,124 @@
 .modalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 9999;
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
 }
 
 .modalContent {
-  background: #2c2c2c;
-  color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 400px;
   position: relative;
+  width: 90%;
+  max-width: 420px;
+  padding: 24px;
+  background: #25362b;
+  color: #c0c0c0;
   text-align: center;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
+}
+
+.modalContent h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  color: rgb(209, 209, 209);
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.5px;
 }
 
 .settingRow {
-  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 1.25rem;
 }
 
 .label {
-  font-weight: bold;
+  font-weight: 600;
   margin-bottom: 0.5rem;
+  color: rgb(200, 200, 200);
+  font-size: 1rem;
 }
 
 .optionRow {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .optionButton {
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 1rem;
   background: #444;
   border: 1px solid #666;
   border-radius: 4px;
-  color: #fff;
+  color: rgb(200, 200, 200);
   cursor: pointer;
+  font-size: 0.9rem;
   transition:
-    background 0.1s ease,
+    background-color 0.2s ease,
     transform 0.2s ease;
 }
 
 .optionButton:hover {
-  background: #555;
-  transform: scale(1.03);
+  background-color: #555;
+  transform: scale(1.02);
 }
 
 .selected {
-  background: #17661f;
-  border-color: #2db03a;
+  background-color: #17661f;
+  border-color: #298432;
 }
 
 .modalActions {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 .modalActions button {
-  background: #005a15;
-  border: 1px solid #666;
-  border-color: #106e93;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: #15824b;
+  border: 1px solid #0c5f34;
   border-radius: 4px;
-  font-size: large;
-  color: #fff;
-  padding: 0.5rem 1rem;
+  color: #d3d3d3;
+  cursor: pointer;
   transition:
-    background 0.1s ease,
+    background-color 0.2s ease,
     transform 0.2s ease;
 }
 
 .modalActions button:hover {
-  background: #555;
+  background-color: #19955a;
   transform: scale(1.03);
+}
+
+.modalActions button:active {
+  background-color: #0c5f34;
+  transform: scale(0.98);
 }
 
 .closeButton {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 14px;
+  right: 14px;
   background: none;
   border: none;
   font-size: 1.5rem;
+  line-height: 1;
+  color: #bbb;
   cursor: pointer;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .closeButton:hover {
-  color: #aaa;
+  color: #fff;
+  transform: scale(1.2);
 }

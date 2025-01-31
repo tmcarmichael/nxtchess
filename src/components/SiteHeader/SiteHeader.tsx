@@ -1,15 +1,15 @@
-// SiteHeader.tsx
 import { useNavigate } from '@solidjs/router';
 import { createSignal, Show } from 'solid-js';
 import styles from './SiteHeader.module.css';
 import PlayModal from '../PlayModal/PlayModal';
-import { Side } from '../../types';
+import { NewGameSettings } from '../../types';
 
 const SiteHeader = (props: { children?: any }) => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
 
-  const handleStartGame = (timeControl: number, difficulty: string, side: Side) => {
+  const handleStartGame = (newSettings: NewGameSettings) => {
+    const { timeControl, difficulty, side } = newSettings;
     navigate('/game', {
       replace: true,
       state: { timeControl, difficulty, side },
@@ -43,11 +43,17 @@ const SiteHeader = (props: { children?: any }) => {
           </div>
         </div>
       </header>
-
       <Show when={isModalOpen()}>
-        <PlayModal onClose={() => setIsModalOpen(false)} onStartGame={handleStartGame} />
+        <PlayModal
+          onClose={() => setIsModalOpen(false)}
+          onStartGame={handleStartGame}
+          initialSettings={{
+            timeControl: 5,
+            difficulty: 'medium',
+            side: 'w',
+          }}
+        />
       </Show>
-
       <main class={styles.mainContent}>{props.children}</main>
     </>
   );
