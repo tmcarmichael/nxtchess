@@ -78,6 +78,11 @@ export type Square =
   | 'h7'
   | 'h8';
 
+export interface BoardSquare {
+  square: Square;
+  piece: string | null;
+}
+
 export interface PieceProps {
   type: PieceType;
 }

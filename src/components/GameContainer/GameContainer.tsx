@@ -3,26 +3,25 @@ import ChessGame from '../ChessGame/ChessGame';
 import GamePanel from '../GamePanel/GamePanel';
 import styles from './GameContainer.module.css';
 import { GameRouteState } from '../../types';
+import { debugLog } from '../../utils';
 
 const GameContainer = () => {
   const location = useLocation<GameRouteState>();
   const timeControl = location.state?.timeControl;
   const difficulty = location.state?.difficulty;
+  const side = location.state?.side;
 
-  if (!timeControl || !difficulty) {
+  if (!timeControl || !difficulty || !side) {
     return <div>Error: Missing game settings. Please return to the homepage.</div>;
   }
 
+  debugLog('GameContainer: ', timeControl, difficulty, side);
+
   return (
     <div class={styles.container}>
-      <h1 class={styles.title}>Game Started!</h1>
-      <div class={styles.details}>
-        <p>Time Control: {timeControl} minutes</p>
-        <p>Difficulty: {difficulty}</p>
-      </div>
       <div class={styles.gameLayout}>
         <div class={styles.boardWrapper}>
-          <ChessGame timeControl={timeControl} />
+          <ChessGame timeControl={timeControl} side={side} />
         </div>
         <div class={styles.panelWrapper}>
           <GamePanel />
