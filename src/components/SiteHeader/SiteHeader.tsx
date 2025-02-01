@@ -1,7 +1,7 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, Show } from 'solid-js';
 import styles from './SiteHeader.module.css';
-import PlayModal from '../PlayModal/PlayModal';
+import PlayModal from '../modals/PlayModal/PlayModal';
 import { NewGameSettings } from '../../types';
 
 const SiteHeader = (props: { children?: any }) => {

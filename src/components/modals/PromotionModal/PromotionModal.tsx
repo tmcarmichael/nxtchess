@@ -1,4 +1,4 @@
-import { PromotionPiece } from '../../types';
+import { PromotionPiece } from '../../../types';
 import styles from './PromotionModal.module.css';
 
 const PromotionModal = ({

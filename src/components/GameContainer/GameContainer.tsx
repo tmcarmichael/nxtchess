@@ -4,7 +4,7 @@ import { Difficulty, Side, ChessGameProps, NewGameSettings, BoardSquare } from '
 import styles from './GameContainer.module.css';
 import ChessGame from '../ChessGame/ChessGame';
 import GamePanel from '../GamePanel/GamePanel';
-import PlayModal from '../PlayModal/PlayModal';
+import PlayModal from '../modals/PlayModal/PlayModal';
 import { debugLog } from '../../utils';
 
 const GameContainer = () => {
