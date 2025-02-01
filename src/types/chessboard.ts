@@ -90,3 +90,12 @@ export interface PieceProps {
 export type Board = (PieceType | null)[][];
 
 export type PromotionPiece = 'q' | 'r' | 'b' | 'n';
+
+export const PIECE_VALUES: Record<string, number> = {
+  P: 1,
+  N: 3,
+  B: 3,
+  R: 5,
+  Q: 9,
+  K: 0,
+};

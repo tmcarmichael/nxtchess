@@ -1,6 +1,6 @@
 import { createSignal, Show, createEffect } from 'solid-js';
 import { useLocation } from '@solidjs/router';
-import { Difficulty, Side, ChessGameProps, NewGameSettings } from '../../types';
+import { Difficulty, Side, ChessGameProps, NewGameSettings, BoardSquare } from '../../types';
 import styles from './GameContainer.module.css';
 import ChessGame from '../ChessGame/ChessGame';
 import GamePanel from '../GamePanel/GamePanel';
@@ -13,6 +13,9 @@ const GameContainer = () => {
   const [difficulty, setDifficulty] = createSignal<Difficulty>('medium');
   const [side, setSide] = createSignal<Side>('w');
   const [showPlayModal, setShowPlayModal] = createSignal(false);
+  const [capturedWhite, setCapturedWhite] = createSignal<string[]>([]);
+  const [capturedBlack, setCapturedBlack] = createSignal<string[]>([]);
+  const [boardSquares, setBoardSquares] = createSignal<BoardSquare[]>([]);
 
   const handleStartGame = (newSettings: NewGameSettings) => {
     const { timeControl, difficulty, side } = newSettings;
@@ -20,6 +23,8 @@ const GameContainer = () => {
     setDifficulty(difficulty);
     setSide(side);
     setShowPlayModal(false);
+    setCapturedWhite([]);
+    setCapturedBlack([]);
   };
 
   createEffect(() => {
@@ -33,7 +38,6 @@ const GameContainer = () => {
 
   return (
     <div class={styles.gameContainer}>
-      <button onClick={() => setShowPlayModal(true)}>Change Settings</button>
       <Show when={showPlayModal()}>
         <PlayModal
           onClose={() => setShowPlayModal(false)}
@@ -52,10 +56,21 @@ const GameContainer = () => {
             difficulty: difficulty(),
             side: side(),
           }) === null}
-          <ChessGame timeControl={timeControl()} difficulty={difficulty()} side={side()} />
+          <ChessGame
+            timeControl={timeControl()}
+            difficulty={difficulty()}
+            side={side()}
+            onCapturedWhiteChange={(fn) => setCapturedWhite((prev) => fn(prev))}
+            onCapturedBlackChange={(fn) => setCapturedBlack((prev) => fn(prev))}
+            onBoardChange={(b) => setBoardSquares(b)}
+          />
         </div>
         <div class={styles.panelWrapper}>
-          <GamePanel />
+          <GamePanel
+            capturedWhite={() => capturedWhite()}
+            capturedBlack={() => capturedBlack()}
+            board={() => boardSquares()}
+          />
         </div>
       </div>
     </div>

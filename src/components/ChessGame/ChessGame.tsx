@@ -1,7 +1,7 @@
 import { createSignal, createMemo, batch, onMount, onCleanup, Show, createEffect } from 'solid-js';
 import { Square, PromotionPiece, Difficulty, Side, ChessGameProps } from '../../types';
-import { fenToBoard } from '../../logic/fenLogic';
 import {
+  fenToBoard,
   initializeGame,
   getLegalMoves,
   updateGameState,
@@ -14,14 +14,18 @@ import ChessBoard from '../ChessBoard/ChessBoard';
 import GameEndModal from '../GameEndModal/GameEndModal';
 import PromotionModal from '../PromotionModal/PromotionModal';
 import styles from './ChessGame.module.css';
+import { initEngine, getBestMove } from '../../logic/services/stockfishService';
 
-const ChessGame = (props: ChessGameProps) => {
+const ELO_MAP = {
+  easy: 800,
+  medium: 1400,
+  hard: 2000,
+} as const;
+
+export default function ChessGame(props: ChessGameProps) {
   const { timeControl, difficulty, side } = props;
-  const [prevProps, setPrevProps] = createSignal<ChessGameProps>({
-    timeControl,
-    difficulty,
-    side,
-  });
+
+  // Main signals
   const [fen, setFen] = createSignal(initializeGame().fen);
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
@@ -47,12 +51,22 @@ const ChessGame = (props: ChessGameProps) => {
   const [orientation, setOrientation] = createSignal<Side>(side);
   const [aiDifficulty, setAiDifficulty] = createSignal<Difficulty>(difficulty);
 
+  // Board squares derived from fen
   const board = createMemo(() => fenToBoard(fen()));
 
+  // AI side detection
+  const aiSide = side === 'w' ? 'b' : 'w';
   let timerId: number | undefined;
 
-  const reInitializeGame = (newTime: number, newDiff: Difficulty, newSide: Side) => {
+  // Re-initialize game
+  function reInitializeGame(newTime: number, newDiff: Difficulty, newSide: Side) {
     if (timerId) clearInterval(timerId);
+
+    if (newSide === 'b') {
+      setCurrentPlayer('b');
+    } else {
+      setCurrentPlayer('w');
+    }
 
     batch(() => {
       setFen(initializeGame().fen);
@@ -60,7 +74,10 @@ const ChessGame = (props: ChessGameProps) => {
       setBlackTime(newTime * 60);
       setOrientation(newSide);
       setAiDifficulty(newDiff);
-      setCurrentPlayer('w');
+
+      // Force White to move first, but if the user is black, the AI is White
+      // setCurrentPlayer('w');
+
       setLastMove(null);
       setIsGameOver(false);
       setGameOverReason(null);
@@ -72,16 +89,30 @@ const ChessGame = (props: ChessGameProps) => {
     });
 
     startTimer();
+
     debugLog('Reinitialized game with props:', {
       timeControl: newTime,
       difficulty: newDiff,
       side: newSide,
     });
-  };
 
-  const startTimer = () => {
+    const elo = ELO_MAP[newDiff] || 1400;
+    initEngine(elo).then(() => {
+      // If the user side is black, AI side is white => AI moves immediately
+      if (newSide === 'b') {
+        handleAIMove();
+      }
+    });
+
+    // Clear parent's board/captured arrays
+    props.onBoardChange?.(fenToBoard(initializeGame().fen));
+    props.onCapturedWhiteChange?.(() => []);
+    props.onCapturedBlackChange?.(() => []);
+  }
+
+  // Timer logic
+  function startTimer() {
     if (timerId) clearInterval(timerId);
-
     timerId = setInterval(() => {
       if (isGameOver()) {
         clearInterval(timerId);
@@ -95,7 +126,7 @@ const ChessGame = (props: ChessGameProps) => {
         if (blackTime() <= 1) handleTimeOut('w');
       }
     }, 1000) as unknown as number;
-  };
+  }
 
   onMount(() => {
     reInitializeGame(timeControl, difficulty, side);
@@ -105,52 +136,89 @@ const ChessGame = (props: ChessGameProps) => {
     if (timerId) clearInterval(timerId);
   });
 
+  // This effect triggers a new game each time props change
   createEffect(() => {
-    const { timeControl: newTime, difficulty: newDiff, side: newSide } = props;
-    const old = prevProps();
-    if (old.timeControl === newTime && old.difficulty === newDiff && old.side === newSide) {
-      return;
+    reInitializeGame(props.timeControl, props.difficulty, props.side);
+  });
+
+  // Helper for capturing piece at target square
+  function captureCheck(target: Square): string | null {
+    const piece = board().find((sq) => sq.square === target)?.piece;
+    return piece || null;
+  }
+
+  // Send captured piece to parent
+  function handleCapturedPiece(piece: string) {
+    if (piece[0] === 'b') {
+      props.onCapturedBlackChange?.((prev) => [...prev, piece]);
+    } else {
+      props.onCapturedWhiteChange?.((prev) => [...prev, piece]);
     }
-    setPrevProps({ timeControl: newTime, difficulty: newDiff, side: newSide });
-    reInitializeGame(newTime, newDiff, newSide);
-  });
+  }
 
-  debugLog('ChessGame => Currently loaded props:', {
-    timeControl: props.timeControl,
-    difficulty: props.difficulty,
-    side: props.side,
-  });
+  // Update parent's board array
+  function updateParentBoard(newFen: string) {
+    props.onBoardChange?.(fenToBoard(newFen));
+  }
 
-  const handleTimeOut = (winnerColor: Side) => {
+  async function handleAIMove() {
+    if (isGameOver() || currentPlayer() !== aiSide) return;
+    try {
+      const bestMove = await getBestMove(fen());
+      if (!bestMove) return;
+      const from = bestMove.slice(0, 2) as Square;
+      const to = bestMove.slice(2, 4) as Square;
+      const promo = bestMove.length === 5 ? bestMove[4] : null;
+
+      if (promo) {
+        const updatedState = updateGameState(
+          { fen: fen(), isGameOver: false },
+          from,
+          to,
+          promo as PromotionPiece
+        );
+        batch(() => {
+          const captured = captureCheck(to);
+          if (captured) handleCapturedPiece(captured);
+          setFen(updatedState.fen);
+          setLastMove({ from, to });
+        });
+        updateParentBoard(updatedState.fen);
+        switchPlayer();
+        afterMoveChecks(updatedState.fen);
+      } else {
+        executeMove(from, to);
+      }
+    } catch (err) {
+      console.error('Engine error:', err);
+    }
+  }
+
+  function handleTimeOut(winnerColor: Side) {
     if (timerId) clearInterval(timerId);
     setIsGameOver(true);
     setGameOverReason('time');
     setGameWinner(winnerColor);
-    debugLog(`${winnerColor === 'w' ? 'White' : 'Black'} wins on time!`);
-  };
+  }
 
-  const checkGameEnd = (newFen: string) => {
+  function checkGameEnd(newFen: string) {
     if (isCheckmate(newFen)) {
       const winner = currentPlayer() === 'w' ? 'b' : 'w';
       setGameWinner(winner);
       setIsGameOver(true);
       setGameOverReason('checkmate');
-      if (timerId) clearInterval(timerId);
-      debugLog('Checkmate');
     } else if (isStalemate(newFen)) {
       setGameWinner('draw');
       setIsGameOver(true);
       setGameOverReason('stalemate');
-      if (timerId) clearInterval(timerId);
-      debugLog('Stalemate!');
     }
-  };
+  }
 
-  const handleSquareClick = (square: Square) => {
+  function handleSquareClick(square: Square) {
     if (isGameOver()) return;
     const currentSelection = selectedSquare();
     if (!currentSelection) {
-      const piece = board().find(({ square: sq }) => sq === square)?.piece;
+      const piece = board().find((sq) => sq.square === square)?.piece;
       if (piece && isPlayerTurn(square)) {
         selectSquare(square);
       }
@@ -161,9 +229,9 @@ const ChessGame = (props: ChessGameProps) => {
     } else {
       clearDraggingState();
     }
-  };
+  }
 
-  const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
+  function handleDragStart(square: Square, piece: string, event: DragEvent) {
     if (isGameOver()) return;
     if (!isPlayerTurn(square)) return;
     setDraggedPiece({ square, piece });
@@ -171,15 +239,15 @@ const ChessGame = (props: ChessGameProps) => {
     setHighlightedMoves(getLegalMoves(fen(), square));
     setSelectedSquare(square);
     event.dataTransfer?.setDragImage(new Image(), 0, 0);
-  };
+  }
 
-  const handleMouseMove = (event: MouseEvent) => {
+  function handleMouseMove(e: MouseEvent) {
     if (draggedPiece()) {
-      setCursorPosition({ x: event.clientX, y: event.clientY });
+      setCursorPosition({ x: e.clientX, y: e.clientY });
     }
-  };
+  }
 
-  const handleMouseUp = (targetSquare: Square) => {
+  function handleMouseUp(targetSquare: Square) {
     if (isGameOver()) return;
     const dragState = draggedPiece();
     if (!dragState) return;
@@ -187,12 +255,11 @@ const ChessGame = (props: ChessGameProps) => {
       executeMove(dragState.square, targetSquare);
     }
     clearDraggingState();
-  };
+  }
 
-  const executeMove = (from: Square, to: Square) => {
+  function executeMove(from: Square, to: Square) {
     const movingPiece = board().find((sq) => sq.square === from)?.piece;
     if (!movingPiece) {
-      console.error(`No piece found at square ${from}`);
       clearDraggingState();
       return;
     }
@@ -202,112 +269,118 @@ const ChessGame = (props: ChessGameProps) => {
       return;
     }
     try {
+      const captured = captureCheck(to);
       const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to);
       batch(() => {
+        if (captured) handleCapturedPiece(captured);
         setFen(updatedState.fen);
         setLastMove({ from, to });
-        debugLog('Last Move Updated:', { from, to });
       });
-
+      updateParentBoard(updatedState.fen);
       switchPlayer();
-      if (isInCheck(updatedState.fen)) {
-        const kingSquare = board().find(({ piece }) => piece === currentPlayer() + 'K')?.square;
-        setCheckedKingSquare(kingSquare ?? null);
-      } else {
-        setCheckedKingSquare(null);
-      }
-      checkGameEnd(updatedState.fen);
-    } catch (error: any) {
-      console.error('Invalid move:', error.message);
+      afterMoveChecks(updatedState.fen);
+    } catch (err: any) {
+      console.error('Invalid move:', err.message);
     } finally {
       clearDraggingState();
     }
-  };
+  }
 
-  const isPlayerTurn = (square: Square) => {
+  function afterMoveChecks(newFen: string) {
+    if (isInCheck(newFen)) {
+      const kingSquare = board().find(({ piece }) => piece === currentPlayer() + 'K')?.square;
+      setCheckedKingSquare(kingSquare ?? null);
+    } else {
+      setCheckedKingSquare(null);
+    }
+    checkGameEnd(newFen);
+    if (!isGameOver() && currentPlayer() === aiSide) {
+      handleAIMove();
+    }
+  }
+
+  function isPlayerTurn(square: Square) {
+    if (currentPlayer() !== side) return false;
     const currentTurn = fen().split(' ')[1];
     const piece = board().find(({ square: sq }) => sq === square)?.piece;
     return piece && piece[0] === currentTurn;
-  };
+  }
 
-  const selectSquare = (square: Square) => {
+  function selectSquare(square: Square) {
     batch(() => {
       setSelectedSquare(square);
       setHighlightedMoves(getLegalMoves(fen(), square));
     });
-  };
+  }
 
-  const clearDraggingState = () => {
+  function clearDraggingState() {
     batch(() => {
       setDraggedPiece(null);
       clearSelection();
     });
-  };
+  }
 
-  const clearSelection = () => {
+  function clearSelection() {
     batch(() => {
       setSelectedSquare(null);
       setHighlightedMoves([]);
     });
-  };
+  }
 
-  const isPawnPromotion = (piece: string | null, to: Square): boolean => {
+  function isPawnPromotion(piece: string | null, to: Square) {
     if (!piece || !piece.endsWith('P')) return false;
     const rank = parseInt(to[1], 10);
     if (piece.startsWith('w') && rank === 8) return true;
     if (piece.startsWith('b') && rank === 1) return true;
     return false;
-  };
+  }
 
-  const finalizePromotion = (from: Square, to: Square, promotion: PromotionPiece) => {
+  function finalizePromotion(from: Square, to: Square, promoPiece: PromotionPiece) {
     try {
-      const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to, promotion);
+      const captured = captureCheck(to);
+      const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to, promoPiece);
       batch(() => {
+        if (captured) handleCapturedPiece(captured);
         setFen(updatedState.fen);
         setLastMove({ from, to });
-        debugLog('Promotion Move Completed:', { from, to, promotion });
       });
+      updateParentBoard(updatedState.fen);
       switchPlayer();
-      if (isInCheck(updatedState.fen)) {
-        const kingSquare = board().find(({ piece }) => piece === currentPlayer() + 'K')?.square;
-        setCheckedKingSquare(kingSquare ?? null);
-      } else {
-        setCheckedKingSquare(null);
-      }
-      checkGameEnd(updatedState.fen);
-    } catch (error: any) {
-      console.error('Invalid promotion move:', error.message);
+      afterMoveChecks(updatedState.fen);
+    } catch (err: any) {
+      console.error('Invalid promotion move:', err.message);
     } finally {
       clearDraggingState();
       setPendingPromotion(null);
     }
-  };
+  }
 
-  const handlePromotionChoice = (pieceType: PromotionPiece) => {
+  function handlePromotionChoice(pieceType: PromotionPiece) {
     const promo = pendingPromotion();
     if (!promo) return;
     finalizePromotion(promo.from, promo.to, pieceType);
-  };
+  }
 
-  const switchPlayer = () => {
+  function switchPlayer() {
     setCurrentPlayer((p) => (p === 'w' ? 'b' : 'w'));
-  };
+  }
 
-  const resetGame = (newTimeControl?: number) => {
+  function resetGame(newTimeControl?: number) {
     if (timerId) clearInterval(timerId);
     const finalTimeControl = newTimeControl ?? timeControl;
     reInitializeGame(finalTimeControl, aiDifficulty(), orientation());
-  };
+  }
 
-  const flipOrientation = () => {
+  function flipOrientation() {
     setOrientation((o) => (o === 'w' ? 'b' : 'w'));
-  };
+  }
 
   return (
     <div onMouseMove={handleMouseMove} class={styles.chessGameContainer}>
       <div class={styles.gameInfoDebug}>
-        <div>White Time: {whiteTime()} seconds</div>
-        <div>Black Time: {blackTime()} seconds</div>
+        <div>DEBUG ⚠️</div>
+        <div>White Time: {whiteTime()}s</div>
+        <div>Black Time: {blackTime()}s</div>
         <div>Difficulty: {aiDifficulty()}</div>
         <div>Side: {orientation() === 'w' ? 'white' : 'black'}</div>
       </div>
@@ -346,6 +419,4 @@ const ChessGame = (props: ChessGameProps) => {
       </Show>
     </div>
   );
-};
-
-export default ChessGame;
+}

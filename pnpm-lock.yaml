@@ -17,6 +17,9 @@ importers:
       solid-js:
         specifier: ^1.9.3
         version: 1.9.4
+      stockfish:
+        specifier: github:nmrugg/stockfish.js
+        version: https://codeload.github.com/nmrugg/stockfish.js/tar.gz/2b2715b8d18d6332c44d08a7ff49d6fd826a3697
     devDependencies:
       prettier:
         specifier: ^3.4.2
@@ -545,6 +548,11 @@ packages:
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
+
+  stockfish@https://codeload.github.com/nmrugg/stockfish.js/tar.gz/2b2715b8d18d6332c44d08a7ff49d6fd826a3697:
+    resolution: {tarball: https://codeload.github.com/nmrugg/stockfish.js/tar.gz/2b2715b8d18d6332c44d08a7ff49d6fd826a3697}
+    version: 16.1.0
+    hasBin: true
 
   typescript@5.6.3:
     resolution: {integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==}
@@ -1075,6 +1083,8 @@ snapshots:
       - supports-color
 
   source-map-js@1.2.1: {}
+
+  stockfish@https://codeload.github.com/nmrugg/stockfish.js/tar.gz/2b2715b8d18d6332c44d08a7ff49d6fd826a3697: {}
 
   typescript@5.6.3: {}
 
