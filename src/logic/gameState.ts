@@ -1,4 +1,3 @@
-// gameState.ts
 import { Chess } from 'chess.js';
 import { debugLog } from '../utils';
 import { GameState, Square, BoardSquare, PromotionPiece, PIECE_VALUES } from '../types';

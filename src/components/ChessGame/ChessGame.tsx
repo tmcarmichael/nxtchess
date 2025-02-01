@@ -11,10 +11,10 @@ import {
 } from '../../logic/gameState';
 import { debugLog } from '../../utils';
 import ChessBoard from '../ChessBoard/ChessBoard';
-import GameEndModal from '../GameEndModal/GameEndModal';
-import PromotionModal from '../PromotionModal/PromotionModal';
+import GameEndModal from '../modals/GameEndModal/GameEndModal';
+import PromotionModal from '../modals/PromotionModal/PromotionModal';
 import styles from './ChessGame.module.css';
-import { initEngine, getBestMove } from '../../logic/services/stockfishService';
+import { initEngine, getBestMove } from '../../store/ai/stockfishService';
 
 const ELO_MAP = {
   easy: 800,

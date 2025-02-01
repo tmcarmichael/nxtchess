@@ -1,6 +1,6 @@
 import { createSignal, For } from 'solid-js';
 import styles from './PlayModal.module.css';
-import { PlayModalProps, Difficulty, Side } from '../../types';
+import { PlayModalProps, Difficulty, Side } from '../../../types';
 
 export default function PlayModal({
   onClose,
