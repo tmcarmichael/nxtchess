@@ -2,12 +2,12 @@ import styles from './GamePanel.module.css';
 import { For, Show, createMemo } from 'solid-js';
 import { computeMaterial } from '../../logic/gameState';
 import Piece from '../Piece/Piece';
-import { PieceType } from '../../types';
+import { PieceType, BoardSquare } from '../../types';
 
 const GamePanel = (props: {
   capturedWhite: () => string[];
   capturedBlack: () => string[];
-  board: () => import('../../types').BoardSquare[];
+  board: () => BoardSquare[];
 }) => {
   const handleResign = () => {
     alert('Resign button clicked - Placeholder functionality.');
@@ -21,7 +21,6 @@ const GamePanel = (props: {
     <div class={styles.panel}>
       <div class={styles.materialContainer}>
         <div class="capturesRow">
-          {/* <span class={styles.capturedLabel}></span> */}
           <For each={props.capturedBlack()}>
             {(cap) => (
               <span class={styles.capturedPiece}>
@@ -31,7 +30,6 @@ const GamePanel = (props: {
           </For>
         </div>
         <div class="capturesRow">
-          {/* <span class={styles.capturedLabel}></span> */}
           <For each={props.capturedWhite()}>
             {(cap) => (
               <span class={styles.capturedPiece}>

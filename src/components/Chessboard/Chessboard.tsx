@@ -1,21 +1,7 @@
 import { createMemo } from 'solid-js';
 import styles from './ChessBoard.module.css';
 import Piece from '../Piece/Piece';
-import { Square, PieceType, BoardSquare, Side } from '../../types';
-
-interface ChessBoardProps {
-  board: () => BoardSquare[];
-  highlightedMoves: () => Square[];
-  selectedSquare: () => Square | null;
-  draggedPiece: () => { square: Square; piece: string } | null;
-  cursorPosition: () => { x: number; y: number };
-  lastMove: () => { from: Square; to: Square } | null;
-  onSquareClick: (square: Square) => void;
-  onSquareMouseUp: (square: Square) => void;
-  onDragStart: (square: Square, piece: string, event: DragEvent) => void;
-  checkedKingSquare: () => Square | null;
-  orientation: () => Side;
-}
+import { PieceType, BoardSquare, ChessBoardProps } from '../../types';
 
 const ChessBoard = (props: ChessBoardProps) => {
   const {
@@ -29,7 +15,7 @@ const ChessBoard = (props: ChessBoardProps) => {
     onSquareMouseUp,
     onDragStart,
     checkedKingSquare,
-    orientation,
+    playerColor,
   } = props;
   const renderDraggedPiece = () => {
     const dragState = draggedPiece();
@@ -49,7 +35,7 @@ const ChessBoard = (props: ChessBoardProps) => {
   };
 
   const squares = createMemo(() => {
-    const squaresToRender = orientation() === 'b' ? [...board()].reverse() : board();
+    const squaresToRender = playerColor() === 'b' ? [...board()].reverse() : board();
     return squaresToRender.map(({ square, piece }: BoardSquare) => {
       const file = square[0];
       const rank = square[1];
@@ -61,9 +47,9 @@ const ChessBoard = (props: ChessBoardProps) => {
       const isCheckedKing = checkedKingSquare() === square;
       const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
       const showFile =
-        (orientation() === 'w' && rank === '1') || (orientation() === 'b' && rank === '8');
+        (playerColor() === 'w' && rank === '1') || (playerColor() === 'b' && rank === '8');
       const showRank =
-        (orientation() === 'w' && file === 'h') || (orientation() === 'b' && file === 'a');
+        (playerColor() === 'w' && file === 'h') || (playerColor() === 'b' && file === 'a');
 
       return (
         <div
