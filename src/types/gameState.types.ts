@@ -36,28 +36,3 @@ export interface PlayModalProps {
 export interface PieceValueMap {
   [key: string]: number;
 }
-
-export interface GameStoreValue {
-  fen: () => string;
-  setFen: (val: string) => void;
-  whiteTime: () => number;
-  setWhiteTime: (fn: (prev: number) => number) => void;
-  blackTime: () => number;
-  setBlackTime: (fn: (prev: number) => number) => void;
-  currentTurn: () => Side;
-  setCurrentTurn: (val: Side) => void;
-  playerColor: () => Side;
-  setPlayerColor: (val: Side) => void;
-  isGameOver: () => boolean;
-  setIsGameOver: (val: boolean) => void;
-  gameOverReason: () => 'checkmate' | 'stalemate' | 'time' | null;
-  setGameOverReason: (val: 'checkmate' | 'stalemate' | 'time' | null) => void;
-  gameWinner: () => Side | 'draw' | null;
-  setGameWinner: (val: Side | 'draw' | null) => void;
-  capturedWhite: () => string[];
-  setCapturedWhite: (fn: (prev: string[]) => string[]) => void;
-  capturedBlack: () => string[];
-  setCapturedBlack: (fn: (prev: string[]) => string[]) => void;
-  startNewGame: (time: number, diff: Difficulty, side: Side) => void;
-  handleTimeOut: (winner: Side) => void;
-}

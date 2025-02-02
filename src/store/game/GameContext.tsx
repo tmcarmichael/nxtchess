@@ -1,7 +1,34 @@
-import { createContext, useContext, createSignal, createEffect, batch, onCleanup } from 'solid-js';
-import { Side, Difficulty, GameStoreValue } from '../../types';
+import { createContext, useContext, createSignal, batch, onCleanup } from 'solid-js';
+import { Side, Difficulty, BoardSquare } from '../../types';
 import { initializeGame } from '../../logic/gameState';
 import { initEngine } from '../ai/stockfishService';
+
+interface GameStoreValue {
+  fen: () => string;
+  setFen: (val: string) => void;
+  whiteTime: () => number;
+  setWhiteTime: (fn: (prev: number) => number) => void;
+  blackTime: () => number;
+  setBlackTime: (fn: (prev: number) => number) => void;
+  currentTurn: () => Side;
+  setCurrentTurn: (value: Side | ((prev: Side) => Side)) => void;
+  playerColor: () => Side;
+  setPlayerColor: (value: Side | ((prev: Side) => Side)) => void;
+  isGameOver: () => boolean;
+  setIsGameOver: (val: boolean) => void;
+  gameOverReason: () => 'checkmate' | 'stalemate' | 'time' | null;
+  setGameOverReason: (val: 'checkmate' | 'stalemate' | 'time' | null) => void;
+  gameWinner: () => Side | 'draw' | null;
+  setGameWinner: (val: Side | 'draw' | null) => void;
+  capturedWhite: () => string[];
+  setCapturedWhite: (fn: (prev: string[]) => string[]) => void;
+  capturedBlack: () => string[];
+  boardSquares: () => BoardSquare[];
+  setBoardSquares: (val: BoardSquare[]) => void;
+  setCapturedBlack: (fn: (prev: string[]) => string[]) => void;
+  startNewGame: (time: number, diff: Difficulty, side: Side) => void;
+  handleTimeOut: (winner: Side) => void;
+}
 
 const GameContext = createContext<GameStoreValue>();
 
@@ -18,6 +45,8 @@ export const GameProvider = (props: { children: any }) => {
   const [capturedWhite, setCapturedWhite] = createSignal<string[]>([]);
   const [capturedBlack, setCapturedBlack] = createSignal<string[]>([]);
   const [gameWinner, setGameWinner] = createSignal<Side | 'draw' | null>(null);
+  const [boardSquares, setBoardSquares] = createSignal<BoardSquare[]>([]);
+
   let timerId: number | undefined;
 
   const startNewGame = (timeControl: number, difficulty: Difficulty, side: Side) => {
@@ -33,7 +62,9 @@ export const GameProvider = (props: { children: any }) => {
       setGameWinner(null);
       setCapturedWhite([]);
       setCapturedBlack([]);
+      setBoardSquares([]);
     });
+
     startTimer();
     const eloMap = { easy: 800, medium: 1400, hard: 2000 } as const;
     initEngine(eloMap[difficulty] ?? 1400).then(() => {
@@ -71,7 +102,7 @@ export const GameProvider = (props: { children: any }) => {
     if (timerId) clearInterval(timerId);
   });
 
-  const storeValue: GameStoreValue = {
+  const storeValue = {
     fen,
     setFen,
     whiteTime,
@@ -92,6 +123,8 @@ export const GameProvider = (props: { children: any }) => {
     setCapturedWhite,
     capturedBlack,
     setCapturedBlack,
+    boardSquares,
+    setBoardSquares,
     startNewGame,
     handleTimeOut,
   };
