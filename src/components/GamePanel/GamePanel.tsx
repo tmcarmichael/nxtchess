@@ -1,15 +1,29 @@
 import styles from './GamePanel.module.css';
-import { For, Show, createMemo } from 'solid-js';
+import { For, Show, createSignal, createMemo } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 import { computeMaterial } from '../../logic/gameState';
 import Piece from '../Piece/Piece';
 import { PieceType } from '../../types';
 import { useGameStore } from '../../store/game/GameContext';
+import ResignModal from '../modals/ResignModal/ResignModal';
 
 const GamePanel = () => {
-  const { boardSquares, capturedWhite, capturedBlack } = useGameStore();
+  const [showResignModal, setShowResignModal] = createSignal(false);
+  const { boardSquares, capturedWhite, capturedBlack, startNewGame, playerColor } = useGameStore();
+  const navigate = useNavigate();
 
   const handleResign = () => {
-    alert('Resign button clicked - Placeholder functionality.');
+    setShowResignModal(true);
+  };
+
+  const handleReplay = () => {
+    startNewGame(3, 'easy', playerColor() === 'w' ? 'b' : 'w');
+    setShowResignModal(false);
+  };
+
+  const handleHome = () => {
+    navigate('/');
+    setShowResignModal(false);
   };
 
   const material = createMemo(() => computeMaterial(boardSquares()));
@@ -50,6 +64,13 @@ const GamePanel = () => {
         <button class={styles.panelButton} onClick={handleResign}>
           <span>Resign</span>
         </button>
+        <Show when={showResignModal()}>
+          <ResignModal
+            onClose={() => setShowResignModal(false)}
+            onReplay={handleReplay}
+            onHome={handleHome}
+          />
+        </Show>
       </div>
     </div>
   );

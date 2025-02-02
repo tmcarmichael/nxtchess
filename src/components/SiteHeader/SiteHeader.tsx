@@ -2,18 +2,13 @@ import { useNavigate } from '@solidjs/router';
 import { createSignal, Show } from 'solid-js';
 import styles from './SiteHeader.module.css';
 import PlayModal from '../modals/PlayModal/PlayModal';
-import { NewGameSettings } from '../../types';
 
 const SiteHeader = (props: { children?: any }) => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
 
-  const handleStartGame = (newSettings: NewGameSettings) => {
-    const { timeControl, difficulty, side } = newSettings;
-    navigate('/game', {
-      replace: true,
-      state: { timeControl, difficulty, side },
-    });
+  const handleStartGame = () => {
+    navigate('/game', { replace: true });
     setIsModalOpen(false);
   };
 
@@ -44,15 +39,7 @@ const SiteHeader = (props: { children?: any }) => {
         </div>
       </header>
       <Show when={isModalOpen()}>
-        <PlayModal
-          onClose={() => setIsModalOpen(false)}
-          onStartGame={handleStartGame}
-          initialSettings={{
-            timeControl: 5,
-            difficulty: 'medium',
-            side: 'w',
-          }}
-        />
+        <PlayModal onClose={() => setIsModalOpen(false)} onStartGame={handleStartGame} />
       </Show>
       <main class={styles.mainContent}>{props.children}</main>
     </>

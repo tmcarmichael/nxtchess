@@ -10,8 +10,8 @@
 
 .gameInfoDebug {
   position: absolute;
-  top: 200px;
-  right: -220px;
+  top: 550px;
+  right: -200px;
   z-index: 9999;
   color: rgb(171, 109, 38);
   font-size: 1rem;

@@ -1,5 +1,7 @@
 import { useGameStore } from '../../store/game/GameContext';
 
+// TODO: Render from GamePanel or GameContainer
+
 const GameClock = () => {
   const { whiteTime, blackTime } = useGameStore();
 

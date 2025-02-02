@@ -10,6 +10,10 @@ interface GameStoreValue {
   setWhiteTime: (fn: (prev: number) => number) => void;
   blackTime: () => number;
   setBlackTime: (fn: (prev: number) => number) => void;
+  timeControl: () => number;
+  setTimeControl: (val: number) => void;
+  difficulty: () => Difficulty;
+  setDifficulty: (val: Difficulty) => void;
   currentTurn: () => Side;
   setCurrentTurn: (value: Side | ((prev: Side) => Side)) => void;
   playerColor: () => Side;
@@ -23,9 +27,9 @@ interface GameStoreValue {
   capturedWhite: () => string[];
   setCapturedWhite: (fn: (prev: string[]) => string[]) => void;
   capturedBlack: () => string[];
+  setCapturedBlack: (fn: (prev: string[]) => string[]) => void;
   boardSquares: () => BoardSquare[];
   setBoardSquares: (val: BoardSquare[]) => void;
-  setCapturedBlack: (fn: (prev: string[]) => string[]) => void;
   startNewGame: (time: number, diff: Difficulty, side: Side) => void;
   handleTimeOut: (winner: Side) => void;
 }
@@ -36,6 +40,8 @@ export const GameProvider = (props: { children: any }) => {
   const [fen, setFen] = createSignal(initializeGame().fen);
   const [whiteTime, setWhiteTime] = createSignal(300);
   const [blackTime, setBlackTime] = createSignal(300);
+  const [timeControl, setTimeControl] = createSignal(5);
+  const [difficulty, setDifficulty] = createSignal<Difficulty>('medium');
   const [currentTurn, setCurrentTurn] = createSignal<Side>('w');
   const [playerColor, setPlayerColor] = createSignal<Side>('w');
   const [isGameOver, setIsGameOver] = createSignal(false);
@@ -49,14 +55,17 @@ export const GameProvider = (props: { children: any }) => {
 
   let timerId: number | undefined;
 
-  const startNewGame = (timeControl: number, difficulty: Difficulty, side: Side) => {
+  const startNewGame = (newTimeControl: number, newDifficulty: Difficulty, side: Side) => {
     if (timerId) clearInterval(timerId);
+
     batch(() => {
       setFen(initializeGame().fen);
-      setWhiteTime(timeControl * 60);
-      setBlackTime(timeControl * 60);
+      setTimeControl(newTimeControl);
+      setDifficulty(newDifficulty);
+      setWhiteTime(newTimeControl * 60);
+      setBlackTime(newTimeControl * 60);
       setPlayerColor(side);
-      setCurrentTurn('w');
+
       setIsGameOver(false);
       setGameOverReason(null);
       setGameWinner(null);
@@ -66,8 +75,9 @@ export const GameProvider = (props: { children: any }) => {
     });
 
     startTimer();
-    const eloMap = { easy: 800, medium: 1400, hard: 2000 } as const;
-    initEngine(eloMap[difficulty] ?? 1400).then(() => {
+
+    const elo = { easy: 800, medium: 1400, hard: 2000 }[newDifficulty] ?? 1400;
+    initEngine(elo).then(() => {
       if (side === 'b') {
         // Trigger AI move first
       }
@@ -102,13 +112,17 @@ export const GameProvider = (props: { children: any }) => {
     if (timerId) clearInterval(timerId);
   });
 
-  const storeValue = {
+  const storeValue: GameStoreValue = {
     fen,
     setFen,
     whiteTime,
     setWhiteTime,
     blackTime,
     setBlackTime,
+    timeControl,
+    setTimeControl,
+    difficulty,
+    setDifficulty,
     currentTurn,
     setCurrentTurn,
     playerColor,

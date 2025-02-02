@@ -28,7 +28,7 @@ export default function GameEndModal(props: GameEndModalProps) {
       case 'stalemate':
         return `It's a draw by stalemate.`;
       case 'time':
-        return `${props.gameWinner === 'w' ? 'White' : 'Black'} wins on time!`;
+        return `${props.gameWinner === 'w' ? 'White' : 'Black'} wins on time.`;
       default:
         return 'The game has ended.';
     }
@@ -39,7 +39,6 @@ export default function GameEndModal(props: GameEndModalProps) {
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <h1>{getHeading()}</h1>
         <p>{getMessage()}</p>
-
         <div class={styles.actions}>
           <button onClick={props.onRestart}>Play Again</button>
         </div>
