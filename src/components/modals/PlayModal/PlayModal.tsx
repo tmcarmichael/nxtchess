@@ -3,12 +3,7 @@ import styles from './PlayModal.module.css';
 import { Difficulty, Side } from '../../../types';
 import { useGameStore } from '../../../store/game/GameContext';
 
-interface PlayModalProps {
-  onClose: () => void;
-  onStartGame: () => void;
-}
-
-export default function PlayModal({ onClose, onStartGame }: PlayModalProps) {
+const PlayModal = ({ onClose, onStartGame }: { onClose: () => void; onStartGame: () => void }) => {
   const { setTimeControl, setDifficulty, setPlayerColor, startNewGame } = useGameStore();
 
   const [localTimeControl, setLocalTimeControl] = createSignal(5);
@@ -100,4 +95,6 @@ export default function PlayModal({ onClose, onStartGame }: PlayModalProps) {
       </div>
     </div>
   );
-}
+};
+
+export default PlayModal;
