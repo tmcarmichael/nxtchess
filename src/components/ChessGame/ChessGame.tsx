@@ -371,7 +371,7 @@ export default function ChessGame(props: ChessGameProps) {
     reInitializeGame(finalTimeControl, aiDifficulty(), playerColor());
   }
 
-  function flipplayerColor() {
+  function flipPlayerColor() {
     setPlayerColor((o) => (o === 'w' ? 'b' : 'w'));
   }
 
@@ -384,7 +384,7 @@ export default function ChessGame(props: ChessGameProps) {
         <div>Difficulty: {aiDifficulty()}</div>
         <div>Side: {playerColor() === 'w' ? 'white' : 'black'}</div>
       </div>
-      <button onClick={flipplayerColor} class={styles.flipButton}>
+      <button onClick={flipPlayerColor} class={styles.flipButton}>
         <span>Flip Board 🔄</span>
       </button>
       <div class={styles.chessboardContainer}>
