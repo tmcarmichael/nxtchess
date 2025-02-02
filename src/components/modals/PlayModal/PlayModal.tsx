@@ -1,28 +1,35 @@
-import { createSignal, For } from 'solid-js';
+import { For, createSignal } from 'solid-js';
 import styles from './PlayModal.module.css';
-import { PlayModalProps, Difficulty, Side } from '../../../types';
+import { Difficulty, Side } from '../../../types';
+import { useGameStore } from '../../../store/game/GameContext';
 
-export default function PlayModal({
-  onClose,
-  onStartGame,
-  initialSettings,
-  timeControlOptions = [3, 5, 10],
-  difficultyOptions = ['easy', 'medium', 'hard'],
-  sideOptions = [
+interface PlayModalProps {
+  onClose: () => void;
+  onStartGame: () => void;
+}
+
+export default function PlayModal({ onClose, onStartGame }: PlayModalProps) {
+  const { setTimeControl, setDifficulty, setPlayerColor, startNewGame } = useGameStore();
+
+  const [localTimeControl, setLocalTimeControl] = createSignal(5);
+  const [localDifficulty, setLocalDifficulty] = createSignal<Difficulty>('medium');
+  const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
+
+  const isSelected = (val: unknown, current: unknown) => val === current;
+
+  const timeControlOptions = [3, 5, 10];
+  const difficultyOptions = ['easy', 'medium', 'hard'];
+  const sideOptions = [
     { value: 'w', label: 'White' },
     { value: 'b', label: 'Black' },
-  ],
-}: PlayModalProps) {
-  const [timeControl, setTimeControl] = createSignal(initialSettings.timeControl);
-  const [difficulty, setDifficulty] = createSignal<Difficulty>(initialSettings.difficulty);
-  const [side, setSide] = createSignal<Side>(initialSettings.side);
-  const isSelected = (val: unknown, current: unknown) => val === current;
+  ];
+
   const handleStartGame = () => {
-    onStartGame({
-      timeControl: timeControl(),
-      difficulty: difficulty(),
-      side: side(),
-    });
+    onStartGame();
+    setTimeControl(localTimeControl());
+    setDifficulty(localDifficulty());
+    setPlayerColor(localPlayerColor());
+    startNewGame(localTimeControl(), localDifficulty(), localPlayerColor());
     onClose();
   };
 
@@ -41,9 +48,9 @@ export default function PlayModal({
                 <button
                   classList={{
                     [styles.optionButton]: true,
-                    [styles.selected]: isSelected(option, timeControl()),
+                    [styles.selected]: isSelected(option, localTimeControl()),
                   }}
-                  onClick={() => setTimeControl(option)}
+                  onClick={() => setLocalTimeControl(option as number)}
                 >
                   {option} min
                 </button>
@@ -59,9 +66,9 @@ export default function PlayModal({
                 <button
                   classList={{
                     [styles.optionButton]: true,
-                    [styles.selected]: isSelected(option, difficulty()),
+                    [styles.selected]: isSelected(option, localDifficulty()),
                   }}
-                  onClick={() => setDifficulty(option)}
+                  onClick={() => setLocalDifficulty(option as Difficulty)}
                 >
                   {option[0].toUpperCase() + option.slice(1)}
                 </button>
@@ -77,9 +84,9 @@ export default function PlayModal({
                 <button
                   classList={{
                     [styles.optionButton]: true,
-                    [styles.selected]: isSelected(option.value, side()),
+                    [styles.selected]: isSelected(option.value, localPlayerColor()),
                   }}
-                  onClick={() => setSide(option.value)}
+                  onClick={() => setLocalPlayerColor(option.value as Side)}
                 >
                   {option.label}
                 </button>

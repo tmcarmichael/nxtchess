@@ -1,0 +1,73 @@
+/* ResignModal.module.css */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modalContent {
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+  border-radius: 8px;
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 400px;
+  padding: 24px;
+  color: #fff;
+}
+
+.modalContent h1 {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+}
+
+.modalContent p {
+  font-size: 1rem;
+  margin: 0 0 20px;
+}
+
+.actions {
+  margin-top: 50px;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  background-color: #444;
+  color: #fff;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease-in-out;
+}
+
+.actions button:hover {
+  background-color: #555;
+  transform: scale(1.05);
+}
+
+.actions button:active {
+  background-color: #666;
+  transform: scale(0.98);
+}
+
+.actions button:focus {
+  outline: none;
+}
