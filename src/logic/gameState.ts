@@ -2,7 +2,7 @@ import { Chess } from 'chess.js';
 import { debugLog } from '../utils';
 import { GameState, Square, BoardSquare, PromotionPiece, PIECE_VALUES } from '../types';
 
-export function fenToBoard(fen: string): BoardSquare[] {
+export const fenToBoard = (fen: string): BoardSquare[] => {
   const chess = new Chess(fen);
   const rawBoard = chess.board();
   const squares: BoardSquare[] = [];
@@ -23,7 +23,7 @@ export function fenToBoard(fen: string): BoardSquare[] {
     }
   }
   return squares;
-}
+};
 
 export const initializeGame = (): GameState => {
   const chess = new Chess();
@@ -68,7 +68,7 @@ export const isStalemate = (fen: string) => {
   return new Chess(fen).isStalemate();
 };
 
-export function computeMaterial(boardSquares: BoardSquare[]) {
+export const computeMaterial = (boardSquares: BoardSquare[]) => {
   let whiteTotal = 0;
   let blackTotal = 0;
   for (const sq of boardSquares) {
@@ -80,4 +80,4 @@ export function computeMaterial(boardSquares: BoardSquare[]) {
     else blackTotal += val;
   }
   return { whiteTotal, blackTotal, diff: whiteTotal - blackTotal };
-}
+};

@@ -26,7 +26,7 @@ export const fenToBoard = (fen: string): { square: Square; piece: PieceType | nu
   return board;
 };
 
-export function mapFenToPieceType(char: string): PieceType | null {
+export const mapFenToPieceType = (char: string): PieceType | null => {
   const pieceMap: Record<string, PieceType> = {
     p: 'bP',
     r: 'bR',
@@ -42,4 +42,4 @@ export function mapFenToPieceType(char: string): PieceType | null {
     K: 'wK',
   };
   return pieceMap[char] || null;
-}
+};

@@ -1,22 +1,33 @@
 import { createMemo } from 'solid-js';
 import styles from './ChessBoard.module.css';
 import Piece from '../Piece/Piece';
-import { PieceType, BoardSquare, ChessBoardProps } from '../../types';
+import { PieceType, BoardSquare, Square, Side } from '../../types';
 
-const ChessBoard = (props: ChessBoardProps) => {
-  const {
-    board,
-    highlightedMoves,
-    selectedSquare,
-    draggedPiece,
-    cursorPosition,
-    lastMove,
-    onSquareClick,
-    onSquareMouseUp,
-    onDragStart,
-    checkedKingSquare,
-    playerColor,
-  } = props;
+const ChessBoard = ({
+  board,
+  highlightedMoves,
+  selectedSquare,
+  draggedPiece,
+  cursorPosition,
+  lastMove,
+  onSquareClick,
+  onSquareMouseUp,
+  onDragStart,
+  checkedKingSquare,
+  playerColor,
+}: {
+  board: () => BoardSquare[];
+  highlightedMoves: () => Square[];
+  selectedSquare: () => Square | null;
+  draggedPiece: () => { square: Square; piece: string } | null;
+  cursorPosition: () => { x: number; y: number };
+  lastMove: () => { from: Square; to: Square } | null;
+  onSquareClick: (square: Square) => void;
+  onSquareMouseUp: (square: Square) => void;
+  onDragStart: (square: Square, piece: string, event: DragEvent) => void;
+  checkedKingSquare: () => Square | null;
+  playerColor: () => Side;
+}) => {
   const renderDraggedPiece = () => {
     const dragState = draggedPiece();
     if (!dragState) return null;
