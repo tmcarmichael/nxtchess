@@ -1,2 +1,2 @@
-export * from './chessboard';
-export * from './gameState';
+export * from './chessBoard.types';
+export * from './gameState.types';

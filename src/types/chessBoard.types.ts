@@ -1,3 +1,5 @@
+import { Side } from './gameState.types';
+
 export type PieceType =
   | 'bR'
   | 'bN'
@@ -99,3 +101,17 @@ export const PIECE_VALUES: Record<string, number> = {
   Q: 9,
   K: 0,
 };
+
+export interface ChessBoardProps {
+  board: () => BoardSquare[];
+  highlightedMoves: () => Square[];
+  selectedSquare: () => Square | null;
+  draggedPiece: () => { square: Square; piece: string } | null;
+  cursorPosition: () => { x: number; y: number };
+  lastMove: () => { from: Square; to: Square } | null;
+  onSquareClick: (square: Square) => void;
+  onSquareMouseUp: (square: Square) => void;
+  onDragStart: (square: Square, piece: string, event: DragEvent) => void;
+  checkedKingSquare: () => Square | null;
+  playerColor: () => Side;
+}

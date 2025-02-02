@@ -48,7 +48,7 @@ export default function ChessGame(props: ChessGameProps) {
     to: Square;
     color: Side;
   } | null>(null);
-  const [orientation, setOrientation] = createSignal<Side>(side);
+  const [playerColor, setPlayerColor] = createSignal<Side>(side);
   const [aiDifficulty, setAiDifficulty] = createSignal<Difficulty>(difficulty);
 
   // Board squares derived from fen
@@ -72,7 +72,7 @@ export default function ChessGame(props: ChessGameProps) {
       setFen(initializeGame().fen);
       setWhiteTime(newTime * 60);
       setBlackTime(newTime * 60);
-      setOrientation(newSide);
+      setPlayerColor(newSide);
       setAiDifficulty(newDiff);
 
       // Force White to move first, but if the user is black, the AI is White
@@ -368,11 +368,11 @@ export default function ChessGame(props: ChessGameProps) {
   function resetGame(newTimeControl?: number) {
     if (timerId) clearInterval(timerId);
     const finalTimeControl = newTimeControl ?? timeControl;
-    reInitializeGame(finalTimeControl, aiDifficulty(), orientation());
+    reInitializeGame(finalTimeControl, aiDifficulty(), playerColor());
   }
 
-  function flipOrientation() {
-    setOrientation((o) => (o === 'w' ? 'b' : 'w'));
+  function flipplayerColor() {
+    setPlayerColor((o) => (o === 'w' ? 'b' : 'w'));
   }
 
   return (
@@ -382,9 +382,9 @@ export default function ChessGame(props: ChessGameProps) {
         <div>White Time: {whiteTime()}s</div>
         <div>Black Time: {blackTime()}s</div>
         <div>Difficulty: {aiDifficulty()}</div>
-        <div>Side: {orientation() === 'w' ? 'white' : 'black'}</div>
+        <div>Side: {playerColor() === 'w' ? 'white' : 'black'}</div>
       </div>
-      <button onClick={flipOrientation} class={styles.flipButton}>
+      <button onClick={flipplayerColor} class={styles.flipButton}>
         <span>Flip Board 🔄</span>
       </button>
       <div class={styles.chessboardContainer}>
@@ -399,7 +399,7 @@ export default function ChessGame(props: ChessGameProps) {
           onSquareMouseUp={handleMouseUp}
           onDragStart={handleDragStart}
           checkedKingSquare={checkedKingSquare}
-          orientation={orientation}
+          playerColor={playerColor}
         />
       </div>
       <Show when={isGameOver()}>
