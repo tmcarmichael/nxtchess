@@ -9,14 +9,9 @@
   <img src="public/assets/nxtchess-2-2-25.gif" alt="Early demo" />
 </div>
 
-## 🚀 Vision
+## 🚀 Project Vision
 
-The goal is to create a high-performance multiplayer chess platform that incorporates unique training modes and AI-driven features. Key objectives include:
-
-- **Real-time Multiplayer**: Delivering seamless, responsive gameplay.
-- **Personalized User Experience**: Supporting accounts with game histories and performance tracking.
-- **Comprehensive Game Database**: Enabling players to study and analyze past games.
-- **AI-Powered Tools**: Providing game reviews and training modes to help players improve their skills.
+Create a lean, high-performance, multiplayer chess platform that incorporates unique training modes and AI-driven features.
 
 **_The project is currently in early development, with a focus on building the frontend client and core game logic. Check out the Roadmap below for more details on our plans and progress._**
 
@@ -24,27 +19,14 @@ The goal is to create a high-performance multiplayer chess platform that incorpo
 
 ## 💻 Tech Stack
 
-### Frontend: **SolidJS**
+- **Frontend:**
+  [SolidJS](https://www.solidjs.com/), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vite.dev/), and a styling solution (TBD: [Tailwind](https://tailwindcss.com/), [PostCSS](https://postcss.org/), or [Macaron](https://macaron.js.org/docs/styling/)).
 
-The frontend is built with **SolidJS**, a modern JavaScript library known for its **fine-grained reactivity** and **high performance**. Why was **SolidJS** chosen?
+- **Backend:**
+  [Golang](https://go.dev/), REST, Websockets, [PostgreSQL](https://www.postgresql.org/), with containerization using Docker/Compose.
 
-1. **Fine-Grained Reactivity**:
-
-   - Unlike traditional virtual DOM-based libraries (e.g., React), SolidJS updates the DOM precisely where changes occur.
-   - This granular approach minimizes unnecessary renders and improves performance, especially for highly interactive interfaces like a chessboard.
-
-2. **Minimal Overhead**:
-
-   - SolidJS compiles components into lightweight, efficient JavaScript code. There's no runtime virtual DOM diffing, which makes the app faster and more memory-efficient.
-
-3. **Scalability**:
-
-   - The reactive core of SolidJS allows the app to scale seamlessly without introducing complexity. This will be critical as we implement multiplayer features, live spectating, and analysis tools.
-
-### Styling
-
-- **CSS Modules** are used for scoped, maintainable styling, ensuring that each component has its own isolated styles.
-- The chessboard design is minimalistic, with clean visuals optimized for both desktop and mobile experiences.
+- **Infrastructure & Tooling:**
+  Logging, monitoring, and other support systems (e.g., ELK/Fluentd, Prometheus, Grafana, Sentry).
 
 ---
 
