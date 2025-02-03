@@ -1,8 +1,8 @@
+import { createMemo } from 'solid-js';
 import { useGameStore } from '../../store/game/GameContext';
+import styles from './GameClock.module.css';
 
-// TODO: Render from GamePanel or GameContainer
-
-const GameClock = () => {
+const GameClock = (props: { side: 'w' | 'b' }) => {
   const { whiteTime, blackTime } = useGameStore();
 
   const formatTime = (time: number) => {
@@ -11,10 +11,14 @@ const GameClock = () => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const label = () => (props.side === 'w' ? 'White' : 'Black');
+
+  const timeValue = createMemo(() => (props.side === 'w' ? whiteTime() : blackTime()));
+
   return (
-    <div style="display: flex; gap: 1rem;">
-      <div>White: {formatTime(whiteTime())}</div>
-      <div>Black: {formatTime(blackTime())}</div>
+    <div class={styles.gameClock}>
+      <span class={styles.label}>{label()}:</span>
+      <span>{formatTime(timeValue())}</span>
     </div>
   );
 };

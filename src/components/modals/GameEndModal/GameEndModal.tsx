@@ -12,24 +12,30 @@ const GameEndModal = ({
   gameWinner: 'w' | 'b' | 'draw' | null;
 }) => {
   const getGameOverHeading = () => {
+    if (gameWinner === 'draw') return 'Draw!';
+    if (!gameOverReason && (gameWinner === 'w' || gameWinner === 'b')) return 'Checkmate!';
     switch (gameOverReason) {
       case 'checkmate':
         return 'Checkmate!';
       case 'stalemate':
         return 'Stalemate!';
       case 'time':
-        return 'Time!';
+        return 'Time Out!';
       default:
         return 'Game Over!';
     }
   };
 
   const getGameOverMessage = () => {
+    if (gameWinner === 'draw') return "It's a draw.";
+    if (!gameOverReason && (gameWinner === 'w' || gameWinner === 'b')) {
+      return `${gameWinner === 'w' ? 'White' : 'Black'} wins by checkmate.`;
+    }
     switch (gameOverReason) {
       case 'checkmate':
         return `${gameWinner === 'w' ? 'White' : 'Black'} wins by checkmate.`;
       case 'stalemate':
-        return `It's a draw by stalemate.`;
+        return "It's a stalemate.";
       case 'time':
         return `${gameWinner === 'w' ? 'White' : 'Black'} wins on time.`;
       default:
@@ -44,6 +50,7 @@ const GameEndModal = ({
         <p>{getGameOverMessage()}</p>
         <div class={styles.actions}>
           <button onClick={onRestart}>Play Again</button>
+          <button onClick={onClose}>Exit</button>
         </div>
       </div>
     </div>

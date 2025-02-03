@@ -1,29 +1,14 @@
-import { createSignal, Show, createEffect } from 'solid-js';
-import { useLocation } from '@solidjs/router';
+import { createSignal, Show } from 'solid-js';
 import styles from './GameContainer.module.css';
 import ChessGame from '../ChessGame/ChessGame';
 import GamePanel from '../GamePanel/GamePanel';
 import PlayModal from '../modals/PlayModal/PlayModal';
-import { debugLog } from '../../utils';
 import { useGameStore } from '../../store/game/GameContext';
 
 const GameContainer = () => {
-  const location = useLocation();
+  const { timeControl, startNewGame, playerColor, difficulty } = useGameStore();
+
   const [showPlayModal, setShowPlayModal] = createSignal(false);
-
-  const {
-    timeControl,
-    setCapturedWhite,
-    setCapturedBlack,
-    setBoardSquares,
-    startNewGame,
-    playerColor,
-    difficulty,
-  } = useGameStore();
-
-  createEffect(() => {
-    debugLog('createEffect() GameContainer.tsx LOCATION.STATE =>', location.state);
-  });
 
   const handleStartGame = () => {
     setShowPlayModal(false);
@@ -37,14 +22,7 @@ const GameContainer = () => {
       </Show>
       <div class={styles.gameLayout}>
         <div class={styles.boardWrapper}>
-          <ChessGame
-            timeControl={timeControl()}
-            difficulty={difficulty()}
-            side={playerColor()}
-            onCapturedWhiteChange={(fn) => setCapturedWhite((prev: any) => fn(prev))}
-            onCapturedBlackChange={(fn) => setCapturedBlack((prev: any) => fn(prev))}
-            onBoardChange={(b) => setBoardSquares(b)}
-          />
+          <ChessGame />
         </div>
         <div class={styles.panelWrapper}>
           <GamePanel />

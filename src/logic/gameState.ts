@@ -1,6 +1,5 @@
 import { Chess } from 'chess.js';
-import { debugLog } from '../utils';
-import { GameState, Square, BoardSquare, PromotionPiece, PIECE_VALUES } from '../types';
+import { GameState, Square, BoardSquare, PromotionPiece, PIECE_VALUES, Side } from '../types';
 
 export const fenToBoard = (fen: string): BoardSquare[] => {
   const chess = new Chess(fen);
@@ -25,6 +24,11 @@ export const fenToBoard = (fen: string): BoardSquare[] => {
   return squares;
 };
 
+export const captureCheck = (target: Square, board: BoardSquare[]): string | null => {
+  const piece = board.find((sq) => sq.square === target)?.piece;
+  return piece || null;
+};
+
 export const initializeGame = (): GameState => {
   const chess = new Chess();
   return {
@@ -35,9 +39,7 @@ export const initializeGame = (): GameState => {
 
 export const getLegalMoves = (fen: string, square: Square): Square[] => {
   const chess = new Chess(fen);
-  debugLog('Getting legal moves for square:', square);
   const legalMoves = chess.moves({ square, verbose: true });
-  debugLog('Verbose Moves:', legalMoves);
   return legalMoves.map((move) => move.to as Square);
 };
 
@@ -56,18 +58,6 @@ export const updateGameState = (
   };
 };
 
-export const isInCheck = (fen: string) => {
-  return new Chess(fen).isCheck();
-};
-
-export const isCheckmate = (fen: string) => {
-  return new Chess(fen).isCheckmate();
-};
-
-export const isStalemate = (fen: string) => {
-  return new Chess(fen).isStalemate();
-};
-
 export const computeMaterial = (boardSquares: BoardSquare[]) => {
   let whiteTotal = 0;
   let blackTotal = 0;
@@ -81,3 +71,43 @@ export const computeMaterial = (boardSquares: BoardSquare[]) => {
   }
   return { whiteTotal, blackTotal, diff: whiteTotal - blackTotal };
 };
+
+export function handleCapturedPiece(
+  piece: string,
+  setCapturedBlack: (fn: (prev: string[]) => string[]) => void,
+  setCapturedWhite: (fn: (prev: string[]) => string[]) => void
+) {
+  if (piece.startsWith('b')) {
+    setCapturedBlack((prev) => [...prev, piece]);
+  } else {
+    setCapturedWhite((prev) => [...prev, piece]);
+  }
+}
+
+export function afterMoveChecks(
+  newFen: string,
+  setGameWinner: (val: Side | 'draw' | null) => void,
+  setIsGameOver: (val: boolean) => void,
+  setGameOverReason: (val: 'checkmate' | 'stalemate' | 'time' | null) => void,
+  setCheckedKingSquare: (val: Square | null) => void
+) {
+  const chessFen = new Chess(newFen);
+  const currentTurn = newFen.split(' ')[1] as 'w' | 'b';
+  if (chessFen.isCheck()) {
+    const kingSquare = fenToBoard(newFen).find(({ piece }) => piece === currentTurn + 'K')?.square;
+    setCheckedKingSquare(kingSquare ?? null);
+  } else {
+    setCheckedKingSquare(null);
+  }
+
+  if (chessFen.isCheckmate()) {
+    const winner = currentTurn === 'w' ? 'b' : 'w';
+    setGameWinner(winner);
+    setIsGameOver(true);
+    setGameOverReason('checkmate');
+  } else if (chessFen.isStalemate()) {
+    setGameWinner('draw');
+    setIsGameOver(true);
+    setGameOverReason('stalemate');
+  }
+}
