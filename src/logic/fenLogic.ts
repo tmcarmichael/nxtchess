@@ -1,5 +1,4 @@
 import { PieceType, Square } from '../types';
-import { debugLog } from '../utils';
 
 export const fenToBoard = (fen: string): { square: Square; piece: PieceType | null }[] => {
   const rows = fen.split(' ')[0].split('/');
@@ -22,7 +21,6 @@ export const fenToBoard = (fen: string): { square: Square; piece: PieceType | nu
       }
     });
   });
-  debugLog('Parsed Board from FEN:', board);
   return board;
 };
 

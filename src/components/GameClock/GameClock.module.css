@@ -1,0 +1,16 @@
+.gameClock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  background: #1e1e1e;
+  color: #dddddd;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.label {
+  color: #bbb;
+}

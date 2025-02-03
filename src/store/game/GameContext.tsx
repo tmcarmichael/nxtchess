@@ -1,7 +1,7 @@
 import { createContext, useContext, createSignal, batch, onCleanup } from 'solid-js';
-import { Side, Difficulty, BoardSquare } from '../../types';
+import { Side, Difficulty, BoardSquare, Square } from '../../types';
 import { initializeGame } from '../../logic/gameState';
-import { initEngine } from '../ai/stockfishService';
+import { initEngine, handleAIMove } from '../ai/stockfishService';
 
 interface GameStoreValue {
   fen: () => string;
@@ -18,6 +18,8 @@ interface GameStoreValue {
   setCurrentTurn: (value: Side | ((prev: Side) => Side)) => void;
   playerColor: () => Side;
   setPlayerColor: (value: Side | ((prev: Side) => Side)) => void;
+  boardView: () => Side;
+  setBoardView: (value: Side | ((prev: Side) => Side)) => void;
   isGameOver: () => boolean;
   setIsGameOver: (val: boolean) => void;
   gameOverReason: () => 'checkmate' | 'stalemate' | 'time' | null;
@@ -32,6 +34,12 @@ interface GameStoreValue {
   setBoardSquares: (val: BoardSquare[]) => void;
   startNewGame: (time: number, diff: Difficulty, side: Side) => void;
   handleTimeOut: (winner: Side) => void;
+  aiSide: () => Side;
+  setAiSide: (value: Side | ((prev: Side) => Side)) => void;
+  lastMove: () => { from: Square; to: Square } | null;
+  setLastMove: (val: { from: Square; to: Square } | null) => void;
+  checkedKingSquare: () => Square | null;
+  setCheckedKingSquare: (val: Square | null) => void;
 }
 
 const GameContext = createContext<GameStoreValue>();
@@ -44,6 +52,7 @@ export const GameProvider = (props: { children: any }) => {
   const [difficulty, setDifficulty] = createSignal<Difficulty>('medium');
   const [currentTurn, setCurrentTurn] = createSignal<Side>('w');
   const [playerColor, setPlayerColor] = createSignal<Side>('w');
+  const [boardView, setBoardView] = createSignal<Side>('w');
   const [isGameOver, setIsGameOver] = createSignal(false);
   const [gameOverReason, setGameOverReason] = createSignal<
     'checkmate' | 'stalemate' | 'time' | null
@@ -52,6 +61,9 @@ export const GameProvider = (props: { children: any }) => {
   const [capturedBlack, setCapturedBlack] = createSignal<string[]>([]);
   const [gameWinner, setGameWinner] = createSignal<Side | 'draw' | null>(null);
   const [boardSquares, setBoardSquares] = createSignal<BoardSquare[]>([]);
+  const [aiSide, setAiSide] = createSignal<Side>('w');
+  const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
+  const [checkedKingSquare, setCheckedKingSquare] = createSignal<Square | null>(null);
 
   let timerId: number | undefined;
 
@@ -65,7 +77,11 @@ export const GameProvider = (props: { children: any }) => {
       setWhiteTime(newTimeControl * 60);
       setBlackTime(newTimeControl * 60);
       setPlayerColor(side);
-
+      setBoardView(side);
+      setAiSide(side === 'w' ? 'b' : 'w');
+      setCurrentTurn('w');
+      setCheckedKingSquare(null);
+      setLastMove(null);
       setIsGameOver(false);
       setGameOverReason(null);
       setGameWinner(null);
@@ -79,7 +95,23 @@ export const GameProvider = (props: { children: any }) => {
     const elo = { easy: 800, medium: 1400, hard: 2000 }[newDifficulty] ?? 1400;
     initEngine(elo).then(() => {
       if (side === 'b') {
-        // Trigger AI move first
+        console.log('INIT AI, side black');
+        handleAIMove(
+          fen(),
+          isGameOver(),
+          aiSide(),
+          currentTurn(),
+          setFen,
+          setLastMove,
+          setBoardSquares,
+          setCurrentTurn,
+          setCapturedBlack,
+          setCapturedWhite,
+          setGameWinner,
+          setIsGameOver,
+          setGameOverReason,
+          setCheckedKingSquare
+        );
       }
     });
   };
@@ -127,6 +159,8 @@ export const GameProvider = (props: { children: any }) => {
     setCurrentTurn,
     playerColor,
     setPlayerColor,
+    boardView,
+    setBoardView,
     isGameOver,
     setIsGameOver,
     gameOverReason,
@@ -141,6 +175,12 @@ export const GameProvider = (props: { children: any }) => {
     setBoardSquares,
     startNewGame,
     handleTimeOut,
+    aiSide,
+    setAiSide,
+    lastMove,
+    setLastMove,
+    checkedKingSquare,
+    setCheckedKingSquare,
   };
 
   return <GameContext.Provider value={storeValue}>{props.children}</GameContext.Provider>;
