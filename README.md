@@ -59,46 +59,54 @@ What’s planned?
 - [x] Implement full chess rules (move validation, checkmate detection, etc.).
 - [x] Add drag-and-drop functionality for intuitive piece movement.
 - [x] Highlight squares for legal moves when clicking pieces.
-- [x] Checkmate, game end, and game restart logic
+- [x] Checkmate, game end, and game restart logic.
+- [x] Game Panel initial implementation.
+- [x] Implement basic AI (easy/medium/hard).
+- [x] Game Panel functional for AI play with time controls (3min, 5min, 10min).
+- [x] Game clock & board flip functionality.
 
-### Phase 2: Core Non-Gameplay elements
+### Phase 2: Polished Core Gameplay and Non-Gameplay Essentials
 
-- [x] Game Panel initial implementation
-- [ ] Implement basic AI for dev testing, 1500 ELO
-- [ ] Game Panel functional for AI play with time controls 3min, 5min, 10min
+- [ ] Containerize frontend for development (Docker builds for local and later server integration).
+- [ ] Navigation panel and game move history.
+- [ ] Implement "take back last move" functionality.
+- [ ] Add keyboard shortcuts for web app interaction.
+- [ ] _(Nice to have)_ Adopt a styling library (Tailwind, PostCSS, or Macaron).
+- [ ] _(Nice to have)_ Enhance board resizing, accessibility, and cross-browser compatibility.
+- [ ] _(Nice to have)_ Enable full offline AI mode via service worker after initial bundle download.
 
-### Phase 3: Multiplayer 1
+### Phase 3: Server for Move Validation and Multiplayer
 
-- [ ] Game Panel functional for human websocket play
-- [ ] Landing page for site and joining queue for websocket play
-- [ ] Account creation and sign in.
-- [ ] Database for accounts, played games, rating system and more.
-- [ ] Caching layer for database.
-- [ ] Integrate WebSocket-based real-time communication for multiplayer gameplay.
+- [ ] Develop a Golang REST server to handle game start and related endpoints.
+- [ ] Wrap Stockfish binary with Golang, interfacing via UCI for engine evaluation.
+- [ ] Containerize the backend for local testing alongside the frontend.
+- [ ] Configure Docker Compose to orchestrate FE and BE builds for rapid local development.
+- [ ] Remove/refactor frontend AI move logic in favor of server-side evaluation (except for offline mode).
+- [ ] Implement full end-to-end tests covering both frontend and backend.
+- [ ] Push containers to a registry for deployment.
 
-### Phase 4: Multiplayer 2
+### Phase 4: Deployment, Logging, and Monitoring Setup
 
-- [ ] Spectator mode for watching live games.
-- [ ] Rating system and matchmaking.
+- [ ] Establish a CI/CD pipeline for automated builds, testing, and deployments.
+- [ ] Deploy frontend and backend containers to staging and production environments.
+- [ ] Integrate centralized logging (ELK/Fluentd) for real-time error tracking.
+- [ ] Configure monitoring and alerting (Prometheus, Grafana, Sentry) for system performance.
+- [ ] Implement health checks and auto-scaling policies for robust deployments.
 
-### Phase 5: AI and Analysis
+### Phase 5: Database and User Account Setup
 
-- [ ] Integrate an AI engine (e.g., Stockfish) for single-player games and post-game analysis.
-- [ ] Allow users to explore opening libraries and endgames.
+- [ ] Integrate PostgreSQL for persistent storage of game data, user profiles, and history.
+- [ ] Implement secure user authentication and authorization (JWT/OAuth2).
+- [ ] Develop REST API endpoints for user management and game history retrieval.
+- [ ] Enable real-time analytics and player statistics tracking.
+- [ ] _(Nice to have)_ Introduce lightweight GraphQL endpoints for efficient client queries.
 
-### Phase 6: Expanded Tools and Options
+### Phase 6: Advanced Features
 
-- [ ] AI training modes.
-- [ ] AI game reviews.
-- [ ] Host public database of games.
-- [ ] Database explorer view with board moves.
-- [ ] Puzzles and Puzzle ELO.
-
-### Phase 6: Community Features
-
-- [ ] Tournament system.
-- [ ] Player profiles and statistics.
-- [ ] Anti-cheat mechanisms.
+- [ ] Develop unique AI chess game modes, training tools, and interactive tutorials.
+- [ ] Build a tournament system.
+- [ ] Enhance player profiles with detailed statistics.
+- [ ] Integrate anti-cheat mechanisms.
 
 ---
 
