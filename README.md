@@ -1,4 +1,4 @@
-# nxtchess - Next Generation Chess
+# NXT Chess
 
 [![Development Status](https://img.shields.io/badge/status-under_development-orange)](#)
 [![License](https://img.shields.io/github/license/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/blob/main/LICENSE)
@@ -126,28 +126,12 @@ What’s planned?
 
 ## 🤝 Contributing
 
-Contributions welcome!
-
-1. Fork the repository.
-2. Create a feature branch:
-   ```bash
-   git checkout -b my-new-feature
-   ```
-3. Commit your changes:
-   ```bash
-   git commit -m "Add some feature"
-   ```
-4. Push to the branch:
-   ```bash
-   git push origin my-new-feature
-   ```
-5. Open a pull request.
+Contributions welcome.
+Get in touch, send a PR, or open a GitHub issue.
 
 ---
 
 ## 📧 Contact
 
-For inquiries, suggestions, or feedback, feel free to reach out:
-
 - Email: ThomasCarmichael@pm.me
-- GitHub Issues: [Submit an Issue](https://github.com/tmcarmichael/nxtchess/issues)
+- Issues: [Submit an Issue](https://github.com/tmcarmichael/nxtchess/issues)
