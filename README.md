@@ -6,7 +6,7 @@
 [![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4)](https://prettier.io/docs/en/why-prettier)
 
 <div style="text-align: center;">
-  <img src="public/assets/nxtchess-1-20-25.gif" alt="Early demo" />
+  <img src="public/assets/nxtchess-2-2-25.gif" alt="Early demo" />
 </div>
 
 ## 🚀 Vision
