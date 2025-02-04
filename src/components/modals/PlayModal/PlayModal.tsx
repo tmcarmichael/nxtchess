@@ -1,30 +1,28 @@
-import { For, createSignal } from 'solid-js';
+import { createSignal } from 'solid-js';
 import styles from './PlayModal.module.css';
-import { Difficulty, Side } from '../../../types';
+import { Side } from '../../../types';
 import { useGameStore } from '../../../store/game/GameContext';
 
 const PlayModal = ({ onClose, onStartGame }: { onClose: () => void; onStartGame: () => void }) => {
   const { setTimeControl, setDifficulty, setPlayerColor, startNewGame } = useGameStore();
 
-  const [localTimeControl, setLocalTimeControl] = createSignal(5);
-  const [localDifficulty, setLocalDifficulty] = createSignal<Difficulty>('medium');
+  const timeValues = [1, 2, 3, 5, 10, 15, 30];
+  const difficultyValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const difficultyEloMap = [400, 500, 600, 800, 1000, 1200, 1400, 1700, 2000, 2400];
+
+  const [localTimeIndex, setLocalTimeIndex] = createSignal(timeValues.indexOf(5));
+  const [localDifficultyIndex, setLocalDifficultyIndex] = createSignal(4);
+
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
-
-  const isSelected = (val: unknown, current: unknown) => val === current;
-
-  const timeControlOptions = [3, 5, 10];
-  const difficultyOptions = ['easy', 'medium', 'hard'];
-  const sideOptions = [
-    { value: 'w', label: 'White' },
-    { value: 'b', label: 'Black' },
-  ];
 
   const handleStartGame = () => {
     onStartGame();
-    setTimeControl(localTimeControl());
-    setDifficulty(localDifficulty());
+    const selectedTime = timeValues[localTimeIndex()];
+    const selectedElo = difficultyEloMap[localDifficultyIndex()];
+    setTimeControl(selectedTime);
+    setDifficulty(selectedElo);
     setPlayerColor(localPlayerColor());
-    startNewGame(localTimeControl(), localDifficulty(), localPlayerColor());
+    startNewGame(selectedTime, selectedElo, localPlayerColor());
     onClose();
   };
 
@@ -34,59 +32,67 @@ const PlayModal = ({ onClose, onStartGame }: { onClose: () => void; onStartGame:
         <button class={styles.closeButton} onClick={onClose} aria-label="Close Modal">
           &times;
         </button>
-        <h2>Game Settings</h2>
+        <h2>Play Against Computer</h2>
         <div class={styles.settingRow}>
-          <label class={styles.label}>Time Control</label>
-          <div class={styles.optionRow}>
-            <For each={timeControlOptions}>
-              {(option) => (
-                <button
-                  classList={{
-                    [styles.optionButton]: true,
-                    [styles.selected]: isSelected(option, localTimeControl()),
-                  }}
-                  onClick={() => setLocalTimeControl(option as number)}
-                >
-                  {option} min
-                </button>
-              )}
-            </For>
+          <label class={styles.rangeSliderLabel}>
+            Time Control: {timeValues[localTimeIndex()]} min
+          </label>
+          <div class={styles.rangeSliderContainer}>
+            <input
+              class={styles.rangeSlider}
+              type="range"
+              min="0"
+              max={timeValues.length - 1}
+              step="1"
+              value={localTimeIndex()}
+              onInput={(e) => {
+                const idx = +e.currentTarget.value;
+                setLocalTimeIndex(idx);
+              }}
+            />
           </div>
         </div>
         <div class={styles.settingRow}>
-          <label class={styles.label}>Difficulty</label>
-          <div class={styles.optionRow}>
-            <For each={difficultyOptions}>
-              {(option) => (
-                <button
-                  classList={{
-                    [styles.optionButton]: true,
-                    [styles.selected]: isSelected(option, localDifficulty()),
-                  }}
-                  onClick={() => setLocalDifficulty(option as Difficulty)}
-                >
-                  {option[0].toUpperCase() + option.slice(1)}
-                </button>
-              )}
-            </For>
+          <label class={styles.rangeSliderLabel}>
+            Difficulty: {difficultyValues[localDifficultyIndex()]} (ELO{' '}
+            {difficultyEloMap[localDifficultyIndex()]})
+          </label>
+          <div class={styles.rangeSliderContainer}>
+            <input
+              class={styles.rangeSlider}
+              type="range"
+              min="0"
+              max={difficultyValues.length - 1}
+              step="1"
+              value={localDifficultyIndex()}
+              onInput={(e) => {
+                const idx = +e.currentTarget.value;
+                setLocalDifficultyIndex(idx);
+              }}
+            />
           </div>
         </div>
         <div class={styles.settingRow}>
           <label class={styles.label}>Play As</label>
-          <div class={styles.optionRow}>
-            <For each={sideOptions}>
-              {(option) => (
-                <button
-                  classList={{
-                    [styles.optionButton]: true,
-                    [styles.selected]: isSelected(option.value, localPlayerColor()),
-                  }}
-                  onClick={() => setLocalPlayerColor(option.value as Side)}
-                >
-                  {option.label}
-                </button>
-              )}
-            </For>
+          <div class={styles.knightSelector}>
+            <img
+              src="/assets/wN.svg"
+              alt="White Knight"
+              classList={{
+                [styles.knightButton]: true,
+                [styles.selectedKnight]: localPlayerColor() === 'w',
+              }}
+              onClick={() => setLocalPlayerColor('w')}
+            />
+            <img
+              src="/assets/bN.svg"
+              alt="Black Knight"
+              classList={{
+                [styles.knightButton]: true,
+                [styles.selectedKnight]: localPlayerColor() === 'b',
+              }}
+              onClick={() => setLocalPlayerColor('b')}
+            />
           </div>
         </div>
         <div class={styles.modalActions}>

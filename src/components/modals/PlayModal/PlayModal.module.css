@@ -13,8 +13,8 @@
   width: 90%;
   max-width: 420px;
   padding: 24px;
-  background: #414141;
-  color: #c0c0c0;
+  background: #313131;
+  color: #b5b5b5;
   text-align: center;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
@@ -23,8 +23,8 @@
 .modalContent h2 {
   margin-top: 0;
   font-size: 1.5rem;
-  color: rgb(209, 209, 209);
-  margin-bottom: 1.2rem;
+  color: rgb(177, 177, 177);
+  margin-bottom: 2.5rem;
   letter-spacing: 0.5px;
 }
 
@@ -37,7 +37,7 @@
 
 .label {
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.7rem;
   color: rgb(200, 200, 200);
   font-size: 1rem;
 }
@@ -81,10 +81,11 @@
 
 .modalActions button {
   padding: 0.6rem 1.2rem;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 500;
-  background: #15824b;
-  border: 1px solid #0c5f34;
+  background: #025135;
+  border: 1px solid #5e370b;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
   border-radius: 4px;
   color: #d3d3d3;
   cursor: pointer;
@@ -94,7 +95,7 @@
 }
 
 .modalActions button:hover {
-  background-color: #19955a;
+  background-color: #036032;
   transform: scale(1.03);
 }
 
@@ -121,4 +122,143 @@
 .closeButton:hover {
   color: #fff;
   transform: scale(1.2);
+}
+
+.rangeSliderContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.rangeSliderLabel {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: rgb(200, 200, 200);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.rangeSlider {
+  width: 80%;
+  height: 6px;
+  background: #555;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.rangeSlider::-webkit-slider-runnable-track {
+  height: 6px;
+  background: #666;
+  border-radius: 4px;
+}
+.rangeSlider::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  background-color: #10482c;
+  border: 2px solid #744c02;
+  border-radius: 50%;
+  cursor: pointer;
+  -webkit-appearance: none;
+  transition:
+    background-color 0.1s ease,
+    transform 0.1s ease;
+}
+.rangeSlider::-webkit-slider-thumb:hover {
+  background-color: #19955a;
+  transform: scale(1.05);
+}
+.rangeSlider::-webkit-slider-thumb:active {
+  background-color: #0c5f34;
+  transform: scale(0.97);
+}
+
+.rangeSlider::-moz-range-track {
+  height: 6px;
+  background: #666;
+  border-radius: 4px;
+}
+.rangeSlider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background-color: #10482c;
+  border: 2px solid #744c02;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background-color 0.1s ease,
+    transform 0.1s ease;
+}
+.rangeSlider::-moz-range-thumb:hover {
+  background-color: #19955a;
+  transform: scale(1.1);
+}
+.rangeSlider::-moz-range-thumb:active {
+  background-color: #0c5f34;
+  transform: scale(0.95);
+}
+
+.rangeSlider::-ms-track {
+  height: 6px;
+  background: transparent;
+  color: transparent;
+  border: none;
+}
+.rangeSlider::-ms-fill-lower {
+  background: #666;
+  border-radius: 4px;
+}
+.rangeSlider::-ms-fill-upper {
+  background: #666;
+  border-radius: 4px;
+}
+.rangeSlider::-ms-thumb {
+  width: 18px;
+  height: 18px;
+  background-color: #15824b;
+  border: 2px solid #0c5f34;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+.rangeSlider::-ms-thumb:hover {
+  background-color: #19955a;
+  transform: scale(1.1);
+}
+.rangeSlider::-ms-thumb:active {
+  background-color: #0c5f34;
+  transform: scale(0.95);
+}
+
+.knightSelector {
+  display: flex;
+  margin-top: 10px;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.knightButton {
+  width: 48px;
+  height: 48px;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.4));
+}
+
+.knightButton:hover {
+  transform: scale(1.05);
+}
+
+.selectedKnight {
+  box-shadow: 0 0 10px 4px rgba(21, 130, 75, 0.7);
+  border-radius: 50%;
+  transform: scale(1.2);
+  margin-bottom: 0.5rem;
 }

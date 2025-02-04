@@ -9,6 +9,7 @@
   color: #dddddd;
   padding: 8px 12px;
   border-radius: 6px;
+  border: 1px solid rgba(63, 63, 63, 0.45);
 }
 
 .label {

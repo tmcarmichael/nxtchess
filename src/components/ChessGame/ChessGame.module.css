@@ -21,9 +21,9 @@
   padding: 8px 18px;
   font-size: 1rem;
   cursor: pointer;
-  border: none;
   border-radius: 6px;
-  background-color: #3b3b3b;
+  background: #202020;
+  border: 1px solid rgba(63, 63, 63, 0.45);
   color: rgb(187, 187, 187);
   transition:
     background-color 0.3s ease,
@@ -33,7 +33,9 @@
 }
 
 .flipButton:hover {
-  background-color: #434343;
+  background-color: #444;
+  color: rgb(255, 255, 255);
+  transform: scale(1.05);
 }
 
 .flipButton span {

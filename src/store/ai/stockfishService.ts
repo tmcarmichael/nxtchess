@@ -31,7 +31,11 @@ export const initEngine = (elo: number): Promise<void> => {
     engine!.postMessage('isready');
     engine!.postMessage('setoption name UCI_LimitStrength value true');
     engine!.postMessage(`setoption name UCI_Elo value ${elo}`);
-    engine!.postMessage('setoption name Threads value 1');
+    // engine!.postMessage('setoption name Threads value 4');
+    // engine!.postMessage('setoption name MultiPV value 4');
+    // engine!.postMessage('setoption name Contempt value 100');
+    // engine!.postMessage('setoption name Aggressiveness value 100');
+    // engine!.postMessage('setoption name King Safety value 0');
     engine!.postMessage('ucinewgame');
     return waitForReady();
   });

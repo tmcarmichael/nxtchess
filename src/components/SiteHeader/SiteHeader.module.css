@@ -14,7 +14,22 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px 15px;
+  background: rgba(20, 20, 20, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition:
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+}
+
+.titleAndPanel:hover {
+  background: rgba(20, 20, 20, 0.55);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
 .title {
@@ -36,14 +51,25 @@
   align-items: center;
   gap: 15px;
   padding: 5px 15px;
-  border: 1px solid #4a4a4a;
+  background: rgba(74, 74, 74, 0.4);
+  border: 1px solid rgba(74, 74, 74, 0.8);
   border-radius: 5px;
-  background-color: #4a4a4a;
+  backdrop-filter: blur(4px);
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.buttonPanel:hover {
+  background: rgba(74, 74, 74, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .button {
   padding: 5px 10px;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   cursor: pointer;
   background-color: transparent;
   color: black;
@@ -69,7 +95,7 @@
 }
 
 .button:hover span {
-  transform: scale(1.08);
+  transform: scale(1.06);
 }
 
 .button:focus,
