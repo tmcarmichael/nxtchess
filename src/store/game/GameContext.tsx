@@ -1,5 +1,5 @@
 import { createContext, useContext, createSignal, batch, onCleanup } from 'solid-js';
-import { Side, Difficulty, BoardSquare, Square } from '../../types';
+import { Side, BoardSquare, Square } from '../../types';
 import { initializeGame } from '../../logic/gameState';
 import { initEngine, handleAIMove } from '../ai/stockfishService';
 
@@ -12,8 +12,8 @@ interface GameStoreValue {
   setBlackTime: (fn: (prev: number) => number) => void;
   timeControl: () => number;
   setTimeControl: (val: number) => void;
-  difficulty: () => Difficulty;
-  setDifficulty: (val: Difficulty) => void;
+  difficulty: () => number;
+  setDifficulty: (val: number) => void;
   currentTurn: () => Side;
   setCurrentTurn: (value: Side | ((prev: Side) => Side)) => void;
   playerColor: () => Side;
@@ -32,7 +32,7 @@ interface GameStoreValue {
   setCapturedBlack: (fn: (prev: string[]) => string[]) => void;
   boardSquares: () => BoardSquare[];
   setBoardSquares: (val: BoardSquare[]) => void;
-  startNewGame: (time: number, diff: Difficulty, side: Side) => void;
+  startNewGame: (time: number, diff: number, side: Side) => void;
   handleTimeOut: (winner: Side) => void;
   aiSide: () => Side;
   setAiSide: (value: Side | ((prev: Side) => Side)) => void;
@@ -49,7 +49,7 @@ export const GameProvider = (props: { children: any }) => {
   const [whiteTime, setWhiteTime] = createSignal(300);
   const [blackTime, setBlackTime] = createSignal(300);
   const [timeControl, setTimeControl] = createSignal(5);
-  const [difficulty, setDifficulty] = createSignal<Difficulty>('medium');
+  const [difficulty, setDifficulty] = createSignal<number>(3);
   const [currentTurn, setCurrentTurn] = createSignal<Side>('w');
   const [playerColor, setPlayerColor] = createSignal<Side>('w');
   const [boardView, setBoardView] = createSignal<Side>('w');
@@ -66,8 +66,9 @@ export const GameProvider = (props: { children: any }) => {
   const [checkedKingSquare, setCheckedKingSquare] = createSignal<Square | null>(null);
 
   let timerId: number | undefined;
+  const difficultyEloMap: number[] = [400, 500, 600, 800, 1000, 1200, 1400, 1700, 2000, 2400];
 
-  const startNewGame = (newTimeControl: number, newDifficulty: Difficulty, side: Side) => {
+  const startNewGame = (newTimeControl: number, newDifficulty: number, side: Side) => {
     if (timerId) clearInterval(timerId);
 
     batch(() => {
@@ -92,7 +93,7 @@ export const GameProvider = (props: { children: any }) => {
 
     startTimer();
 
-    const elo = { easy: 800, medium: 1400, hard: 2000 }[newDifficulty] ?? 1400;
+    const elo = difficultyEloMap[newDifficulty - 1] ?? 600;
     initEngine(elo).then(() => {
       if (side === 'b') {
         console.log('INIT AI, side black');

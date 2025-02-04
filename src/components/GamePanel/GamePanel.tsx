@@ -19,7 +19,7 @@ const GamePanel = () => {
   };
 
   const handleReplay = () => {
-    startNewGame(3, 'easy', playerColor() === 'w' ? 'b' : 'w');
+    startNewGame(3, 600, playerColor() === 'w' ? 'b' : 'w');
     setShowResignModal(false);
   };
 
