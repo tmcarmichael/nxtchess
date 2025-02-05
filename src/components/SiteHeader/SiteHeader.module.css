@@ -111,6 +111,50 @@ button::-moz-focus-inner {
   border: 0;
 }
 
+.comingSoonButton {
+  color: rgb(117, 117, 117);
+  padding: 5px 10px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+  border-radius: 3px;
+  transition:
+    background-color 0.4s ease-in-out,
+    color 0.4s ease-in-out;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.comingSoonButton span {
+  display: inline-block;
+  text-shadow: 0px 2px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.4s ease-in-out;
+}
+
+.comingSoonButton:hover {
+  color: #8d8d8ded;
+  outline: none;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.comingSoonButton:hover span {
+  transform: scale(1.06);
+}
+
+.comingSoonButton:focus,
+.comingSoonButton:active {
+  outline: none;
+  background-color: transparent;
+  box-shadow: none;
+  transform: scale(1.05);
+}
+
+comingSoonButton::-moz-focus-inner {
+  border: 0;
+}
+
 .mainContent {
   display: flex;
   flex-direction: column;
@@ -142,4 +186,25 @@ button::-moz-focus-inner {
       0 0 2px #2adeae,
       0 0 2px #2adeae;
   }
+}
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  background: rgba(50, 50, 50, 0.55);
+  color: #a7a7a7;
+  padding: 6px 10px;
+  border-radius: 4px;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.7rem;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 1;
 }

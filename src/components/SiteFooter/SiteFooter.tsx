@@ -1,6 +1,6 @@
 import styles from './SiteFooter.module.css';
 
-const SiteFooter = (props: { children?: any }) => {
+const SiteFooter = () => {
   return (
     <footer class={styles.footer}>
       <ul class={styles.footerList}>
