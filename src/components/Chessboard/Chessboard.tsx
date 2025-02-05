@@ -1,4 +1,4 @@
-import { createMemo, JSX } from 'solid-js';
+import { JSX } from 'solid-js';
 import styles from './ChessBoard.module.css';
 import Piece from '../Piece/Piece';
 import { PieceType, BoardSquare, Square } from '../../types';
@@ -42,7 +42,7 @@ const ChessBoard = ({
     );
   };
 
-  const renderedSquares = createMemo(() => {
+  const renderedSquares = () => {
     const view: 'w' | 'b' = boardView();
     const boardSquares: BoardSquare[] = view === 'b' ? [...board()].reverse() : board();
     const highlights: Square[] = highlightedMoves();
@@ -96,7 +96,7 @@ const ChessBoard = ({
     };
 
     return boardSquares.map(renderSquare);
-  });
+  };
 
   return (
     <div class={styles.boardContainer}>

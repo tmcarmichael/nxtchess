@@ -83,10 +83,10 @@
   padding: 0.6rem 1.2rem;
   font-size: 1.1rem;
   font-weight: 500;
-  background: #025135;
-  border: 1px solid #5e370b;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
-  border-radius: 4px;
+  background: rgba(21, 125, 73, 0.6);
+  border: 1px solid #2d2d2d;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
   color: #d3d3d3;
   cursor: pointer;
   transition:
@@ -95,12 +95,12 @@
 }
 
 .modalActions button:hover {
-  background-color: #036032;
+  background-color: rgba(25, 154, 90, 0.487);
   transform: scale(1.03);
 }
 
 .modalActions button:active {
-  background-color: #0c5f34;
+  background-color: rgba(21, 130, 75, 0.6) 70%;
   transform: scale(0.98);
 }
 
@@ -158,8 +158,8 @@
   width: 18px;
   height: 18px;
   margin-top: -6px;
-  background-color: #10482c;
-  border: 2px solid #744c02;
+  background-color: #1431af;
+  border: 2px solid #3c3c3c;
   border-radius: 50%;
   cursor: pointer;
   -webkit-appearance: none;
@@ -245,20 +245,53 @@
 .knightButton {
   width: 48px;
   height: 48px;
+  position: relative;
   cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.knightButton img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .knightButton:hover {
-  transform: scale(1.05);
+  transform: scale(1.15);
 }
 
 .selectedKnight {
-  box-shadow: 0 0 10px 4px rgba(21, 130, 75, 0.7);
-  border-radius: 50%;
   transform: scale(1.2);
-  margin-bottom: 0.5rem;
+}
+
+.selectedKnight::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(24, 143, 83, 0.6) 25%, rgba(24, 143, 83, 0) 70%);
+  animation: pulseCenter 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseCenter {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.7;
+  }
 }

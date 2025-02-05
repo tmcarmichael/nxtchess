@@ -10,23 +10,14 @@
   box-sizing: border-box;
 }
 
-.title {
-  margin-bottom: 20px;
-}
-
-.details {
-  margin-bottom: 10px;
-}
-
 .gameLayout {
   display: flex;
-  justify-content: center;
   align-items: flex-start;
   gap: 2rem;
   margin-top: 7rem;
-  height: auto;
   min-height: 80vh;
   width: 100%;
+  justify-content: center;
 }
 
 .boardWrapper {
@@ -35,11 +26,11 @@
   justify-content: center;
   align-items: center;
   min-height: 500px;
+  margin-top: 100px;
 }
 
 .panelWrapper {
   width: 350px;
-  height: auto;
   flex-shrink: 0;
   margin: 0;
 }

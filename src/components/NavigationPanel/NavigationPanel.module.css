@@ -1,0 +1,83 @@
+.navigationPanel {
+  display: flex;
+  flex-direction: column;
+  width: 350px;
+  margin-top: -1rem;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 1rem;
+  background-color: rgba(67, 67, 67, 0.15);
+  box-sizing: border-box;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.movesContainer {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  height: 40rem;
+  scrollbar-width: thin;
+  scrollbar-color: #575757 transparent;
+}
+
+.movesContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.movesContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.movesContainer::-webkit-scrollbar-thumb {
+  background-color: #575757;
+  border-radius: 4px;
+  border: 1px solid #444;
+}
+
+.movesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.moveRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.move {
+  display: block;
+  padding: 0.25rem;
+  font-size: 1rem;
+  color: #cbcbcb;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.active {
+  background-color: #444;
+}
+
+.arrowButtons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.arrowButton {
+  flex: 1;
+  font-size: 1.25rem;
+  padding: 0.5rem;
+  margin: 0 0.5rem;
+  background: rgba(81, 81, 81, 0.35);
+  border: 1px solid #575757;
+  border-radius: 6px;
+  color: #acacac;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.arrowButton:hover {
+  background-color: #444;
+}

@@ -1,7 +1,13 @@
 import { createContext, useContext, createSignal, batch, onCleanup } from 'solid-js';
-import { Side, BoardSquare, Square } from '../../types';
-import { initializeGame } from '../../logic/gameState';
-import { initEngine, handleAIMove } from '../ai/stockfishService';
+import { Chess } from 'chess.js';
+import { Side, BoardSquare, Square, PromotionPiece, GameState } from '../../types';
+import { initEngine, getBestMove } from '../ai/stockfishService';
+import {
+  fenToBoard,
+  captureCheck,
+  afterMoveChecks,
+  handleCapturedPiece,
+} from '../../logic/gameState';
 
 interface GameStoreValue {
   fen: () => string;
@@ -40,12 +46,24 @@ interface GameStoreValue {
   setLastMove: (val: { from: Square; to: Square } | null) => void;
   checkedKingSquare: () => Square | null;
   setCheckedKingSquare: (val: Square | null) => void;
+  moveHistory: () => string[];
+  setMoveHistory: (val: string[]) => void;
+  getChessInstance: () => Chess;
+  performAIMove: () => Promise<void>;
+  viewMoveIndex: () => number;
+  setViewMoveIndex: (val: number) => void;
+  viewFen: () => string;
+  setViewFen: (val: string) => void;
+  jumpToMoveIndex: (targetIndex: number) => void;
 }
 
 const GameContext = createContext<GameStoreValue>();
 
 export const GameProvider = (props: { children: any }) => {
-  const [fen, setFen] = createSignal(initializeGame().fen);
+  let chess = new Chess();
+  const chessGameHistory = new Chess();
+
+  const [fen, setFen] = createSignal(chess.fen());
   const [whiteTime, setWhiteTime] = createSignal(300);
   const [blackTime, setBlackTime] = createSignal(300);
   const [timeControl, setTimeControl] = createSignal(5);
@@ -64,15 +82,77 @@ export const GameProvider = (props: { children: any }) => {
   const [aiSide, setAiSide] = createSignal<Side>('w');
   const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
   const [checkedKingSquare, setCheckedKingSquare] = createSignal<Square | null>(null);
+  const [moveHistory, setMoveHistory] = createSignal<string[]>([]);
+  const [viewMoveIndex, setViewMoveIndex] = createSignal<number>(-1);
+  const [viewFen, setViewFen] = createSignal(chess.fen());
 
   let timerId: number | undefined;
   const difficultyEloMap: number[] = [400, 500, 600, 800, 1000, 1200, 1400, 1700, 2000, 2400];
 
+  const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): GameState => {
+    const move = chess.move({ from, to, promotion });
+    if (!move) {
+      throw new Error(`Invalid move from ${from} to ${to} (promotion=${promotion})`);
+    }
+    return {
+      fen: chess.fen(),
+      isGameOver: chess.isGameOver(),
+    };
+  };
+
+  const performAIMove = async () => {
+    if (isGameOver() || currentTurn() !== aiSide()) return;
+    try {
+      console.log('performAIMove: AI side is', aiSide());
+      const best = await getBestMove(fen());
+      if (!best) {
+        throw Error('No AI best move');
+      }
+      const from = best.slice(0, 2) as Square;
+      const to = best.slice(2, 4) as Square;
+      const promo = best.length === 5 ? best[4] : null;
+
+      const updatedState = promo
+        ? updateGameState(from, to, promo as PromotionPiece)
+        : updateGameState(from, to);
+
+      batch(() => {
+        const captured = captureCheck(to, fenToBoard(fen()));
+        if (captured) {
+          handleCapturedPiece(captured, setCapturedBlack, setCapturedWhite);
+        }
+        setFen(updatedState.fen);
+        setLastMove({ from, to });
+
+        const hist = chess.history();
+        setMoveHistory(hist);
+        setViewMoveIndex(hist.length - 1);
+      });
+
+      setBoardSquares(fenToBoard(updatedState.fen));
+      setViewFen(updatedState.fen);
+
+      setCurrentTurn((p) => (p === 'w' ? 'b' : 'w'));
+
+      afterMoveChecks(
+        updatedState.fen,
+        setGameWinner,
+        setIsGameOver,
+        setGameOverReason,
+        setCheckedKingSquare
+      );
+    } catch (err) {
+      console.error('Engine error:', err);
+    }
+  };
+
   const startNewGame = (newTimeControl: number, newDifficulty: number, side: Side) => {
     if (timerId) clearInterval(timerId);
+    chess = new Chess();
+    chessGameHistory.reset();
 
     batch(() => {
-      setFen(initializeGame().fen);
+      setFen(chess.fen());
       setTimeControl(newTimeControl);
       setDifficulty(newDifficulty);
       setWhiteTime(newTimeControl * 60);
@@ -89,6 +169,11 @@ export const GameProvider = (props: { children: any }) => {
       setCapturedWhite([]);
       setCapturedBlack([]);
       setBoardSquares([]);
+
+      setMoveHistory([]);
+      setViewMoveIndex(-1);
+
+      setViewFen(chess.fen());
     });
 
     startTimer();
@@ -97,22 +182,7 @@ export const GameProvider = (props: { children: any }) => {
     initEngine(elo).then(() => {
       if (side === 'b') {
         console.log('INIT AI, side black');
-        handleAIMove(
-          fen(),
-          isGameOver(),
-          aiSide(),
-          currentTurn(),
-          setFen,
-          setLastMove,
-          setBoardSquares,
-          setCurrentTurn,
-          setCapturedBlack,
-          setCapturedWhite,
-          setGameWinner,
-          setIsGameOver,
-          setGameOverReason,
-          setCheckedKingSquare
-        );
+        performAIMove();
       }
     });
   };
@@ -139,6 +209,22 @@ export const GameProvider = (props: { children: any }) => {
     setIsGameOver(true);
     setGameOverReason('time');
     setGameWinner(winnerColor);
+  };
+
+  const jumpToMoveIndex = (targetIndex: number) => {
+    const history = moveHistory();
+    const clamped = Math.min(Math.max(0, targetIndex), history.length - 1);
+    chessGameHistory.reset();
+
+    history.slice(0, clamped + 1).forEach((moveSan) => {
+      chessGameHistory.move(moveSan);
+    });
+    setViewMoveIndex(clamped);
+    if (clamped === history.length - 1) {
+      setViewFen(fen());
+    } else {
+      setViewFen(chessGameHistory.fen());
+    }
   };
 
   onCleanup(() => {
@@ -182,6 +268,15 @@ export const GameProvider = (props: { children: any }) => {
     setLastMove,
     checkedKingSquare,
     setCheckedKingSquare,
+    moveHistory,
+    setMoveHistory,
+    performAIMove,
+    viewMoveIndex,
+    setViewMoveIndex,
+    viewFen,
+    setViewFen,
+    jumpToMoveIndex,
+    getChessInstance: () => chess,
   };
 
   return <GameContext.Provider value={storeValue}>{props.children}</GameContext.Provider>;

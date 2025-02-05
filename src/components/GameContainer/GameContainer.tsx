@@ -4,6 +4,7 @@ import ChessGame from '../ChessGame/ChessGame';
 import GamePanel from '../GamePanel/GamePanel';
 import PlayModal from '../modals/PlayModal/PlayModal';
 import { useGameStore } from '../../store/game/GameContext';
+import NavigationPanel from '../NavigationPanel/NavigationPanel';
 
 const GameContainer = () => {
   const { timeControl, startNewGame, playerColor, difficulty } = useGameStore();
@@ -21,6 +22,9 @@ const GameContainer = () => {
         <PlayModal onClose={() => setShowPlayModal(false)} onStartGame={handleStartGame} />
       </Show>
       <div class={styles.gameLayout}>
+        <div class={styles.panelWrapper}>
+          <NavigationPanel />
+        </div>
         <div class={styles.boardWrapper}>
           <ChessGame />
         </div>
