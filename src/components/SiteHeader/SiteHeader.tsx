@@ -26,16 +26,28 @@ const SiteHeader = () => {
             >
               <span>PLAY</span>
             </button>
-            <button class={styles.button} onClick={() => alert('Tools placeholder')}>
+            <button
+              class={`${styles.comingSoonButton} ${styles.tooltip}`}
+              data-tooltip="Tools section with game analysis coming soon."
+            >
               <span>TOOLS</span>
             </button>
-            <button class={styles.button} onClick={() => alert('Puzzles placeholder')}>
+            <button
+              class={`${styles.comingSoonButton} ${styles.tooltip}`}
+              data-tooltip="Puzzles section with custom difficulty coming soon."
+            >
               <span>PUZZLES</span>
             </button>
-            <button class={styles.button} onClick={() => alert('Database placeholder')}>
+            <button
+              class={`${styles.comingSoonButton} ${styles.tooltip}`}
+              data-tooltip="Database section with games and latest tournament games coming soon."
+            >
               <span>DATABASE</span>
             </button>
-            <button class={styles.button} onClick={() => alert('Sign In placeholder')}>
+            <button
+              class={`${styles.comingSoonButton} ${styles.tooltip}`}
+              data-tooltip="Sign in with google OAuth for game history and more coming soon."
+            >
               <span>SIGN IN</span>
             </button>
           </div>
