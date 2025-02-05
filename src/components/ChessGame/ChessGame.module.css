@@ -8,43 +8,10 @@
   position: relative;
 }
 
-.chessboardContainer {
+.chessBoardContainer {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.flipButton {
-  position: absolute;
-  top: -240px;
-  right: -160px;
-  padding: 8px 18px;
-  font-size: 1rem;
-  cursor: pointer;
-  border-radius: 6px;
-  background: #202020;
-  border: 1px solid rgba(63, 63, 63, 0.45);
-  color: rgb(187, 187, 187);
-  transition:
-    background-color 0.3s ease,
-    transform 0.4s ease-in-out;
-  box-shadow: 8px 8px 12px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-
-.flipButton:hover {
-  background-color: #444;
-  color: rgb(255, 255, 255);
-  transform: scale(1.05);
-}
-
-.flipButton span {
-  display: inline-block;
-  transition: transform 0.4s ease-in-out;
-}
-
-.flipButton:hover span {
-  transform: scale(1.02);
 }
 
 .materialContainer {

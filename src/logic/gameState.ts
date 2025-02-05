@@ -1,5 +1,5 @@
 import { Chess } from 'chess.js';
-import { GameState, Square, BoardSquare, PromotionPiece, PIECE_VALUES, Side } from '../types';
+import { Square, BoardSquare, PIECE_VALUES, Side } from '../types';
 
 export const fenToBoard = (fen: string): BoardSquare[] => {
   const chess = new Chess(fen);
@@ -29,33 +29,10 @@ export const captureCheck = (target: Square, board: BoardSquare[]): string | nul
   return piece || null;
 };
 
-export const initializeGame = (): GameState => {
-  const chess = new Chess();
-  return {
-    fen: chess.fen(),
-    isGameOver: false,
-  };
-};
-
 export const getLegalMoves = (fen: string, square: Square): Square[] => {
   const chess = new Chess(fen);
   const legalMoves = chess.moves({ square, verbose: true });
   return legalMoves.map((move) => move.to as Square);
-};
-
-export const updateGameState = (
-  state: GameState,
-  from: Square,
-  to: Square,
-  promotion?: PromotionPiece
-): GameState => {
-  const chess = new Chess(state.fen);
-  const move = chess.move({ from, to, promotion });
-  if (!move) throw new Error(`Invalid move from ${from} to ${to} (promotion=${promotion})`);
-  return {
-    fen: chess.fen(),
-    isGameOver: chess.isGameOver(),
-  };
 };
 
 export const computeMaterial = (boardSquares: BoardSquare[]) => {

@@ -3,7 +3,7 @@ import { createSignal, Show } from 'solid-js';
 import styles from './SiteHeader.module.css';
 import PlayModal from '../modals/PlayModal/PlayModal';
 
-const SiteHeader = (props: { children?: any }) => {
+const SiteHeader = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
 
@@ -20,20 +20,23 @@ const SiteHeader = (props: { children?: any }) => {
             nxtchess
           </h1>
           <div class={styles.buttonPanel}>
-            <button class={styles.button} onClick={() => setIsModalOpen(true)}>
-              <span>Play</span>
+            <button
+              class={`${styles.button} ${styles.playButton}`}
+              onClick={() => setIsModalOpen(true)}
+            >
+              <span>PLAY</span>
             </button>
             <button class={styles.button} onClick={() => alert('Tools placeholder')}>
-              <span>Tools</span>
+              <span>TOOLS</span>
             </button>
             <button class={styles.button} onClick={() => alert('Puzzles placeholder')}>
-              <span>Puzzles</span>
+              <span>PUZZLES</span>
             </button>
             <button class={styles.button} onClick={() => alert('Database placeholder')}>
-              <span>Database</span>
+              <span>DATABASE</span>
             </button>
             <button class={styles.button} onClick={() => alert('Sign In placeholder')}>
-              <span>Sign In</span>
+              <span>SIGN IN</span>
             </button>
           </div>
         </div>
@@ -41,7 +44,6 @@ const SiteHeader = (props: { children?: any }) => {
       <Show when={isModalOpen()}>
         <PlayModal onClose={() => setIsModalOpen(false)} onStartGame={handleStartGame} />
       </Show>
-      <main class={styles.mainContent}>{props.children}</main>
     </>
   );
 };

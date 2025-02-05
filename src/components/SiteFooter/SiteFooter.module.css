@@ -1,0 +1,46 @@
+.footer {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  margin-top: 2rem;
+  background-color: #222;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background: rgba(20, 20, 20, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.footerList {
+  list-style: none;
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  font-size: 0.7rem;
+  color: #aaa;
+  text-transform: uppercase;
+}
+
+.footerList a {
+  color: #aaa !important;
+  text-decoration: none !important;
+  transition: none !important;
+}
+
+.footerList a:visited {
+  color: #aaa !important;
+  text-decoration: none !important;
+}
+
+.footerList a:hover {
+  color: #2adeae !important;
+}
+
+.footerList a:active {
+  color: #aaa !important;
+  text-decoration: none !important;
+}

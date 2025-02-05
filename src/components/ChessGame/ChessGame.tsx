@@ -1,9 +1,8 @@
-import { createSignal, createMemo, batch, Show } from 'solid-js';
-import { Square, PromotionPiece, Side } from '../../types';
+import { createSignal, batch, Show, onMount, onCleanup } from 'solid-js';
+import { Square, PromotionPiece, Side, GameState } from '../../types';
 import {
   fenToBoard,
   getLegalMoves,
-  updateGameState,
   captureCheck,
   afterMoveChecks,
   handleCapturedPiece,
@@ -12,7 +11,6 @@ import ChessBoard from '../ChessBoard/ChessBoard';
 import GameEndModal from '../modals/GameEndModal/GameEndModal';
 import PromotionModal from '../modals/PromotionModal/PromotionModal';
 import styles from './ChessGame.module.css';
-import { handleAIMove } from '../../store/ai/stockfishService';
 import { useGameStore } from '../../store/game/GameContext';
 import { useNavigate } from '@solidjs/router';
 
@@ -35,8 +33,17 @@ const ChessGame = () => {
     setIsGameOver,
     setGameOverReason,
     setCheckedKingSquare,
-    setBoardView,
     startNewGame,
+    getChessInstance,
+    performAIMove,
+    setMoveHistory,
+    setViewMoveIndex,
+    viewMoveIndex,
+    moveHistory,
+    jumpToMoveIndex,
+    viewFen,
+    setViewFen,
+    setBoardView,
   } = useGameStore();
 
   const navigate = useNavigate();
@@ -53,10 +60,50 @@ const ChessGame = () => {
     color: Side;
   } | null>(null);
 
-  const board = createMemo(() => fenToBoard(fen()));
+  const board = () => fenToBoard(viewFen());
+
+  onMount(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (isGameOver()) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        e.stopPropagation();
+        const newIndex = viewMoveIndex() - 1;
+        if (newIndex >= 0) {
+          setViewMoveIndex(newIndex);
+          jumpToMoveIndex(newIndex);
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        e.stopPropagation();
+        const newIndex = viewMoveIndex() + 1;
+        if (newIndex <= moveHistory().length - 1) {
+          setViewMoveIndex(newIndex);
+          jumpToMoveIndex(newIndex);
+        }
+      } else if (e.key === 'f') {
+        setBoardView((c) => (c === 'w' ? 'b' : 'w'));
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+
+    onCleanup(() => {
+      window.removeEventListener('keydown', handleKeyDown);
+    });
+  });
+
+  const resetViewIfNeeded = () => {
+    if (viewFen() !== fen()) {
+      setViewFen(fen());
+      const hist = getChessInstance().history();
+      setViewMoveIndex(hist.length - 1);
+    }
+  };
 
   const handleSquareClick = (square: Square) => {
     if (isGameOver()) return;
+    resetViewIfNeeded();
     const currentSelection = selectedSquare();
     if (!currentSelection) {
       const piece = board().find((sq) => sq.square === square)?.piece;
@@ -64,12 +111,13 @@ const ChessGame = () => {
       return;
     }
     highlightedMoves().includes(square)
-      ? performPlayerMove(currentSelection, square)
+      ? executeMove(currentSelection, square)
       : clearDraggingState();
   };
 
   const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
     if (isGameOver() || !isPlayerTurn(square)) return;
+    resetViewIfNeeded();
     setDraggedPiece({ square, piece });
     setCursorPosition({ x: event.clientX, y: event.clientY });
     setHighlightedMoves(getLegalMoves(fen(), square));
@@ -83,11 +131,23 @@ const ChessGame = () => {
 
   const handleMouseUp = (targetSquare: Square) => {
     if (isGameOver()) return;
+    resetViewIfNeeded();
     const dragState = draggedPiece();
     if (!dragState) return;
-    if (highlightedMoves().includes(targetSquare))
-      performPlayerMove(dragState.square, targetSquare);
+    if (highlightedMoves().includes(targetSquare)) {
+      executeMove(dragState.square, targetSquare);
+    }
     clearDraggingState();
+  };
+
+  const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): GameState => {
+    const chess = getChessInstance();
+    const move = chess.move({ from, to, promotion });
+    if (!move) throw new Error(`Invalid move from ${from} to ${to} (promotion=${promotion})`);
+    return {
+      fen: chess.fen(),
+      isGameOver: chess.isGameOver(),
+    };
   };
 
   const applyMove = (from: Square, to: Square, updatedState: { fen: string }, captured: any) => {
@@ -95,9 +155,13 @@ const ChessGame = () => {
       if (captured) handleCapturedPiece(captured, setCapturedBlack, setCapturedWhite);
       setFen(updatedState.fen);
       setLastMove({ from, to });
+      const hist = getChessInstance().history();
+      setMoveHistory(hist);
+      setViewMoveIndex(hist.length - 1);
+      setViewFen(updatedState.fen);
     });
     setBoardSquares(fenToBoard(updatedState.fen));
-    switchPlayer();
+    setCurrentTurn((p) => (p === 'w' ? 'b' : 'w'));
     afterMoveChecks(
       updatedState.fen,
       setGameWinner,
@@ -105,7 +169,9 @@ const ChessGame = () => {
       setGameOverReason,
       setCheckedKingSquare
     );
-    if (!isGameOver() && currentTurn() === aiSide()) executeIfAIMove();
+    if (!isGameOver() && currentTurn() === aiSide()) {
+      performAIMove();
+    }
   };
 
   const executeMove = (from: Square, to: Square) => {
@@ -121,7 +187,7 @@ const ChessGame = () => {
     }
     try {
       const captured = captureCheck(to, board());
-      const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to);
+      const updatedState = updateGameState(from, to);
       applyMove(from, to, updatedState, captured);
     } catch (err: any) {
       console.error('Invalid move:', err.message);
@@ -133,7 +199,7 @@ const ChessGame = () => {
   const finalizePromotion = (from: Square, to: Square, promoPiece: PromotionPiece) => {
     try {
       const captured = captureCheck(to, board());
-      const updatedState = updateGameState({ fen: fen(), isGameOver: false }, from, to, promoPiece);
+      const updatedState = updateGameState(from, to, promoPiece);
       applyMove(from, to, updatedState, captured);
     } catch (err: any) {
       console.error('Invalid promotion move:', err.message);
@@ -142,8 +208,6 @@ const ChessGame = () => {
       setPendingPromotion(null);
     }
   };
-
-  const performPlayerMove = (from: Square, to: Square) => executeMove(from, to);
 
   const isPlayerTurn = (square: Square) => {
     if (currentTurn() !== playerColor()) return false;
@@ -182,32 +246,6 @@ const ChessGame = () => {
     finalizePromotion(promo.from, promo.to, pieceType);
   };
 
-  const switchPlayer = () => setCurrentTurn((p) => (p === 'w' ? 'b' : 'w'));
-
-  const executeIfAIMove = () => {
-    if (!isGameOver() && currentTurn() === aiSide())
-      handleAIMove(
-        fen(),
-        isGameOver(),
-        aiSide(),
-        currentTurn(),
-        setFen,
-        setLastMove,
-        setBoardSquares,
-        setCurrentTurn,
-        setCapturedBlack,
-        setCapturedWhite,
-        setGameWinner,
-        setIsGameOver,
-        setGameOverReason,
-        setCheckedKingSquare
-      );
-  };
-
-  const flipBoardView = () => {
-    setBoardView((c) => (c === 'w' ? 'b' : 'w'));
-  };
-
   const handleRestart = () => {
     startNewGame(3, 600, playerColor() === 'w' ? 'b' : 'w');
   };
@@ -218,10 +256,7 @@ const ChessGame = () => {
 
   return (
     <div onMouseMove={handleMouseMove} class={styles.chessGameContainer}>
-      <button onClick={flipBoardView} class={styles.flipButton}>
-        <span>Flip Board 🔄</span>
-      </button>
-      <div class={styles.chessboardContainer}>
+      <div class={styles.chessBoardContainer}>
         <ChessBoard
           board={board}
           highlightedMoves={highlightedMoves}

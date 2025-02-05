@@ -59,7 +59,7 @@
 
 .actions button {
   padding: 0.6rem 1.2rem;
-  background: #278330;
+  background: #434343;
   border: none;
   border-radius: 4px;
   color: #fff;
@@ -69,10 +69,10 @@
 }
 
 .actions button:hover {
-  background: #2db03a;
+  background: #5e5e5e;
 }
 
 .actions button:focus {
   outline: none;
-  box-shadow: 0 0 3px #2db03a;
+  box-shadow: 0 0 3px #5e5e5e;
 }

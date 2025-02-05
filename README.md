@@ -6,7 +6,7 @@
 [![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4)](https://prettier.io/docs/en/why-prettier)
 
 <div style="text-align: center;">
-  <img src="public/assets/nxtchess-2-2-25.gif" alt="Early demo" />
+  <img src="public/assets/nxtchess-2-4-25.gif" alt="Early demo" />
 </div>
 
 ## 🚀 Project Vision
@@ -32,7 +32,7 @@ Create a lean, high-performance, multiplayer chess platform that incorporates un
 
 ## 📜 Roadmap
 
-What’s planned?
+What's planned?
 
 ### Phase 1: Core Gameplay ✅
 
@@ -50,9 +50,9 @@ What’s planned?
 ### Phase 2: Polished Core Gameplay and Non-Gameplay Essentials
 
 - [ ] Containerize frontend for development (Docker builds for local and later server integration).
-- [ ] Navigation panel and game move history.
+- [x] Navigation panel and game move history.
 - [ ] Implement "take back last move" functionality.
-- [ ] Add keyboard shortcuts for web app interaction.
+- [x] Add keyboard shortcuts for web app interaction.
 - [ ] _(Nice to have)_ Adopt a styling library (Tailwind, PostCSS, or Macaron).
 - [ ] _(Nice to have)_ Enhance board resizing, accessibility, and cross-browser compatibility.
 - [ ] _(Nice to have)_ Enable full offline AI mode via service worker after initial bundle download.

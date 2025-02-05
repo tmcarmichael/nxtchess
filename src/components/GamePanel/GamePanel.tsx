@@ -10,8 +10,15 @@ import GameClock from '../GameClock/GameClock';
 
 const GamePanel = () => {
   const navigate = useNavigate();
-  const { boardSquares, capturedWhite, capturedBlack, startNewGame, playerColor, difficulty } =
-    useGameStore();
+  const {
+    boardSquares,
+    capturedWhite,
+    capturedBlack,
+    startNewGame,
+    playerColor,
+    difficulty,
+    setBoardView,
+  } = useGameStore();
   const [showResignModal, setShowResignModal] = createSignal(false);
 
   const handleResign = () => {
@@ -28,63 +35,96 @@ const GamePanel = () => {
     setShowResignModal(false);
   };
 
+  const handleTakeBack = () => {
+    console.log('Take back action');
+    alert('Take back action placeholder');
+  };
+
   const material = createMemo(() => computeMaterial(boardSquares()));
 
   const opponentSide = () => (playerColor() === 'w' ? 'b' : 'w');
 
+  const flipBoardView = () => {
+    setBoardView((c) => (c === 'w' ? 'b' : 'w'));
+  };
+
   return (
-    <div class={styles.clockLayout}>
-      <div class={styles.clockWrapper}>
-        <GameClock side={opponentSide()} />
-      </div>
-      <div class={styles.panel}>
-        <div class={styles.materialContainer}>
-          <div class="capturesRow">
-            <For each={capturedBlack()}>
-              {(cap) => (
-                <span class={styles.capturedPiece}>
-                  <Piece type={cap as PieceType} style={{ width: '24px', height: '24px' }} />
-                </span>
-              )}
-            </For>
+    <div>
+      <div class={styles.clockLayout}>
+        <div class={styles.clockWrapper}>
+          <GameClock side={opponentSide()} />
+        </div>
+        <div class={styles.panel}>
+          <div class={styles.buttonPanel}>
+            <button onClick={handleResign} class={styles.gamePanelButton}>
+              <span>Resign ⏹️</span>
+            </button>
+            <button onClick={flipBoardView} class={styles.gamePanelButton}>
+              <span>Flip Board 🔄</span>
+            </button>
+            <button onClick={handleTakeBack} class={styles.gamePanelButton}>
+              <span>Take Back ⏪</span>
+            </button>
           </div>
-          <div class="capturesRow">
-            <For each={capturedWhite()}>
-              {(cap) => (
-                <span class={styles.capturedPiece}>
-                  <Piece type={cap as PieceType} style={{ width: '24px', height: '24px' }} />
-                </span>
-              )}
-            </For>
-          </div>
-          <div class={styles.materialDiff}>
-            <Show when={material().diff !== 0}>
-              <span>
-                {material().diff > 0 ? `White +${material().diff}` : `Black +${-material().diff}`}
-              </span>
-            </Show>
-            <Show when={material().diff === 0}>
-              <span>Material equal</span>
-            </Show>
-          </div>
+          <Show when={playerColor() === 'w'}>
+            <div class={styles.playerInfo}>
+              <span>You play White pieces </span>
+              <Piece type="wN" style={{ width: '32px', height: '32px' }} />
+            </div>
+          </Show>
+          <Show when={playerColor() === 'b'}>
+            <div class={styles.playerInfo}>
+              <span>You play Black pieces </span>
+              <Piece type="bN" style={{ width: '32px', height: '32px' }} />
+            </div>
+          </Show>
           <div class={styles.difficulty}>
-            <span>{`Difficulty: ${difficulty()}`}</span>
+            <span>{`Difficulty: ${difficulty()} ELO`}</span>
+          </div>
+          <div class={styles.materialContainer}>
+            <div class={styles.materialDiff}>
+              <Show when={material().diff !== 0}>
+                <span>
+                  {material().diff > 0 ? `White +${material().diff}` : `Black +${-material().diff}`}
+                </span>
+              </Show>
+              <Show when={material().diff === 0}>
+                <span>Material equal</span>
+              </Show>
+            </div>
+            <div class={styles.capturesContainer}>
+              <div class="capturesRow">
+                <For each={capturedBlack()}>
+                  {(cap) => (
+                    <span class={styles.capturedPiece}>
+                      <Piece type={cap as PieceType} style={{ width: '24px', height: '24px' }} />
+                    </span>
+                  )}
+                </For>
+              </div>
+              <div class="capturesRow">
+                <For each={capturedWhite()}>
+                  {(cap) => (
+                    <span class={styles.capturedPiece}>
+                      <Piece type={cap as PieceType} style={{ width: '24px', height: '24px' }} />
+                    </span>
+                  )}
+                </For>
+              </div>
+            </div>
           </div>
         </div>
-        <button class={styles.resignButton} onClick={handleResign}>
-          <span>Resign</span>
-        </button>
-        <Show when={showResignModal()}>
-          <ResignModal
-            onClose={() => setShowResignModal(false)}
-            onReplay={handleReplay}
-            onHome={handleHome}
-          />
-        </Show>
+        <div class={styles.clockWrapper}>
+          <GameClock side={playerColor()} />
+        </div>
       </div>
-      <div class={styles.clockWrapper}>
-        <GameClock side={playerColor()} />
-      </div>
+      <Show when={showResignModal()}>
+        <ResignModal
+          onClose={() => setShowResignModal(false)}
+          onReplay={handleReplay}
+          onHome={handleHome}
+        />
+      </Show>
     </div>
   );
 };

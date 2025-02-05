@@ -75,24 +75,25 @@ const PlayModal = ({ onClose, onStartGame }: { onClose: () => void; onStartGame:
         <div class={styles.settingRow}>
           <label class={styles.label}>Play As</label>
           <div class={styles.knightSelector}>
-            <img
-              src="/assets/wN.svg"
-              alt="White Knight"
+            <div
               classList={{
                 [styles.knightButton]: true,
                 [styles.selectedKnight]: localPlayerColor() === 'w',
               }}
               onClick={() => setLocalPlayerColor('w')}
-            />
-            <img
-              src="/assets/bN.svg"
-              alt="Black Knight"
+            >
+              <img src="/assets/wN.svg" alt="White Knight" />
+            </div>
+
+            <div
               classList={{
                 [styles.knightButton]: true,
                 [styles.selectedKnight]: localPlayerColor() === 'b',
               }}
               onClick={() => setLocalPlayerColor('b')}
-            />
+            >
+              <img src="/assets/bN.svg" alt="Black Knight" />
+            </div>
           </div>
         </div>
         <div class={styles.modalActions}>

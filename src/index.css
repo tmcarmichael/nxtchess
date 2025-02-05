@@ -15,8 +15,20 @@ body {
   min-height: 100vh;
   position: relative;
   background: linear-gradient(120deg, #444, #131313, #444);
-  background-size: 300% 300%;
+  background-size: 400% 400%;
   animation: gradientAnimation 100s ease infinite;
+}
+
+body::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 100, 255, 0.1);
+  pointer-events: none;
+  animation: colorPulse 20s ease-in-out infinite;
 }
 
 @keyframes gradientAnimation {
@@ -31,25 +43,13 @@ body {
   }
 }
 
-body::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 100, 255, 0.05);
-  pointer-events: none;
-  animation: colorPulse 20s ease-in-out infinite;
-}
-
 @keyframes brightnessPulse {
   0%,
   100% {
     filter: brightness(1);
   }
   50% {
-    filter: brightness(1.07);
+    filter: brightness(1.1);
   }
 }
 
@@ -59,6 +59,6 @@ body::after {
     opacity: 0.05;
   }
   50% {
-    opacity: 0.3;
+    opacity: 0.1;
   }
 }
