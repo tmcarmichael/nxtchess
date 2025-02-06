@@ -4,6 +4,17 @@ import Piece from '../Piece/Piece';
 import { PieceType, BoardSquare, Square } from '../../types';
 import { useGameStore } from '../../store/game/GameContext';
 
+type ChessBoardProps = {
+  board: () => BoardSquare[];
+  highlightedMoves: () => Square[];
+  selectedSquare: () => Square | null;
+  draggedPiece: () => { square: Square; piece: string } | null;
+  cursorPosition: () => { x: number; y: number };
+  onSquareClick: (square: Square) => void;
+  onSquareMouseUp: (square: Square) => void;
+  onDragStart: (square: Square, piece: string, event: DragEvent) => void;
+};
+
 const ChessBoard = ({
   board,
   highlightedMoves,
@@ -36,10 +47,7 @@ const ChessBoard = ({
     return (
       <div
         class={styles.draggedPiece}
-        style={{
-          top: `${y}px`,
-          left: `${x}px`,
-        }}
+        style={{ top: `${y}px`, left: `${x}px` }}
       >
         <Piece type={dragState.piece as PieceType} />
       </div>
@@ -51,23 +59,23 @@ const ChessBoard = ({
     const boardSquares: BoardSquare[] = view === 'b' ? [...board()].reverse() : board();
     const highlights: Square[] = highlightedMoves();
     const selected: Square | null = selectedSquare();
-    const dragState: { square: Square; piece: string } | null = draggedPiece();
-    const last: { from: Square; to: Square } | null = lastMove();
-    const checkedSquare: Square | null = checkedKingSquare();
+    const dragState = draggedPiece();
+    const last = lastMove();
+    const checkedSquare = checkedKingSquare();
 
     const renderSquare = ({ square, piece }: BoardSquare): JSX.Element => {
-      const file: string = square[0];
-      const rank: string = square[1];
+      const file = square[0];
+      const rank = square[1];
 
-      const isHighlighted: boolean = highlights.includes(square);
-      const isSelected: boolean = selected === square;
-      const isDragging: boolean = dragState?.square === square;
-      const isLastMove: boolean = last !== null && (last.from === square || last.to === square);
-      const isEnemyPiece: boolean = !!piece && !!dragState && dragState.piece[0] !== piece[0];
-      const isCheckedKing: boolean = checkedSquare === square;
-      const isLightSquare: boolean = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
-      const showFile: boolean = (view === 'w' && rank === '1') || (view === 'b' && rank === '8');
-      const showRank: boolean = (view === 'w' && file === 'h') || (view === 'b' && file === 'a');
+      const isHighlighted = highlights.includes(square);
+      const isSelected = selected === square;
+      const isDragging = dragState?.square === square;
+      const isLastMove = last !== null && (last.from === square || last.to === square);
+      const isEnemyPiece = !!piece && !!dragState && dragState.piece[0] !== piece[0];
+      const isCheckedKing = checkedSquare === square;
+      const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
+      const showFile = (view === 'w' && rank === '1') || (view === 'b' && rank === '8');
+      const showRank = (view === 'w' && file === 'h') || (view === 'b' && file === 'a');
 
       return (
         <div
@@ -92,7 +100,7 @@ const ChessBoard = ({
               type={piece as PieceType}
               draggable
               onDragStart={(e: DragEvent) => onDragStart(square, piece, e)}
-              style={{ opacity: isDragging ? 0.5 : 1 }}
+              style={{ opacity: isDragging ? 0.5 : 1, transition: 'opacity 0.2s ease' }}
             />
           )}
         </div>
