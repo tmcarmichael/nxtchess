@@ -14,7 +14,7 @@ const PlayModal = ({ onClose }: { onClose: () => void }) => {
   const navigate = useNavigate();
 
   const [localTimeIndex, setLocalTimeIndex] = createSignal(TIME_VALUES_MINUTES.indexOf(5));
-  const [localDifficultyIndex, setLocalDifficultyIndex] = createSignal(4);
+  const [localDifficultyIndex, setLocalDifficultyIndex] = createSignal(3);
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
 
   const handleStartGame = () => {

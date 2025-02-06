@@ -1,14 +1,12 @@
-import SiteContainer from './components/SiteContainer/SiteContainer';
-import GameContainer from './components/GameContainer/GameContainer';
-import { Route } from '@solidjs/router';
+import SiteHeader from './components/SiteHeader/SiteHeader';
+import SiteFooter from './components/SiteFooter/SiteFooter';
 
-const App = () => {
-  return (
-    <Route path="/" component={SiteContainer}>
-      <Route path="/" component={() => <div></div>} />
-      <Route path="/game" component={GameContainer} />
-    </Route>
-  );
-};
+const App = (props: any) => (
+  <>
+    <SiteHeader />
+    {props.children}
+    <SiteFooter />
+  </>
+);
 
 export default App;

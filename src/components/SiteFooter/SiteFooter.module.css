@@ -1,8 +1,11 @@
 .footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   padding: 1rem;
-  margin: 0 auto;
   background-color: #222;
   align-items: center;
   gap: 10px;

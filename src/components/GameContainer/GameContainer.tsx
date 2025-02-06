@@ -13,7 +13,6 @@ const GameContainer = () => {
       <Show when={showPlayModal()}>
         <PlayModal onClose={() => setShowPlayModal(false)} />
       </Show>
-
       <div class={styles.gameLayout}>
         <div class={styles.panelWrapper}>
           <NavigationPanel />

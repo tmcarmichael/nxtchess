@@ -8,6 +8,13 @@
     "email": "ThomasCarmichael@pm.me",
     "url": "https://tmcarmichael.com/"
   },
+  "contributors": [
+    {
+      "name": "Kevin Nguyen",
+      "email": "kev.ftw595@gmail.com",
+      "url": "https://github.com/kwin555"
+    }
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

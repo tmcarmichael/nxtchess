@@ -12,9 +12,9 @@ const SiteHero = () => {
   onMount(() => {
     intervalId = setInterval(() => {
       setPos({
-        x: Math.random() * 12 - 6,
-        y: Math.random() * 12 - 6,
-        r: Math.random() * 3 - 1.5,
+        x: Math.random() * 18 - 9,
+        y: Math.random() * 18 - 9,
+        r: Math.random() * 4 - 2,
       });
     }, 2000);
   });

@@ -254,7 +254,7 @@ const ChessGame = () => {
   };
 
   const handleRestart = () => {
-    startNewGame(3, 600, playerColor() === 'w' ? 'b' : 'w');
+    startNewGame(5, 3, playerColor() === 'w' ? 'b' : 'w');
   };
 
   const handleCloseEndGame = () => {
