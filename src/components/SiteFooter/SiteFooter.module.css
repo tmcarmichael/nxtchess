@@ -2,7 +2,7 @@
   display: flex;
   justify-content: center;
   padding: 1rem;
-  margin-top: 2rem;
+  margin: 0 auto;
   background-color: #222;
   align-items: center;
   gap: 10px;
@@ -12,6 +12,7 @@
   border-radius: 10px;
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
 }
 
 .footerList {

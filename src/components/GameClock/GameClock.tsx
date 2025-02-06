@@ -3,7 +3,10 @@ import { useGameStore } from '../../store/game/GameContext';
 import styles from './GameClock.module.css';
 
 const GameClock = (props: { side: 'w' | 'b' }) => {
-  const { whiteTime, blackTime } = useGameStore();
+  const [state, _] = useGameStore();
+
+  const whiteTime = () => state.whiteTime;
+  const blackTime = () => state.blackTime;
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);

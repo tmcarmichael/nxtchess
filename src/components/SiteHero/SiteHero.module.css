@@ -1,0 +1,44 @@
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 90vh;
+  overflow: hidden;
+}
+
+.knight {
+  position: absolute;
+  user-select: none;
+  pointer-events: none;
+  height: 500px;
+  max-height: 100%;
+  opacity: 0.02;
+  filter: grayscale(100%);
+  transform-origin: center;
+  z-index: 0;
+  animation: knightFloat 6s ease-in-out infinite alternate;
+}
+
+.playNowButton {
+  position: relative;
+  z-index: 1;
+  padding: 1rem 2rem;
+  font-size: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-transform: uppercase;
+  color: #2adeaed6;
+  background: transparent;
+  border: 2px solid #2adeaeb5;
+  border-radius: 5px;
+  cursor: pointer;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  box-shadow: 0 0 10px rgba(42, 222, 174, 0.5);
+}
+
+.playNowButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(42, 222, 174, 0.8);
+}
