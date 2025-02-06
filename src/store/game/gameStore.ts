@@ -139,7 +139,7 @@ export const createGameStore = () => {
     }
   };
 
-  function startNewGame(newTimeControl: number, newDifficulty: number, side: Side) {
+  function startNewGame(newTimeControl: number, newDifficultyLevel: number, side: Side) {
     if (timerId) clearInterval(timerId);
 
     chess = new Chess();
@@ -149,7 +149,7 @@ export const createGameStore = () => {
       setState({
         fen: chess.fen(),
         timeControl: newTimeControl,
-        difficulty: newDifficulty,
+        difficulty: newDifficultyLevel,
         whiteTime: newTimeControl * 60,
         blackTime: newTimeControl * 60,
         playerColor: side,
@@ -172,7 +172,7 @@ export const createGameStore = () => {
 
     startTimer();
 
-    const elo = DIFFICULTY_VALUES_ELO[newDifficulty - 1] ?? 600;
+    const elo = DIFFICULTY_VALUES_ELO[newDifficultyLevel - 1] ?? 600;
     initEngine(elo).then(() => {
       if (side === 'b') {
         performAIMove();
