@@ -1,25 +1,45 @@
 import { PromotionPiece } from '../../../types';
 import styles from './PromotionModal.module.css';
 
-const PromotionModal = ({
-  color,
-  onPromote,
-  onClose,
-}: {
+type PromotionModalProps = {
   color: string;
   onPromote: (piece: PromotionPiece) => void;
   onClose: () => void;
-}) => {
+};
+
+const PROMOTION_PIECES: Array<PromotionPiece> = ['q', 'r', 'b', 'n'];
+
+const PromotionModal = ({ color, onPromote, onClose }: PromotionModalProps) => {
+  // Allow keyboard selection (Enter or Space)
+  const handleKeyDown = (e: KeyboardEvent, piece: PromotionPiece) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onPromote(piece);
+    }
+  };
+
   return (
-    <div class={styles.modalOverlay} onClick={onClose}>
-      <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <div style="display: flex; gap: 1.2rem;">
-          {['q', 'r', 'b', 'n'].map((piece) => (
+    <div class={styles.modalOverlay} onClick={onClose} aria-modal="true" role="dialog">
+      <div
+        class={styles.modalContent}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          class={styles.closeButton}
+          onClick={onClose}
+          aria-label="Close promotion modal"
+        >
+          &times;
+        </button>
+        <div class={styles.promotionOptions}>
+          {PROMOTION_PIECES.map((piece) => (
             <img
+              class={styles.promotionImage}
               src={`/assets/${color}${piece.toUpperCase()}.svg`}
               alt={`Promote to ${piece.toUpperCase()}`}
-              style="width: 90px; cursor: pointer;"
-              onClick={() => onPromote(piece as PromotionPiece)}
+              tabindex="0"
+              onClick={() => onPromote(piece)}
+              onKeyDown={(e) => handleKeyDown(e, piece)}
             />
           ))}
         </div>
