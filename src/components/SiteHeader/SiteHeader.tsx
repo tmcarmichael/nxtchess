@@ -3,26 +3,38 @@ import { createSignal, Show } from 'solid-js';
 import styles from './SiteHeader.module.css';
 import PlayModal from '../modals/PlayModal/PlayModal';
 
-type SiteHeaderProps = {
-  children?: any;
+type NavItem = {
+  label: string;
+  action?: (setModal: (open: boolean) => void) => void;
+  tooltip?: string;
 };
 
-const NAV_ITEMS = [
-  { label: 'Play', action: (setModal: (open: boolean) => void) => setModal(true) },
-  { label: 'Tools', action: () => alert('Tools placeholder') },
-  { label: 'Puzzles', action: () => alert('Puzzles placeholder') },
-  { label: 'Database', action: () => alert('Database placeholder') },
-  { label: 'Sign In', action: () => alert('Sign In placeholder') },
-] as const;
+const NAV_ITEMS: NavItem[] = [
+  {
+    label: 'Play',
+    action: (setModal: (open: boolean) => void) => setModal(true),
+  },
+  {
+    label: 'Tools',
+    tooltip: 'Tools and game analysis coming soon.',
+  },
+  {
+    label: 'Puzzles',
+    tooltip: 'Puzzles and challenges coming soon.',
+  },
+  {
+    label: 'Database',
+    tooltip: 'Database with recent tournament games coming soon.',
+  },
+  {
+    label: 'Sign In',
+    tooltip: 'Sign In with Google OAuth coming soon.',
+  },
+];
 
-const SiteHeader = (props: SiteHeaderProps) => {
+const SiteHeader = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
-
-  const handleStartGame = () => {
-    navigate('/game', { replace: true });
-    setIsModalOpen(false);
-  };
 
   return (
     <>
@@ -32,10 +44,11 @@ const SiteHeader = (props: SiteHeaderProps) => {
             nxtchess
           </h1>
           <div class={styles.buttonPanel}>
-            {NAV_ITEMS.map(item => (
-              <button 
-                class={styles.button} 
-                onClick={() => item.action(setIsModalOpen)}
+            {NAV_ITEMS.map((item) => (
+              <button
+                class={`${styles.button} ${item.tooltip ? styles.tooltip : ''}`}
+                {...(item.tooltip ? { 'data-tooltip': item.tooltip } : {})}
+                onClick={() => item.action?.(setIsModalOpen)}
               >
                 <span>{item.label}</span>
               </button>
@@ -44,7 +57,7 @@ const SiteHeader = (props: SiteHeaderProps) => {
         </div>
       </header>
       <Show when={isModalOpen()}>
-        <PlayModal onClose={() => setIsModalOpen(false)} onStartGame={handleStartGame} />
+        <PlayModal onClose={() => setIsModalOpen(false)} />
       </Show>
     </>
   );

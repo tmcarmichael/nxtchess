@@ -1,31 +1,44 @@
+import { For } from 'solid-js';
 import styles from './SiteFooter.module.css';
+
+const links = [
+  {
+    label: 'ABOUT',
+    url: 'https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#nxt-chess',
+  },
+  {
+    label: 'ROADMAP',
+    url: 'https://github.com/tmcarmichael/nxtchess/blob/main/README.md#-roadmap',
+  },
+  {
+    label: 'SUPPORT',
+    url: 'https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#-contact',
+  },
+  {
+    label: 'PRIVACY',
+    url: 'https://github.com/tmcarmichael/nxtchess/blob/main/PRIVACY.md',
+  },
+  {
+    label: 'CONTRIBUTE',
+    url: 'https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#%EF%B8%8F-getting-started',
+  },
+  {
+    label: 'CONTACT',
+    url: 'https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#-contact',
+  },
+];
 
 const SiteFooter = () => {
   return (
     <footer class={styles.footer}>
       <ul class={styles.footerList}>
-        <li>
-          <a href="https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#nxt-chess">ABOUT</a>
-        </li>
-        <li>
-          <a href="https://github.com/tmcarmichael/nxtchess/blob/main/README.md#-roadmap">
-            ROADMAP
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#-contact">SUPPORT</a>
-        </li>
-        <li>
-          <a href="https://github.com/tmcarmichael/nxtchess/blob/main/PRIVACY.md">PRIVACY</a>
-        </li>
-        <li>
-          <a href="https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#%EF%B8%8F-getting-started">
-            CONTRIBUTE
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#-contact">CONTACT</a>
-        </li>
+        <For each={links}>
+          {(link) => (
+            <li>
+              <a href={link.url}>{link.label}</a>
+            </li>
+          )}
+        </For>
       </ul>
     </footer>
   );

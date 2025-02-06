@@ -10,7 +10,6 @@ type PromotionModalProps = {
 const PROMOTION_PIECES: Array<PromotionPiece> = ['q', 'r', 'b', 'n'];
 
 const PromotionModal = ({ color, onPromote, onClose }: PromotionModalProps) => {
-  // Allow keyboard selection (Enter or Space)
   const handleKeyDown = (e: KeyboardEvent, piece: PromotionPiece) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -20,15 +19,8 @@ const PromotionModal = ({ color, onPromote, onClose }: PromotionModalProps) => {
 
   return (
     <div class={styles.modalOverlay} onClick={onClose} aria-modal="true" role="dialog">
-      <div
-        class={styles.modalContent}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          class={styles.closeButton}
-          onClick={onClose}
-          aria-label="Close promotion modal"
-        >
+      <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <button class={styles.closeButton} onClick={onClose} aria-label="Close promotion modal">
           &times;
         </button>
         <div class={styles.promotionOptions}>

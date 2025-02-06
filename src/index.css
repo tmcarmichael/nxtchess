@@ -6,13 +6,12 @@
 }
 
 body {
-  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 90vh;
   position: relative;
   background: linear-gradient(120deg, #444, #131313, #444);
   background-size: 400% 400%;
