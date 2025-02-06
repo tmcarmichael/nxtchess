@@ -30,11 +30,12 @@
   margin-top: 1rem;
 }
 
-/* New class to style promotion images */
 .promotionImage {
   width: 90px;
   cursor: pointer;
-  transition: transform 0.2s ease, filter 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
 }
 
 .promotionImage:hover,
@@ -44,7 +45,6 @@
   outline: none;
 }
 
-/* (Optional) Close button styling if you decide to include one */
 .closeButton {
   position: absolute;
   top: 1rem;
@@ -60,7 +60,9 @@
   font-size: 1.8rem;
   cursor: pointer;
   color: #ccc;
-  transition: transform 0.2s ease, color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
 }
 
 .closeButton:hover,
@@ -71,11 +73,21 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
