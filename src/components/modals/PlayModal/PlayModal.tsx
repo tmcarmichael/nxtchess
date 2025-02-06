@@ -29,8 +29,8 @@ const PlayModal = ({ onClose, onStartGame }: { onClose: () => void; onStartGame:
   return (
     <div class={styles.modalOverlay} onClick={onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <button class={styles.closeButton} onClick={onClose} aria-label="Close Modal">
-          &times;
+        <button class={styles.closeButton} onClick={onClose} aria-label="Close">
+          ×
         </button>
         <h2>Play Against Computer</h2>
         <div class={styles.settingRow}>
@@ -96,7 +96,9 @@ const PlayModal = ({ onClose, onStartGame }: { onClose: () => void; onStartGame:
           </div>
         </div>
         <div class={styles.modalActions}>
-          <button onClick={handleStartGame}>Start Game</button>
+          <button class={styles.startButton} onClick={handleStartGame}>
+            Start Game
+          </button>
         </div>
       </div>
     </div>

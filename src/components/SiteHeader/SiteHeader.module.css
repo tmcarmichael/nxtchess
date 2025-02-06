@@ -1,13 +1,13 @@
 .header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
   display: flex;
   align-items: center;
-  padding: 10px 20px;
-  background-color: transparent;
-  z-index: 1000;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: #1a1a1a;
+  border-bottom: 1px solid #2a2a2a;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .titleAndPanel {
@@ -33,17 +33,15 @@
 }
 
 .title {
-  margin: 0;
-  font-size: 2.2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
   cursor: pointer;
-  color: rgb(207, 207, 207);
-  transition: color 0.4s ease-in-out;
-  user-select: none;
+  transition: color 0.2s;
 }
 
 .title:hover {
-  color: #2d7ed4;
+  color: #4a9eff;
 }
 
 .buttonPanel {
@@ -156,14 +154,23 @@ comingSoonButton::-moz-focus-inner {
 }
 
 .mainContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding-top: 60px;
+  flex: 1;
   width: 100%;
-  min-height: 100vh;
-  overflow-x: hidden;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .titleAndPanel {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .buttonPanel {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 .playButton span {
