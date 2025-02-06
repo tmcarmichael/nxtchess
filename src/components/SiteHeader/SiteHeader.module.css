@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 10px 15px;
+  padding: 6px 15px;
   background: rgba(20, 20, 20, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -150,14 +150,6 @@ button::-moz-focus-inner {
 
 comingSoonButton::-moz-focus-inner {
   border: 0;
-}
-
-.mainContent {
-  flex: 1;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
 }
 
 @media (max-width: 768px) {
