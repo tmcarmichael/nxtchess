@@ -3,7 +3,11 @@ import { useGameStore } from '../../store/game/GameContext';
 import styles from './NavigationPanel.module.css';
 
 const NavigationPanel = () => {
-  const { moveHistory, viewMoveIndex, jumpToMoveIndex } = useGameStore();
+  const [state, actions] = useGameStore();
+  const moveHistory = () => state.moveHistory;
+  const viewMoveIndex = () => state.viewMoveIndex;
+  const { jumpToMoveIndex } = actions;
+
   let movesContainerRef: HTMLDivElement | undefined;
 
   createEffect(

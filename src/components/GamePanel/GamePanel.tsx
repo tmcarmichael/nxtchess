@@ -1,24 +1,42 @@
-import styles from './GamePanel.module.css';
-import { For, Show, createSignal, createMemo } from 'solid-js';
+import { For, Show, createSignal, createMemo, batch } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { computeMaterial } from '../../logic/gameState';
-import Piece from '../Piece/Piece';
+import { computeMaterial, fenToBoard } from '../../logic/gameState';
 import { PieceType } from '../../types';
 import { useGameStore } from '../../store/game/GameContext';
+import Piece from '../Piece/Piece';
 import ResignModal from '../modals/ResignModal/ResignModal';
 import GameClock from '../GameClock/GameClock';
+import { DIFFICULTY_VALUES_ELO } from '../../utils';
+import styles from './GamePanel.module.css';
 
 const GamePanel = () => {
   const navigate = useNavigate();
-  const {
-    boardSquares,
-    capturedWhite,
-    capturedBlack,
-    startNewGame,
-    playerColor,
-    difficulty,
-    setBoardView,
-  } = useGameStore();
+  const [
+    _,
+    {
+      boardSquares,
+      capturedWhite,
+      capturedBlack,
+      startNewGame,
+      playerColor,
+      difficulty,
+      setBoardView,
+      getChessInstance,
+      setFen,
+      setViewFen,
+      setBoardSquares,
+      setCapturedBlack,
+      setCapturedWhite,
+      setMoveHistory,
+      setViewMoveIndex,
+      setIsGameOver,
+      setGameOverReason,
+      setGameWinner,
+      setCurrentTurn,
+      performAIMove,
+    },
+  ] = useGameStore();
+
   const [showResignModal, setShowResignModal] = createSignal(false);
 
   const handleResign = () => {
@@ -36,8 +54,45 @@ const GamePanel = () => {
   };
 
   const handleTakeBack = () => {
-    console.log('Take back action');
-    alert('Take back action placeholder');
+    const chess = getChessInstance();
+    const undone1 = chess.undo();
+    if (!undone1) return;
+    if (undone1.captured) {
+      if (undone1.color === 'w') {
+        setCapturedBlack((prev) => prev.slice(0, -1));
+      } else {
+        setCapturedWhite((prev) => prev.slice(0, -1));
+      }
+    }
+    if (chess.turn() !== playerColor()) {
+      const undone2 = chess.undo();
+      if (undone2 && undone2.captured) {
+        if (undone2.color === 'w') {
+          setCapturedBlack((prev) => prev.slice(0, -1));
+        } else {
+          setCapturedWhite((prev) => prev.slice(0, -1));
+        }
+      }
+    }
+    batch(() => {
+      const newFen = chess.fen();
+      setFen(newFen);
+      setViewFen(newFen);
+      setBoardSquares(fenToBoard(newFen));
+      setMoveHistory(chess.history());
+      setViewMoveIndex(chess.history().length - 1);
+      setIsGameOver(false);
+      setGameOverReason(null);
+      setGameWinner(null);
+
+      if (chess.history().length === 0) {
+        setCurrentTurn('w');
+
+        if (playerColor() === 'b') {
+          performAIMove();
+        }
+      }
+    });
   };
 
   const material = createMemo(() => computeMaterial(boardSquares()));
@@ -47,6 +102,8 @@ const GamePanel = () => {
   const flipBoardView = () => {
     setBoardView((c) => (c === 'w' ? 'b' : 'w'));
   };
+
+  const difficultyELO = DIFFICULTY_VALUES_ELO[difficulty()];
 
   return (
     <div>
@@ -79,7 +136,7 @@ const GamePanel = () => {
             </div>
           </Show>
           <div class={styles.difficulty}>
-            <span>{`Difficulty: ${difficulty()} ELO`}</span>
+            <span>{`Difficulty: ${difficultyELO} ELO`}</span>
           </div>
           <div class={styles.materialContainer}>
             <div class={styles.materialDiff}>

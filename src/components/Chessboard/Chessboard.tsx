@@ -23,7 +23,11 @@ const ChessBoard = ({
   onSquareMouseUp: (square: Square) => void;
   onDragStart: (square: Square, piece: string, event: DragEvent) => void;
 }) => {
-  const { checkedKingSquare, boardView, lastMove } = useGameStore();
+  const [state, _] = useGameStore();
+
+  const lastMove = () => state.lastMove;
+  const checkedKingSquare = () => state.checkedKingSquare;
+  const boardView = () => state.boardView;
 
   const renderDraggedPiece = () => {
     const dragState = draggedPiece();

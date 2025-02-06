@@ -3,8 +3,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  width: 100%;
-  min-height: 100vh;
+  max-width: 1200px;
   text-align: center;
   padding: 8rem 1rem 2rem;
   box-sizing: border-box;
@@ -15,8 +14,8 @@
   align-items: flex-start;
   gap: 2rem;
   margin-top: 7rem;
-  min-height: 80vh;
-  width: 100%;
+  min-height: 70vh;
+  max-width: 1200px;
   justify-content: center;
 }
 

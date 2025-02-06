@@ -1,14 +1,13 @@
 import { createSignal, Show } from 'solid-js';
+import { useGameStore } from '../../store/game/GameContext';
 import styles from './GameContainer.module.css';
 import ChessGame from '../ChessGame/ChessGame';
 import GamePanel from '../GamePanel/GamePanel';
 import PlayModal from '../modals/PlayModal/PlayModal';
-import { useGameStore } from '../../store/game/GameContext';
 import NavigationPanel from '../NavigationPanel/NavigationPanel';
 
 const GameContainer = () => {
-  const { timeControl, startNewGame, playerColor, difficulty } = useGameStore();
-
+  const [_, { timeControl, startNewGame, playerColor, difficulty }] = useGameStore();
   const [showPlayModal, setShowPlayModal] = createSignal(false);
 
   const handleStartGame = () => {

@@ -1,4 +1,5 @@
 import { createSignal, batch, Show, onMount, onCleanup } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 import { Square, PromotionPiece, Side, GameState } from '../../types';
 import {
   fenToBoard,
@@ -10,43 +11,43 @@ import {
 import ChessBoard from '../ChessBoard/ChessBoard';
 import GameEndModal from '../modals/GameEndModal/GameEndModal';
 import PromotionModal from '../modals/PromotionModal/PromotionModal';
-import styles from './ChessGame.module.css';
 import { useGameStore } from '../../store/game/GameContext';
-import { useNavigate } from '@solidjs/router';
+import styles from './ChessGame.module.css';
 
 const ChessGame = () => {
-  const {
-    fen,
-    setFen,
-    playerColor,
-    currentTurn,
-    setCurrentTurn,
-    isGameOver,
-    gameOverReason,
-    gameWinner,
-    aiSide,
-    setBoardSquares,
-    setCapturedBlack,
-    setCapturedWhite,
-    setLastMove,
-    setGameWinner,
-    setIsGameOver,
-    setGameOverReason,
-    setCheckedKingSquare,
-    startNewGame,
-    getChessInstance,
-    performAIMove,
-    setMoveHistory,
-    setViewMoveIndex,
-    viewMoveIndex,
-    moveHistory,
-    jumpToMoveIndex,
-    viewFen,
-    setViewFen,
-    setBoardView,
-  } = useGameStore();
+  const [state, actions] = useGameStore();
 
-  const navigate = useNavigate();
+  const fen = () => state.fen;
+  const playerColor = () => state.playerColor;
+  const currentTurn = () => state.currentTurn;
+  const isGameOver = () => state.isGameOver;
+  const gameOverReason = () => state.gameOverReason;
+  const gameWinner = () => state.gameWinner;
+  const aiSide = () => state.aiSide;
+  const viewMoveIndex = () => state.viewMoveIndex;
+  const moveHistory = () => state.moveHistory;
+  const viewFen = () => state.viewFen;
+
+  const setFen = (val: string) => actions.setFen(val);
+  const setCurrentTurn = (val: Side | ((prev: Side) => Side)) => actions.setCurrentTurn(val);
+  const setBoardSquares = (squares: any) => actions.setBoardSquares(squares);
+  const setCapturedBlack = (fnOrVal: any) => actions.setCapturedBlack(fnOrVal);
+  const setCapturedWhite = (fnOrVal: any) => actions.setCapturedWhite(fnOrVal);
+  const setLastMove = (move: { from: Square; to: Square } | null) => actions.setLastMove(move);
+  const setGameWinner = (val: Side | 'draw' | null) => actions.setGameWinner(val);
+  const setIsGameOver = (val: boolean) => actions.setIsGameOver(val);
+  const setGameOverReason = (val: 'checkmate' | 'stalemate' | 'time' | null) =>
+    actions.setGameOverReason(val);
+  const setCheckedKingSquare = (square: Square | null) => actions.setCheckedKingSquare(square);
+  const setMoveHistory = (moves: string[]) => actions.setMoveHistory(moves);
+  const setViewMoveIndex = (index: number) => actions.setViewMoveIndex(index);
+  const setViewFen = (val: string) => actions.setViewFen(val);
+  const setBoardView = (val: Side | ((prev: Side) => Side)) => actions.setBoardView(val);
+
+  const startNewGame = actions.startNewGame;
+  const performAIMove = actions.performAIMove;
+  const jumpToMoveIndex = actions.jumpToMoveIndex;
+  const getChessInstance = actions.getChessInstance;
 
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
@@ -60,12 +61,13 @@ const ChessGame = () => {
     color: Side;
   } | null>(null);
 
+  const navigate = useNavigate();
+
   const board = () => fenToBoard(viewFen());
 
   onMount(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (isGameOver()) return;
-
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
         e.stopPropagation();
@@ -87,7 +89,6 @@ const ChessGame = () => {
       }
     }
     window.addEventListener('keydown', handleKeyDown);
-
     onCleanup(() => {
       window.removeEventListener('keydown', handleKeyDown);
     });
@@ -110,9 +111,11 @@ const ChessGame = () => {
       if (piece && isPlayerTurn(square)) selectSquare(square);
       return;
     }
-    highlightedMoves().includes(square)
-      ? executeMove(currentSelection, square)
-      : clearDraggingState();
+    if (highlightedMoves().includes(square)) {
+      executeMove(currentSelection, square);
+    } else {
+      clearDraggingState();
+    }
   };
 
   const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
@@ -143,7 +146,9 @@ const ChessGame = () => {
   const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): GameState => {
     const chess = getChessInstance();
     const move = chess.move({ from, to, promotion });
-    if (!move) throw new Error(`Invalid move from ${from} to ${to} (promotion=${promotion})`);
+    if (!move) {
+      throw new Error(`Invalid move from ${from} to ${to} (promotion=${promotion})`);
+    }
     return {
       fen: chess.fen(),
       isGameOver: chess.isGameOver(),
@@ -152,7 +157,9 @@ const ChessGame = () => {
 
   const applyMove = (from: Square, to: Square, updatedState: { fen: string }, captured: any) => {
     batch(() => {
-      if (captured) handleCapturedPiece(captured, setCapturedBlack, setCapturedWhite);
+      if (captured) {
+        handleCapturedPiece(captured, setCapturedBlack, setCapturedWhite);
+      }
       setFen(updatedState.fen);
       setLastMove({ from, to });
       const hist = getChessInstance().history();
@@ -161,7 +168,7 @@ const ChessGame = () => {
       setViewFen(updatedState.fen);
     });
     setBoardSquares(fenToBoard(updatedState.fen));
-    setCurrentTurn((p) => (p === 'w' ? 'b' : 'w'));
+    setCurrentTurn((prev) => (prev === 'w' ? 'b' : 'w'));
     afterMoveChecks(
       updatedState.fen,
       setGameWinner,
