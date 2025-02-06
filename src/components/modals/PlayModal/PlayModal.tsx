@@ -1,29 +1,29 @@
 import { createSignal } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 import { useGameStore } from '../../../store/game/GameContext';
 import { Side } from '../../../types';
 import {
   TIME_VALUES_MINUTES,
   DIFFICULTY_VALUES_ELO,
   DIFFICULTY_VALUES_LEVEL,
-} from '../../../utils';
+} from '../../../utils/constants';
 import styles from './PlayModal.module.css';
 
-const PlayModal = ({ onClose, onStartGame }: { onClose: () => void; onStartGame: () => void }) => {
-  const [_, { setTimeControl, setDifficulty, setPlayerColor, startNewGame }] = useGameStore();
+const PlayModal = ({ onClose }: { onClose: () => void }) => {
+  const [_, { startNewGame }] = useGameStore();
+  const navigate = useNavigate();
 
   const [localTimeIndex, setLocalTimeIndex] = createSignal(TIME_VALUES_MINUTES.indexOf(5));
   const [localDifficultyIndex, setLocalDifficultyIndex] = createSignal(4);
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
 
   const handleStartGame = () => {
-    onStartGame();
     const selectedTime = TIME_VALUES_MINUTES[localTimeIndex()];
-    const selectedElo = DIFFICULTY_VALUES_ELO[localDifficultyIndex()];
-    setTimeControl(selectedTime);
-    setDifficulty(selectedElo);
-    setPlayerColor(localPlayerColor());
-    startNewGame(selectedTime, selectedElo, localPlayerColor());
+    const selectedLevel = localDifficultyIndex() + 1;
+    const chosenSide = localPlayerColor();
+    startNewGame(selectedTime, selectedLevel, chosenSide);
     onClose();
+    navigate('/game');
   };
 
   return (
@@ -45,10 +45,7 @@ const PlayModal = ({ onClose, onStartGame }: { onClose: () => void; onStartGame:
               max={TIME_VALUES_MINUTES.length - 1}
               step="1"
               value={localTimeIndex()}
-              onInput={(e) => {
-                const idx = +e.currentTarget.value;
-                setLocalTimeIndex(idx);
-              }}
+              onInput={(e) => setLocalTimeIndex(+e.currentTarget.value)}
             />
           </div>
         </div>
@@ -65,10 +62,7 @@ const PlayModal = ({ onClose, onStartGame }: { onClose: () => void; onStartGame:
               max={DIFFICULTY_VALUES_LEVEL.length - 1}
               step="1"
               value={localDifficultyIndex()}
-              onInput={(e) => {
-                const idx = +e.currentTarget.value;
-                setLocalDifficultyIndex(idx);
-              }}
+              onInput={(e) => setLocalDifficultyIndex(+e.currentTarget.value)}
             />
           </div>
         </div>

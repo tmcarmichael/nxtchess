@@ -103,7 +103,8 @@ const GamePanel = () => {
     setBoardView((c) => (c === 'w' ? 'b' : 'w'));
   };
 
-  const difficultyELO = DIFFICULTY_VALUES_ELO[difficulty()];
+  const difficultyLevel = difficulty();
+  const difficultyELO = DIFFICULTY_VALUES_ELO[difficultyLevel - 1];
 
   return (
     <div>

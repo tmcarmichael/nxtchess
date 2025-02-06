@@ -51,7 +51,7 @@
   align-items: center;
   gap: 15px;
   padding: 5px 15px;
-  background: rgba(74, 74, 74, 0.4);
+  background: rgba(79, 79, 79, 0.3);
   border: 1px solid rgba(74, 74, 74, 0.8);
   border-radius: 5px;
   backdrop-filter: blur(4px);
