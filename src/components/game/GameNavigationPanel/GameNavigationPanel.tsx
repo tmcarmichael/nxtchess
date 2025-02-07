@@ -1,8 +1,8 @@
 import { For, createMemo, createEffect, on } from 'solid-js';
-import { useGameStore } from '../../store/game/GameContext';
-import styles from './NavigationPanel.module.css';
+import { useGameStore } from '../../../store/GameContext';
+import styles from './GameNavigationPanel.module.css';
 
-const NavigationPanel = () => {
+const GameNavigationPanel = () => {
   const [state, actions] = useGameStore();
   const moveHistory = () => state.moveHistory;
   const viewMoveIndex = () => state.viewMoveIndex;
@@ -90,4 +90,4 @@ const NavigationPanel = () => {
   );
 };
 
-export default NavigationPanel;
+export default GameNavigationPanel;

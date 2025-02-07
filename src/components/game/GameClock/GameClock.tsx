@@ -1,5 +1,5 @@
 import { createMemo } from 'solid-js';
-import { useGameStore } from '../../store/game/GameContext';
+import { useGameStore } from '../../../store/GameContext';
 import styles from './GameClock.module.css';
 
 const GameClock = (props: { side: 'w' | 'b' }) => {

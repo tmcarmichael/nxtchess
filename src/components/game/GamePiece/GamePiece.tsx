@@ -1,8 +1,8 @@
-import styles from './Piece.module.css';
-import { PieceType } from '../../types';
+import { PieceType } from '../../../types';
 import { JSX } from 'solid-js';
+import styles from './GamePiece.module.css';
 
-const Piece = ({
+const GamePiece = ({
   type,
   draggable = false,
   onDragStart,
@@ -27,4 +27,4 @@ const Piece = ({
   );
 };
 
-export default Piece;
+export default GamePiece;

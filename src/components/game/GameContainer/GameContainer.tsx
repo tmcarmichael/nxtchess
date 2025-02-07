@@ -1,9 +1,9 @@
 import { createSignal, Show } from 'solid-js';
+import GameBoardController from '../GameBoardController/GameBoardController';
+import GameControlsPanel from '../GameControlsPanel/GameControlsPanel';
+import PlayModal from '../../modals/PlayModal/PlayModal';
+import NavigationPanel from '../GameNavigationPanel/GameNavigationPanel';
 import styles from './GameContainer.module.css';
-import ChessGame from '../ChessGame/ChessGame';
-import GamePanel from '../GamePanel/GamePanel';
-import PlayModal from '../modals/PlayModal/PlayModal';
-import NavigationPanel from '../NavigationPanel/NavigationPanel';
 
 const GameContainer = () => {
   const [showPlayModal, setShowPlayModal] = createSignal(false);
@@ -18,10 +18,10 @@ const GameContainer = () => {
           <NavigationPanel />
         </div>
         <div class={styles.boardWrapper}>
-          <ChessGame />
+          <GameBoardController />
         </div>
         <div class={styles.panelWrapper}>
-          <GamePanel />
+          <GameControlsPanel />
         </div>
       </div>
     </div>

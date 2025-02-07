@@ -1,20 +1,20 @@
 import { createSignal, batch, Show, onMount, onCleanup } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Square, PromotionPiece, Side, GameState } from '../../types';
+import { Square, PromotionPiece, Side, GameState } from '../../../types';
 import {
   fenToBoard,
   getLegalMoves,
   captureCheck,
   afterMoveChecks,
   handleCapturedPiece,
-} from '../../logic/gameState';
-import ChessBoard from '../ChessBoard/ChessBoard';
-import GameEndModal from '../modals/GameEndModal/GameEndModal';
-import PromotionModal from '../modals/PromotionModal/PromotionModal';
-import { useGameStore } from '../../store/game/GameContext';
-import styles from './ChessGame.module.css';
+} from '../../../services/chessGameService';
+import GameBoard from '../GameBoard/GameBoard';
+import GameEndModal from '../../modals/GameEndModal/GameEndModal';
+import PromotionModal from '../../modals/PromotionModal/PromotionModal';
+import { useGameStore } from '../../../store/GameContext';
+import styles from './GameBoardController.module.css';
 
-const ChessGame = () => {
+const GameBoardController = () => {
   const [state, actions] = useGameStore();
 
   const fen = () => state.fen;
@@ -27,6 +27,9 @@ const ChessGame = () => {
   const viewMoveIndex = () => state.viewMoveIndex;
   const moveHistory = () => state.moveHistory;
   const viewFen = () => state.viewFen;
+  const lastMove = () => state.lastMove;
+  const checkedKingSquare = () => state.checkedKingSquare;
+  const boardView = () => state.boardView;
 
   const setFen = (val: string) => actions.setFen(val);
   const setCurrentTurn = (val: Side | ((prev: Side) => Side)) => actions.setCurrentTurn(val);
@@ -264,7 +267,7 @@ const ChessGame = () => {
   return (
     <div onMouseMove={handleMouseMove} class={styles.chessGameContainer}>
       <div class={styles.chessBoardContainer}>
-        <ChessBoard
+        <GameBoard
           board={board}
           highlightedMoves={highlightedMoves}
           selectedSquare={selectedSquare}
@@ -273,6 +276,9 @@ const ChessGame = () => {
           onSquareClick={handleSquareClick}
           onSquareMouseUp={handleMouseUp}
           onDragStart={handleDragStart}
+          lastMove={lastMove}
+          checkedKingSquare={checkedKingSquare}
+          boardView={boardView}
         />
       </div>
       <Show when={isGameOver()}>
@@ -294,4 +300,4 @@ const ChessGame = () => {
   );
 };
 
-export default ChessGame;
+export default GameBoardController;

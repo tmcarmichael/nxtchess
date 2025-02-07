@@ -1,11 +1,11 @@
-import SiteHeader from './components/SiteHeader/SiteHeader';
-import SiteFooter from './components/SiteFooter/SiteFooter';
+import CommonSiteHeader from './components/common/CommonSiteHeader/CommonSiteHeader';
+import CommonSiteFooter from './components/common/CommonSiteFooter/CommonSiteFooter';
 
 const App = (props: any) => (
   <>
-    <SiteHeader />
+    <CommonSiteHeader />
     {props.children}
-    <SiteFooter />
+    <CommonSiteFooter />
   </>
 );
 

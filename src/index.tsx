@@ -1,9 +1,9 @@
 import { render } from 'solid-js/web';
 import { Router, Route } from '@solidjs/router';
-import { GameProvider } from './store/game/GameContext';
+import { GameProvider } from './store/GameContext';
 import App from './App';
-import HomeContainer from './components/HomeContainer/HomeContainer';
-import GameContainer from './components/GameContainer/GameContainer';
+import HomeContainer from './components/home/HomeContainer/HomeContainer';
+import GameContainer from './components/game/GameContainer/GameContainer';
 import './index.css';
 
 render(
