@@ -52,7 +52,7 @@ What's planned?
 - [x] Navigation panel and game move history.
 - [x] Implement "take back last move" functionality.
 - [x] Add keyboard shortcuts for web app interaction.
-- [ ] Refactor frontend from rapid development, clear UI layer, Service layer, State management.
+- [x] Refactor frontend from rapid development, clear UI layer, Service layer, State management.
 - [ ] Containerize frontend for development (Docker builds for local and later server integration).
 - [ ] _(Nice to have)_ Adopt a styling library (Tailwind, PostCSS, or Macaron).
 - [ ] _(Nice to have)_ Enhance board resizing, accessibility, and cross-browser compatibility.
