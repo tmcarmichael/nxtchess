@@ -5,7 +5,6 @@ import {
   fenToBoard,
   getLegalMoves,
   captureCheck,
-  afterMoveChecks,
   handleCapturedPiece,
 } from '../../../services/chessGameService';
 import GameBoard from '../GameBoard/GameBoard';
@@ -37,11 +36,6 @@ const GameBoardController = () => {
   const setCapturedBlack = (fnOrVal: any) => actions.setCapturedBlack(fnOrVal);
   const setCapturedWhite = (fnOrVal: any) => actions.setCapturedWhite(fnOrVal);
   const setLastMove = (move: { from: Square; to: Square } | null) => actions.setLastMove(move);
-  const setGameWinner = (val: Side | 'draw' | null) => actions.setGameWinner(val);
-  const setIsGameOver = (val: boolean) => actions.setIsGameOver(val);
-  const setGameOverReason = (val: 'checkmate' | 'stalemate' | 'time' | null) =>
-    actions.setGameOverReason(val);
-  const setCheckedKingSquare = (square: Square | null) => actions.setCheckedKingSquare(square);
   const setMoveHistory = (moves: string[]) => actions.setMoveHistory(moves);
   const setViewMoveIndex = (index: number) => actions.setViewMoveIndex(index);
   const setViewFen = (val: string) => actions.setViewFen(val);
@@ -51,6 +45,7 @@ const GameBoardController = () => {
   const performAIMove = actions.performAIMove;
   const jumpToMoveIndex = actions.jumpToMoveIndex;
   const getChessInstance = actions.getChessInstance;
+  const afterMoveChecks = actions.afterMoveChecks;
 
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
@@ -172,13 +167,8 @@ const GameBoardController = () => {
     });
     setBoardSquares(fenToBoard(updatedState.fen));
     setCurrentTurn((prev) => (prev === 'w' ? 'b' : 'w'));
-    afterMoveChecks(
-      updatedState.fen,
-      setGameWinner,
-      setIsGameOver,
-      setGameOverReason,
-      setCheckedKingSquare
-    );
+    afterMoveChecks(updatedState.fen);
+
     if (!isGameOver() && currentTurn() === aiSide()) {
       performAIMove();
     }

@@ -53,7 +53,7 @@ What's planned?
 - [x] Implement "take back last move" functionality.
 - [x] Add keyboard shortcuts for web app interaction.
 - [x] Refactor frontend from rapid development, clear UI layer, Service layer, State management.
-- [ ] Containerize frontend for development (Docker builds for local and later server integration).
+- [x] Containerize frontend for development (Docker builds for local and later server integration).
 - [ ] _(Nice to have)_ Adopt a styling library (Tailwind, PostCSS, or Macaron).
 - [ ] _(Nice to have)_ Enhance board resizing, accessibility, and cross-browser compatibility.
 - [ ] _(Nice to have)_ Enable full offline AI mode via service worker after initial bundle download.
@@ -98,30 +98,55 @@ What's planned?
 ### Prerequisites
 
 - **Node.js** (>v16)
-- **pnpm**
+- **yarn**
 
 ### Installation
 
+#### Local:
+
 1. Clone this repository:
-   ```bash
-   git clone https://github.com/tmcarmichael/nxtchess.git
-   ```
+
+```bash
+git clone https://github.com/tmcarmichael/nxtchess.git
+```
+
 2. Navigate to the project directory:
-   ```bash
-   cd nxtchess
-   ```
+
+```bash
+cd nxtchess
+```
+
 3. Install dependencies:
-   ```bash
-   pnpm install
-   ```
+
+```bash
+yarn install
+```
+
 4. Start the development server:
-   ```bash
-   pnpm run dev
-   ```
-5. Open your browser and navigate to the localhost port suggested by Vite, such as:
-   ```
-   Local:   http://localhost:5173/
-   ```
+
+```bash
+yarn dev
+```
+
+5. Open your browser and navigate to the localhost port suggested by Vite, such as, http://localhost:5173/
+
+#### Local Docker Container:
+
+1. Download Docker desktop for Docker and Docker Compose. Or ensure you have both installed. https://www.docker.com/products/docker-desktop/.
+2. Build local container.
+
+```bash
+yarn docker:dev:build
+```
+
+3. Spin up local container.
+
+```bash
+yarn docker:dev:run
+```
+
+4. Access container at localhost, http://localhost/
+5. Alternatively use Docker Desktop and for nxtchess-frontend-dev, click "open in browser".
 
 ---
 
