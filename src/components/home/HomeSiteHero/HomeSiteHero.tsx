@@ -1,9 +1,9 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, onMount, onCleanup } from 'solid-js';
-import { useGameStore } from '../../store/game/GameContext';
-import styles from './SiteHero.module.css';
+import { useGameStore } from '../../../store/GameContext';
+import styles from './HomeSiteHero.module.css';
 
-const SiteHero = () => {
+const HomeSiteHero = () => {
   const navigate = useNavigate();
   const [_, { startNewGame }] = useGameStore();
   const [pos, setPos] = createSignal({ x: 0, y: 0, r: 0 });
@@ -50,4 +50,4 @@ const SiteHero = () => {
   );
 };
 
-export default SiteHero;
+export default HomeSiteHero;

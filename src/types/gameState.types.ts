@@ -4,7 +4,3 @@ export interface GameState {
 }
 
 export type Side = 'w' | 'b';
-
-export interface PieceValueMap {
-  [key: string]: number;
-}

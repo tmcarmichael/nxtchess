@@ -1,15 +1,15 @@
 import { For, Show, createSignal, createMemo, batch } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { computeMaterial, fenToBoard } from '../../logic/gameState';
-import { PieceType } from '../../types';
-import { useGameStore } from '../../store/game/GameContext';
-import Piece from '../Piece/Piece';
-import ResignModal from '../modals/ResignModal/ResignModal';
+import { computeMaterial, fenToBoard } from '../../../services/chessGameService';
+import { PieceType } from '../../../types';
+import { useGameStore } from '../../../store/GameContext';
+import Piece from '../GamePiece/GamePiece';
+import ResignModal from '../../modals/ResignModal/ResignModal';
 import GameClock from '../GameClock/GameClock';
-import { DIFFICULTY_VALUES_ELO } from '../../utils';
-import styles from './GamePanel.module.css';
+import { DIFFICULTY_VALUES_ELO } from '../../../utils';
+import styles from './GameControlsPanel.module.css';
 
-const GamePanel = () => {
+const GameControlsPanel = () => {
   const navigate = useNavigate();
   const [
     _,
@@ -103,9 +103,6 @@ const GamePanel = () => {
     setBoardView((c) => (c === 'w' ? 'b' : 'w'));
   };
 
-  const difficultyLevel = difficulty();
-  const difficultyELO = DIFFICULTY_VALUES_ELO[difficultyLevel - 1];
-
   return (
     <div>
       <div class={styles.clockLayout}>
@@ -137,7 +134,7 @@ const GamePanel = () => {
             </div>
           </Show>
           <div class={styles.difficulty}>
-            <span>{`Difficulty: ${difficultyELO} ELO`}</span>
+            <span>Difficulty: {DIFFICULTY_VALUES_ELO[difficulty() - 1]} ELO</span>
           </div>
           <div class={styles.materialContainer}>
             <div class={styles.materialDiff}>
@@ -187,4 +184,4 @@ const GamePanel = () => {
   );
 };
 
-export default GamePanel;
+export default GameControlsPanel;

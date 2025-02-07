@@ -1,12 +1,12 @@
 import { useLocation } from '@solidjs/router';
-import SiteHero from '../SiteHero/SiteHero';
+import HomeSiteHero from '../HomeSiteHero/HomeSiteHero';
 import styles from './HomeContainer.module.css';
 
 const HomeContainer = (props: any) => {
   const location = useLocation();
   return (
     <div class={styles.container}>
-      {location.pathname === '/' && <SiteHero />}
+      {location.pathname === '/' && <HomeSiteHero />}
       <main class={styles.content}>{props.children}</main>
     </div>
   );

@@ -1,6 +1,6 @@
 import { createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { useGameStore } from '../../../store/game/GameContext';
+import { useGameStore } from '../../../store/GameContext';
 import { Side } from '../../../types';
 import {
   TIME_VALUES_MINUTES,
@@ -23,7 +23,6 @@ const PlayModal = ({ onClose }: { onClose: () => void }) => {
     const chosenSide = localPlayerColor();
     startNewGame(selectedTime, selectedLevel, chosenSide);
     onClose();
-    navigate('/game');
   };
 
   return (

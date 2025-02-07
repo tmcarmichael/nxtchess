@@ -1,5 +1,5 @@
 import { For } from 'solid-js';
-import styles from './SiteFooter.module.css';
+import styles from './CommonSiteFooter.module.css';
 
 const links = [
   {
@@ -28,7 +28,7 @@ const links = [
   },
 ];
 
-const SiteFooter = () => {
+const CommonSiteFooter = () => {
   return (
     <footer class={styles.footer}>
       <ul class={styles.footerList}>
@@ -44,4 +44,4 @@ const SiteFooter = () => {
   );
 };
 
-export default SiteFooter;
+export default CommonSiteFooter;

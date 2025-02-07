@@ -1,15 +1,15 @@
 import { createStore } from 'solid-js/store';
 import { Chess } from 'chess.js';
 import { batch } from 'solid-js';
-import { Side, BoardSquare, Square, PromotionPiece, GameState } from '../../types';
-import { initEngine, getBestMove } from '../ai/stockfishService';
+import { Side, BoardSquare, Square, PromotionPiece, GameState } from '../types';
+import { initEngine, getBestMove } from '../services/chessEngineService';
 import {
   fenToBoard,
   captureCheck,
   afterMoveChecks,
   handleCapturedPiece,
-} from '../../logic/gameState';
-import { DIFFICULTY_VALUES_ELO } from '../../utils';
+} from '../services/chessGameService';
+import { DIFFICULTY_VALUES_ELO } from '../utils';
 
 interface GameStoreState {
   fen: string;

@@ -1,21 +1,10 @@
 import { JSX } from 'solid-js';
-import styles from './ChessBoard.module.css';
-import Piece from '../Piece/Piece';
-import { PieceType, BoardSquare, Square } from '../../types';
-import { useGameStore } from '../../store/game/GameContext';
+import Piece from '../GamePiece/GamePiece';
+import { PieceType, BoardSquare, Square, Side } from '../../../types';
+import { useGameStore } from '../../../store/GameContext';
+import styles from './GameBoard.module.css';
 
-type ChessBoardProps = {
-  board: () => BoardSquare[];
-  highlightedMoves: () => Square[];
-  selectedSquare: () => Square | null;
-  draggedPiece: () => { square: Square; piece: string } | null;
-  cursorPosition: () => { x: number; y: number };
-  onSquareClick: (square: Square) => void;
-  onSquareMouseUp: (square: Square) => void;
-  onDragStart: (square: Square, piece: string, event: DragEvent) => void;
-};
-
-const ChessBoard = ({
+const GameBoard = ({
   board,
   highlightedMoves,
   selectedSquare,
@@ -24,6 +13,9 @@ const ChessBoard = ({
   onSquareClick,
   onSquareMouseUp,
   onDragStart,
+  lastMove,
+  checkedKingSquare,
+  boardView,
 }: {
   board: () => BoardSquare[];
   highlightedMoves: () => Square[];
@@ -33,22 +25,19 @@ const ChessBoard = ({
   onSquareClick: (square: Square) => void;
   onSquareMouseUp: (square: Square) => void;
   onDragStart: (square: Square, piece: string, event: DragEvent) => void;
+  lastMove: () => {
+    from: Square;
+    to: Square;
+  } | null;
+  checkedKingSquare: () => Square | null;
+  boardView: () => Side;
 }) => {
-  const [state, _] = useGameStore();
-
-  const lastMove = () => state.lastMove;
-  const checkedKingSquare = () => state.checkedKingSquare;
-  const boardView = () => state.boardView;
-
   const renderDraggedPiece = () => {
     const dragState = draggedPiece();
     if (!dragState) return null;
     const { x, y } = cursorPosition();
     return (
-      <div
-        class={styles.draggedPiece}
-        style={{ top: `${y}px`, left: `${x}px` }}
-      >
+      <div class={styles.draggedPiece} style={{ top: `${y}px`, left: `${x}px` }}>
         <Piece type={dragState.piece as PieceType} />
       </div>
     );
@@ -120,4 +109,4 @@ const ChessBoard = ({
   );
 };
 
-export default ChessBoard;
+export default GameBoard;
