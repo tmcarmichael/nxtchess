@@ -3,12 +3,7 @@ import { Chess } from 'chess.js';
 import { batch } from 'solid-js';
 import { Side, BoardSquare, Square, PromotionPiece, GameState } from '../types';
 import { initEngine, getBestMove } from '../services/chessEngineService';
-import {
-  fenToBoard,
-  captureCheck,
-  afterMoveChecks,
-  handleCapturedPiece,
-} from '../services/chessGameService';
+import { fenToBoard, captureCheck, handleCapturedPiece } from '../services/chessGameService';
 import { DIFFICULTY_VALUES_ELO } from '../utils';
 
 interface GameStoreState {
@@ -83,10 +78,10 @@ export const createGameStore = () => {
       }
       if (state.currentTurn === 'w') {
         setState('whiteTime', (t) => Math.max(0, t - 1));
-        if (state.whiteTime <= 1) handleTimeOut('b');
+        if (state.whiteTime < 1) handleTimeOut('b');
       } else {
         setState('blackTime', (t) => Math.max(0, t - 1));
-        if (state.blackTime <= 1) handleTimeOut('w');
+        if (state.blackTime < 1) handleTimeOut('w');
       }
     }, 1000) as unknown as number;
   };
@@ -127,19 +122,13 @@ export const createGameStore = () => {
         setState('currentTurn', state.currentTurn === 'w' ? 'b' : 'w');
       });
 
-      afterMoveChecks(
-        updatedState.fen,
-        (val) => setState('gameWinner', val),
-        (val) => setState('isGameOver', val),
-        (val) => setState('gameOverReason', val),
-        (val) => setState('checkedKingSquare', val)
-      );
+      if (!state.isGameOver) afterMoveChecks(updatedState.fen);
     } catch (err) {
       console.error('Engine error:', err);
     }
   };
 
-  function startNewGame(newTimeControl: number, newDifficultyLevel: number, side: Side) {
+  const startNewGame = (newTimeControl: number, newDifficultyLevel: number, side: Side) => {
     if (timerId) clearInterval(timerId);
 
     chess = new Chess();
@@ -178,16 +167,44 @@ export const createGameStore = () => {
         performAIMove();
       }
     });
-  }
+  };
 
-  function handleTimeOut(winnerColor: Side) {
+  const afterMoveChecks = (newFen: string) => {
+    if (state.isGameOver) return;
+    const chessFen = new Chess(newFen);
+    const currentTurn = newFen.split(' ')[1] as 'w' | 'b';
+    if (chessFen.isCheck()) {
+      const kingSquare = fenToBoard(newFen).find(
+        ({ piece }) => piece === currentTurn + 'K'
+      )?.square;
+      setState('checkedKingSquare', kingSquare ?? null);
+    } else {
+      setState('checkedKingSquare', null);
+    }
+
+    if (chessFen.isCheckmate()) {
+      const winner = currentTurn === 'w' ? 'b' : 'w';
+      setState('gameWinner', winner);
+      setState('isGameOver', true);
+      setState('gameOverReason', 'checkmate');
+    } else if (chessFen.isStalemate()) {
+      setState('gameWinner', 'draw');
+      setState('isGameOver', true);
+      setState('gameOverReason', 'stalemate');
+    } else {
+      if (state.gameOverReason === 'time') return;
+      setState('gameOverReason', null);
+    }
+  };
+
+  const handleTimeOut = (winnerColor: Side) => {
     if (timerId) clearInterval(timerId);
     setState('isGameOver', true);
     setState('gameOverReason', 'time');
     setState('gameWinner', winnerColor);
-  }
+  };
 
-  function jumpToMoveIndex(targetIndex: number) {
+  const jumpToMoveIndex = (targetIndex: number) => {
     const history = state.moveHistory;
     const clamped = Math.min(Math.max(0, targetIndex), history.length - 1);
 
@@ -202,11 +219,11 @@ export const createGameStore = () => {
     } else {
       setState('viewFen', chessGameHistory.fen());
     }
-  }
+  };
 
-  function clearGameTimer() {
+  const clearGameTimer = () => {
     if (timerId) clearInterval(timerId);
-  }
+  };
 
   const fen = () => state.fen;
   const whiteTime = () => state.whiteTime;
@@ -259,6 +276,7 @@ export const createGameStore = () => {
     jumpToMoveIndex,
     clearGameTimer,
     getChessInstance: () => chess,
+    afterMoveChecks,
 
     fen,
     whiteTime,

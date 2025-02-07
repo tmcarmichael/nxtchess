@@ -58,10 +58,12 @@
   transform: translate(-50%, -50%);
   opacity: 0.9;
   transition: transform 0.2s ease;
+  z-index: 2000;
 }
 
 .highlightDot:hover {
   transform: translate(-50%, -50%) scale(1.2);
+  z-index: 2000;
 }
 
 .enemyDot {

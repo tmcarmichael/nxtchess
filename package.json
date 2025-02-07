@@ -16,12 +16,17 @@
     }
   ],
   "scripts": {
-    "dev": "vite",
     "build": "tsc -b && vite build",
-    "ci": "rm -rf node_modules pnpm-lock.yaml && pnpm store prune && pnpm install",
-    "preview": "vite preview",
+    "dev": "vite",
+    "ci": "yarn cache clean && yarn install",
+    "clear-cache": "yarn clear cache",
+    "docker:dev:build": "docker compose build nxtchess-frontend-dev",
+    "docker:dev:run": "docker compose up nxtchess-frontend-prod",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prebuild": "yarn format:check",
+    "preview": "vite preview",
+    "type:check": "tsc --noEmit"
   },
   "dependencies": {
     "@solidjs/router": "^0.15.3",
@@ -39,5 +44,6 @@
     "typescript": "~5.6.2",
     "vite": "^6.0.5",
     "vite-plugin-solid": "^2.11.0"
-  }
+  },
+  "packageManager": "yarn@1.22.22"
 }

@@ -21,6 +21,7 @@ const PlayModal = ({ onClose }: { onClose: () => void }) => {
     const selectedTime = TIME_VALUES_MINUTES[localTimeIndex()];
     const selectedLevel = localDifficultyIndex() + 1;
     const chosenSide = localPlayerColor();
+    navigate('/game', { replace: true });
     startNewGame(selectedTime, selectedLevel, chosenSide);
     onClose();
   };

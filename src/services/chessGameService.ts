@@ -1,5 +1,5 @@
 import { Chess } from 'chess.js';
-import { Square, BoardSquare, PIECE_VALUES, Side } from '../types';
+import { Square, BoardSquare, PIECE_VALUES } from '../types';
 
 export const fenToBoard = (fen: string): BoardSquare[] => {
   const chess = new Chess(fen);
@@ -58,33 +58,5 @@ export function handleCapturedPiece(
     setCapturedBlack((prev) => [...prev, piece]);
   } else {
     setCapturedWhite((prev) => [...prev, piece]);
-  }
-}
-
-export function afterMoveChecks(
-  newFen: string,
-  setGameWinner: (val: Side | 'draw' | null) => void,
-  setIsGameOver: (val: boolean) => void,
-  setGameOverReason: (val: 'checkmate' | 'stalemate' | 'time' | null) => void,
-  setCheckedKingSquare: (val: Square | null) => void
-) {
-  const chessFen = new Chess(newFen);
-  const currentTurn = newFen.split(' ')[1] as 'w' | 'b';
-  if (chessFen.isCheck()) {
-    const kingSquare = fenToBoard(newFen).find(({ piece }) => piece === currentTurn + 'K')?.square;
-    setCheckedKingSquare(kingSquare ?? null);
-  } else {
-    setCheckedKingSquare(null);
-  }
-
-  if (chessFen.isCheckmate()) {
-    const winner = currentTurn === 'w' ? 'b' : 'w';
-    setGameWinner(winner);
-    setIsGameOver(true);
-    setGameOverReason('checkmate');
-  } else if (chessFen.isStalemate()) {
-    setGameWinner('draw');
-    setIsGameOver(true);
-    setGameOverReason('stalemate');
   }
 }

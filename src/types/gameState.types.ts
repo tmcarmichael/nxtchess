@@ -4,3 +4,5 @@ export interface GameState {
 }
 
 export type Side = 'w' | 'b';
+
+export type GameOverReason = 'checkmate' | 'stalemate' | 'time' | null;

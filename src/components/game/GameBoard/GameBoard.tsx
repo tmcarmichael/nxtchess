@@ -1,7 +1,6 @@
 import { JSX } from 'solid-js';
 import Piece from '../GamePiece/GamePiece';
 import { PieceType, BoardSquare, Square, Side } from '../../../types';
-import { useGameStore } from '../../../store/GameContext';
 import styles from './GameBoard.module.css';
 
 const GameBoard = ({
