@@ -146,7 +146,7 @@ yarn docker:dev:run
 ```
 
 4. Access container at localhost, http://localhost/
-5. Alternatively use Docker Desktop and for nxtchess-frontend-dev, click "open in browser".
+5. Alternatively, use Docker Desktop and look for image 'nxtchess-frontend-dev', click "open in browser".
 
 ---
 
