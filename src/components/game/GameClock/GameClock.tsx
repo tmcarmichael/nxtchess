@@ -5,9 +5,6 @@ import styles from './GameClock.module.css';
 const GameClock = (props: { side: 'w' | 'b' }) => {
   const [state, _] = useGameStore();
 
-  const whiteTime = () => state.whiteTime;
-  const blackTime = () => state.blackTime;
-
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
@@ -16,7 +13,7 @@ const GameClock = (props: { side: 'w' | 'b' }) => {
 
   const label = () => (props.side === 'w' ? 'White' : 'Black');
 
-  const timeValue = createMemo(() => (props.side === 'w' ? whiteTime() : blackTime()));
+  const timeValue = createMemo(() => (props.side === 'w' ? state.whiteTime : state.blackTime));
 
   return (
     <div class={styles.gameClock}>

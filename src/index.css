@@ -17,9 +17,9 @@ body {
   justify-content: center;
   min-height: 90vh;
   position: relative;
-  background: linear-gradient(120deg, #444, #131313, #444);
+  background: linear-gradient(120deg, #333, #222, #333);
   background-size: 400% 400%;
-  animation: gradientAnimation 100s ease infinite;
+  animation: gradientAnimation 100s linear infinite;
 }
 
 body::after {
@@ -31,7 +31,7 @@ body::after {
   height: 100%;
   background: rgba(0, 100, 255, 0.1);
   pointer-events: none;
-  animation: colorPulse 20s ease-in-out infinite;
+  animation: colorPulse 8s ease-in-out infinite;
 }
 
 @keyframes gradientAnimation {
@@ -46,22 +46,12 @@ body::after {
   }
 }
 
-@keyframes brightnessPulse {
-  0%,
-  100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.1);
-  }
-}
-
 @keyframes colorPulse {
   0%,
   100% {
     opacity: 0.05;
   }
   50% {
-    opacity: 0.1;
+    opacity: 0.25;
   }
 }

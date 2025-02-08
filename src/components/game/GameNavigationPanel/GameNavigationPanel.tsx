@@ -1,18 +1,14 @@
-import { For, createMemo, createEffect, on } from 'solid-js';
+import { For, createMemo, createEffect, on, Component } from 'solid-js';
 import { useGameStore } from '../../../store/GameContext';
 import styles from './GameNavigationPanel.module.css';
 
-const GameNavigationPanel = () => {
+const GameNavigationPanel: Component = () => {
   const [state, actions] = useGameStore();
-  const moveHistory = () => state.moveHistory;
-  const viewMoveIndex = () => state.viewMoveIndex;
-  const { jumpToMoveIndex } = actions;
 
   let movesContainerRef: HTMLDivElement | undefined;
-
   createEffect(
     on(
-      () => moveHistory().length,
+      () => state.moveHistory.length,
       () => {
         queueMicrotask(() => {
           if (movesContainerRef) {
@@ -23,12 +19,13 @@ const GameNavigationPanel = () => {
     )
   );
 
-  const whiteMoves = createMemo(() => moveHistory().filter((_, i) => i % 2 === 0));
-  const blackMoves = createMemo(() => moveHistory().filter((_, i) => i % 2 === 1));
+  const whiteMoves = createMemo(() => state.moveHistory.filter((_, i) => i % 2 === 0));
+  const blackMoves = createMemo(() => state.moveHistory.filter((_, i) => i % 2 === 1));
 
   const movesRows = createMemo(() => {
     const totalRows = Math.max(whiteMoves().length, blackMoves().length);
     return Array.from({ length: totalRows }, (_, i) => ({
+      turnNumber: i + 1,
       whiteMove: whiteMoves()[i] || '',
       blackMove: blackMoves()[i] || '',
       whiteIndex: i * 2,
@@ -36,30 +33,56 @@ const GameNavigationPanel = () => {
     }));
   });
 
-  const MoveRow = (props: {
+  const handleJumpToMoveIndex = (index: number) => {
+    actions.jumpToMoveIndex(index);
+  };
+
+  const MoveRow: Component<{
+    turnNumber: number;
     whiteMove: string;
     blackMove: string;
     whiteIndex: number;
     blackIndex: number;
-  }) => (
-    <div class={styles.moveRow}>
-      <span class={`${styles.move} ${props.whiteIndex === viewMoveIndex() ? styles.active : ''}`}>
-        {props.whiteMove}
-      </span>
-      <span class={`${styles.move} ${props.blackIndex === viewMoveIndex() ? styles.active : ''}`}>
-        {props.blackMove}
-      </span>
-    </div>
-  );
+  }> = (props) => {
+    const whiteActive = () => props.whiteIndex === state.viewMoveIndex;
+    const blackActive = () => props.blackIndex === state.viewMoveIndex;
+
+    return (
+      <div class={styles.moveRow}>
+        {props.whiteMove && (
+          <span
+            classList={{
+              [styles.move]: true,
+              [styles.active]: whiteActive(),
+            }}
+            onClick={() => handleJumpToMoveIndex(props.whiteIndex)}
+          >
+            {`${props.turnNumber}. ${props.whiteMove}`}
+          </span>
+        )}
+        {props.blackMove && (
+          <span
+            classList={{
+              [styles.move]: true,
+              [styles.active]: blackActive(),
+            }}
+            onClick={() => handleJumpToMoveIndex(props.blackIndex)}
+          >
+            {`${props.turnNumber}.. ${props.blackMove}`}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   const goToPreviousMove = () => {
-    const newIndex = Math.max(0, viewMoveIndex() - 1);
-    jumpToMoveIndex(newIndex);
+    const newIndex = Math.max(0, state.viewMoveIndex - 1);
+    handleJumpToMoveIndex(newIndex);
   };
 
   const goToNextMove = () => {
-    const newIndex = Math.min(moveHistory().length - 1, viewMoveIndex() + 1);
-    jumpToMoveIndex(newIndex);
+    const newIndex = Math.min(state.moveHistory.length - 1, state.viewMoveIndex + 1);
+    handleJumpToMoveIndex(newIndex);
   };
 
   return (
@@ -69,6 +92,7 @@ const GameNavigationPanel = () => {
           <For each={movesRows()}>
             {(rowData) => (
               <MoveRow
+                turnNumber={rowData.turnNumber}
                 whiteMove={rowData.whiteMove}
                 blackMove={rowData.blackMove}
                 whiteIndex={rowData.whiteIndex}

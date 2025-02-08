@@ -34,7 +34,6 @@ export const createGameStore = () => {
   const chessGameHistory = new Chess();
 
   let timerId: number | undefined;
-
   const [state, setState] = createStore<GameStoreState>({
     fen: chess.fen(),
     whiteTime: 300,
@@ -130,7 +129,6 @@ export const createGameStore = () => {
 
   const startNewGame = (newTimeControl: number, newDifficultyLevel: number, side: Side) => {
     if (timerId) clearInterval(timerId);
-
     chess = new Chess();
     chessGameHistory.reset();
 
@@ -192,15 +190,15 @@ export const createGameStore = () => {
       setState('isGameOver', true);
       setState('gameOverReason', 'stalemate');
     } else {
-      if (state.gameOverReason === 'time') return;
+      if (state.isGameOver || state.gameOverReason === 'time') return;
       setState('gameOverReason', null);
     }
   };
 
   const handleTimeOut = (winnerColor: Side) => {
     if (timerId) clearInterval(timerId);
-    setState('isGameOver', true);
     setState('gameOverReason', 'time');
+    setState('isGameOver', true);
     setState('gameWinner', winnerColor);
   };
 

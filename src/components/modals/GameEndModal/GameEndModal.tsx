@@ -31,7 +31,6 @@ const GameEndModal = ({
     if (!gameOverReason && (gameWinner === 'w' || gameWinner === 'b')) {
       return `${gameWinner === 'w' ? 'White' : 'Black'} wins by checkmate.`;
     }
-    console.log(gameOverReason);
     switch (gameOverReason) {
       case 'checkmate':
         return `${gameWinner === 'w' ? 'White' : 'Black'} wins by checkmate.`;
