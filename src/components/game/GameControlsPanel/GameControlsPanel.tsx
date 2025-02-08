@@ -11,31 +11,7 @@ import styles from './GameControlsPanel.module.css';
 
 const GameControlsPanel = () => {
   const navigate = useNavigate();
-  const [
-    _,
-    {
-      boardSquares,
-      capturedWhite,
-      capturedBlack,
-      startNewGame,
-      playerColor,
-      difficulty,
-      setBoardView,
-      getChessInstance,
-      setFen,
-      setViewFen,
-      setBoardSquares,
-      setCapturedBlack,
-      setCapturedWhite,
-      setMoveHistory,
-      setViewMoveIndex,
-      setIsGameOver,
-      setGameOverReason,
-      setGameWinner,
-      setCurrentTurn,
-      performAIMove,
-    },
-  ] = useGameStore();
+  const [_, actions] = useGameStore();
 
   const [showResignModal, setShowResignModal] = createSignal(false);
 
@@ -44,7 +20,7 @@ const GameControlsPanel = () => {
   };
 
   const handleReplay = () => {
-    startNewGame(5, 3, playerColor() === 'w' ? 'b' : 'w');
+    actions.startNewGame(5, 3, actions.playerColor() === 'w' ? 'b' : 'w');
     setShowResignModal(false);
   };
 
@@ -54,53 +30,53 @@ const GameControlsPanel = () => {
   };
 
   const handleTakeBack = () => {
-    const chess = getChessInstance();
+    const chess = actions.getChessInstance();
     const undone1 = chess.undo();
     if (!undone1) return;
     if (undone1.captured) {
       if (undone1.color === 'w') {
-        setCapturedBlack((prev) => prev.slice(0, -1));
+        actions.setCapturedBlack((prev) => prev.slice(0, -1));
       } else {
-        setCapturedWhite((prev) => prev.slice(0, -1));
+        actions.setCapturedWhite((prev) => prev.slice(0, -1));
       }
     }
-    if (chess.turn() !== playerColor()) {
+    if (chess.turn() !== actions.playerColor()) {
       const undone2 = chess.undo();
       if (undone2 && undone2.captured) {
         if (undone2.color === 'w') {
-          setCapturedBlack((prev) => prev.slice(0, -1));
+          actions.setCapturedBlack((prev) => prev.slice(0, -1));
         } else {
-          setCapturedWhite((prev) => prev.slice(0, -1));
+          actions.setCapturedWhite((prev) => prev.slice(0, -1));
         }
       }
     }
     batch(() => {
       const newFen = chess.fen();
-      setFen(newFen);
-      setViewFen(newFen);
-      setBoardSquares(fenToBoard(newFen));
-      setMoveHistory(chess.history());
-      setViewMoveIndex(chess.history().length - 1);
-      setIsGameOver(false);
-      setGameOverReason(null);
-      setGameWinner(null);
+      actions.setFen(newFen);
+      actions.setViewFen(newFen);
+      actions.setBoardSquares(fenToBoard(newFen));
+      actions.setMoveHistory(chess.history());
+      actions.setViewMoveIndex(chess.history().length - 1);
+      actions.setIsGameOver(false);
+      actions.setGameOverReason(null);
+      actions.setGameWinner(null);
 
       if (chess.history().length === 0) {
-        setCurrentTurn('w');
+        actions.setCurrentTurn('w');
 
-        if (playerColor() === 'b') {
-          performAIMove();
+        if (actions.playerColor() === 'b') {
+          actions.performAIMove();
         }
       }
     });
   };
 
-  const material = createMemo(() => computeMaterial(boardSquares()));
+  const material = createMemo(() => computeMaterial(actions.boardSquares()));
 
-  const opponentSide = () => (playerColor() === 'w' ? 'b' : 'w');
+  const opponentSide = () => (actions.playerColor() === 'w' ? 'b' : 'w');
 
   const flipBoardView = () => {
-    setBoardView((c) => (c === 'w' ? 'b' : 'w'));
+    actions.setBoardView((c) => (c === 'w' ? 'b' : 'w'));
   };
 
   return (
@@ -121,20 +97,20 @@ const GameControlsPanel = () => {
               <span>Take Back ⏪</span>
             </button>
           </div>
-          <Show when={playerColor() === 'w'}>
+          <Show when={actions.playerColor() === 'w'}>
             <div class={styles.playerInfo}>
               <span>You play White pieces </span>
               <Piece type="wN" style={{ width: '32px', height: '32px' }} />
             </div>
           </Show>
-          <Show when={playerColor() === 'b'}>
+          <Show when={actions.playerColor() === 'b'}>
             <div class={styles.playerInfo}>
               <span>You play Black pieces </span>
               <Piece type="bN" style={{ width: '32px', height: '32px' }} />
             </div>
           </Show>
           <div class={styles.difficulty}>
-            <span>Difficulty: {DIFFICULTY_VALUES_ELO[difficulty() - 1]} ELO</span>
+            <span>Difficulty: {DIFFICULTY_VALUES_ELO[actions.difficulty() - 1]} ELO</span>
           </div>
           <div class={styles.materialContainer}>
             <div class={styles.materialDiff}>
@@ -149,7 +125,7 @@ const GameControlsPanel = () => {
             </div>
             <div class={styles.capturesContainer}>
               <div class="capturesRow">
-                <For each={capturedBlack()}>
+                <For each={actions.capturedBlack()}>
                   {(cap) => (
                     <span class={styles.capturedPiece}>
                       <Piece type={cap as PieceType} style={{ width: '24px', height: '24px' }} />
@@ -158,7 +134,7 @@ const GameControlsPanel = () => {
                 </For>
               </div>
               <div class="capturesRow">
-                <For each={capturedWhite()}>
+                <For each={actions.capturedWhite()}>
                   {(cap) => (
                     <span class={styles.capturedPiece}>
                       <Piece type={cap as PieceType} style={{ width: '24px', height: '24px' }} />
@@ -170,7 +146,7 @@ const GameControlsPanel = () => {
           </div>
         </div>
         <div class={styles.clockWrapper}>
-          <GameClock side={playerColor()} />
+          <GameClock side={actions.playerColor()} />
         </div>
       </div>
       <Show when={showResignModal()}>

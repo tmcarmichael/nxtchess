@@ -1,20 +1,21 @@
+import { splitProps } from 'solid-js';
 import styles from './GameEndModal.module.css';
 
-const GameEndModal = ({
-  onClose,
-  onRestart,
-  gameOverReason,
-  gameWinner,
-}: {
+interface GameEndModalProps {
   onClose: () => void;
   onRestart: () => void;
   gameOverReason: 'checkmate' | 'stalemate' | 'time' | null;
   gameWinner: 'w' | 'b' | 'draw' | null;
-}) => {
+}
+
+const GameEndModal = (props: GameEndModalProps) => {
+  const [local] = splitProps(props, ['onClose', 'onRestart', 'gameOverReason', 'gameWinner']);
+
   const getGameOverHeading = () => {
-    if (gameWinner === 'draw') return 'Draw!';
-    if (!gameOverReason && (gameWinner === 'w' || gameWinner === 'b')) return 'Checkmate!';
-    switch (gameOverReason) {
+    if (local.gameWinner === 'draw') return 'Draw!';
+    if (!local.gameOverReason && (local.gameWinner === 'w' || local.gameWinner === 'b'))
+      return 'Checkmate!';
+    switch (local.gameOverReason) {
       case 'checkmate':
         return 'Checkmate!';
       case 'stalemate':
@@ -27,30 +28,30 @@ const GameEndModal = ({
   };
 
   const getGameOverMessage = () => {
-    if (gameWinner === 'draw') return "It's a draw.";
-    if (!gameOverReason && (gameWinner === 'w' || gameWinner === 'b')) {
-      return `${gameWinner === 'w' ? 'White' : 'Black'} wins by checkmate.`;
+    if (local.gameWinner === 'draw') return "It's a draw.";
+    if (!local.gameOverReason && (local.gameWinner === 'w' || local.gameWinner === 'b')) {
+      return `${local.gameWinner === 'w' ? 'White' : 'Black'} wins by checkmate.`;
     }
-    switch (gameOverReason) {
+    switch (local.gameOverReason) {
       case 'checkmate':
-        return `${gameWinner === 'w' ? 'White' : 'Black'} wins by checkmate.`;
+        return `${local.gameWinner === 'w' ? 'White' : 'Black'} wins by checkmate.`;
       case 'stalemate':
         return "It's a stalemate.";
       case 'time':
-        return `${gameWinner === 'w' ? 'White' : 'Black'} wins on time.`;
+        return `${local.gameWinner === 'w' ? 'White' : 'Black'} wins on time.`;
       default:
         return 'The game has ended.';
     }
   };
 
   return (
-    <div class={styles.modalOverlay} onClick={onClose}>
+    <div class={styles.modalOverlay} onClick={local.onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <h1>{getGameOverHeading()}</h1>
         <p>{getGameOverMessage()}</p>
         <div class={styles.actions}>
-          <button onClick={onRestart}>Play Again</button>
-          <button onClick={onClose}>Exit</button>
+          <button onClick={local.onRestart}>Play Again</button>
+          <button onClick={local.onClose}>Exit</button>
         </div>
       </div>
     </div>

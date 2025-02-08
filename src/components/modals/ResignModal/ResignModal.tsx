@@ -1,22 +1,22 @@
+import { splitProps } from 'solid-js';
 import styles from './ResignModal.module.css';
 
-const ResignModal = ({
-  onClose,
-  onReplay,
-  onHome,
-}: {
+interface ResignModalProps {
   onClose: () => void;
   onReplay: () => void;
   onHome: () => void;
-}) => {
+}
+
+const ResignModal = (props: ResignModalProps) => {
+  const [local] = splitProps(props, ['onClose', 'onReplay', 'onHome']);
   return (
-    <div class={styles.modalOverlay} onClick={onClose}>
+    <div class={styles.modalOverlay} onClick={local.onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <h1>You resigned.</h1>
         <p>Better luck next time.</p>
         <div class={styles.actions}>
-          <button onClick={onReplay}>Play Again</button>
-          <button onClick={onHome}>Home</button>
+          <button onClick={local.onReplay}>Play Again</button>
+          <button onClick={local.onHome}>Home</button>
         </div>
       </div>
     </div>

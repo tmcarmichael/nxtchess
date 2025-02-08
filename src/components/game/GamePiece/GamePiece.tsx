@@ -1,28 +1,26 @@
 import { PieceType } from '../../../types';
-import { JSX } from 'solid-js';
+import { JSX, splitProps } from 'solid-js';
 import styles from './GamePiece.module.css';
 
-const GamePiece = ({
-  type,
-  draggable = false,
-  onDragStart,
-  style,
-}: {
+interface GamePieceProps {
   type: PieceType;
   draggable?: boolean;
   onDragStart?: (event: DragEvent) => void;
   style?: JSX.CSSProperties;
-}) => {
-  const pieceSrc = `/assets/${type}.svg`;
+}
+
+const GamePiece = (props: GamePieceProps) => {
+  const [local] = splitProps(props, ['type', 'draggable', 'onDragStart', 'style']);
+  const pieceSrc = `/assets/${local.type}.svg`;
 
   return (
     <img
       src={pieceSrc}
-      alt={type}
+      alt={local.type}
       class={styles.piece}
-      draggable={draggable}
-      onDragStart={onDragStart}
-      style={style}
+      draggable={local.draggable}
+      onDragStart={local.onDragStart}
+      style={local.style}
     />
   );
 };

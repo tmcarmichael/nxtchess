@@ -5,7 +5,7 @@ import styles from './HomeSiteHero.module.css';
 
 const HomeSiteHero = () => {
   const navigate = useNavigate();
-  const [_, { startNewGame }] = useGameStore();
+  const [_, actions] = useGameStore();
   const [pos, setPos] = createSignal({ x: 0, y: 0, r: 0 });
   let intervalId: number | undefined;
 
@@ -28,7 +28,7 @@ const HomeSiteHero = () => {
     const quickPlayTime = [3, 5, 10][Math.floor(Math.random() * 3)];
     const quickPlaySide = Math.random() < 0.5 ? 'w' : 'b';
     navigate('/game', { replace: true });
-    startNewGame(quickPlayTime, quickPlayDifficulty, quickPlaySide);
+    actions.startNewGame(quickPlayTime, quickPlayDifficulty, quickPlaySide);
   };
 
   return (
