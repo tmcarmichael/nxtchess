@@ -1,5 +1,5 @@
 import { PieceType } from '../../../types';
-import { JSX, splitProps } from 'solid-js';
+import { JSX, splitProps, Component } from 'solid-js';
 import styles from './GamePiece.module.css';
 
 interface GamePieceProps {
@@ -9,7 +9,7 @@ interface GamePieceProps {
   style?: JSX.CSSProperties;
 }
 
-const GamePiece = (props: GamePieceProps) => {
+const GamePiece: Component<GamePieceProps> = (props: GamePieceProps) => {
   const [local] = splitProps(props, ['type', 'draggable', 'onDragStart', 'style']);
   const pieceSrc = `/assets/${local.type}.svg`;
 

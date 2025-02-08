@@ -1,5 +1,5 @@
 import { useNavigate } from '@solidjs/router';
-import { createSignal, Show } from 'solid-js';
+import { createSignal, Show, ParentComponent } from 'solid-js';
 import PlayModal from '../../modals/PlayModal/PlayModal';
 import styles from './CommonSiteHeader.module.css';
 
@@ -32,7 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-const CommonSiteHeader = () => {
+const CommonSiteHeader: ParentComponent = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
 

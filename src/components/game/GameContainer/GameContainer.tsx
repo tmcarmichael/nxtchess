@@ -1,4 +1,4 @@
-import { createSignal, Show, onMount } from 'solid-js';
+import { createSignal, Show, onMount, ParentComponent } from 'solid-js';
 import GameBoardController from '../GameBoardController/GameBoardController';
 import GameControlsPanel from '../GameControlsPanel/GameControlsPanel';
 import PlayModal from '../../modals/PlayModal/PlayModal';
@@ -6,7 +6,7 @@ import NavigationPanel from '../GameNavigationPanel/GameNavigationPanel';
 import styles from './GameContainer.module.css';
 import { useGameStore } from '../../../store/GameContext';
 
-const GameContainer = () => {
+const GameContainer: ParentComponent = () => {
   const [_, actions] = useGameStore();
   const [showPlayModal, setShowPlayModal] = createSignal(false);
 

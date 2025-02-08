@@ -1,4 +1,4 @@
-import { createSignal, batch, Show, onMount, onCleanup } from 'solid-js';
+import { createSignal, batch, Show, onMount, onCleanup, ParentComponent } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Square, PromotionPiece, Side, GameState } from '../../../types';
 import {
@@ -13,7 +13,7 @@ import PromotionModal from '../../modals/PromotionModal/PromotionModal';
 import { useGameStore } from '../../../store/GameContext';
 import styles from './GameBoardController.module.css';
 
-const GameBoardController = () => {
+const GameBoardController: ParentComponent = () => {
   const [state, actions] = useGameStore();
   const navigate = useNavigate();
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);

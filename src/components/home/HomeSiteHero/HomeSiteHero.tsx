@@ -1,9 +1,9 @@
 import { useNavigate } from '@solidjs/router';
-import { createSignal, onMount, onCleanup } from 'solid-js';
+import { createSignal, onMount, onCleanup, Component } from 'solid-js';
 import { useGameStore } from '../../../store/GameContext';
 import styles from './HomeSiteHero.module.css';
 
-const HomeSiteHero = () => {
+const HomeSiteHero: Component = () => {
   const navigate = useNavigate();
   const [_, actions] = useGameStore();
   const [pos, setPos] = createSignal({ x: 0, y: 0, r: 0 });

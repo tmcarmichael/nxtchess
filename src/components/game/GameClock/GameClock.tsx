@@ -1,4 +1,4 @@
-import { createMemo, splitProps } from 'solid-js';
+import { createMemo, splitProps, Component } from 'solid-js';
 import { useGameStore } from '../../../store/GameContext';
 import styles from './GameClock.module.css';
 
@@ -6,7 +6,7 @@ interface GameClockProps {
   side: 'w' | 'b';
 }
 
-const GameClock = (props: GameClockProps) => {
+const GameClock: Component<GameClockProps> = (props) => {
   const [local] = splitProps(props, ['side']);
   const [state] = useGameStore();
 

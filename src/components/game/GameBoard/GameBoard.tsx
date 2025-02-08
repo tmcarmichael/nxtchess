@@ -1,4 +1,4 @@
-import { JSX, splitProps, For } from 'solid-js';
+import { JSX, splitProps, For, Component } from 'solid-js';
 import Piece from '../GamePiece/GamePiece';
 import { PieceType, BoardSquare, Square, Side } from '../../../types';
 import styles from './GameBoard.module.css';
@@ -17,7 +17,7 @@ interface GameBoardProps {
   boardView: () => Side;
 }
 
-const GameBoard = (props: GameBoardProps) => {
+const GameBoard: Component<GameBoardProps> = (props) => {
   const [local] = splitProps(props, [
     'board',
     'highlightedMoves',
