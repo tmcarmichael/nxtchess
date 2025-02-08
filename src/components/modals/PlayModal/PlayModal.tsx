@@ -1,4 +1,4 @@
-import { createSignal } from 'solid-js';
+import { createSignal, splitProps } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useGameStore } from '../../../store/GameContext';
 import { Side } from '../../../types';
@@ -9,8 +9,14 @@ import {
 } from '../../../utils/constants';
 import styles from './PlayModal.module.css';
 
-const PlayModal = ({ onClose }: { onClose: () => void }) => {
-  const [_, { startNewGame }] = useGameStore();
+interface PlayModalProps {
+  onClose: () => void;
+}
+
+const PlayModal = (props: PlayModalProps) => {
+  const [local] = splitProps(props, ['onClose']);
+  const [_, actions] = useGameStore();
+
   const navigate = useNavigate();
 
   const [localTimeIndex, setLocalTimeIndex] = createSignal(TIME_VALUES_MINUTES.indexOf(5));
@@ -22,14 +28,14 @@ const PlayModal = ({ onClose }: { onClose: () => void }) => {
     const selectedLevel = localDifficultyIndex() + 1;
     const chosenSide = localPlayerColor();
     navigate('/game', { replace: true });
-    startNewGame(selectedTime, selectedLevel, chosenSide);
-    onClose();
+    actions.startNewGame(selectedTime, selectedLevel, chosenSide);
+    local.onClose();
   };
 
   return (
-    <div class={styles.modalOverlay} onClick={onClose}>
+    <div class={styles.modalOverlay} onClick={local.onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <button class={styles.closeButton} onClick={onClose} aria-label="Close">
+        <button class={styles.closeButton} onClick={local.onClose} aria-label="Close">
           ×
         </button>
         <h2>Play Against Computer</h2>

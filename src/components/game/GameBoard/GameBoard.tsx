@@ -1,21 +1,9 @@
-import { JSX } from 'solid-js';
+import { JSX, splitProps, For } from 'solid-js';
 import Piece from '../GamePiece/GamePiece';
 import { PieceType, BoardSquare, Square, Side } from '../../../types';
 import styles from './GameBoard.module.css';
 
-const GameBoard = ({
-  board,
-  highlightedMoves,
-  selectedSquare,
-  draggedPiece,
-  cursorPosition,
-  onSquareClick,
-  onSquareMouseUp,
-  onDragStart,
-  lastMove,
-  checkedKingSquare,
-  boardView,
-}: {
+interface GameBoardProps {
   board: () => BoardSquare[];
   highlightedMoves: () => Square[];
   selectedSquare: () => Square | null;
@@ -24,17 +12,29 @@ const GameBoard = ({
   onSquareClick: (square: Square) => void;
   onSquareMouseUp: (square: Square) => void;
   onDragStart: (square: Square, piece: string, event: DragEvent) => void;
-  lastMove: () => {
-    from: Square;
-    to: Square;
-  } | null;
+  lastMove: () => { from: Square; to: Square } | null;
   checkedKingSquare: () => Square | null;
   boardView: () => Side;
-}) => {
+}
+
+const GameBoard = (props: GameBoardProps) => {
+  const [local] = splitProps(props, [
+    'board',
+    'highlightedMoves',
+    'selectedSquare',
+    'draggedPiece',
+    'cursorPosition',
+    'onSquareClick',
+    'onSquareMouseUp',
+    'onDragStart',
+    'lastMove',
+    'checkedKingSquare',
+    'boardView',
+  ]);
   const renderDraggedPiece = () => {
-    const dragState = draggedPiece();
+    const dragState = local.draggedPiece();
     if (!dragState) return null;
-    const { x, y } = cursorPosition();
+    const { x, y } = local.cursorPosition();
     return (
       <div class={styles.draggedPiece} style={{ top: `${y}px`, left: `${x}px` }}>
         <Piece type={dragState.piece as PieceType} />
@@ -43,13 +43,13 @@ const GameBoard = ({
   };
 
   const renderedSquares = () => {
-    const view: 'w' | 'b' = boardView();
-    const boardSquares: BoardSquare[] = view === 'b' ? [...board()].reverse() : board();
-    const highlights: Square[] = highlightedMoves();
-    const selected: Square | null = selectedSquare();
-    const dragState = draggedPiece();
-    const last = lastMove();
-    const checkedSquare = checkedKingSquare();
+    const view: 'w' | 'b' = local.boardView();
+    const boardSquares: BoardSquare[] = view === 'b' ? [...local.board()].reverse() : local.board();
+    const highlights: Square[] = local.highlightedMoves();
+    const selected: Square | null = local.selectedSquare();
+    const dragState = local.draggedPiece();
+    const last = local.lastMove();
+    const checkedSquare = local.checkedKingSquare();
 
     const renderSquare = ({ square, piece }: BoardSquare): JSX.Element => {
       const file = square[0];
@@ -75,8 +75,8 @@ const GameBoard = ({
             [styles.lastMove]: isLastMove,
             [styles.checkedKing]: isCheckedKing,
           }}
-          onClick={() => onSquareClick(square)}
-          onMouseUp={() => onSquareMouseUp(square)}
+          onClick={() => local.onSquareClick(square)}
+          onMouseUp={() => local.onSquareMouseUp(square)}
         >
           {showFile && <span class={styles.fileLabel}>{file}</span>}
           {showRank && <span class={styles.rankLabel}>{rank}</span>}
@@ -87,7 +87,7 @@ const GameBoard = ({
             <Piece
               type={piece as PieceType}
               draggable
-              onDragStart={(e: DragEvent) => onDragStart(square, piece, e)}
+              onDragStart={(e: DragEvent) => local.onDragStart(square, piece, e)}
               style={{ opacity: isDragging ? 0.5 : 1, transition: 'opacity 0.2s ease' }}
             />
           )}
@@ -95,7 +95,7 @@ const GameBoard = ({
       );
     };
 
-    return boardSquares.map(renderSquare);
+    return <For each={boardSquares}>{(square) => renderSquare(square)}</For>;
   };
 
   return (

@@ -1,9 +1,14 @@
-import { createMemo } from 'solid-js';
+import { createMemo, splitProps } from 'solid-js';
 import { useGameStore } from '../../../store/GameContext';
 import styles from './GameClock.module.css';
 
-const GameClock = (props: { side: 'w' | 'b' }) => {
-  const [state, _] = useGameStore();
+interface GameClockProps {
+  side: 'w' | 'b';
+}
+
+const GameClock = (props: GameClockProps) => {
+  const [local] = splitProps(props, ['side']);
+  const [state] = useGameStore();
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
@@ -13,7 +18,7 @@ const GameClock = (props: { side: 'w' | 'b' }) => {
 
   const label = () => (props.side === 'w' ? 'White' : 'Black');
 
-  const timeValue = createMemo(() => (props.side === 'w' ? state.whiteTime : state.blackTime));
+  const timeValue = createMemo(() => (local.side === 'w' ? state.whiteTime : state.blackTime));
 
   return (
     <div class={styles.gameClock}>
