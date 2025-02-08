@@ -1,4 +1,4 @@
-import { splitProps, Component } from 'solid-js';
+import { splitProps, Component, For } from 'solid-js';
 import { PromotionPiece } from '../../../types';
 import styles from './PromotionModal.module.css';
 
@@ -12,12 +12,24 @@ const PROMOTION_PIECES: Array<PromotionPiece> = ['q', 'r', 'b', 'n'];
 
 const PromotionModal: Component<PromotionModalProps> = (props) => {
   const [local] = splitProps(props, ['color', 'onPromote', 'onClose']);
+
   const handleKeyDown = (e: KeyboardEvent, piece: PromotionPiece) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       local.onPromote(piece);
     }
   };
+
+  const renderPromotionImage = (piece: PromotionPiece) => (
+    <img
+      class={styles.promotionImage}
+      src={`/assets/${local.color}${piece.toUpperCase()}.svg`}
+      alt={`Promote to ${piece.toUpperCase()}`}
+      tabIndex="0"
+      onClick={() => local.onPromote(piece)}
+      onKeyDown={(e) => handleKeyDown(e, piece)}
+    />
+  );
 
   return (
     <div class={styles.modalOverlay} onClick={local.onClose} aria-modal="true" role="dialog">
@@ -30,16 +42,7 @@ const PromotionModal: Component<PromotionModalProps> = (props) => {
           &times;
         </button>
         <div class={styles.promotionOptions}>
-          {PROMOTION_PIECES.map((piece) => (
-            <img
-              class={styles.promotionImage}
-              src={`/assets/${local.color}${piece.toUpperCase()}.svg`}
-              alt={`Promote to ${piece.toUpperCase()}`}
-              tabindex="0"
-              onClick={() => local.onPromote(piece)}
-              onKeyDown={(e) => handleKeyDown(e, piece)}
-            />
-          ))}
+          <For each={PROMOTION_PIECES}>{(piece) => renderPromotionImage(piece)}</For>
         </div>
       </div>
     </div>

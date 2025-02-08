@@ -1,5 +1,5 @@
 import { useNavigate } from '@solidjs/router';
-import { createSignal, Show, ParentComponent } from 'solid-js';
+import { createSignal, Show, ParentComponent, For } from 'solid-js';
 import PlayModal from '../../modals/PlayModal/PlayModal';
 import styles from './CommonSiteHeader.module.css';
 
@@ -36,16 +36,19 @@ const CommonSiteHeader: ParentComponent = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
 
-  const renderNavItems = (items: NavItem[]) =>
-    items.map((item) => (
-      <button
-        class={`${styles.button} ${item.tooltip ? styles.tooltip : ''}`}
-        {...(item.tooltip ? { 'data-tooltip': item.tooltip } : {})}
-        onClick={() => item.action?.(setIsModalOpen)}
-      >
-        <span>{item.label}</span>
-      </button>
-    ));
+  const renderNavItems = (items: NavItem[]) => (
+    <For each={items}>
+      {(item: NavItem) => (
+        <button
+          class={`${styles.button} ${item.tooltip ? styles.tooltip : ''}`}
+          {...(item.tooltip ? { 'data-tooltip': item.tooltip } : {})}
+          onClick={() => item.action?.(setIsModalOpen)}
+        >
+          <span>{item.label}</span>
+        </button>
+      )}
+    </For>
+  );
 
   return (
     <>
