@@ -49,14 +49,14 @@ export const computeMaterial = (boardSquares: BoardSquare[]) => {
   return { whiteTotal, blackTotal, diff: whiteTotal - blackTotal };
 };
 
-export function handleCapturedPiece(
+export const handleCapturedPiece = (
   piece: string,
   setCapturedBlack: (fn: (prev: string[]) => string[]) => void,
   setCapturedWhite: (fn: (prev: string[]) => string[]) => void
-) {
+) => {
   if (piece.startsWith('b')) {
     setCapturedBlack((prev) => [...prev, piece]);
   } else {
     setCapturedWhite((prev) => [...prev, piece]);
   }
-}
+};

@@ -4,22 +4,45 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
   display: flex;
   justify-content: center;
   align-items: center;
+  animation: fadeIn 0.3s ease-out forwards;
   z-index: 9999;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .modalContent {
-  background-color: #2c2c2c;
+  background: rgba(40, 40, 40, 0.85);
   border: 1px solid #444;
-  border-radius: 8px;
-  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
   width: 90%;
   max-width: 400px;
   padding: 24px;
-  color: #fff;
+  color: #e0e0e0;
+  animation: popIn 0.4s ease-out forwards;
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modalContent h1 {
@@ -50,15 +73,15 @@
   border: none;
   border-radius: 6px;
   background-color: #444;
-  color: #fff;
+  color: #e0e0e0;
   transition:
     background-color 0.3s ease,
     transform 0.2s ease-in-out;
 }
 
 .actions button:hover {
-  background-color: #555;
-  transform: scale(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .actions button:active {

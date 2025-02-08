@@ -12,8 +12,8 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 6px 15px;
-  background: rgba(20, 20, 20, 0.35);
+  padding: 2px 15px;
+  background: rgba(20, 20, 20, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   backdrop-filter: blur(8px);
@@ -24,13 +24,8 @@
     transform 0.3s ease;
 }
 
-.titleAndPanel:hover {
-  background: rgba(20, 20, 20, 0.55);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-  transform: translateY(-1px);
-}
-
 .title {
+  margin-right: -4px;
   font-size: 1.6rem;
   font-weight: 700;
   color: #e1e1e1;
@@ -39,7 +34,7 @@
 }
 
 .title:hover {
-  color: #4a9eff;
+  color: rgba(42, 222, 174, 0.8);
 }
 
 .buttonPanel {
@@ -47,10 +42,11 @@
   align-items: center;
   gap: 15px;
   padding: 5px 15px;
-  background: rgba(79, 79, 79, 0.3);
+  background: rgba(79, 79, 79, 0.25);
   border: 1px solid rgba(74, 74, 74, 0.7);
   border-radius: 5px;
   backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   transition:
     background 0.3s ease,
     transform 0.3s ease,
@@ -58,9 +54,9 @@
 }
 
 .buttonPanel:hover {
-  background: rgba(74, 74, 74, 0.3);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: rgba(74, 74, 74, 0.24);
+  transform: translateX(1px) translateY(1px);
+  box-shadow: none;
 }
 
 .button {
@@ -162,15 +158,6 @@ comingSoonButton::-moz-focus-inner {
     flex-wrap: wrap;
     justify-content: center;
   }
-}
-
-.playButton span {
-  background: linear-gradient(45deg, #2adeae, #2d7ed4);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: #2adeae;
-  -webkit-text-fill-color: transparent;
-  animation: glowPulse 2s ease-in-out infinite alternate;
 }
 
 @keyframes glowPulse {

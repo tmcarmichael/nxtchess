@@ -19,8 +19,8 @@ const NAV_ITEMS: NavItem[] = [
     tooltip: 'Tools and game analysis coming soon.',
   },
   {
-    label: 'Puzzles',
-    tooltip: 'Puzzles and challenges coming soon.',
+    label: 'Training',
+    tooltip: 'Training mode with customizable AI personality coming soon.',
   },
   {
     label: 'Database',
@@ -36,6 +36,17 @@ const CommonSiteHeader = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
 
+  const renderNavItems = (items: NavItem[]) =>
+    items.map((item) => (
+      <button
+        class={`${styles.button} ${item.tooltip ? styles.tooltip : ''}`}
+        {...(item.tooltip ? { 'data-tooltip': item.tooltip } : {})}
+        onClick={() => item.action?.(setIsModalOpen)}
+      >
+        <span>{item.label}</span>
+      </button>
+    ));
+
   return (
     <>
       <header class={styles.header}>
@@ -43,17 +54,7 @@ const CommonSiteHeader = () => {
           <h1 class={styles.title} onClick={() => navigate('/')}>
             nxtchess
           </h1>
-          <div class={styles.buttonPanel}>
-            {NAV_ITEMS.map((item) => (
-              <button
-                class={`${styles.button} ${item.tooltip ? styles.tooltip : ''}`}
-                {...(item.tooltip ? { 'data-tooltip': item.tooltip } : {})}
-                onClick={() => item.action?.(setIsModalOpen)}
-              >
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </div>
+          <div class={styles.buttonPanel}>{renderNavItems(NAV_ITEMS)}</div>
         </div>
       </header>
       <Show when={isModalOpen()}>

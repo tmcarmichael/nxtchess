@@ -2,14 +2,15 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 9999;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.25s forwards;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
 @keyframes fadeIn {
@@ -22,33 +23,41 @@
 }
 
 .modalContent {
-  position: relative;
-  background: #2c2c2c;
-  color: #f0f0f0;
+  background: rgba(40, 40, 40, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
   padding: 2rem;
-  border-radius: 8px;
-  text-align: center;
-  max-width: 400px;
+  border-radius: 10px;
+  max-width: 450px;
   width: 90%;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  transform: translateY(-15px);
-  animation: slideDown 0.25s forwards;
+  text-align: center;
+  color: #e0e0e0;
+  animation: popIn 0.4s ease-out forwards;
 }
 
-@keyframes slideDown {
-  to {
-    transform: translateY(0);
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
 .modalContent h1 {
-  margin-bottom: 0.75rem;
-  font-size: 1.75rem;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #e0e0e0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .modalContent p {
-  margin-bottom: 1.5rem;
   font-size: 1.125rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  color: #ccc;
 }
 
 .actions {
@@ -58,21 +67,24 @@
 }
 
 .actions button {
-  padding: 0.6rem 1.2rem;
-  background: #434343;
+  background: linear-gradient(145deg, #444, #333);
   border: none;
-  border-radius: 4px;
-  color: #d8d8d8;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  color: #e0e0e0;
   font-size: 1rem;
   cursor: pointer;
-  transition: background 0.1s;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 .actions button:hover {
-  background: #5e5e5e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .actions button:focus {
   outline: none;
-  box-shadow: 0 0 3px #5e5e5e;
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
 }
