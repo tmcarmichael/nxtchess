@@ -247,6 +247,7 @@ const GameBoardController: ParentComponent = () => {
           lastMove={() => state.lastMove}
           checkedKingSquare={() => state.checkedKingSquare}
           boardView={() => state.boardView}
+          activePieceColor={() => state.currentTurn}
         />
       </div>
       <Show when={state.isGameOver}>
