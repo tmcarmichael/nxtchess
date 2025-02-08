@@ -1,5 +1,5 @@
 import { useNavigate } from '@solidjs/router';
-import { createSignal, onMount, onCleanup, Component } from 'solid-js';
+import { createSignal, onMount, onCleanup, Component, createMemo } from 'solid-js';
 import { useGameStore } from '../../../store/GameContext';
 import styles from './HomeSiteHero.module.css';
 
@@ -31,16 +31,18 @@ const HomeSiteHero: Component = () => {
     actions.startNewGame(quickPlayTime, quickPlayDifficulty, quickPlaySide);
   };
 
+  const knightStyle = createMemo(() => ({
+    transition: 'transform 2s ease-in-out',
+    transform: `translate(${pos().x}px, ${pos().y}px) rotate(${pos().r}deg)`,
+  }));
+
   return (
     <section class={styles.hero}>
       <img
         src="/assets/wN.svg"
         alt="Faded Knight Hero Image"
         class={styles.knight}
-        style={{
-          transition: 'transform 2s ease-in-out',
-          transform: `translate(${pos().x}px, ${pos().y}px) rotate(${pos().r}deg)`,
-        }}
+        style={knightStyle()}
         draggable="false"
       />
       <button class={styles.playNowButton} onClick={handlePlayNow}>
