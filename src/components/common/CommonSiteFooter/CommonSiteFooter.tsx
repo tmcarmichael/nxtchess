@@ -1,4 +1,4 @@
-import { For } from 'solid-js';
+import { For, Component } from 'solid-js';
 import styles from './CommonSiteFooter.module.css';
 
 const links = [
@@ -28,7 +28,7 @@ const links = [
   },
 ];
 
-const CommonSiteFooter = () => {
+const CommonSiteFooter: Component = () => {
   return (
     <footer class={styles.footer}>
       <ul class={styles.footerList}>

@@ -1,4 +1,4 @@
-import { splitProps } from 'solid-js';
+import { splitProps, Component } from 'solid-js';
 import styles from './ResignModal.module.css';
 
 interface ResignModalProps {
@@ -7,7 +7,7 @@ interface ResignModalProps {
   onHome: () => void;
 }
 
-const ResignModal = (props: ResignModalProps) => {
+const ResignModal: Component<ResignModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose', 'onReplay', 'onHome']);
   return (
     <div class={styles.modalOverlay} onClick={local.onClose}>

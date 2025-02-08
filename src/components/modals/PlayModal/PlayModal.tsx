@@ -1,4 +1,4 @@
-import { createSignal, splitProps } from 'solid-js';
+import { createSignal, splitProps, Component } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useGameStore } from '../../../store/GameContext';
 import { Side } from '../../../types';
@@ -13,7 +13,7 @@ interface PlayModalProps {
   onClose: () => void;
 }
 
-const PlayModal = (props: PlayModalProps) => {
+const PlayModal: Component<PlayModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose']);
   const [_, actions] = useGameStore();
 

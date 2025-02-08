@@ -1,4 +1,4 @@
-import { splitProps } from 'solid-js';
+import { splitProps, Component } from 'solid-js';
 import styles from './GameEndModal.module.css';
 
 interface GameEndModalProps {
@@ -8,7 +8,7 @@ interface GameEndModalProps {
   gameWinner: 'w' | 'b' | 'draw' | null;
 }
 
-const GameEndModal = (props: GameEndModalProps) => {
+const GameEndModal: Component<GameEndModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose', 'onRestart', 'gameOverReason', 'gameWinner']);
 
   const getGameOverHeading = () => {

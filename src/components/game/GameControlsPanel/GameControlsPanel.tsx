@@ -1,4 +1,4 @@
-import { For, Show, createSignal, createMemo, batch } from 'solid-js';
+import { For, Show, createSignal, createMemo, batch, ParentComponent } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { computeMaterial, fenToBoard } from '../../../services/chessGameService';
 import { PieceType } from '../../../types';
@@ -9,7 +9,7 @@ import GameClock from '../GameClock/GameClock';
 import { DIFFICULTY_VALUES_ELO } from '../../../utils';
 import styles from './GameControlsPanel.module.css';
 
-const GameControlsPanel = () => {
+const GameControlsPanel: ParentComponent = () => {
   const navigate = useNavigate();
   const [_, actions] = useGameStore();
 
