@@ -8,6 +8,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type DBInterface interface {
+	Close()
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
 type dbPoolAdapter struct {
 	pool *pgxpool.Pool
 }

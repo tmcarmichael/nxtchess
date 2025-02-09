@@ -13,8 +13,11 @@
 
 **[Prerequisite: Install Golang]**(https://go.dev/doc/install)
 
-**Currently mocking the DB Connection**
-From ./nxtchess/apps/backend
+Depending on your IDE, it's recommended to open the backend up at /apps/backend instead of the repo root.
+
+When MOCK_DB is set true in /env, mock DB connection is used.
+
+Contact for Postman collection and Supabase steps.
 
 1. Install dependencies:
 
