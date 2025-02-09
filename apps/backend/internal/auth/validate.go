@@ -12,9 +12,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-
 		// tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-
 		next.ServeHTTP(w, r)
 	})
 }
