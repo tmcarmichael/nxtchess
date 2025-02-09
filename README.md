@@ -58,9 +58,19 @@ What's planned?
 - [ ] _(Nice to have)_ Enhance board resizing, accessibility, and cross-browser compatibility.
 - [ ] _(Nice to have)_ Enable full offline AI mode via service worker after initial bundle download.
 
-### Phase 3: Server for Move Validation and Multiplayer
+### Phase 3: OAuth sign in on frontend and persisting profile and game data
 
-- [ ] Develop a Golang REST server to handle game start and related endpoints.
+- [x] Develop a Golang server integrated with PostgreSQL DB.
+- [x] Create tables and validate with mock DB.
+- [ ] Handle sign in, profile GET/POST.
+- [ ] Create tables for game data linked to profiles.
+- [ ] Hook frontend 'sign in' to backend and validate tables update.
+- [ ] Finalize user OAuth sign in and test.
+- [ ] Create profile page on frontend with basic dashboard and info.
+- [ ] End-to-End validation of user sign in and initial server calls.
+
+### Phase 4: Server extended for human multiplayer and server engine use
+
 - [ ] Wrap Stockfish binary with Golang, interfacing via UCI for engine evaluation.
 - [ ] Containerize the backend for local testing alongside the frontend.
 - [ ] Configure Docker Compose to orchestrate FE and BE builds for rapid local development.
@@ -68,7 +78,7 @@ What's planned?
 - [ ] Implement testing strategy for frontend and backend.
 - [ ] Push containers to a registry for deployment.
 
-### Phase 4: Deployment, Logging, and Monitoring Setup
+### Phase 5: Deployment, Logging, and Monitoring Setup
 
 - [ ] Establish a CI/CD pipeline for automated builds, testing, and deployments.
 - [ ] Deploy frontend and backend containers to staging and production environments.
@@ -76,7 +86,7 @@ What's planned?
 - [ ] Configure monitoring and alerting (Prometheus, Grafana, Sentry) for system performance.
 - [ ] Implement health checks and auto-scaling policies for robust deployments.
 
-### Phase 5: Database and User Account Setup
+### Phase 6: Database and User Account Setup
 
 - [ ] Integrate PostgreSQL for persistent storage of game data, user profiles, and history.
 - [ ] Implement secure user authentication and authorization (JWT/OAuth2).
@@ -84,7 +94,7 @@ What's planned?
 - [ ] Enable real-time analytics and player statistics tracking.
 - [ ] _(Nice to have)_ Introduce lightweight GraphQL endpoints for efficient client queries.
 
-### Phase 6: Advanced Features
+### Phase 7: Advanced Features
 
 - [ ] Develop unique AI chess game modes, training tools, and interactive tutorials.
 - [ ] Build a tournament system.
