@@ -6,7 +6,7 @@
 [![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4)](https://prettier.io/docs/en/why-prettier)
 
 <div style="text-align: center;">
-  <img src="public/assets/nxtchess-2-5-25.gif" alt="Early demo" />
+  <img src="apps/frontend/public/assets/nxtchess-2-5-25.gif" alt="Early demo" />
 </div>
 
 ## 🚀 Project Vision
@@ -23,7 +23,7 @@ Create a lean, high-performance, multiplayer chess platform that incorporates un
   [SolidJS](https://www.solidjs.com/), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vite.dev/), and a styling solution (TBD: [Tailwind](https://tailwindcss.com/), [PostCSS](https://postcss.org/), or [Macaron](https://macaron.js.org/docs/styling/)).
 
 - **Backend:**
-  [Golang](https://go.dev/), REST, Websockets, [PostgreSQL](https://www.postgresql.org/), with containerization using Docker/Compose.
+  [Golang](https://go.dev/), [Chi](https://github.com/go-chi/chi) Golang Router, Websockets, [PostgreSQL](https://www.postgresql.org/), with containerization using Docker/Compose.
 
 - **Infrastructure & Tooling:**
   Logging, monitoring, and other support systems (e.g., ELK/Fluentd, Prometheus, Grafana, Sentry).
@@ -64,8 +64,8 @@ What's planned?
 - [ ] Wrap Stockfish binary with Golang, interfacing via UCI for engine evaluation.
 - [ ] Containerize the backend for local testing alongside the frontend.
 - [ ] Configure Docker Compose to orchestrate FE and BE builds for rapid local development.
-- [ ] Remove/refactor frontend AI move logic in favor of server-side evaluation (except for offline mode).
-- [ ] Implement full end-to-end tests covering both frontend and backend.
+- [ ] Refactor to enable either frontend WASM stockfish engine or server-side engine calculations.
+- [ ] Implement testing strategy for frontend and backend.
 - [ ] Push containers to a registry for deployment.
 
 ### Phase 4: Deployment, Logging, and Monitoring Setup
@@ -97,12 +97,18 @@ What's planned?
 
 ### Prerequisites
 
+Frontend:
+
 - **Node.js** (>v16)
 - **yarn**
 
-### Installation
+Backend:
 
-#### Local:
+- **Golang**
+
+### Frontend
+
+#### Local Frontend:
 
 1. Clone this repository:
 
@@ -116,37 +122,57 @@ git clone https://github.com/tmcarmichael/nxtchess.git
 cd nxtchess
 ```
 
-3. Install dependencies:
+3. Navigate to the frontend:
+
+```bash
+cd apps/frontend
+```
+
+4. Install dependencies:
 
 ```bash
 yarn install
 ```
 
-4. Start the development server:
+5. Start the development server:
 
 ```bash
 yarn dev
 ```
 
-5. Open your browser and navigate to the localhost port suggested by Vite, such as, http://localhost:5173/
+6. Open your browser and navigate to the localhost port suggested by Vite, such as, http://localhost:5173/
 
-#### Local Docker Container:
+#### Local Docker Frontend:
 
 1. Download Docker desktop for Docker and Docker Compose. Or ensure you have both installed. https://www.docker.com/products/docker-desktop/.
-2. Build local container.
+
+2. Navigate to the frontend:
+
+```bash
+cd apps/frontend
+```
+
+3. Build local container:
 
 ```bash
 yarn docker:dev:build
 ```
 
-3. Spin up local container.
+3. Spin up local container:
 
 ```bash
 yarn docker:dev:run
 ```
 
 4. Access container at localhost, http://localhost/
+
 5. Alternatively, use Docker Desktop and look for image 'nxtchess-frontend-dev', click "open in browser".
+
+### Backend
+
+#### Local Backend:
+
+\*_in progress_
 
 ---
 
