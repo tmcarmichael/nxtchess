@@ -6,8 +6,9 @@
 
 ### Design
 
+- Core application + domain logic, orchestrating Stockfish, websockets, DB reads/writes.
 - Separate domain logic (services), data access (repositories), and HTTP/websocket logic (controllers).
-- Using [Chi Router](https://github.com/go-chi/chi)
+- Using [Chi Router](https://github.com/go-chi/chi).
 
 ### 🛠️ Getting Started
 
