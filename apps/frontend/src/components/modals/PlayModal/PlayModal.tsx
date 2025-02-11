@@ -36,7 +36,7 @@ const PlayModal: Component<PlayModalProps> = (props) => {
     <div class={styles.modalOverlay} onClick={local.onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <button class={styles.closeButton} onClick={local.onClose} aria-label="Close">
-          ×
+          &times;
         </button>
         <h2>Play Against Computer</h2>
         <div class={styles.settingRow}>

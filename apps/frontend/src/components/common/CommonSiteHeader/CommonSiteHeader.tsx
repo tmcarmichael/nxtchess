@@ -1,18 +1,24 @@
 import { useNavigate } from '@solidjs/router';
-import { createSignal, Show, ParentComponent, For } from 'solid-js';
+import { createSignal, Show, For } from 'solid-js';
 import PlayModal from '../../modals/PlayModal/PlayModal';
+import SignInModal from '../../modals/SignInModal/SignInModal';
 import styles from './CommonSiteHeader.module.css';
+
+type ModalSetters = {
+  setShowPlayModal: (open: boolean) => void;
+  setShowSignInModal: (open: boolean) => void;
+};
 
 type NavItem = {
   label: string;
-  action?: (setModal: (open: boolean) => void) => void;
   tooltip?: string;
+  action?: (setters: ModalSetters) => void;
 };
 
 const NAV_ITEMS: NavItem[] = [
   {
     label: 'Play',
-    action: (setModal: (open: boolean) => void) => setModal(true),
+    action: ({ setShowPlayModal }) => setShowPlayModal(true),
   },
   {
     label: 'Tools',
@@ -28,21 +34,29 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     label: 'Sign In',
-    tooltip: 'Sign In with Google OAuth coming soon.',
+    action: ({ setShowSignInModal }) => setShowSignInModal(true),
   },
 ];
 
-const CommonSiteHeader: ParentComponent = () => {
+const CommonSiteHeader = () => {
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = createSignal(false);
+  const [showPlayModal, setShowPlayModal] = createSignal(false);
+  const [showSignInModal, setShowSignInModal] = createSignal(false);
+
+  const modalSetters: ModalSetters = {
+    setShowPlayModal,
+    setShowSignInModal,
+  };
 
   const renderNavItems = (items: NavItem[]) => (
     <For each={items}>
-      {(item: NavItem) => (
+      {(item) => (
         <button
           class={`${styles.button} ${item.tooltip ? styles.tooltip : ''}`}
           {...(item.tooltip ? { 'data-tooltip': item.tooltip } : {})}
-          onClick={() => item.action?.(setIsModalOpen)}
+          onClick={() => {
+            item.action?.(modalSetters);
+          }}
         >
           <span>{item.label}</span>
         </button>
@@ -60,8 +74,11 @@ const CommonSiteHeader: ParentComponent = () => {
           <div class={styles.buttonPanel}>{renderNavItems(NAV_ITEMS)}</div>
         </div>
       </header>
-      <Show when={isModalOpen()}>
-        <PlayModal onClose={() => setIsModalOpen(false)} />
+      <Show when={showPlayModal()}>
+        <PlayModal onClose={() => setShowPlayModal(false)} />
+      </Show>
+      <Show when={showSignInModal()}>
+        <SignInModal onClose={() => setShowSignInModal(false)} />
       </Show>
     </>
   );

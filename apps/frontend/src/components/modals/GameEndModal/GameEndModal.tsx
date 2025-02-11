@@ -8,47 +8,54 @@ interface GameEndModalProps {
   gameWinner: 'w' | 'b' | 'draw' | null;
 }
 
+interface GameOverInfo {
+  heading: string;
+  message: string | ((winnerName: string) => string);
+}
+
+const GAME_OVER_MAPPING: Record<
+  NonNullable<GameEndModalProps['gameOverReason']> | 'default',
+  GameOverInfo
+> = {
+  checkmate: {
+    heading: 'Checkmate!',
+    message: (winnerName: string) => `${winnerName} wins by checkmate.`,
+  },
+  stalemate: {
+    heading: 'Stalemate!',
+    message: "It's a stalemate.",
+  },
+  time: {
+    heading: 'Time Out!',
+    message: (winnerName: string) => `${winnerName} wins on time.`,
+  },
+  default: {
+    heading: 'Game Over!',
+    message: 'The game has ended.',
+  },
+};
+
 const GameEndModal: Component<GameEndModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose', 'onRestart', 'gameOverReason', 'gameWinner']);
 
-  const getGameOverHeading = () => {
-    if (local.gameWinner === 'draw') return 'Draw!';
-    if (!local.gameOverReason && (local.gameWinner === 'w' || local.gameWinner === 'b'))
-      return 'Checkmate!';
-    switch (local.gameOverReason) {
-      case 'checkmate':
-        return 'Checkmate!';
-      case 'stalemate':
-        return 'Stalemate!';
-      case 'time':
-        return 'Time Out!';
-      default:
-        return 'Game Over!';
+  const getGameOverInfo = () => {
+    if (local.gameWinner === 'draw') {
+      return { heading: 'Draw!', message: "It's a draw." };
     }
+    const winnerName = local.gameWinner === 'w' ? 'White' : 'Black';
+    const mapping = GAME_OVER_MAPPING[local.gameOverReason ?? 'checkmate'];
+    const computedMessage =
+      typeof mapping.message === 'function' ? mapping.message(winnerName) : mapping.message;
+    return { heading: mapping.heading, message: computedMessage };
   };
 
-  const getGameOverMessage = () => {
-    if (local.gameWinner === 'draw') return "It's a draw.";
-    if (!local.gameOverReason && (local.gameWinner === 'w' || local.gameWinner === 'b')) {
-      return `${local.gameWinner === 'w' ? 'White' : 'Black'} wins by checkmate.`;
-    }
-    switch (local.gameOverReason) {
-      case 'checkmate':
-        return `${local.gameWinner === 'w' ? 'White' : 'Black'} wins by checkmate.`;
-      case 'stalemate':
-        return "It's a stalemate.";
-      case 'time':
-        return `${local.gameWinner === 'w' ? 'White' : 'Black'} wins on time.`;
-      default:
-        return 'The game has ended.';
-    }
-  };
+  const { heading, message } = getGameOverInfo();
 
   return (
     <div class={styles.modalOverlay} onClick={local.onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <h1>{getGameOverHeading()}</h1>
-        <p>{getGameOverMessage()}</p>
+        <h1>{heading}</h1>
+        <p>{message}</p>
         <div class={styles.actions}>
           <button onClick={local.onRestart}>Play Again</button>
           <button onClick={local.onClose}>Exit</button>
