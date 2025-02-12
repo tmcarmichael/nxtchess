@@ -18,7 +18,20 @@ Depending on your IDE, it's recommended to open the backend up at /apps/backend 
 
 When MOCK_DB is set true in /env, mock DB connection is used.
 
-Contact for Postman collection and Supabase steps.
+Contact for full Postman collection and PostgreSQL db steps.
+Spinning up docker:
+
+```bash
+docker-compose up -d
+```
+
+Spinning up docker:
+
+```bash
+docker-compose down
+```
+
+Local server:
 
 1. Install dependencies:
 

@@ -3,62 +3,37 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
-	"strings"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/joho/godotenv"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/auth"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/controllers"
-	"github.com/tmcarmichael/nxtchess/apps/backend/internal/repositories"
-	"github.com/tmcarmichael/nxtchess/apps/backend/internal/services"
 )
 
 func main() {
-	cfg := config.LoadConfig()
-	if cfg != nil {
-		log.Println("No .env file found, or couldn't load it. Continuing anyway...")
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found or couldn't load it. Continuing with OS environment...")
 	}
 
-	useMock := strings.ToLower(os.Getenv("USE_MOCK")) == "true"
-
-	var dbPool repositories.DBInterface
-	if useMock {
-		dbPool = repositories.NewMockDBPool()
-	} else {
-		dbPool = repositories.NewDBPool(cfg.DATABASE_URL)
+	cfg := config.Load()
+	port := cfg.Port
+	if port == "" {
+		port = "8080"
 	}
-	defer dbPool.Close()
 
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-
-	r.Get("/", controllers.HealthCheck)
-
-	profileRepo := repositories.NewProfileRepository(dbPool)
-	profileService := services.NewProfileService(profileRepo)
-
-	profileController := controllers.NewProfileController(profileService)
-	oauthController := controllers.NewOAuthController()
+	auth.InitGoogleOAuth(cfg)
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/auth/google", oauthController.GoogleLogin)
-	mux.HandleFunc("/auth/google/callback", oauthController.GoogleCallback)
-	mux.HandleFunc("/profile", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			profileController.CreateProfile(w, r)
-		case http.MethodGet:
-			profileController.GetProfile(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	mux.HandleFunc("/auth/google", auth.GoogleLoginHandler)
+	mux.HandleFunc("/auth/google/callback", auth.GoogleCallbackHandler)
 
-	log.Printf("Starting server on port %s\n", cfg.PORT)
-	if err := http.ListenAndServe(":"+cfg.PORT, mux); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	// Protected
+	mux.Handle("/profile", auth.SessionMiddleware(http.HandlerFunc(controllers.UserProfileHandler)))
+
+	addr := ":" + port
+	log.Printf("Server starting on %s", addr)
+	if err := http.ListenAndServe(addr, mux); err != nil {
+		log.Fatalf("ListenAndServe failed: %v", err)
 	}
 }
