@@ -12,12 +12,12 @@ const SignInModal: Component<SignInModalProps> = (props) => {
     window.location.href = 'http://localhost:8080/auth/google';
   };
 
-  const handleDiscordSignIn = () => {
-    alert('Discord sign-in coming soon...');
+  const handleDiscordLogin = () => {
+    window.location.href = 'http://localhost:8080/auth/discord';
   };
 
-  const handleGithubSignIn = () => {
-    alert('GitHub sign-in coming soon...');
+  const handleGitHubLogin = () => {
+    window.location.href = 'http://localhost:8080/auth/github';
   };
 
   return (
@@ -27,16 +27,16 @@ const SignInModal: Component<SignInModalProps> = (props) => {
           &times;
         </button>
         <h2>Sign In</h2>
-        <p>Choose your sign-in provider:</p>
+        <p>Choose your OAuth sign-in provider:</p>
         <div class={styles.signInOptions}>
           <button class={styles.signInButton} onClick={handleGoogleSignIn}>
-            Sign in with Google
+            Sign in with Google OAuth2
           </button>
-          <button class={styles.signInButton} onClick={handleDiscordSignIn}>
-            Sign in with Discord
+          <button class={styles.signInButton} onClick={handleDiscordLogin}>
+            Sign in with Discord OAuth2
           </button>
-          <button class={styles.signInButton} onClick={handleGithubSignIn}>
-            Sign in with GitHub
+          <button class={styles.signInButton} onClick={handleGitHubLogin}>
+            Sign in with GitHub OAuth2
           </button>
         </div>
       </div>

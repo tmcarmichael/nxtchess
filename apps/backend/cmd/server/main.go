@@ -8,6 +8,7 @@ import (
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/auth"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/controllers"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/sessions"
 )
 
 func main() {
@@ -21,12 +22,25 @@ func main() {
 		port = "8080"
 	}
 
+	sessions.InitRedis()
+
 	auth.InitGoogleOAuth(cfg)
+	auth.InitGitHubOAuth(cfg)
+	auth.InitDiscordOAuth(cfg)
 
 	mux := http.NewServeMux()
 
+	// Google
 	mux.HandleFunc("/auth/google", auth.GoogleLoginHandler)
 	mux.HandleFunc("/auth/google/callback", auth.GoogleCallbackHandler)
+
+	// Discord
+	mux.HandleFunc("/auth/discord", auth.DiscordLoginHandler)
+	mux.HandleFunc("/auth/discord/callback", auth.DiscordCallbackHandler)
+
+	// GitHub
+	mux.HandleFunc("/auth/github", auth.GitHubLoginHandler)
+	mux.HandleFunc("/auth/github/callback", auth.GitHubCallbackHandler)
 
 	// Protected
 	mux.Handle("/profile", auth.SessionMiddleware(http.HandlerFunc(controllers.UserProfileHandler)))

@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -10,25 +11,25 @@ import (
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/sessions"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/utils"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/github"
 )
 
-var googleOAuthConfig *oauth2.Config
+var githubOAuthConfig *oauth2.Config
 
-func InitGoogleOAuth(cfg *config.Config) {
-	googleOAuthConfig = &oauth2.Config{
-		RedirectURL:  "http://localhost:8080/auth/google/callback",
-		ClientID:     cfg.GoogleClientID,
-		ClientSecret: cfg.GoogleClientSecret,
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.profile"},
-		Endpoint:     google.Endpoint,
+func InitGitHubOAuth(cfg *config.Config) {
+	githubOAuthConfig = &oauth2.Config{
+		ClientID:     cfg.GitHubClientID,
+		ClientSecret: cfg.GitHubClientSecret,
+		RedirectURL:  "http://localhost:8080/auth/github/callback",
+		Scopes:       []string{"read:user"},
+		Endpoint:     github.Endpoint,
 	}
-	log.Println("[InitGoogleOAuth] Google OAuth config initialized.")
+	log.Println("[InitGitHubOAuth] GitHub OAuth config initialized.")
 }
 
-func GoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
-	if googleOAuthConfig == nil {
-		http.Error(w, "OAuth config not initialized", http.StatusInternalServerError)
+func GitHubLoginHandler(w http.ResponseWriter, r *http.Request) {
+	if githubOAuthConfig == nil {
+		http.Error(w, "OAuth config not initialized for GitHub", http.StatusInternalServerError)
 		return
 	}
 
@@ -39,21 +40,21 @@ func GoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "oauth_state",
+		Name:     "oauth_state_github",
 		Value:    state,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false, // prod:true
 	})
 
-	authURL := googleOAuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
-	log.Printf("[GoogleLoginHandler] Redirecting user to: %s", authURL)
+	authURL := githubOAuthConfig.AuthCodeURL(state)
+	log.Printf("[GitHubLoginHandler] Redirecting user to: %s", authURL)
 	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 }
 
-func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	if googleOAuthConfig == nil {
-		http.Error(w, "OAuth config not initialized", http.StatusInternalServerError)
+func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	if githubOAuthConfig == nil {
+		http.Error(w, "OAuth config not initialized for GitHub", http.StatusInternalServerError)
 		return
 	}
 
@@ -63,7 +64,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stateCookie, err := r.Cookie("oauth_state")
+	stateCookie, err := r.Cookie("oauth_state_github")
 	if err != nil {
 		http.Error(w, "Missing or invalid state cookie", http.StatusBadRequest)
 		return
@@ -75,30 +76,30 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	code := r.URL.Query().Get("code")
-	token, err := googleOAuthConfig.Exchange(context.Background(), code)
+	token, err := githubOAuthConfig.Exchange(context.Background(), code)
 	if err != nil {
 		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	client := googleOAuthConfig.Client(context.Background(), token)
-	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	client := githubOAuthConfig.Client(context.Background(), token)
+	resp, err := client.Get("https://api.github.com/user")
 	if err != nil {
 		http.Error(w, "Failed to get user info: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer resp.Body.Close()
 
-	var googleUser struct {
-		ID string `json:"id"`
+	var ghUser struct {
+		ID int `json:"id"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&googleUser); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&ghUser); err != nil {
 		http.Error(w, "Failed to decode user info: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("[GoogleCallbackHandler] User logged in with Google ID: %s", googleUser.ID)
+	log.Printf("[GitHubCallbackHandler] User logged in with GitHub ID: %d.", ghUser.ID)
 
 	sessionToken, err := sessions.GenerateSessionToken()
 	if err != nil {
@@ -106,7 +107,8 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessions.StoreSession(sessionToken, googleUser.ID)
+	userID := fmt.Sprintf("github_%d", ghUser.ID)
+	sessions.StoreSession(sessionToken, userID)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",

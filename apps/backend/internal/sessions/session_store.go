@@ -1,29 +1,39 @@
 package sessions
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"io"
 	"log"
-	"sync"
+	"os"
+	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 var (
-	sessionStore = make(map[string]string)
-	storeMu      sync.Mutex
+	rdb *redis.Client
+	ctx = context.Background()
 )
 
-func StoreSession(token, userID string) {
-	storeMu.Lock()
-	defer storeMu.Unlock()
-	sessionStore[token] = userID
-}
+func InitRedis() {
+	redisAddr := os.Getenv("REDIS_PORT")
+	if redisAddr == "" {
+		redisAddr = "redis:6379"
+	}
 
-func GetSessionUserID(token string) (string, bool) {
-	storeMu.Lock()
-	defer storeMu.Unlock()
-	userID, found := sessionStore[token]
-	return userID, found
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     redisAddr,
+		Password: "",
+		DB:       0,
+	})
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		log.Fatalf("Failed to connect to Redis at %s: %v", redisAddr, err)
+	}
+
+	log.Printf("[InitRedis] Connected to Redis at %s", redisAddr)
 }
 
 func GenerateSessionToken() (string, error) {
@@ -34,4 +44,24 @@ func GenerateSessionToken() (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+// (token -> userID) mapping
+func StoreSession(token, userID string) error {
+	err := rdb.Set(ctx, token, userID, 24*time.Hour).Err()
+	if err != nil {
+		log.Printf("Error storing session in Redis: %v", err)
+	}
+	return err
+}
+
+func GetSessionUserID(token string) (string, bool) {
+	userID, err := rdb.Get(ctx, token).Result()
+	if err == redis.Nil {
+		return "", false
+	} else if err != nil {
+		log.Printf("Error getting session from Redis: %v", err)
+		return "", false
+	}
+	return userID, true
 }
