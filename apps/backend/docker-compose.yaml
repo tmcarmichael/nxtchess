@@ -24,5 +24,25 @@ services:
       PGRST_DB_SCHEMA: "public"
       PGRST_DB_ANON_ROLE: "anon"
 
+  redis:
+    image: redis:7
+    container_name: chess_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chess_backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+
 volumes:
   db_data:

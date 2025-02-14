@@ -13,7 +13,7 @@
 
 Create a lean, high-performance, multiplayer chess platform that incorporates unique training modes and AI-driven features.
 
-**_The project is currently in early development, with a focus on building the frontend client and core game logic. Check out the Roadmap below for more details on our plans and progress._**
+**_The project is currently in early development. Check out the Roadmap below for more details on our plans and progress._**
 
 ---
 
