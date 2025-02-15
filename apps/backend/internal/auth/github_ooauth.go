@@ -7,116 +7,124 @@ import (
 	"log"
 	"net/http"
 
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
+
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/sessions"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/utils"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/github"
 )
 
 var githubOAuthConfig *oauth2.Config
 
 func InitGitHubOAuth(cfg *config.Config) {
+	callbackURL := cfg.BackendURL + "/auth/github/callback"
+
 	githubOAuthConfig = &oauth2.Config{
+		RedirectURL:  callbackURL,
 		ClientID:     cfg.GitHubClientID,
 		ClientSecret: cfg.GitHubClientSecret,
-		RedirectURL:  "http://localhost:8080/auth/github/callback",
 		Scopes:       []string{"read:user"},
 		Endpoint:     github.Endpoint,
 	}
-	log.Println("[InitGitHubOAuth] GitHub OAuth config initialized.")
+
+	log.Printf("[InitGitHubOAuth] GitHub OAuth config initialized. Callback: %s\n", callbackURL)
 }
 
-func GitHubLoginHandler(w http.ResponseWriter, r *http.Request) {
-	if githubOAuthConfig == nil {
-		http.Error(w, "OAuth config not initialized for GitHub", http.StatusInternalServerError)
-		return
+func GitHubLoginHandler(cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if githubOAuthConfig == nil {
+			http.Error(w, "GitHub OAuth config not initialized", http.StatusInternalServerError)
+			return
+		}
+
+		state, err := utils.GenerateRandomString(16)
+		if err != nil {
+			http.Error(w, "Failed to generate state parameter", http.StatusInternalServerError)
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "oauth_state_github",
+			Value:    state,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   false, // prod:true
+		})
+
+		authURL := githubOAuthConfig.AuthCodeURL(state)
+		log.Printf("[GitHubLoginHandler] Redirecting user to GitHub OAuth: %s", authURL)
+		http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 	}
-
-	state, err := utils.GenerateRandomString(16)
-	if err != nil {
-		http.Error(w, "Failed to generate state parameter", http.StatusInternalServerError)
-		return
-	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "oauth_state_github",
-		Value:    state,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   false, // prod:true
-	})
-
-	authURL := githubOAuthConfig.AuthCodeURL(state)
-	log.Printf("[GitHubLoginHandler] Redirecting user to: %s", authURL)
-	http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 }
 
-func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	if githubOAuthConfig == nil {
-		http.Error(w, "OAuth config not initialized for GitHub", http.StatusInternalServerError)
-		return
+func GitHubCallbackHandler(cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if githubOAuthConfig == nil {
+			utils.AuthRedirectWithError(w, r, "GitHub OAuth config not initialized", http.StatusInternalServerError, cfg)
+			return
+		}
+
+		stateParam := r.URL.Query().Get("state")
+		if stateParam == "" {
+			utils.AuthRedirectWithError(w, r, "Missing OAuth state parameter", http.StatusBadRequest, cfg)
+			return
+		}
+
+		stateCookie, err := r.Cookie("oauth_state_github")
+		if err != nil {
+			utils.AuthRedirectWithError(w, r, "Missing or invalid state cookie", http.StatusBadRequest, cfg)
+			return
+		}
+
+		if stateParam != stateCookie.Value {
+			utils.AuthRedirectWithError(w, r, "Invalid OAuth state parameter", http.StatusBadRequest, cfg)
+			return
+		}
+
+		code := r.URL.Query().Get("code")
+		token, err := githubOAuthConfig.Exchange(context.Background(), code)
+		if err != nil {
+			utils.AuthRedirectWithError(w, r, "Failed to exchange token: "+err.Error(), http.StatusBadRequest, cfg)
+			return
+		}
+
+		client := githubOAuthConfig.Client(context.Background(), token)
+		resp, err := client.Get("https://api.github.com/user")
+		if err != nil {
+			utils.AuthRedirectWithError(w, r, "Failed to get user info: "+err.Error(), http.StatusBadRequest, cfg)
+			return
+		}
+		defer resp.Body.Close()
+
+		var ghUser struct {
+			ID int `json:"id"`
+		}
+		if decodeErr := json.NewDecoder(resp.Body).Decode(&ghUser); decodeErr != nil {
+			utils.AuthRedirectWithError(w, r, "Failed to decode user info: "+decodeErr.Error(), http.StatusInternalServerError, cfg)
+			return
+		}
+
+		sessionToken, err := sessions.GenerateSessionToken()
+		if err != nil {
+			utils.AuthRedirectWithError(w, r, "Failed to generate session token: "+err.Error(), http.StatusInternalServerError, cfg)
+			return
+		}
+
+		userID := fmt.Sprintf("github_%d", ghUser.ID)
+		if err := sessions.StoreSession(sessionToken, userID); err != nil {
+			utils.AuthRedirectWithError(w, r, "Failed to store session: "+err.Error(), http.StatusInternalServerError, cfg)
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_token",
+			Value:    sessionToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   false, // prod:true
+		})
+
+		http.Redirect(w, r, cfg.FrontendURL+"/", http.StatusSeeOther)
 	}
-
-	stateParam := r.URL.Query().Get("state")
-	if stateParam == "" {
-		http.Error(w, "Missing OAuth state parameter", http.StatusBadRequest)
-		return
-	}
-
-	stateCookie, err := r.Cookie("oauth_state_github")
-	if err != nil {
-		http.Error(w, "Missing or invalid state cookie", http.StatusBadRequest)
-		return
-	}
-
-	if stateParam != stateCookie.Value {
-		http.Error(w, "Invalid OAuth state parameter", http.StatusBadRequest)
-		return
-	}
-
-	code := r.URL.Query().Get("code")
-	token, err := githubOAuthConfig.Exchange(context.Background(), code)
-	if err != nil {
-		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	client := githubOAuthConfig.Client(context.Background(), token)
-	resp, err := client.Get("https://api.github.com/user")
-	if err != nil {
-		http.Error(w, "Failed to get user info: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer resp.Body.Close()
-
-	var ghUser struct {
-		ID int `json:"id"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&ghUser); err != nil {
-		http.Error(w, "Failed to decode user info: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	log.Printf("[GitHubCallbackHandler] User logged in with GitHub ID: %d.", ghUser.ID)
-
-	sessionToken, err := sessions.GenerateSessionToken()
-	if err != nil {
-		http.Error(w, "Failed to generate session token", http.StatusInternalServerError)
-		return
-	}
-
-	userID := fmt.Sprintf("github_%d", ghUser.ID)
-	sessions.StoreSession(sessionToken, userID)
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    sessionToken,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   false, // prod:true
-	})
-
-	http.Redirect(w, r, "http://localhost:5173/", http.StatusSeeOther)
 }

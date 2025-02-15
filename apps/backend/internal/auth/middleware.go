@@ -7,6 +7,10 @@ import (
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/sessions"
 )
 
+type contextKey string
+
+const UserIDKey contextKey = "userID"
+
 func SessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_token")
@@ -21,7 +25,7 @@ func SessionMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "userID", userID)
+		ctx := context.WithValue(r.Context(), UserIDKey, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

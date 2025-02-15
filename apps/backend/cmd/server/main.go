@@ -31,16 +31,16 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Google
-	mux.HandleFunc("/auth/google", auth.GoogleLoginHandler)
-	mux.HandleFunc("/auth/google/callback", auth.GoogleCallbackHandler)
+	mux.HandleFunc("/auth/google/login", auth.GoogleLoginHandler(cfg))
+	mux.HandleFunc("/auth/google/callback", auth.GoogleCallbackHandler(cfg))
 
 	// Discord
-	mux.HandleFunc("/auth/discord", auth.DiscordLoginHandler)
-	mux.HandleFunc("/auth/discord/callback", auth.DiscordCallbackHandler)
+	mux.HandleFunc("/auth/discord/login", auth.DiscordLoginHandler(cfg))
+	mux.HandleFunc("/auth/discord/callback", auth.DiscordCallbackHandler(cfg))
 
 	// GitHub
-	mux.HandleFunc("/auth/github", auth.GitHubLoginHandler)
-	mux.HandleFunc("/auth/github/callback", auth.GitHubCallbackHandler)
+	mux.HandleFunc("/auth/github/login", auth.GitHubLoginHandler(cfg))
+	mux.HandleFunc("/auth/github/callback", auth.GitHubCallbackHandler(cfg))
 
 	// Protected
 	mux.Handle("/profile", auth.SessionMiddleware(http.HandlerFunc(controllers.UserProfileHandler)))
