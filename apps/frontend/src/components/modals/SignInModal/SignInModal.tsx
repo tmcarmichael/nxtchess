@@ -1,5 +1,6 @@
 import { splitProps, Component, createEffect } from 'solid-js';
 // import { useNavigate } from '@solidjs/router';
+import { BACKEND_URL } from '../../../config/env';
 import styles from './SignInModal.module.css';
 
 interface SignInModalProps {
@@ -11,19 +12,19 @@ const SignInModal: Component<SignInModalProps> = (props) => {
   // const navigate = useNavigate();
 
   const handleGoogleSignIn = () => {
-    window.location.href = 'http://localhost:8080/auth/google/login';
+    window.location.href = BACKEND_URL + '/auth/google/login';
   };
 
   const handleDiscordSignIn = () => {
-    window.location.href = 'http://localhost:8080/auth/discord/login';
+    window.location.href = BACKEND_URL + '/auth/discord/login';
   };
 
   const handleGitHubSignIn = () => {
-    window.location.href = 'http://localhost:8080/auth/github/login';
+    window.location.href = BACKEND_URL + '/auth/github/login';
   };
 
   createEffect(() => {
-    fetch('http://localhost:8080/check-username', { credentials: 'include' })
+    fetch(BACKEND_URL + '/TODO-CHECK-USERNAME', { credentials: 'include' })
       .then((res) => {
         if (res.status === 404) {
           // navigate('/TODO-USERNAME');
