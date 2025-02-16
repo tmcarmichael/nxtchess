@@ -15,7 +15,9 @@ const ResignModal: Component<ResignModalProps> = (props) => {
         <h1>You resigned.</h1>
         <p>Better luck next time.</p>
         <div class={styles.actions}>
-          <button onClick={local.onReplay}>Play Again</button>
+          <button class={styles.playAgainButton} onClick={local.onReplay}>
+            Play Again
+          </button>
           <button onClick={local.onHome}>Home</button>
         </div>
       </div>

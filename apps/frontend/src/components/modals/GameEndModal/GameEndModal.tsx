@@ -54,10 +54,15 @@ const GameEndModal: Component<GameEndModalProps> = (props) => {
   return (
     <div class={styles.modalOverlay} onClick={local.onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <button class={styles.closeButton} onClick={local.onClose} aria-label="Close">
+          <span class={styles.closeIcon}>&times;</span>
+        </button>
         <h1>{heading}</h1>
         <p>{message}</p>
         <div class={styles.actions}>
-          <button onClick={local.onRestart}>Play Again</button>
+          <button class={styles.playAgainButton} onClick={local.onRestart}>
+            Play Again
+          </button>
           <button onClick={local.onClose}>Exit</button>
         </div>
       </div>

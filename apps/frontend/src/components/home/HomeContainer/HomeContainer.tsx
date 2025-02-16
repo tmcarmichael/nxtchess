@@ -1,6 +1,7 @@
-import { JSX, splitProps, ParentComponent } from 'solid-js';
-import { useLocation } from '@solidjs/router';
+import { JSX, splitProps, ParentComponent, createSignal, createEffect, Show } from 'solid-js';
+import { useLocation, useSearchParams } from '@solidjs/router';
 import HomeSiteHero from '../HomeSiteHero/HomeSiteHero';
+import SignInModal from '../../modals/SignInModal/SignInModal';
 import styles from './HomeContainer.module.css';
 
 interface HomeContainerProps {
@@ -10,10 +11,27 @@ interface HomeContainerProps {
 const HomeContainer: ParentComponent<HomeContainerProps> = (props) => {
   const [local] = splitProps(props, ['children']);
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showSignInModal, setShowSignInModal] = createSignal(false);
+
+  createEffect(() => {
+    if (searchParams.error) {
+      setShowSignInModal(true);
+    }
+  });
+
+  const closeModal = () => {
+    setShowSignInModal(false);
+    setSearchParams({ error: undefined });
+  };
+
   return (
     <div class={styles.container}>
       {location.pathname === '/' && <HomeSiteHero />}
       <main class={styles.content}>{local.children}</main>
+      <Show when={showSignInModal()}>
+        <SignInModal onClose={closeModal} />
+      </Show>
     </div>
   );
 };

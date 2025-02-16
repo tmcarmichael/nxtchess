@@ -5,7 +5,7 @@
   justify-content: center;
   align-items: center;
   background-color: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(2px);
   z-index: 9999;
   animation: fadeIn 0.3s ease-out forwards;
 }
@@ -25,14 +25,13 @@
   max-width: 440px;
   padding: 2rem;
   text-align: center;
-  color: #e0e0e0;
+  color: #c5c5c5;
   background: linear-gradient(145deg, rgba(42, 42, 42, 0.7), rgba(51, 51, 51, 0.7));
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.5),
     0 2px 4px rgba(255, 255, 255, 0.05);
-
   animation: slideUp 0.3s ease-out forwards;
 }
 
@@ -81,6 +80,16 @@
   color: #d4d4d4;
 }
 
+.closeIcon {
+  position: relative;
+  top: -2px;
+  font-size: 1.5rem;
+  color: #888;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
 .signInOptions {
   display: flex;
   flex-direction: column;
@@ -93,7 +102,7 @@
   font-size: 1rem;
   font-weight: 600;
   background: rgba(21, 125, 73, 0.6);
-  color: #d3d3d3;
+  color: #bebebe;
   border: 1px solid #2d2d2d;
   border-radius: 6px;
   cursor: pointer;
@@ -105,8 +114,8 @@
 }
 
 .signInButton:hover {
+  transform: scale(1.02);
   background-color: rgba(25, 154, 90, 0.5);
-  transform: scale(1.03);
   box-shadow: 0 4px 12px rgba(22, 22, 22, 0.8);
 }
 
@@ -119,4 +128,43 @@
   .modalContent {
     padding: 1.5rem;
   }
+}
+
+.errorBanner {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background-color: rgba(200, 25, 25, 0.15);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  color: #ffc7c7;
+  font-weight: 500;
+  text-align: left;
+}
+
+.errorBanner p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.errorBanner button {
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #ffc7c7;
+  background-color: rgba(255, 0, 0, 0.25);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.errorBanner button:hover {
+  background-color: rgba(255, 0, 0, 0.35);
+  transform: scale(1.02);
+}
+
+.errorBanner button:active {
+  background-color: rgba(255, 0, 0, 0.45);
+  transform: scale(0.98);
 }

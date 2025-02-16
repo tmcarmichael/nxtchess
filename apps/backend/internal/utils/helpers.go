@@ -28,7 +28,7 @@ func AuthRedirectWithError(
 	cfg *config.Config,
 ) {
 	encodedMsg := url.QueryEscape(errMsg)
-	redirectURL := fmt.Sprintf("%s/login?error=%s", cfg.FrontendURL, encodedMsg)
+	redirectURL := fmt.Sprintf("%s/?error=%s", cfg.FrontendURL, encodedMsg)
 	log.Printf("[AuthRedirectWithError] %s (status code %d)\n", errMsg, statusCode)
 	http.Redirect(w, r, redirectURL, statusCode)
 }

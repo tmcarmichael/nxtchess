@@ -11,8 +11,8 @@
   gap: 10px;
   padding: 10px 15px;
   background: rgba(20, 20, 20, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   max-width: 500px;
@@ -25,18 +25,18 @@
   margin: 0;
   padding: 0;
   font-size: 0.7rem;
-  color: #aaa;
+  color: #888;
   text-transform: uppercase;
 }
 
 .footerList a {
-  color: #aaa !important;
+  color: #888 !important;
   text-decoration: none !important;
   transition: none !important;
 }
 
 .footerList a:visited {
-  color: #aaa !important;
+  color: #888 !important;
   text-decoration: none !important;
 }
 
@@ -45,6 +45,6 @@
 }
 
 .footerList a:active {
-  color: #aaa !important;
+  color: #888 !important;
   text-decoration: none !important;
 }

@@ -64,12 +64,20 @@
     transform 0.2s ease,
     color 0.2s ease;
 }
-
 .closeButton:hover,
 .closeButton:focus {
   color: #fff;
   transform: scale(1.1);
   outline: none;
+}
+.closeIcon {
+  position: relative;
+  top: -2px;
+  font-size: 1.5rem;
+  color: #888;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 @keyframes fadeIn {

@@ -1,18 +1,13 @@
-import { useNavigate } from '@solidjs/router';
 import { createSignal, Show, For } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 import PlayModal from '../../modals/PlayModal/PlayModal';
 import SignInModal from '../../modals/SignInModal/SignInModal';
 import styles from './CommonSiteHeader.module.css';
 
-type ModalSetters = {
-  setShowPlayModal: (open: boolean) => void;
-  setShowSignInModal: (open: boolean) => void;
-};
-
 type NavItem = {
   label: string;
   tooltip?: string;
-  action?: (setters: ModalSetters) => void;
+  action?: (api: { setShowPlayModal: (open: boolean) => void }) => void;
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -21,57 +16,53 @@ const NAV_ITEMS: NavItem[] = [
     action: ({ setShowPlayModal }) => setShowPlayModal(true),
   },
   {
-    label: 'Tools',
-    tooltip: 'Tools and game analysis coming soon.',
-  },
-  {
     label: 'Training',
     tooltip: 'Training mode with customizable AI personality coming soon.',
+  },
+  {
+    label: 'Tools',
+    tooltip: 'Tools and game analysis coming soon.',
   },
   {
     label: 'Database',
     tooltip: 'Database with recent tournament games coming soon.',
   },
-  {
-    label: 'Sign In',
-    action: ({ setShowSignInModal }) => setShowSignInModal(true),
-  },
 ];
 
-const CommonSiteHeader = () => {
+export default function CommonSiteHeader() {
   const navigate = useNavigate();
+
   const [showPlayModal, setShowPlayModal] = createSignal(false);
   const [showSignInModal, setShowSignInModal] = createSignal(false);
 
-  const modalSetters: ModalSetters = {
+  const navAPI = {
     setShowPlayModal,
-    setShowSignInModal,
   };
-
-  const renderNavItems = (items: NavItem[]) => (
-    <For each={items}>
-      {(item) => (
-        <button
-          class={`${styles.button} ${item.tooltip ? styles.tooltip : ''}`}
-          {...(item.tooltip ? { 'data-tooltip': item.tooltip } : {})}
-          onClick={() => {
-            item.action?.(modalSetters);
-          }}
-        >
-          <span>{item.label}</span>
-        </button>
-      )}
-    </For>
-  );
 
   return (
     <>
-      <header class={styles.header}>
-        <div class={styles.titleAndPanel}>
-          <h1 class={styles.title} onClick={() => navigate('/')}>
-            nxtchess
-          </h1>
-          <div class={styles.buttonPanel}>{renderNavItems(NAV_ITEMS)}</div>
+      <header class={styles.headerRoot}>
+        <div class={styles.headerLeft} onClick={() => navigate('/')}>
+          nxtchess
+        </div>
+        <div class={styles.headerCenter}>
+          <For each={NAV_ITEMS}>
+            {(item) => (
+              <span
+                classList={{
+                  [styles.navItem]: true,
+                  [styles.tooltip]: Boolean(item.tooltip),
+                }}
+                data-tooltip={item.tooltip ?? undefined}
+                onClick={() => item.action?.(navAPI)}
+              >
+                {item.label}
+              </span>
+            )}
+          </For>
+        </div>
+        <div class={styles.headerRight} onClick={() => setShowSignInModal(true)}>
+          Sign In
         </div>
       </header>
       <Show when={showPlayModal()}>
@@ -82,6 +73,4 @@ const CommonSiteHeader = () => {
       </Show>
     </>
   );
-};
-
-export default CommonSiteHeader;
+}

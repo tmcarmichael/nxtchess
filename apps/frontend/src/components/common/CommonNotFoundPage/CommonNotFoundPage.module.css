@@ -1,0 +1,32 @@
+.notFoundContainer {
+  text-align: center;
+  color: #c4c4c4;
+}
+
+.notFoundTitle {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.notFoundText {
+  font-size: 1.1rem;
+  color: #c4c4c4;
+}
+
+.backLink {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #636363b2;
+  color: #ccc;
+  border-radius: 4px;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(22, 22, 22, 0.8);
+  transition: background-color 0.2s ease;
+}
+
+.backLink:hover {
+  background-color: #555;
+  color: #c4c4c4;
+}

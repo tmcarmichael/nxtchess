@@ -30,6 +30,12 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	// DEV
+	// mux.HandleFunc("/auth/google/fail", func(w http.ResponseWriter, r *http.Request) {
+	// 	simErr := "OAuth2 sim error FE, lorem ipsum lorem ipsum"
+	// 	utils.AuthRedirectWithError(w, r, simErr, http.StatusSeeOther, cfg)
+	// })
+
 	// Google
 	mux.HandleFunc("/auth/google/login", auth.GoogleLoginHandler(cfg))
 	mux.HandleFunc("/auth/google/callback", auth.GoogleCallbackHandler(cfg))

@@ -39,7 +39,7 @@ const PromotionModal: Component<PromotionModalProps> = (props) => {
           onClick={local.onClose}
           aria-label="Close promotion modal"
         >
-          &times;
+          <span class={styles.closeIcon}>&times;</span>
         </button>
         <div class={styles.promotionOptions}>
           <For each={PROMOTION_PIECES}>{(piece) => renderPromotionImage(piece)}</For>
