@@ -1,14 +1,11 @@
 .modalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(3px);
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
   z-index: 9999;
   animation: fadeIn 0.3s ease-out forwards;
 }
@@ -23,15 +20,18 @@
 }
 
 .modalContent {
-  background: rgba(40, 40, 40, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-  padding: 2rem;
-  border-radius: 10px;
-  max-width: 450px;
+  position: relative;
   width: 90%;
-  text-align: center;
+  max-width: 480px;
+  padding: 1.4rem;
+  background: linear-gradient(145deg, rgba(42, 42, 42, 0.7), rgba(51, 51, 51, 0.7));
   color: #e0e0e0;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(255, 255, 255, 0.05);
   animation: popIn 0.4s ease-out forwards;
 }
 
@@ -46,11 +46,14 @@
   }
 }
 
-.modalContent h1 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-  color: #e0e0e0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+.modalContent h1,
+.modalContent h2 {
+  margin: 0 0 1.5rem;
+  padding-bottom: 1rem;
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: #b0b0b0;
+  letter-spacing: 0.5px;
 }
 
 .modalContent p {
@@ -65,26 +68,96 @@
   gap: 1rem;
   justify-content: center;
 }
-
 .actions button {
-  background: linear-gradient(145deg, #444, #333);
-  border: none;
-  border-radius: 8px;
   padding: 0.75rem 1.5rem;
-  color: #e0e0e0;
   font-size: 1rem;
+  font-weight: 500;
+  background: rgba(101, 101, 101, 0.6);
+  border: 1px solid #2d2d2d;
+  border-radius: 6px;
+  color: #d3d3d3;
   cursor: pointer;
   transition:
-    transform 0.1s ease,
-    box-shadow 0.1s ease;
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow:
+    0 2px 4px rgba(255, 255, 255, 0.05),
+    0 4px 8px rgba(0, 0, 0, 0.5);
 }
-
 .actions button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  background-color: rgba(132, 132, 132, 0.5);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(22, 22, 22, 0.8);
+}
+.actions button:active {
+  background-color: rgba(21, 130, 75, 0.6);
+  transform: scale(0.98);
 }
 
-.actions button:focus {
-  outline: none;
-  box-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+.playAgainButton {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: rgba(14, 190, 1, 0.389) !important;
+  border: 1px solid #2d2d2d;
+  border-radius: 6px;
+  color: #d3d3d3;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow:
+    0 2px 4px rgba(255, 255, 255, 0.05),
+    0 4px 8px rgba(0, 0, 0, 0.5);
+}
+.playAgainButton:hover {
+  background-color: rgba(42, 197, 31, 0.544) !important;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(22, 22, 22, 0.8);
+}
+.playAgainButton:active {
+  transform: scale(0.98);
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.056);
+  border: none;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  color: #a0a0a0;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #d4d4d4;
+}
+
+.closeIcon {
+  position: relative;
+  top: -2px;
+  font-size: 1.5rem;
+  color: #888;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+@media (max-width: 480px) {
+  .modalContent {
+    padding: 1.5rem;
+  }
 }

@@ -36,12 +36,12 @@ const PlayModal: Component<PlayModalProps> = (props) => {
     <div class={styles.modalOverlay} onClick={local.onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <button class={styles.closeButton} onClick={local.onClose} aria-label="Close">
-          &times;
+          <span class={styles.closeIcon}>&times;</span>
         </button>
         <h2>Play Against Computer</h2>
         <div class={styles.settingRow}>
           <label class={styles.rangeSliderLabel}>
-            Time Control: {TIME_VALUES_MINUTES[localTimeIndex()]} min
+            Time Control:&nbsp&nbsp&nbsp{TIME_VALUES_MINUTES[localTimeIndex()]} min
           </label>
           <div class={styles.rangeSliderContainer}>
             <input
@@ -57,7 +57,7 @@ const PlayModal: Component<PlayModalProps> = (props) => {
         </div>
         <div class={styles.settingRow}>
           <label class={styles.rangeSliderLabel}>
-            Difficulty: {DIFFICULTY_VALUES_LEVEL[localDifficultyIndex()]} (ELO{' '}
+            Difficulty:&nbsp&nbsp&nbsp{DIFFICULTY_VALUES_LEVEL[localDifficultyIndex()]} (ELO{' '}
             {DIFFICULTY_VALUES_ELO[localDifficultyIndex()]})
           </label>
           <div class={styles.rangeSliderContainer}>
@@ -73,7 +73,7 @@ const PlayModal: Component<PlayModalProps> = (props) => {
           </div>
         </div>
         <div class={styles.settingRow}>
-          <label class={styles.label}>Play As</label>
+          <label class={styles.label}>Play As:</label>
           <div class={styles.knightSelector}>
             <div
               classList={{

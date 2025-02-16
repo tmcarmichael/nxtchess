@@ -40,7 +40,7 @@
 .gamePanelButton:hover {
   background-color: #3f3f3f;
   color: #fff;
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .gamePanelButton:active {
