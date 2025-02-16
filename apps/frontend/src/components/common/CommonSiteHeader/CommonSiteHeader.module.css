@@ -33,11 +33,12 @@
   padding: 1.05rem 4rem;
   display: flex;
   gap: 2.4rem;
-  border: 1.5px solid rgba(255, 255, 255, 0.07);
+  /* border: 1px solid rgba(34, 196, 39, 0.307); */
+  border: 1px solid rgba(104, 104, 104, 0.307);
 }
 
 .navItem {
-  font-family: 'Inter';
+  font-family: 'Inter', 'Open Sans', 'Arial', 'sans-serif';
   font-size: 1.3rem;
   font-weight: 500;
   letter-spacing: 0px;
@@ -52,7 +53,6 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 .navItem::after {
-  content: '';
   position: absolute;
   left: 0;
   bottom: -2px;
@@ -71,11 +71,13 @@
 
 .headerRight {
   position: absolute;
-  right: 6rem;
-  top: 34%;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: rgb(55, 103, 181);
+  right: 5rem;
+  top: 30%;
+  font-family: 'Inter', 'Open Sans', 'Arial', 'sans-serif';
+  font-size: 1.4rem;
+  letter-spacing: 0.5px;
+  font-weight: 550;
+  color: rgb(105, 163, 255);
   cursor: pointer;
   transition:
     color 0.2s,

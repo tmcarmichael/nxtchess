@@ -1,4 +1,4 @@
-import { splitProps, Component, createEffect } from 'solid-js';
+import { splitProps, Component } from 'solid-js';
 import { useSearchParams } from '@solidjs/router';
 import { BACKEND_URL } from '../../../config/env';
 import styles from './SignInModal.module.css';
@@ -12,7 +12,6 @@ const SignInModal: Component<SignInModalProps> = (props) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const handleGoogleSignIn = () => {
-    // window.location.href = `${BACKEND_URL}/auth/google/fail`; // DEV
     window.location.href = `${BACKEND_URL}/auth/google/login`;
   };
   const handleDiscordSignIn = () => {
@@ -25,12 +24,6 @@ const SignInModal: Component<SignInModalProps> = (props) => {
   const dismissError = () => {
     setSearchParams({ error: undefined });
   };
-
-  createEffect(() => {
-    if (searchParams.error) {
-      console.log('OAuth Error:', searchParams.error);
-    }
-  });
 
   return (
     <div class={styles.modalOverlay} onClick={local.onClose}>
@@ -49,13 +42,7 @@ const SignInModal: Component<SignInModalProps> = (props) => {
         {searchParams.error && (
           <div class={styles.errorBanner}>
             <p>{searchParams.error}</p>
-            <button
-              onClick={() => {
-                dismissError();
-              }}
-            >
-              Dismiss Error
-            </button>
+            <button onClick={dismissError}>Dismiss Error</button>
           </div>
         )}
         <p>Choose your OAuth sign-in provider:</p>

@@ -19,13 +19,20 @@ Discord OAuth2 - Complete&Verifying
 
 ### 🛠️ Getting Started
 
-**[Prerequisite: Install Golang]**(https://go.dev/doc/install)
+**\[Prerequisite\]**
 
-Depending on your IDE, it's recommended to open the backend up at /apps/backend instead of the repo root.
+- Install [Golang](https://go.dev/doc/install)
+- Install [Docker & Docker Desktop ](https://www.docker.com/)
 
 Set environment variables in .env, contact for info if needed.
 
-After validation of OAuth flows and username setting, migrating to Azure. Recommended to use Docker Desktop for backend logs and debug.
+#### Backend Start
+
+From ./apps/backend
+
+```bash
+go mod tidy
+```
 
 Docker-Compose will pull .env variables and stand up:
 
@@ -43,13 +50,23 @@ docker-compose up --build -d
 Spinning up docker:
 
 ```bash
-docker-compose down
+docker-compose down -v
 ```
 
-Check Redis session store, verifying OAuth session:
+Optionally check Redis session store, verifying OAuth session:
 
 ```bash
-docker exec -it chess_redis redis-cli
+docker-compose exec redis redis-cli
+```
+
+Optionally check profiles in postgres:
+
+```bash
+docker-compose exec db psql -U postgres -d chess_db
+```
+
+```sql
+SELECT user_id, username, rating FROM profiles;
 ```
 
 For full project view see main README: [https://github.com/tmcarmichael/nxtchess/blob/main/README.md](https://github.com/tmcarmichael/nxtchess/blob/main/README.md)

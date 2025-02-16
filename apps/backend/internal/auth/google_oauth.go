@@ -6,12 +6,16 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
-	"github.com/tmcarmichael/nxtchess/apps/backend/internal/sessions"
-	"github.com/tmcarmichael/nxtchess/apps/backend/internal/utils"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/httpx"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/sessions"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/utils"
 )
+
 
 var googleOAuthConfig *oauth2.Config
 
@@ -33,13 +37,13 @@ func InitGoogleOAuth(cfg *config.Config) {
 func GoogleLoginHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if googleOAuthConfig == nil {
-			http.Error(w, "Google OAuth config not initialized", http.StatusInternalServerError)
+			httpx.WriteJSONError(w, http.StatusInternalServerError, "Google OAuth config not initialized")
 			return
 		}
 
 		state, err := utils.GenerateRandomString(16)
 		if err != nil {
-			http.Error(w, "Failed to generate state parameter", http.StatusInternalServerError)
+			httpx.WriteJSONError(w, http.StatusInternalServerError, "Failed to generate state parameter")
 			return
 		}
 
@@ -48,7 +52,7 @@ func GoogleLoginHandler(cfg *config.Config) http.HandlerFunc {
 			Value:    state,
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   false, // prod:true
+			Secure:   false,
 		})
 
 		authURL := googleOAuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
@@ -110,8 +114,8 @@ func GoogleCallbackHandler(cfg *config.Config) http.HandlerFunc {
 			return
 		}
 
-		if err := sessions.StoreSession(sessionToken, googleUser.ID); err != nil {
-			utils.AuthRedirectWithError(w, r, "Failed to store session: "+err.Error(), http.StatusInternalServerError, cfg)
+		if sessionErr := sessions.StoreSession(sessionToken, googleUser.ID); sessionErr != nil {
+			utils.AuthRedirectWithError(w, r, "Failed to store session: "+sessionErr.Error(), http.StatusInternalServerError, cfg)
 			return
 		}
 
@@ -120,9 +124,25 @@ func GoogleCallbackHandler(cfg *config.Config) http.HandlerFunc {
 			Value:    sessionToken,
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   false, // prod:true
+			Secure:   false,
 		})
 
-		http.Redirect(w, r, cfg.FrontendURL+"/", http.StatusSeeOther)
+		_, err = database.DB.Exec("INSERT INTO profiles (user_id) VALUES ($1) ON CONFLICT DO NOTHING", googleUser.ID)
+		if err != nil {
+			utils.AuthRedirectWithError(w, r, "Failed to insert user row: "+err.Error(), http.StatusInternalServerError, cfg)
+			return
+		}
+
+		hasUsername, err := database.HasUsername(googleUser.ID)
+		if err != nil {
+			utils.AuthRedirectWithError(w, r, "Database error: "+err.Error(), http.StatusInternalServerError, cfg)
+			return
+		}
+
+		if hasUsername {
+			http.Redirect(w, r, cfg.FrontendURL+"/", http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, cfg.FrontendURL+"/username-setup", http.StatusSeeOther)
+		}
 	}
 }
