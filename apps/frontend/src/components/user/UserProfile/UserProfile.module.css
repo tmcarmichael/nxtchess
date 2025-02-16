@@ -1,0 +1,28 @@
+.userProfileContainer {
+  width: 400px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: #444;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  font-family: 'Open Sans', Arial, sans-serif;
+  text-align: center;
+  color: #d2d2d2;
+}
+
+.userProfileTitle {
+  user-select: text;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.userProfileRating {
+  font-size: 1.2rem;
+  color: #ccc;
+}
+
+.userProfileLoading {
+  font-size: 1rem;
+  color: #aaa;
+}

@@ -1,5 +1,7 @@
-import { createSignal, Show, For } from 'solid-js';
+import { createSignal, Show, For, createEffect, ParentComponent } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
+
+import { useAuthStore } from '../../../store/AuthContext';
 import PlayModal from '../../modals/PlayModal/PlayModal';
 import SignInModal from '../../modals/SignInModal/SignInModal';
 import styles from './CommonSiteHeader.module.css';
@@ -29,15 +31,19 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export default function CommonSiteHeader() {
+const CommonSiteHeader: ParentComponent = () => {
   const navigate = useNavigate();
-
+  const [authState, authActions] = useAuthStore();
   const [showPlayModal, setShowPlayModal] = createSignal(false);
   const [showSignInModal, setShowSignInModal] = createSignal(false);
 
   const navAPI = {
     setShowPlayModal,
   };
+
+  createEffect(() => {
+    authActions.checkUserStatus(navigate);
+  });
 
   return (
     <>
@@ -61,8 +67,15 @@ export default function CommonSiteHeader() {
             )}
           </For>
         </div>
-        <div class={styles.headerRight} onClick={() => setShowSignInModal(true)}>
-          Sign In
+        <div class={styles.headerRight}>
+          <Show
+            when={authState.isLoggedIn}
+            fallback={<span onClick={() => setShowSignInModal(true)}>Sign In</span>}
+          >
+            <span onClick={() => navigate(`/profile/${authState.username}`)}>
+              {authState.username}
+            </span>
+          </Show>
         </div>
       </header>
       <Show when={showPlayModal()}>
@@ -73,4 +86,6 @@ export default function CommonSiteHeader() {
       </Show>
     </>
   );
-}
+};
+
+export default CommonSiteHeader;

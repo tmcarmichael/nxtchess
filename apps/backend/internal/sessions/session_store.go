@@ -46,7 +46,6 @@ func GenerateSessionToken() (string, error) {
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
-// (token -> userID) mapping
 func StoreSession(token, userID string) error {
 	err := rdb.Set(ctx, token, userID, 24*time.Hour).Err()
 	if err != nil {

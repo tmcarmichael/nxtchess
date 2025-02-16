@@ -1,0 +1,72 @@
+.usernameSetupContainer {
+  width: 400px;
+  height: 300px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background-color: #444;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Open Sans', Arial, sans-serif;
+}
+
+.usernameSetupTitle {
+  font-size: 1.8rem;
+  margin-bottom: 2.75rem;
+  color: #d2d2d2;
+  font-weight: 600;
+  text-align: center;
+}
+
+.usernameSetupSubtitle {
+  font-size: 1rem;
+  color: #ccc;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  max-width: 80%;
+}
+
+.usernameSetupInput {
+  width: 80%;
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  font-size: 1rem;
+  color: #ddd;
+  background-color: #555;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: border-color 0.2s;
+}
+
+.usernameSetupInput:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+.usernameSetupButton {
+  background-color: #4caf4fc0;
+  color: #e4e4e4;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(22, 22, 22, 0.8);
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.usernameSetupButton:hover {
+  background-color: #45a049;
+}
+
+.usernameSetupError {
+  color: red;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
