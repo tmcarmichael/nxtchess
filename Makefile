@@ -111,7 +111,7 @@ clean: init ## Full cleanup of containers+volumes
 	docker-compose -f $(COMPOSE_FILE) down -v
 
 ## dev: One command to set up env, build, and start in attached mode (QUICK START)
-dev: init build up
+dev: init build up ## * QUICK START
 
 ## exec: Exec into a running container. e.g. make exec SERVICE=backend CMD='bash'
 exec: init ## Exec into container (SERVICE=..., CMD=...)
