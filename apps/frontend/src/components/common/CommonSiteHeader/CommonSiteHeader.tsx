@@ -1,6 +1,6 @@
 import { createSignal, Show, For, createEffect, ParentComponent } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { useAuthStore } from '../../../store/AuthContext';
+import { useUserStore } from '../../../store/UserContext';
 import PlayModal from '../../modals/PlayModal/PlayModal';
 import SignInModal from '../../modals/SignInModal/SignInModal';
 import styles from './CommonSiteHeader.module.css';
@@ -32,18 +32,18 @@ const NAV_ITEMS: NavItem[] = [
 
 const CommonSiteHeader: ParentComponent = () => {
   const navigate = useNavigate();
-  const [authState, authActions] = useAuthStore();
+  const [userState, userActions] = useUserStore();
   const [showPlayModal, setShowPlayModal] = createSignal(false);
   const [showSignInModal, setShowSignInModal] = createSignal(false);
 
   createEffect(() => {
-    authActions.checkUserStatus(navigate);
+    userActions.checkUserStatus(navigate);
   });
 
   const handleSignOut = () => {
     document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    authActions.setIsLoggedIn(false);
-    authActions.setUsername('');
+    userActions.setIsLoggedIn(false);
+    userActions.setUsername('');
     navigate('/');
   };
 
@@ -71,14 +71,14 @@ const CommonSiteHeader: ParentComponent = () => {
         </div>
         <div class={styles.headerRight}>
           <Show
-            when={authState.isLoggedIn}
+            when={userState.isLoggedIn}
             fallback={<span onClick={() => setShowSignInModal(true)}>Sign In</span>}
           >
             <span
               class={styles.usernameText}
-              onClick={() => navigate(`/profile/${authState.username}`)}
+              onClick={() => navigate(`/profile/${userState.username}`)}
             >
-              {authState.username}
+              {userState.username}
             </span>
             <span class={styles.signOutText} onClick={handleSignOut}>
               Sign Out

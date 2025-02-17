@@ -1,6 +1,6 @@
 import { render } from 'solid-js/web';
 import { Router, Route } from '@solidjs/router';
-import { AuthProvider } from './store/AuthContext';
+import { UserProvider } from './store/UserContext';
 import { GameProvider } from './store/GameContext';
 import App from './App';
 import HomeContainer from './components/home/HomeContainer/HomeContainer';
@@ -12,7 +12,7 @@ import './index.css';
 
 render(
   () => (
-    <AuthProvider>
+    <UserProvider>
       <GameProvider>
         <Router root={App}>
           <Route path="/" component={HomeContainer} />
@@ -22,7 +22,7 @@ render(
           <Route path="*" component={CommonNotFoundPage} />
         </Router>
       </GameProvider>
-    </AuthProvider>
+    </UserProvider>
   ),
   document.body
 );

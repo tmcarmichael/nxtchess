@@ -16,9 +16,7 @@ interface PlayModalProps {
 const PlayModal: Component<PlayModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose']);
   const [_, actions] = useGameStore();
-
   const navigate = useNavigate();
-
   const [localTimeIndex, setLocalTimeIndex] = createSignal(TIME_VALUES_MINUTES.indexOf(5));
   const [localDifficultyIndex, setLocalDifficultyIndex] = createSignal(3);
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');

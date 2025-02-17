@@ -1,17 +1,17 @@
 import { createSignal, Component } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { useAuthStore } from '../../../store/AuthContext';
+import { useUserStore } from '../../../store/UserContext';
 import styles from './UsernameSetup.module.css';
 
 const UsernameSetup: Component = () => {
   const navigate = useNavigate();
-  const [_, authActions] = useAuthStore();
+  const [_, userActions] = useUserStore();
   const [localName, setLocalName] = createSignal('');
   const [error, setError] = createSignal('');
 
   const submitUsername = async () => {
     try {
-      await authActions.saveUsername(localName(), navigate);
+      await userActions.saveUsername(localName(), navigate);
     } catch (err: any) {
       setError(err.message || 'Error saving username');
     }

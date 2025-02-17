@@ -30,7 +30,9 @@
   },
   "dependencies": {
     "@solidjs/router": "^0.15.3",
+    "apexcharts": "^4.4.0",
     "chess.js": "^1.0.0",
+    "solid-apexcharts": "^0.4.0",
     "solid-js": "^1.9.3",
     "stockfish": "github:nmrugg/stockfish.js"
   },
