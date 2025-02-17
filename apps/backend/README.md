@@ -1,34 +1,18 @@
 # NXT Chess
 
-## Backend - Golang REST, PostgreSQL
-
-\*_in progress_
-
-### Design
-
-- Core application + domain logic, orchestrating Stockfish, websockets, DB reads/writes.
-- Separate domain logic (services), data access (repositories), and HTTP/websocket logic (controllers).
-- Using [Chi Router](https://github.com/go-chi/chi).
-- Websockets once server supports service for wrapping Stockfish binary for UCI STD I/O.
-
-#### Auth status:
-
-Google OAuth2 - Complete
-GitHub OAuth2 - Complete&Verifying
-Discord OAuth2 - Complete&Verifying
+## Backend - Golang, PostgreSQL, Redis
 
 ### 🛠️ Getting Started
 
-**\[Prerequisite\]**
+See [primary README](https://github.com/tmcarmichael/nxtchess/blob/main/README.md)
 
-- Install [Golang](https://go.dev/doc/install)
-- Install [Docker & Docker Desktop ](https://www.docker.com/)
+---
 
-Set environment variables in .env, contact for info if needed.
+### Backend Dev Steps
 
-#### Backend Start
+**Set environment variables in .env. Backend is in developement, contact for additional info on env setting.**
 
-From ./apps/backend
+1. From ./apps/backend
 
 ```bash
 go mod tidy
@@ -36,18 +20,24 @@ go mod tidy
 
 Docker-Compose will pull .env variables and stand up:
 
-1. Go Backend on 8080
-2. PostgreSQL DB instance on 5432 - persistant user table, game table
-3. PostgREST on 3000
-4. Redis on 6379 - ephemeral session store and live game last move FEN/PGN
+- Go Backend on 8080
+- PostgreSQL DB instance on 5432 - persistant user table, game table
+- PostgREST on 3000
+- Redis on 6379 - ephemeral session store and live game last move FEN/PGN
 
-Spinning up docker:
+2. Docker containers built and started:
 
 ```bash
 docker-compose up --build -d
 ```
 
-Spinning up docker:
+**The frontend is now able to hit backend API and OAuth flows.**
+
+---
+
+#### Clean up and optional commands
+
+Optionally shut down docker containers and remove volumes:
 
 ```bash
 docker-compose down -v
@@ -78,7 +68,7 @@ Example:
 docker-compose logs -f backend
 ```
 
-Optionally full clean containers locally:
+Optionally deep reset containers locally:
 
 ```bash
 docker-compose down --remove-orphans
@@ -88,4 +78,6 @@ docker-compose down --remove-orphans
 docker-compose down --rmi all -v
 ```
 
-For full project view see main README: [https://github.com/tmcarmichael/nxtchess/blob/main/README.md](https://github.com/tmcarmichael/nxtchess/blob/main/README.md)
+---
+
+For full project info see main README: [https://github.com/tmcarmichael/nxtchess/blob/main/README.md](https://github.com/tmcarmichael/nxtchess/blob/main/README.md)

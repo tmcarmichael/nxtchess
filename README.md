@@ -79,82 +79,20 @@ What's planned next?
 
 ### Prerequisites
 
-Frontend:
+- **Node.js v16 or later**
+- **Yarn (Recommended)**
+- **Go v1.21 or later (if you run the backend outside of Docker)**
+- **Docker and Docker Compose ([Docker Desktop](https://www.docker.com/products/docker-desktop/) Recommended)**
 
-- **Node.js** (>v16)
-- **yarn**
-
-Backend:
-
-- **Golang**
+---
 
 ### Frontend
 
-#### Local Frontend:
-
-1. Clone this repository:
-
-```bash
-git clone https://github.com/tmcarmichael/nxtchess.git
-```
-
-2. Navigate to the project directory:
-
-```bash
-cd nxtchess
-```
-
-3. Navigate to the frontend:
-
-```bash
-cd apps/frontend
-```
-
-4. Install dependencies:
-
-```bash
-yarn install
-```
-
-5. Start the development server:
-
-```bash
-yarn dev
-```
-
-6. Open your browser and navigate to the localhost port suggested by Vite, such as, http://localhost:5173/
-
-#### Local Docker Frontend:
-
-1. Download Docker desktop for Docker and Docker Compose. Or ensure you have both installed. https://www.docker.com/products/docker-desktop/.
-
-2. Navigate to the frontend:
-
-```bash
-cd apps/frontend
-```
-
-3. Build local container:
-
-```bash
-yarn docker:dev:build
-```
-
-3. Spin up local container:
-
-```bash
-yarn docker:dev:run
-```
-
-4. Access container at localhost, http://localhost/
-
-5. Alternatively, use Docker Desktop and look for image 'nxtchess-frontend-dev', click "open in browser".
+For launching the frontend locally, see the [frontend README](https://github.com/tmcarmichael/nxtchess/blob/main/apps/frontend/README.md).
 
 ### Backend
 
-#### Local Backend:
-
-\*_in progress_
+For launching the backend locally, see the [backend README](https://github.com/tmcarmichael/nxtchess/blob/main/apps/backend/README.md).
 
 ---
 
