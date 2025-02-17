@@ -22,7 +22,6 @@ Docker-Compose will pull .env variables and stand up:
 
 - Go Backend on 8080
 - PostgreSQL DB instance on 5432 - persistant user table, game table
-- PostgREST on 3000
 - Redis on 6379 - ephemeral session store and live game last move FEN/PGN
 
 2. Docker containers built and started:
@@ -60,7 +59,7 @@ SELECT user_id, username, rating FROM profiles;
 ```
 
 Optionally watch docker logs (or use docker desktop):
-[backend, db, postgrest, redis]
+[backend, db, redis]
 
 Example:
 

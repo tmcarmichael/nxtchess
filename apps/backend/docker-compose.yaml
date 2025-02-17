@@ -12,18 +12,6 @@ services:
       - db_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
-  postgrest:
-    image: postgrest/postgrest:latest
-    container_name: chess_postgrest
-    depends_on:
-      - db
-    ports:
-      - "3000:3000"
-    environment:
-      PGRST_DB_URI: "postgres://postgres:postgres@db:5432/chess_db"
-      PGRST_DB_SCHEMA: "public"
-      PGRST_DB_ANON_ROLE: "anon"
-
   redis:
     image: redis:7
     container_name: chess_redis
