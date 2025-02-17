@@ -17,6 +17,24 @@ Create a lean, high-performance, multiplayer chess platform that incorporates un
 
 ---
 
+## ⚡️ Quick Start
+
+_Install Docker & Docker Compose Recommended: [Docker Desktop](https://www.docker.com/products/docker-desktop/)_
+
+1. Run the one-shot Make command:
+
+```bash
+make dev
+```
+
+2. Open the frontend at [http://localhost:5173](http://localhost:5173)
+
+For 'sign in' funcationality, OAuth clientID/secret is required in backend env.
+
+_CTRL+C to bring the containers down._
+
+---
+
 ## 💻 Tech Stack
 
 - **Frontend:**
@@ -104,7 +122,7 @@ For launching the backend locally, see the [backend README](https://github.com/t
 
 ---
 
-## Design
+## ✨ Design North Star _2-17-25_
 
 <div style="text-align: center;">
   <img src="docs/diagrams/architecture.png" alt="Early design" />

@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:15
+    container_name: nxtchess_db_dev
+    environment:
+      POSTGRES_DB: chess_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data_dev:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  redis:
+    image: redis:7
+    container_name: nxtchess_redis_dev
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.dev
+    container_name: nxtchess_backend_dev
+    env_file: ./apps/backend/.env.development
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./apps/backend:/app
+    ports:
+      - "8080:8080"
+    command: ["go", "run", "cmd/server/main.go"]
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.dev
+    container_name: nxtchess_frontend_dev
+    environment:
+      VITE_DEBUG: "true"
+      VITE_BACKEND_URL: "http://localhost:8080"
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/frontend:/app
+      - /app/node_modules
+    command: ["yarn", "dev", "--host", "0.0.0.0"]
+
+volumes:
+  db_data_dev:

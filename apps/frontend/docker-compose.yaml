@@ -12,9 +12,9 @@ services:
       - '5173'
     environment:
       VITE_DEBUG: 'true'
-      VITE_API_URL: 'https://api.placeholder.com/api'
       VITE_APP_TITLE: 'nxtchess'
       VITE_APP_VERSION: '1.0.0'
+      VITE_BACKEND_URL: 'http://localhost:8080'
     command: ['yarn', 'dev']
 
   # FRONTEND PROD SERVICE
@@ -27,8 +27,6 @@ services:
       - '80:80'
     environment:
       VITE_DEBUG: 'false'
-      VITE_API_URL: 'https://api.placeholder.com/api'
       VITE_APP_TITLE: 'nxtchess'
       VITE_APP_VERSION: '1.0.0'
-
-  # TODO: BACKEND SERVICE (Golang + Postgres)
+      VITE_BACKEND_URL: 'http://localhost:8080' # Replace in prod
