@@ -1,6 +1,5 @@
 import { createSignal, Show, For, createEffect, ParentComponent } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-
 import { useAuthStore } from '../../../store/AuthContext';
 import PlayModal from '../../modals/PlayModal/PlayModal';
 import SignInModal from '../../modals/SignInModal/SignInModal';
@@ -37,13 +36,16 @@ const CommonSiteHeader: ParentComponent = () => {
   const [showPlayModal, setShowPlayModal] = createSignal(false);
   const [showSignInModal, setShowSignInModal] = createSignal(false);
 
-  const navAPI = {
-    setShowPlayModal,
-  };
-
   createEffect(() => {
     authActions.checkUserStatus(navigate);
   });
+
+  const handleSignOut = () => {
+    document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    authActions.setIsLoggedIn(false);
+    authActions.setUsername('');
+    navigate('/');
+  };
 
   return (
     <>
@@ -57,10 +59,10 @@ const CommonSiteHeader: ParentComponent = () => {
               <span
                 classList={{
                   [styles.navItem]: true,
-                  [styles.tooltip]: Boolean(item.tooltip),
+                  [styles.tooltip]: !!item.tooltip,
                 }}
                 data-tooltip={item.tooltip ?? undefined}
-                onClick={() => item.action?.(navAPI)}
+                onClick={() => item.action?.({ setShowPlayModal })}
               >
                 {item.label}
               </span>
@@ -72,8 +74,14 @@ const CommonSiteHeader: ParentComponent = () => {
             when={authState.isLoggedIn}
             fallback={<span onClick={() => setShowSignInModal(true)}>Sign In</span>}
           >
-            <span onClick={() => navigate(`/profile/${authState.username}`)}>
+            <span
+              class={styles.usernameText}
+              onClick={() => navigate(`/profile/${authState.username}`)}
+            >
               {authState.username}
+            </span>
+            <span class={styles.signOutText} onClick={handleSignOut}>
+              Sign Out
             </span>
           </Show>
         </div>

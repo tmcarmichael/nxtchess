@@ -1,9 +1,9 @@
 .usernameSetupContainer {
-  width: 400px;
-  height: 300px;
+  width: 30rem;
+  height: 20rem;
   margin: 3rem auto;
   padding: 2rem;
-  background-color: #444;
+  background-color: rgba(93, 93, 93, 0.105);
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
   display: flex;
@@ -43,11 +43,11 @@
 
 .usernameSetupInput:focus {
   outline: none;
-  border-color: #4caf50;
+  border-color: #68d46b;
 }
 
 .usernameSetupButton {
-  background-color: #4caf4fc0;
+  background-color: #298a2cc0;
   color: #e4e4e4;
   padding: 0.6rem 1.2rem;
   border: none;
@@ -61,7 +61,7 @@
 }
 
 .usernameSetupButton:hover {
-  background-color: #45a049;
+  background-color: #368c3a;
 }
 
 .usernameSetupError {
