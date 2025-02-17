@@ -13,20 +13,28 @@
 
 Create a lean, high-performance, multiplayer chess platform that incorporates unique training modes and AI-driven features.
 
-**_The project is currently in early development. Check out the Roadmap below for more details on our plans and progress._**
+**_The project is currently in early development. Check out the Roadmap below for planned features._**
 
 ---
 
 ## 💻 Tech Stack
 
 - **Frontend:**
-  [SolidJS](https://www.solidjs.com/), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vite.dev/), and a styling solution (TBD: [Tailwind](https://tailwindcss.com/), [PostCSS](https://postcss.org/), or [Macaron](https://macaron.js.org/docs/styling/)).
+  [SolidJS](https://www.solidjs.com/), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vite.dev/). _Styling solution is TBD: likely [Tailwind CSS](https://tailwindcss.com/), [PostCSS](https://postcss.org/), [Macaron](https://macaron.js.org/docs/styling/)._
 
 - **Backend:**
-  [Golang](https://go.dev/), [Chi](https://github.com/go-chi/chi) Golang Router, Websockets, [PostgreSQL](https://www.postgresql.org/), with containerization using Docker/Compose.
+  [Golang](https://go.dev/), [Chi](https://github.com/go-chi/chi), [Redis](https://redis.io/), [PostgreSQL](https://www.postgresql.org/).
 
-- **Infrastructure & Tooling:**
-  Logging, monitoring, and other support systems (e.g., ELK/Fluentd, Prometheus, Grafana, Sentry).
+- **Cloud [Prod]:**
+  [Azure App Service](https://azure.microsoft.com/en-us/products/app-service/), [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/products/postgresql/), [Azure Key Vault](https://azure.microsoft.com/en-us/products/key-vault/), [Azure Container Registry](https://azure.microsoft.com/en-us/products/container-registry/).
+
+- **Infrastructure:**
+  [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/), [GitHub Actions](https://github.com/features/actions).
+
+- **Observability:**
+  - **Logging**: [ELK](https://www.elastic.co/elastic-stack)
+  - **Metrics**: [Prometheus](https://prometheus.io/)
+  - **Visualization**: [Grafana](https://grafana.com/)
 
 ---
 
