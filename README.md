@@ -1,4 +1,4 @@
-# NXT Chess
+# nxtchess
 
 [![Development Status](https://img.shields.io/badge/status-under_development-orange)](#)
 [![License](https://img.shields.io/github/license/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/blob/main/LICENSE)
@@ -6,7 +6,7 @@
 [![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4)](https://prettier.io/docs/en/why-prettier)
 
 <div style="text-align: center;">
-  <img src="apps/frontend/public/assets/nxtchess-2-5-25.gif" alt="Early demo" />
+  <img src="apps/frontend/public/assets/nxtchess-2-16-25.gif" alt="Early demo" />
 </div>
 
 ## 🚀 Project Vision
@@ -32,74 +32,46 @@ Create a lean, high-performance, multiplayer chess platform that incorporates un
 
 ## 📜 Roadmap
 
-What's planned?
+What's planned next?
 
-### Phase 1: Core Gameplay ✅
+### 🚀 (In Progress) Phase 4: Server Engine Integration, Rating, and Training
 
-- [x] Chessboard rendering.
-- [x] Responsive design.
-- [x] Implement full chess rules (move validation, checkmate detection, etc.).
-- [x] Add drag-and-drop functionality for intuitive piece movement.
-- [x] Highlight squares for legal moves when clicking pieces.
-- [x] Checkmate, game end, and game restart logic.
-- [x] Game Panel initial implementation.
-- [x] Implement basic AI (easy/medium/hard).
-- [x] Game Panel functional for AI play with time controls (3min, 5min, 10min).
-- [x] Game clock & board flip functionality.
+- [ ] Wrap the Stockfish binary in Golang to interface via UCI for server-side engine evaluations.
+- [ ] Implement server-side move validation, rating calculations, and storage of game results.
+- [ ] Reflect multiple rating types (blitz, rapid, AI training) in user profiles.
+- [ ] Add websocket support for real-time rated modes against engine or human players.
+- [ ] Refactor the frontend chessboard for seamless reuse across various game modes.
+- [ ] Refine user flows for account creation, username collisions, and sign-in edge cases.
 
-### Phase 2: Polished Core Gameplay and Non-Gameplay Essentials
+### Phase 5: Deployment, Logging, and Monitoring
 
-- [x] Navigation panel and game move history.
-- [x] Implement "take back last move" functionality.
-- [x] Add keyboard shortcuts for web app interaction.
-- [x] Refactor frontend from rapid development, clear UI layer, Service layer, State management.
-- [x] Containerize frontend for development (Docker builds for local and later server integration).
-- [ ] _(Nice to have)_ Adopt a styling library (Tailwind, PostCSS, or Macaron).
-- [ ] _(Nice to have)_ Enhance board resizing, accessibility, and cross-browser compatibility.
-- [ ] _(Nice to have)_ Enable full offline AI mode via service worker after initial bundle download.
+- [ ] Deploy FE & BE on Azure Apps, sidecar Redis instance for ephemeral session data.
+- [ ] Deploy a basic/free tier PostgresDB for persisting profiles and game history.
+- [ ] Establish a GitHub Actions CI/CD pipeline for automated builds, tests, and deployments.
+- [ ] Create staging and prod realms and integrate with CI/CD.
+- [ ] Implement a minimal ELK stack to centralize, index, and visualize logs.
+- [ ] Prometheus for metrics from Golang server, Postgres, and Redis sidecar.
+- [ ] Grafana to visualize key Prometheus logs, health checks, and alerting.
+- [ ] Configure domain, SSL certificates, and AKS env-based secret management for prod.
 
-### Phase 3: OAuth sign in on frontend and persisting profile and game data
+### Phase 6: Quality Assurance and Performance Optimization
 
-- [x] Develop a Golang server integrated with PostgreSQL DB.
-- [x] Create tables and validate with mock DB.
-- [ ] Handle sign in, profile GET/POST.
-- [ ] Create tables for game data linked to profiles.
-- [ ] Hook frontend 'sign in' to backend and validate tables update.
-- [ ] Finalize user OAuth sign in and test.
-- [ ] Create profile page on frontend with basic dashboard and info.
-- [ ] End-to-End validation of user sign in and initial server calls.
+- [ ] Add unit, integration, and end-to-end tests for critical frontend and backend flows.
+- [ ] Enable coverage reports and automated testing in CI/CD pipelines.
+- [ ] Load testing and optimization of server concurrency/caching strategies.
+- [ ] Database indexing, migrations, and query performance.
+- [ ] Integrate security scanning and code linting checks into CI/CD pipeline.
+- [ ] _(Nice to have)_ Expand i18n/l10n support or plan for multi-language interfaces.
+- [ ] _(Nice to have)_ Improve board resizing, accessibility, and cross-browser compatibility.
 
-### Phase 4: Server extended for human multiplayer and server engine use
+### Phase 7: Enhanced Mechanics and Community
 
-- [ ] Wrap Stockfish binary with Golang, interfacing via UCI for engine evaluation.
-- [ ] Containerize the backend for local testing alongside the frontend.
-- [ ] Configure Docker Compose to orchestrate FE and BE builds for rapid local development.
-- [ ] Refactor to enable either frontend WASM stockfish engine or server-side engine calculations.
-- [ ] Implement testing strategy for frontend and backend.
-- [ ] Push containers to a registry for deployment.
-
-### Phase 5: Deployment, Logging, and Monitoring Setup
-
-- [ ] Establish a CI/CD pipeline for automated builds, testing, and deployments.
-- [ ] Deploy frontend and backend containers to staging and production environments.
-- [ ] Integrate centralized logging (ELK/Fluentd) for real-time error tracking.
-- [ ] Configure monitoring and alerting (Prometheus, Grafana, Sentry) for system performance.
-- [ ] Implement health checks and auto-scaling policies for robust deployments.
-
-### Phase 6: Database and User Account Setup
-
-- [ ] Integrate PostgreSQL for persistent storage of game data, user profiles, and history.
-- [ ] Implement secure user authentication and authorization (JWT/OAuth2).
-- [ ] Develop REST API endpoints for user management and game history retrieval.
-- [ ] Enable real-time analytics and player statistics tracking.
-- [ ] _(Nice to have)_ Introduce lightweight GraphQL endpoints for efficient client queries.
-
-### Phase 7: Advanced Features
-
-- [ ] Develop unique AI chess game modes, training tools, and interactive tutorials.
-- [ ] Build a tournament system.
-- [ ] Enhance player profiles with detailed statistics.
-- [ ] Integrate anti-cheat mechanisms.
+- [ ] Develop unique AI training modes with server-based analysis.
+- [ ] Build a tournament system with scheduling, brackets, and user match histories.
+- [ ] Introduce friend lists or user-specific invites for community matches.
+- [ ] Add advanced player profile statistics and anti-cheat mechanisms.
+- [ ] Create a basic community layer (forums, Discord integration).
+- [ ] _(Nice to have)_ API contract (OpenAPI, gRPC, or GraphQL) to formalize FE/BE interactions.
 
 ---
 
