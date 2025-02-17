@@ -69,4 +69,23 @@ docker-compose exec db psql -U postgres -d chess_db
 SELECT user_id, username, rating FROM profiles;
 ```
 
+Optionally watch docker logs (or use docker desktop):
+[backend, db, postgrest, redis]
+
+Example:
+
+```bash
+docker-compose logs -f backend
+```
+
+Optionally full clean containers locally:
+
+```bash
+docker-compose down --remove-orphans
+```
+
+```bash
+docker-compose down --rmi all -v
+```
+
 For full project view see main README: [https://github.com/tmcarmichael/nxtchess/blob/main/README.md](https://github.com/tmcarmichael/nxtchess/blob/main/README.md)
