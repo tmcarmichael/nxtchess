@@ -38,7 +38,7 @@ func Load() *Config {
 
 	// AUTH
 	if cfg.GoogleClientID == "" || cfg.GoogleClientSecret == "" {
-		log.Fatal("Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET in environment.")
+		log.Printf("Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET in environment.")
 	}
 	if cfg.DiscordClientID == "" || cfg.DiscordClientSecret == "" {
 		log.Printf("Missing DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET in environment.")
