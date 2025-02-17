@@ -1,0 +1,45 @@
+---
+config:
+  theme: neo-dark
+  look: neo
+  layout: fixed
+---
+flowchart LR
+ subgraph CI_CD["GitHub Actions CI/CD Pipeline"]
+    direction LR
+        Repo["GitHub Actions"]
+        Docker["Docker Build & Test"]
+  end
+ subgraph AppService["Azure App Service"]
+    direction LR
+        FE["SolidJS/TypeScript Frontend"]
+        BE["Golang Server"]
+        RS["Redis Sidecar"]
+  end
+ subgraph Observability["Observability ACIs"]
+        Prom["Prometheus"]
+        Graf["Grafana"]
+        ELK["ELK Stack"]
+  end
+ subgraph VNET["Azure Virtual Network"]
+        ACR["Azure Container Registry"]
+        AppService
+        DB["Azure Database for PostgreSQL"]
+        KV["Azure Key Vault"]
+        Observability
+  end
+    UserBrowser["UserBrowser"] --> FE
+    Repo --> Docker
+    Docker --> ACR
+    ACR --> AppService
+    FE <--> BE
+    BE <--> RS & DB & Prom & Graf & ELK
+    FE --> KV
+    BE --> KV
+    RS@{ shape: cyl}
+    DB@{ shape: cyl}
+    KV@{ shape: cyl}
+    UserBrowser@{ shape: rounded}
+    style AppService fill:#181818
+    style VNET fill:#242424
+    style CI_CD fill:#242424
