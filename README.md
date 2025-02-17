@@ -104,6 +104,12 @@ For launching the backend locally, see the [backend README](https://github.com/t
 
 ---
 
+## Design
+
+<div style="text-align: center;">
+  <img src="docs/diagrams/architecture.png" alt="Early design" />
+</div>
+
 ## 🤝 Contributing
 
 Contributions welcome.
