@@ -1,7 +1,8 @@
 services:
   db:
     image: postgres:15
-    container_name: nxtchess_db_dev
+    container_name: nxtchess_db
+    profiles: ["db", "full"]
     environment:
       POSTGRES_DB: chess_db
       POSTGRES_USER: postgres
@@ -9,12 +10,13 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db_data_dev:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   redis:
     image: redis:7
-    container_name: nxtchess_redis_dev
+    container_name: nxtchess_redis
+    profiles: ["redis", "full"]
     ports:
       - "6379:6379"
 
@@ -22,8 +24,9 @@ services:
     build:
       context: ./apps/backend
       dockerfile: Dockerfile.dev
-    container_name: nxtchess_backend_dev
-    env_file: ./apps/backend/.env.development
+    container_name: nxtchess_backend
+    profiles: ["backend", "full"]
+    env_file: ./apps/backend/.env
     depends_on:
       - db
       - redis
@@ -37,12 +40,11 @@ services:
     build:
       context: ./apps/frontend
       dockerfile: Dockerfile.dev
-    container_name: nxtchess_frontend_dev
+    container_name: nxtchess_frontend
+    profiles: ["frontend", "full"]
     environment:
       VITE_DEBUG: "true"
       VITE_BACKEND_URL: "http://localhost:8080"
-    depends_on:
-      - backend
     ports:
       - "5173:5173"
     volumes:
@@ -51,4 +53,4 @@ services:
     command: ["yarn", "dev", "--host", "0.0.0.0"]
 
 volumes:
-  db_data_dev:
+  db_data:
