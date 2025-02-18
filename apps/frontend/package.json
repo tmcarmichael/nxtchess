@@ -20,8 +20,6 @@
     "dev": "vite",
     "ci": "yarn cache clean && yarn install",
     "clear-cache": "yarn clear cache",
-    "docker:dev:build": "docker compose build nxtchess-frontend-dev",
-    "docker:dev:run": "docker compose up nxtchess-frontend-prod",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prebuild": "yarn format:check",

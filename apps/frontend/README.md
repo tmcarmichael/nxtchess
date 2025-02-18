@@ -26,33 +26,17 @@ yarn dev
 
 3. Open your browser and navigate to the localhost port suggested by Vite, such as, http://localhost:5173/
 
----
+### Docker Frontend:
 
-#### Docker Frontend:
-
-1. Download Docker desktop for Docker and Docker Compose. Or ensure you have both installed. https://www.docker.com/products/docker-desktop/.
-
-2. Navigate to the frontend:
+Use the [project Makefile](https://github.com/tmcarmichael/nxtchess/blob/main/Makefile) with PROFILES=frontend to target the frontend only for dev.
 
 ```bash
-cd apps/frontend
+make help
 ```
-
-3. Build local container:
 
 ```bash
-yarn docker:dev:build
+make up PROFILES=frontend
 ```
-
-3. Spin up local container:
-
-```bash
-yarn docker:dev:run
-```
-
-4. Access container at localhost, http://localhost/
-
-5. Alternatively, use Docker Desktop and look for image 'nxtchess-frontend-dev', click "open in browser".
 
 ---
 

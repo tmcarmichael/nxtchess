@@ -112,13 +112,93 @@ What's planned next?
 
 ---
 
-### Frontend
+You can build and run the frontend, server, or the whole app. Set .env in apps/frontend and apps/backend as needed.
 
-For launching the frontend locally, see the [frontend README](https://github.com/tmcarmichael/nxtchess/blob/main/apps/frontend/README.md).
+Use the [Makefile](https://github.com/tmcarmichael/nxtchess/blob/main/Makefile), for key commands:
 
-### Backend
+```bash
+make help
+```
 
-For launching the backend locally, see the [backend README](https://github.com/tmcarmichael/nxtchess/blob/main/apps/backend/README.md).
+1. **Complete app startup**
+
+For a full startup (frontend, backend, DB, Redis):
+
+```bash
+make dev
+```
+
+This builds images, starts containers, and runs everything in attached mode on local ports. For server and sign in flows, OAuth clientID and secrets are required.
+
+2. **Backend Server Only**
+
+For backend server only (and its DB/Redis dependencies):
+
+```bash
+make up PROFILES=backend
+```
+
+You can verify backend is up with:
+
+```bash
+curl http://localhost:8080
+```
+
+3. **Frontend Only**
+
+If you only want the frontend dev server:
+
+```bash
+make up PROFILES=frontend
+```
+
+4. **[Optional] Cleanup Commands**
+
+Key commands are:
+
+To stop containers without removing them:
+
+```bash
+make stop PROFILES=full
+```
+
+To stop and remove containers:
+
+```bash
+make down PROFILES=full
+```
+
+To stop and remove containers and their volumes:
+
+```bash
+make clean PROFILES=full
+```
+
+5. **[Optional] Logs and Containers Exec**
+
+To follow logs for backend containers:
+
+```bash
+make logs PROFILES=backend
+```
+
+To access db container psql:
+
+```bash
+make exec-db
+```
+
+To open redis-cli in the redis container:
+
+```bash
+make exec-redis
+```
+
+To shell into the backend container:
+
+```bash
+make exec SERVICE=backend CMD="bash"
+```
 
 ---
 
