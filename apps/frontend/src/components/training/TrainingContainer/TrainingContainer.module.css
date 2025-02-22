@@ -1,0 +1,28 @@
+.trainingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  padding: 8rem 1rem 2rem;
+  box-sizing: border-box;
+}
+
+.trainingLayout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-top: 7rem;
+  min-height: 70vh;
+  max-width: 2000px;
+  justify-content: center;
+}
+
+.boardWrapper {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 500px;
+  margin-top: 100px;
+}

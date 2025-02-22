@@ -60,3 +60,10 @@ export const handleCapturedPiece = (
     setCapturedWhite((prev) => [...prev, piece]);
   }
 };
+
+export const getRandomQuickPlayConfig = (): [number, number, 'w' | 'b'] => {
+  const quickPlayDifficulty = Math.floor(Math.random() * (8 - 2 + 1)) + 2;
+  const quickPlayTime = [3, 5, 10][Math.floor(Math.random() * 3)];
+  const quickPlaySide = Math.random() < 0.5 ? 'w' : 'b';
+  return [quickPlayTime, quickPlayDifficulty, quickPlaySide];
+};

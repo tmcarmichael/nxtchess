@@ -1,33 +1,24 @@
 import { createSignal, Show, For, createEffect, ParentComponent } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useUserStore } from '../../../store/UserContext';
-import PlayModal from '../../modals/PlayModal/PlayModal';
-import SignInModal from '../../modals/SignInModal/SignInModal';
+import PlayModal from '../../play/PlayModal/PlayModal';
+import TrainingModal from '../../training/TrainingModal/TrainingModal';
+import SignInModal from '../../user/UserSignInModal/UserSignInModal';
 import styles from './CommonSiteHeader.module.css';
 
-type NavItem = {
+export type NavItem = {
   label: string;
+  route?: string;
+  showPlayModal?: boolean;
+  showTrainingModal?: boolean;
   tooltip?: string;
-  action?: (api: { setShowPlayModal: (open: boolean) => void }) => void;
 };
 
-const NAV_ITEMS: NavItem[] = [
-  {
-    label: 'Play',
-    action: ({ setShowPlayModal }) => setShowPlayModal(true),
-  },
-  {
-    label: 'Training',
-    tooltip: 'Training mode with customizable AI personality coming soon.',
-  },
-  {
-    label: 'Tools',
-    tooltip: 'Tools and game analysis coming soon.',
-  },
-  {
-    label: 'Database',
-    tooltip: 'Database with recent tournament games coming soon.',
-  },
+export const NAV_ITEMS: NavItem[] = [
+  { label: 'Play', showPlayModal: true },
+  { label: 'Training', showTrainingModal: true },
+  { label: 'Tools', tooltip: 'Tools and game analysis coming soon.' },
+  { label: 'Database', tooltip: 'Database with recent tournament games coming soon.' },
 ];
 
 const CommonSiteHeader: ParentComponent = () => {
@@ -35,13 +26,14 @@ const CommonSiteHeader: ParentComponent = () => {
   const [userState, userActions] = useUserStore();
   const [showPlayModal, setShowPlayModal] = createSignal(false);
   const [showSignInModal, setShowSignInModal] = createSignal(false);
+  const [showTrainingModal, setShowTrainingModal] = createSignal(false);
 
   createEffect(() => {
     userActions.checkUserStatus(navigate);
   });
 
   const handleSignOut = () => {
-    document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; // TODO: Imp sign out
     userActions.setIsLoggedIn(false);
     userActions.setUsername('');
     navigate('/');
@@ -62,7 +54,17 @@ const CommonSiteHeader: ParentComponent = () => {
                   [styles.tooltip]: !!item.tooltip,
                 }}
                 data-tooltip={item.tooltip ?? undefined}
-                onClick={() => item.action?.({ setShowPlayModal })}
+                onClick={() => {
+                  if (item.route) {
+                    navigate(item.route);
+                  }
+                  if (item.showPlayModal) {
+                    setShowPlayModal(true);
+                  }
+                  if (item.showTrainingModal) {
+                    setShowTrainingModal(true);
+                  }
+                }}
               >
                 {item.label}
               </span>
@@ -91,6 +93,9 @@ const CommonSiteHeader: ParentComponent = () => {
       </Show>
       <Show when={showSignInModal()}>
         <SignInModal onClose={() => setShowSignInModal(false)} />
+      </Show>
+      <Show when={showTrainingModal()}>
+        <TrainingModal onClose={() => setShowTrainingModal(false)} />
       </Show>
     </>
   );

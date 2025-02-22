@@ -1,7 +1,7 @@
 import { JSX, splitProps, ParentComponent, createSignal, createEffect, Show } from 'solid-js';
 import { useLocation, useSearchParams } from '@solidjs/router';
 import HomeSiteHero from '../HomeSiteHero/HomeSiteHero';
-import SignInModal from '../../modals/SignInModal/SignInModal';
+import SignInModal from '../../user/UserSignInModal/UserSignInModal';
 import styles from './HomeContainer.module.css';
 
 interface HomeContainerProps {
