@@ -1,6 +1,7 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, onMount, onCleanup, Component, createMemo } from 'solid-js';
 import { useGameStore } from '../../../store/GameContext';
+import { getRandomQuickPlayConfig } from '../../../services/chessGameService';
 import styles from './HomeSiteHero.module.css';
 
 const HomeSiteHero: Component = () => {
@@ -23,11 +24,9 @@ const HomeSiteHero: Component = () => {
     clearInterval(intervalId);
   });
 
+  const [quickPlayTime, quickPlayDifficulty, quickPlaySide] = getRandomQuickPlayConfig();
   const handlePlayNow = () => {
-    const quickPlayDifficulty = Math.floor(Math.random() * (8 - 2 + 1)) + 2;
-    const quickPlayTime = [3, 5, 10][Math.floor(Math.random() * 3)];
-    const quickPlaySide = Math.random() < 0.5 ? 'w' : 'b';
-    navigate('/game', { replace: true });
+    navigate('/play', { replace: true });
     actions.startNewGame(quickPlayTime, quickPlayDifficulty, quickPlaySide);
   };
 

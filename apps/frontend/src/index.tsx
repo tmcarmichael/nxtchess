@@ -4,8 +4,9 @@ import { UserProvider } from './store/UserContext';
 import { GameProvider } from './store/GameContext';
 import App from './App';
 import HomeContainer from './components/home/HomeContainer/HomeContainer';
-import GameContainer from './components/game/GameContainer/GameContainer';
-import CommonNotFoundPage from './components/common/CommonNotFoundPage/CommonNotFoundPage';
+import PlayContainer from './components/play/PlayContainer/PlayContainer';
+import TrainingContainer from './components/training/TrainingContainer/TrainingContainer';
+import NotFoundPage from './components/common/CommonNotFoundPage/CommonNotFoundPage';
 import UsernameSetup from './components/user/UsernameSetup/UsernameSetup';
 import UserProfile from './components/user/UserProfile/UserProfile';
 import './index.css';
@@ -16,10 +17,11 @@ render(
       <GameProvider>
         <Router root={App}>
           <Route path="/" component={HomeContainer} />
-          <Route path="/game" component={GameContainer} />
+          <Route path="/play" component={PlayContainer} />
+          <Route path="/training" component={TrainingContainer} />
           <Route path="/username-setup" component={UsernameSetup} />
           <Route path="/profile/:username" component={UserProfile} />
-          <Route path="*" component={CommonNotFoundPage} />
+          <Route path="*" component={NotFoundPage} />
         </Router>
       </GameProvider>
     </UserProvider>

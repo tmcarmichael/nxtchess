@@ -1,0 +1,274 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modalContent {
+  position: relative;
+  width: 90%;
+  max-width: 480px;
+  padding: 1.4rem;
+  background: linear-gradient(145deg, rgba(42, 42, 42, 0.7), rgba(51, 51, 51, 0.7));
+  color: #e0e0e0;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 2px 4px rgba(255, 255, 255, 0.05);
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modalContent h2 {
+  margin: 0 0 1.5rem;
+  padding-bottom: 1rem;
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: #b0b0b0;
+  letter-spacing: 0.5px;
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.056);
+  border: none;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  color: #a0a0a0;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #d4d4d4;
+}
+.closeIcon {
+  position: relative;
+  top: -2px;
+  font-size: 1.5rem;
+  color: #888;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.settingRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  font-weight: 500;
+  color: #acacac;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rangeSliderContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.rangeSliderLabel {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #acacac;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.rangeSlider {
+  width: 70%;
+  height: 6px;
+  background: #444;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+.rangeSlider::-webkit-slider-runnable-track {
+  height: 6px;
+  background: #444;
+  border-radius: 4px;
+}
+.rangeSlider::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  background-color: #545454;
+  border: 2px solid #3c3c3c;
+  border-radius: 50%;
+  cursor: pointer;
+  -webkit-appearance: none;
+  transition:
+    background-color 0.1s ease,
+    transform 0.1s ease;
+}
+.rangeSlider::-moz-range-track {
+  height: 6px;
+  background: #666;
+  border-radius: 4px;
+}
+.rangeSlider::-ms-track {
+  height: 6px;
+  background: transparent;
+  color: transparent;
+  border: none;
+}
+.rangeSlider::-ms-fill-lower {
+  background: #666;
+  border-radius: 4px;
+}
+.rangeSlider::-ms-fill-upper {
+  background: #666;
+  border-radius: 4px;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.toggleButton {
+  background: #3a3a3a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d5d5d5;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+  font-size: 0.95rem;
+}
+.toggleButton:hover {
+  background: #464646;
+}
+.selectedToggle {
+  background: #5c5c5c;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.styleSelector {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 0.5rem;
+}
+.styleIconContainer {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  background: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.styleIconContainer:hover {
+  transform: scale(1.05);
+}
+.selectedIcon {
+  transform: scale(1.1);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.7);
+}
+.opponentIcon {
+  width: 32px;
+  height: 32px;
+}
+.iconLabel {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #ccc;
+}
+
+.startButton {
+  margin-top: 1.2rem;
+  padding: 0.75rem 2rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  color: #d9d9d9;
+  cursor: pointer;
+  background: rgba(14, 190, 1, 0.389);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.startButton:hover {
+  background-color: rgba(42, 197, 31, 0.544);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 22, 22, 0.9);
+}
+
+.startButton:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 480px) {
+  .modalContent {
+    padding: 1.5rem;
+  }
+  .styleIconContainer {
+    width: 48px;
+    height: 48px;
+  }
+  .opponentIcon {
+    width: 24px;
+    height: 24px;
+  }
+}

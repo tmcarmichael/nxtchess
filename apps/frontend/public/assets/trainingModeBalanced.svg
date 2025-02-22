@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg version="1.1" id="Icons" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 viewBox="0 0 32 32" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:none;stroke:#000000;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}
+</style>
+<circle class="st0" cx="16" cy="5" r="2"/>
+<line class="st0" x1="5" y1="5" x2="14" y2="5"/>
+<line class="st0" x1="18" y1="5" x2="27" y2="5"/>
+<path class="st0" d="M16,7v14"/>
+<path class="st0" d="M1,17c0,2.2,1.8,4,4,4s4-1.8,4-4H1z"/>
+<polygon class="st0" points="5,5 1,17 9,17 "/>
+<path class="st0" d="M23,17c0,2.2,1.8,4,4,4s4-1.8,4-4H23z"/>
+<polygon class="st0" points="27,5 23,17 31,17 "/>
+<line class="st0" x1="16" y1="1" x2="16" y2="3"/>
+<path class="st0" d="M24,30H8l0.5-1.6c0.3-0.8,1-1.4,1.9-1.4h11.1c0.9,0,1.6,0.6,1.9,1.4L24,30z"/>
+<path class="st0" d="M18,27h-4v-5c0-0.6,0.4-1,1-1h2c0.6,0,1,0.4,1,1V27z"/>
+</svg>
