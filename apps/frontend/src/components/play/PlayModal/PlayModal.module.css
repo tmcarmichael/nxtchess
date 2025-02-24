@@ -88,6 +88,8 @@
 }
 
 .rangeSlider {
+  -webkit-appearance: none;
+  appearance: none;
   width: 70%;
   height: 6px;
   background: #444;
@@ -103,14 +105,15 @@
 }
 
 .rangeSlider::-webkit-slider-thumb {
-  width: 18px;
-  height: 18px;
-  margin-top: -6px;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -9px;
   background-color: #545454;
   border: 2px solid #3c3c3c;
   border-radius: 50%;
   cursor: pointer;
-  -webkit-appearance: none;
   transition:
     background-color 0.1s ease,
     transform 0.1s ease;

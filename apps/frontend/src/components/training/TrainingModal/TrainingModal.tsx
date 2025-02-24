@@ -122,7 +122,8 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
             </For>
           </div>
         </div>
-        <button class={styles.startButton} onClick={handleStartTraining}>
+        {/* <button class={styles.startButton} onClick={handleStartTraining}> */}
+        <button class={styles.startButton} onClick={() => alert('dev in progress..')}>
           Start Training
         </button>
       </div>

@@ -17,21 +17,24 @@ const TrainingBoardController: ParentComponent = () => {
   };
 
   return (
+    // <div onMouseMove={handleMouseMove} class={styles.chessGameContainer}>
     <div class={styles.chessGameContainer}>
-      <ChessBoard
-        board={() => fenToBoard('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')}
-        highlightedMoves={highlightedMoves}
-        selectedSquare={selectedSquare}
-        draggedPiece={() => null}
-        cursorPosition={() => ({ x: 0, y: 0 })}
-        onSquareClick={handleSquareClick}
-        onSquareMouseUp={() => {}}
-        onDragStart={() => {}}
-        lastMove={() => null}
-        checkedKingSquare={() => null}
-        boardView={() => 'w'}
-        activePieceColor={() => 'w'}
-      />
+      <div class={styles.chessBoardContainer}>
+        <ChessBoard
+          board={() => fenToBoard('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')}
+          highlightedMoves={highlightedMoves}
+          selectedSquare={selectedSquare}
+          draggedPiece={() => null}
+          cursorPosition={() => ({ x: 0, y: 0 })}
+          onSquareClick={handleSquareClick}
+          onSquareMouseUp={() => {}}
+          onDragStart={() => {}}
+          lastMove={() => null}
+          checkedKingSquare={() => null}
+          boardView={() => 'w'}
+          activePieceColor={() => 'w'}
+        />
+      </div>
     </div>
   );
 };

@@ -27,6 +27,12 @@ interface GameStoreState {
   moveHistory: string[];
   viewMoveIndex: number;
   viewFen: string;
+  mode: 'play' | 'training' | 'analysis';
+  isRated: boolean;
+  opponentStyle: 'aggressive' | 'defensive' | 'balanced' | 'positional' | 'random' | null;
+  gamePhase: 'opening' | 'middlegame' | 'endgame' | null;
+  availableHints: number;
+  usedHints: number;
 }
 
 export const createGameStore = () => {
@@ -55,6 +61,12 @@ export const createGameStore = () => {
     moveHistory: [],
     viewMoveIndex: -1,
     viewFen: chess.fen(),
+    mode: 'play',
+    isRated: false,
+    opponentStyle: null,
+    gamePhase: null,
+    availableHints: 0,
+    usedHints: 0,
   });
 
   const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): GameState => {
@@ -127,10 +139,22 @@ export const createGameStore = () => {
     }
   };
 
-  const startNewGame = (newTimeControl: number, newDifficultyLevel: number, side: Side) => {
+  const startNewGame = (
+    newTimeControl: number,
+    newDifficultyLevel: number,
+    side: Side,
+    options?: {
+      mode?: 'play' | 'training' | 'analysis';
+      isRated?: boolean;
+      opponentStyle?: 'aggressive' | 'defensive' | 'balanced' | 'positional' | 'random' | null;
+      gamePhase?: 'opening' | 'middlegame' | 'endgame';
+      availableHints?: number;
+    }
+  ) => {
     if (timerId) clearInterval(timerId);
     chess = new Chess();
     chessGameHistory.reset();
+    const mode = options?.mode ?? 'play';
 
     batch(() => {
       setState({
@@ -154,10 +178,18 @@ export const createGameStore = () => {
         moveHistory: [],
         viewMoveIndex: -1,
         viewFen: chess.fen(),
+        mode,
+        isRated: options?.isRated ?? false,
+        opponentStyle: options?.opponentStyle ?? null,
+        gamePhase: options?.gamePhase ?? null,
+        availableHints: options?.availableHints ?? 0,
+        usedHints: 0,
       });
     });
 
-    startTimer();
+    if (mode === 'play') {
+      startTimer();
+    }
 
     const elo = DIFFICULTY_VALUES_ELO[newDifficultyLevel - 1] ?? 600;
     initEngine(elo).then(() => {
