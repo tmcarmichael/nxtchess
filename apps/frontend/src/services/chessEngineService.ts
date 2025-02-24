@@ -14,19 +14,46 @@ const waitForReady = (): Promise<void> => {
     engine?.postMessage('isready');
   });
 };
+interface StyleConfig {
+  contempt?: number;
+  aggressiveness?: number;
+}
 
-export const initEngine = (elo: number): Promise<void> => {
+type PlayStyle = 'aggressive' | 'defensive' | 'balanced' | 'positional' | 'random';
+
+const STYLE_PRESETS: Record<PlayStyle, StyleConfig> = {
+  aggressive: {
+    contempt: 100,
+    aggressiveness: 100,
+  },
+  defensive: {
+    contempt: -50,
+    aggressiveness: 0,
+  },
+  balanced: {
+    contempt: 0,
+    aggressiveness: 50,
+  },
+  positional: {
+    contempt: 20,
+    aggressiveness: 30,
+  },
+  random: {
+    contempt: Math.floor(Math.random() * 201) - 100, // -100, 100
+    aggressiveness: Math.floor(Math.random() * 101), // 0, 100
+  },
+};
+
+export const initEngine = (elo: number, style: PlayStyle = 'balanced'): Promise<void> => {
   engine = new Worker(new URL('stockfish/src/stockfish-16.1.js', import.meta.url));
   engine.postMessage('uci');
+  const { contempt, aggressiveness } = STYLE_PRESETS[style];
   return waitForReady().then(() => {
     engine!.postMessage('isready');
     engine!.postMessage('setoption name UCI_LimitStrength value true');
     engine!.postMessage(`setoption name UCI_Elo value ${elo}`);
-    // engine!.postMessage('setoption name Threads value 4');
-    // engine!.postMessage('setoption name MultiPV value 4');
-    // engine!.postMessage('setoption name Contempt value 100');
-    // engine!.postMessage('setoption name Aggressiveness value 100');
-    // engine!.postMessage('setoption name King Safety value 0');
+    engine!.postMessage(`setoption name Contempt value ${contempt}`);
+    engine!.postMessage(`setoption name Aggressiveness value ${aggressiveness}`);
     engine!.postMessage('ucinewgame');
     return waitForReady();
   });
