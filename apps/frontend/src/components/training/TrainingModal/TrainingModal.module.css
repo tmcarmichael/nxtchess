@@ -191,6 +191,18 @@
 .toggleButton:hover {
   background: #464646;
 }
+.toggleButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: #2a2a2a;
+}
+.toggleButton:disabled:hover,
+.toggleButton:disabled:focus {
+  background: #2a2a2a !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
 .selectedToggle {
   background: #5c5c5c;
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);

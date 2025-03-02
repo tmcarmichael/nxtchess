@@ -1,4 +1,12 @@
-import { createSignal, batch, Show, onMount, onCleanup, ParentComponent } from 'solid-js';
+import {
+  createSignal,
+  batch,
+  Show,
+  onMount,
+  onCleanup,
+  ParentComponent,
+  createEffect,
+} from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Square, PromotionPiece, Side, GameState } from '../../../types';
 import {
@@ -7,13 +15,17 @@ import {
   captureCheck,
   handleCapturedPiece,
 } from '../../../services/chessGameService';
-import ChessBoard from '../../chess/ChessBoard/ChessBoard';
-import PlayEndModal from '../PlayEndModal/PlayEndModal';
-import ChessPromotionModal from '../../chess/ChessPromotionModal/ChessPromotionModal';
 import { useGameStore } from '../../../store/GameContext';
-import styles from './PlayBoardController.module.css';
+import ChessEvalBar from '../ChessEvalBar/ChessEvalBar';
+import { getEvaluation } from '../../../services/chessEngineService';
+import ChessEndModal from '../ChessEndModal/ChessEndModal';
+import ChessPromotionModal from '../../chess/ChessPromotionModal/ChessPromotionModal';
+import ChessBoard from '../../chess/ChessBoard/ChessBoard';
+import PlayModal from '../../play/PlayModal/PlayModal';
+import TrainingModal from '../../training/TrainingModal/TrainingModal';
+import styles from './ChessBoardController.module.css';
 
-const PlayBoardController: ParentComponent = () => {
+const ChessBoardController: ParentComponent = () => {
   const [state, actions] = useGameStore();
   const navigate = useNavigate();
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
@@ -27,16 +39,18 @@ const PlayBoardController: ParentComponent = () => {
     to: Square;
     color: Side;
   } | null>(null);
+  const [evalScore, setEvalScore] = createSignal<number | null>(null);
+  const [showPlayModal, setShowPlayModal] = createSignal(false);
+  const [showTrainingModal, setShowTrainingModal] = createSignal(false);
+  const [showEndModal, setShowEndModal] = createSignal(false);
 
   const board = () => fenToBoard(state.viewFen);
 
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (state.isGameOver) return;
-
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        e.stopPropagation();
         const newIndex = state.viewMoveIndex - 1;
         if (newIndex >= 0) {
           actions.setViewMoveIndex(newIndex);
@@ -44,7 +58,6 @@ const PlayBoardController: ParentComponent = () => {
         }
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        e.stopPropagation();
         const newIndex = state.viewMoveIndex + 1;
         if (newIndex <= state.moveHistory.length - 1) {
           actions.setViewMoveIndex(newIndex);
@@ -54,12 +67,25 @@ const PlayBoardController: ParentComponent = () => {
         actions.setBoardView((c) => (c === 'w' ? 'b' : 'w'));
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
-
     onCleanup(() => {
       window.removeEventListener('keydown', handleKeyDown);
     });
+  });
+
+  createEffect(() => {
+    if (state.mode === 'training') {
+      const currentFen = state.fen;
+      getEvaluation(currentFen).then((score) => {
+        setEvalScore(score ?? null);
+      });
+    }
+  });
+
+  createEffect(() => {
+    if (state.isGameOver) {
+      setShowEndModal(true);
+    }
   });
 
   const resetViewIfNeeded = () => {
@@ -115,6 +141,28 @@ const PlayBoardController: ParentComponent = () => {
     clearDraggingState();
   };
 
+  const executeMove = (from: Square, to: Square) => {
+    const movingPiece = board().find((sq) => sq.square === from)?.piece;
+    if (!movingPiece) {
+      clearDraggingState();
+      return;
+    }
+    if (isPawnPromotion(movingPiece, to)) {
+      setPendingPromotion({ from, to, color: movingPiece[0] as Side });
+      clearDraggingState();
+      return;
+    }
+    try {
+      const captured = captureCheck(to, board());
+      const updatedState = updateGameState(from, to);
+      applyMove(from, to, updatedState, captured);
+    } catch (err: any) {
+      console.error('Invalid move:', err.message);
+    } finally {
+      clearDraggingState();
+    }
+  };
+
   const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): GameState => {
     const chess = actions.getChessInstance();
     const move = chess.move({ from, to, promotion });
@@ -139,35 +187,11 @@ const PlayBoardController: ParentComponent = () => {
       actions.setViewMoveIndex(hist.length - 1);
       actions.setViewFen(updatedState.fen);
     });
-
     actions.setBoardSquares(fenToBoard(updatedState.fen));
     actions.setCurrentTurn((prev) => (prev === 'w' ? 'b' : 'w'));
     actions.afterMoveChecks(updatedState.fen);
-
     if (!state.isGameOver && state.currentTurn === state.aiSide) {
       actions.performAIMove();
-    }
-  };
-
-  const executeMove = (from: Square, to: Square) => {
-    const movingPiece = board().find((sq) => sq.square === from)?.piece;
-    if (!movingPiece) {
-      clearDraggingState();
-      return;
-    }
-    if (isPawnPromotion(movingPiece, to)) {
-      setPendingPromotion({ from, to, color: movingPiece[0] as Side });
-      clearDraggingState();
-      return;
-    }
-    try {
-      const captured = captureCheck(to, board());
-      const updatedState = updateGameState(from, to);
-      applyMove(from, to, updatedState, captured);
-    } catch (err: any) {
-      console.error('Invalid move:', err.message);
-    } finally {
-      clearDraggingState();
     }
   };
 
@@ -201,12 +225,6 @@ const PlayBoardController: ParentComponent = () => {
   const clearDraggingState = () => {
     batch(() => {
       setDraggedPiece(null);
-      clearSelection();
-    });
-  };
-
-  const clearSelection = () => {
-    batch(() => {
       setSelectedSquare(null);
       setHighlightedMoves([]);
     });
@@ -218,14 +236,21 @@ const PlayBoardController: ParentComponent = () => {
     return (piece.startsWith('w') && rank === 8) || (piece.startsWith('b') && rank === 1);
   };
 
+  const handlePlayAgain = () => {
+    setShowEndModal(false);
+    if (state.mode === 'play') {
+      setShowPlayModal(true);
+    } else if (state.mode === 'training') {
+      setShowTrainingModal(true);
+    } else {
+      setShowPlayModal(true);
+    }
+  };
+
   const handlePromotionChoice = (pieceType: PromotionPiece) => {
     const promo = pendingPromotion();
     if (!promo) return;
     finalizePromotion(promo.from, promo.to, pieceType);
-  };
-
-  const handleRestart = () => {
-    actions.startNewGame(5, 3, state.playerColor === 'w' ? 'b' : 'w');
   };
 
   const handleCloseEndGame = () => {
@@ -234,30 +259,38 @@ const PlayBoardController: ParentComponent = () => {
 
   return (
     <div onMouseMove={handleMouseMove} class={styles.chessGameContainer}>
-      <div class={styles.chessBoardContainer}>
-        <ChessBoard
-          board={board}
-          highlightedMoves={highlightedMoves}
-          selectedSquare={selectedSquare}
-          draggedPiece={draggedPiece}
-          cursorPosition={cursorPosition}
-          onSquareClick={handleSquareClick}
-          onSquareMouseUp={handleMouseUp}
-          onDragStart={handleDragStart}
-          lastMove={() => state.lastMove}
-          checkedKingSquare={() => state.checkedKingSquare}
-          boardView={() => state.boardView}
-          activePieceColor={() => state.currentTurn}
-        />
+      <div class={styles.rowWrapper}>
+        <Show when={state.mode === 'training'}>
+          <ChessEvalBar evalScore={evalScore()} />
+        </Show>
+
+        <div class={styles.chessBoardContainer}>
+          <ChessBoard
+            board={board}
+            highlightedMoves={highlightedMoves}
+            selectedSquare={selectedSquare}
+            draggedPiece={draggedPiece}
+            cursorPosition={cursorPosition}
+            onSquareClick={handleSquareClick}
+            onSquareMouseUp={handleMouseUp}
+            onDragStart={handleDragStart}
+            lastMove={() => state.lastMove}
+            checkedKingSquare={() => state.checkedKingSquare}
+            boardView={() => state.boardView}
+            activePieceColor={() => state.currentTurn}
+          />
+        </div>
       </div>
-      <Show when={state.isGameOver}>
-        <PlayEndModal
+
+      <Show when={showEndModal()}>
+        <ChessEndModal
           onClose={handleCloseEndGame}
-          onRestart={handleRestart}
+          onPlayAgain={handlePlayAgain}
           gameOverReason={state.gameOverReason}
           gameWinner={state.gameWinner}
         />
       </Show>
+
       <Show when={pendingPromotion()}>
         <ChessPromotionModal
           color={pendingPromotion()!.color}
@@ -265,8 +298,16 @@ const PlayBoardController: ParentComponent = () => {
           onClose={() => setPendingPromotion(null)}
         />
       </Show>
+
+      <Show when={showPlayModal()}>
+        <PlayModal onClose={() => setShowPlayModal(false)} />
+      </Show>
+
+      <Show when={showTrainingModal()}>
+        <TrainingModal onClose={() => setShowTrainingModal(false)} />
+      </Show>
     </div>
   );
 };
 
-export default PlayBoardController;
+export default ChessBoardController;

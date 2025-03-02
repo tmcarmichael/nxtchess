@@ -5,6 +5,7 @@ import { Side, BoardSquare, Square, PromotionPiece, GameState } from '../types';
 import { initEngine, getBestMove } from '../services/chessEngineService';
 import { fenToBoard, captureCheck, handleCapturedPiece } from '../services/chessGameService';
 import { DIFFICULTY_VALUES_ELO } from '../utils';
+import { getEvaluation } from '../services/chessEngineService';
 
 interface GameStoreState {
   fen: string;
@@ -33,6 +34,7 @@ interface GameStoreState {
   gamePhase: 'opening' | 'middlegame' | 'endgame' | null;
   availableHints: number;
   usedHints: number;
+  trainingEvalScore: number | null;
 }
 
 export const createGameStore = () => {
@@ -67,6 +69,7 @@ export const createGameStore = () => {
     gamePhase: null,
     availableHints: 0,
     usedHints: 0,
+    trainingEvalScore: null,
   });
 
   const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): GameState => {
@@ -203,6 +206,14 @@ export const createGameStore = () => {
     if (state.isGameOver) return;
     const chessFen = new Chess(newFen);
     const currentTurn = newFen.split(' ')[1] as 'w' | 'b';
+    updateCheckedKingSquare(chessFen, currentTurn, newFen);
+    if (checkForTerminal(chessFen, currentTurn)) {
+      return;
+    }
+    checkTrainingOpeningEnd(chessFen, newFen);
+  };
+
+  const updateCheckedKingSquare = (chessFen: Chess, currentTurn: 'w' | 'b', newFen: string) => {
     if (chessFen.isCheck()) {
       const kingSquare = fenToBoard(newFen).find(
         ({ piece }) => piece === currentTurn + 'K'
@@ -211,20 +222,41 @@ export const createGameStore = () => {
     } else {
       setState('checkedKingSquare', null);
     }
+  };
 
+  const checkForTerminal = (chessFen: Chess, currentTurn: 'w' | 'b'): boolean => {
     if (chessFen.isCheckmate()) {
       const winner = currentTurn === 'w' ? 'b' : 'w';
       setState('gameWinner', winner);
       setState('isGameOver', true);
       setState('gameOverReason', 'checkmate');
-    } else if (chessFen.isStalemate()) {
+      return true;
+    }
+    if (chessFen.isStalemate()) {
       setState('gameWinner', 'draw');
       setState('isGameOver', true);
       setState('gameOverReason', 'stalemate');
-    } else {
-      if (state.isGameOver || state.gameOverReason === 'time') return;
-      setState('gameOverReason', null);
+      return true;
     }
+    return false;
+  };
+
+  const checkTrainingOpeningEnd = (chessFen: Chess, newFen: string) => {
+    if (state.mode !== 'training' || state.gamePhase !== 'opening') {
+      return;
+    }
+    const moveCount = state.moveHistory.length;
+    console.log('checkTrainingOpeningEnd ', moveCount);
+    if (moveCount < 20) {
+      return;
+    }
+    const ENGINE_DEPTH = 15;
+    getEvaluation(newFen, ENGINE_DEPTH).then((score) => {
+      setState('trainingEvalScore', score);
+      setState('isGameOver', true);
+      setState('gameWinner', null);
+      setState('gameOverReason', null);
+    });
   };
 
   const handleTimeOut = (winnerColor: Side) => {
@@ -275,6 +307,7 @@ export const createGameStore = () => {
   const moveHistory = () => state.moveHistory;
   const viewMoveIndex = () => state.viewMoveIndex;
   const viewFen = () => state.viewFen;
+  const trainingEvalScore = () => state.trainingEvalScore;
 
   const setFen = (value: string) => setState('fen', value);
   const setWhiteTime = (value: number | ((prev: number) => number)) => setState('whiteTime', value);
@@ -298,6 +331,7 @@ export const createGameStore = () => {
   const setMoveHistory = (value: string[]) => setState('moveHistory', value);
   const setViewMoveIndex = (value: number) => setState('viewMoveIndex', value);
   const setViewFen = (value: string) => setState('viewFen', value);
+  const setTrainingEvalScore = (value: number | null) => setState('trainingEvalScore', value);
 
   const actions = {
     performAIMove,
@@ -328,6 +362,7 @@ export const createGameStore = () => {
     moveHistory,
     viewMoveIndex,
     viewFen,
+    trainingEvalScore,
 
     setFen,
     setWhiteTime,
@@ -348,6 +383,7 @@ export const createGameStore = () => {
     setMoveHistory,
     setViewMoveIndex,
     setViewFen,
+    setTrainingEvalScore,
   };
 
   return [state, actions] as const;
