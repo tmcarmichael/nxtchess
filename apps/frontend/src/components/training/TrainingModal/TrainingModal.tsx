@@ -1,12 +1,25 @@
-import { createSignal, Show, For, createMemo, ParentComponent } from 'solid-js';
+import { createSignal, Show, For, ParentComponent, splitProps } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
+import { useGameStore } from '../../../store/GameContext';
+import { RatedMode, OpponentStyle, GamePhase } from '../../../types';
 import styles from './TrainingModal.module.css';
 
 interface TrainingModalProps {
   onClose: () => void;
 }
 
-const OPPONENT_STYLES = [
+interface OpponentStyleOption {
+  value: OpponentStyle;
+  label: string;
+  icon: string;
+}
+
+interface GamePhaseOption {
+  value: GamePhase;
+  label: string;
+}
+
+const OPPONENT_STYLES: OpponentStyleOption[] = [
   { value: 'aggressive', label: 'Aggressive', icon: '/assets/trainingModeAggressive.svg' },
   { value: 'defensive', label: 'Defensive', icon: '/assets/trainingModeDefensive.svg' },
   { value: 'balanced', label: 'Balanced', icon: '/assets/trainingModeBalanced.svg' },
@@ -14,33 +27,36 @@ const OPPONENT_STYLES = [
   { value: 'positional', label: 'Positional', icon: '/assets/trainingModePositional.svg' },
 ];
 
-const GAME_PHASES = [
+const GAME_PHASES: GamePhaseOption[] = [
   { value: 'opening', label: 'Opening (1-10)' },
   { value: 'middlegame', label: 'Middlegame (10-20)' },
   { value: 'endgame', label: 'Endgame (>20)' },
 ];
 
 const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
+  const [local] = splitProps(props, ['onClose']);
   const navigate = useNavigate();
-  const [mode, setMode] = createSignal<'rated' | 'casual'>('casual');
-  const [difficulty, setDifficulty] = createSignal(3);
-  const [opponentStyle, setOpponentStyle] = createSignal(OPPONENT_STYLES[0].value);
-  const [gamePhase, setGamePhase] = createSignal(GAME_PHASES[0].value);
+  const [_, actions] = useGameStore();
 
-  // DEBUG
-  // const selectedOpponentStyleLabel = createMemo(() => {
-  //   return OPPONENT_STYLES.find((s) => s.value === opponentStyle())?.label ?? '';
-  // });
+  const [ratedMode, setRatedMode] = createSignal<RatedMode>('casual');
+  const [difficulty, setDifficulty] = createSignal<number>(3);
+  const [opponentStyle, setOpponentStyle] = createSignal<OpponentStyle>('balanced');
+  const [gamePhase, setGamePhase] = createSignal<GamePhase>('opening');
 
   const handleStartTraining = () => {
-    // Store or pass via query params
-    console.log('Mode:', mode());
-    console.log('Difficulty:', difficulty());
-    console.log('Opponent Style:', opponentStyle());
-    console.log('Game Phase:', gamePhase());
+    const DEV_TRAINING_MINUTES = 5;
+    const DEV_TRAINING_SIDE = 'w';
+    const DEV_TRAINING_MODE = 'training';
+
+    actions.startNewGame(DEV_TRAINING_MINUTES, difficulty(), DEV_TRAINING_SIDE, {
+      mode: DEV_TRAINING_MODE,
+      isRated: ratedMode() === 'rated',
+      opponentStyle: opponentStyle(),
+      gamePhase: gamePhase(),
+    });
 
     navigate('/training');
-    props.onClose();
+    local.onClose();
   };
 
   return (
@@ -50,27 +66,30 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
           &times;
         </button>
         <h2>Training Options</h2>
+
         <div class={styles.buttonGroup}>
           <button
             classList={{
               [styles.toggleButton]: true,
-              [styles.selectedToggle]: mode() === 'rated',
+              [styles.selectedToggle]: ratedMode() === 'rated',
             }}
-            onClick={() => setMode('rated')}
+            disabled
+            onClick={() => setRatedMode('rated')}
           >
             Rated
           </button>
           <button
             classList={{
               [styles.toggleButton]: true,
-              [styles.selectedToggle]: mode() === 'casual',
+              [styles.selectedToggle]: ratedMode() === 'casual',
             }}
-            onClick={() => setMode('casual')}
+            onClick={() => setRatedMode('casual')}
           >
             Casual
           </button>
         </div>
-        <Show when={mode() === 'casual'}>
+
+        <Show when={ratedMode() === 'casual'}>
           <div class={styles.settingRow}>
             <label class={styles.rangeSliderLabel}>Difficulty: {difficulty()}</label>
             <div class={styles.rangeSliderContainer}>
@@ -85,6 +104,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
             </div>
           </div>
         </Show>
+
         <div class={styles.settingRow}>
           <label class={styles.label}>Opponent Style:</label>
           <div class={styles.styleSelector}>
@@ -104,6 +124,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
             </For>
           </div>
         </div>
+
         <div class={styles.settingRow}>
           <label class={styles.label}>Game Phase:</label>
           <div class={styles.buttonGroup}>
@@ -114,6 +135,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
                     [styles.toggleButton]: true,
                     [styles.selectedToggle]: phase.value === gamePhase(),
                   }}
+                  disabled={phase.value !== 'opening'}
                   onClick={() => setGamePhase(phase.value)}
                 >
                   {phase.label}
@@ -122,8 +144,8 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
             </For>
           </div>
         </div>
-        {/* <button class={styles.startButton} onClick={handleStartTraining}> */}
-        <button class={styles.startButton} onClick={() => alert('dev in progress..')}>
+
+        <button class={styles.startButton} onClick={handleStartTraining}>
           Start Training
         </button>
       </div>

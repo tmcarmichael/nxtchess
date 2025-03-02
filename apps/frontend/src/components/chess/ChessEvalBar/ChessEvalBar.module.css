@@ -1,0 +1,30 @@
+.evalBarContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+
+.barBackground {
+  position: relative;
+  width: 0.8rem;
+  height: 46.6rem;
+  background-color: #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background-color: #000000aa;
+}
+
+.evalScore {
+  margin-top: 0.2rem;
+  font-size: smaller;
+  font-weight: bold;
+  color: rgb(88, 88, 88);
+}

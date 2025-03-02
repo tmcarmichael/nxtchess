@@ -1,18 +1,20 @@
-import { ParentComponent } from 'solid-js';
-import TrainingBoardController from '../TrainingBoardController/TrainingBoardController';
+import { ParentComponent, Show, createSignal } from 'solid-js';
+import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
+import TrainingModal from '../TrainingModal/TrainingModal';
 import styles from './TrainingContainer.module.css';
 
 const TrainingContainer: ParentComponent = () => {
+  const [showTrainingModal, setShowTrainingModal] = createSignal(false);
+
   return (
     <div class={styles.trainingContainer}>
+      <Show when={showTrainingModal()}>
+        <TrainingModal onClose={() => setShowTrainingModal(false)} />
+      </Show>
       <div class={styles.trainingLayout}>
-        {/* <div class={styles.panelWrapper}>
-        </div> */}
         <div class={styles.boardWrapper}>
-          <TrainingBoardController />
+          <ChessBoardController />
         </div>
-        {/* <div class={styles.panelWrapper}>
-        </div> */}
       </div>
     </div>
   );
