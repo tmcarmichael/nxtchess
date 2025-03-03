@@ -104,7 +104,6 @@ export const createGameStore = () => {
 
   const performAIMove = async () => {
     if (state.isGameOver || state.currentTurn !== state.aiSide || state.isAiThinking) return;
-    // console.log('fen', state.fen, 'last move', state.lastMove);
     setState('isAiThinking', true);
     try {
       const fenAtStart = state.fen;
@@ -113,8 +112,7 @@ export const createGameStore = () => {
         throw Error('No AI best move');
       }
       if (state.fen !== fenAtStart) {
-        console.log('Skipping stale AI move. fen changed from', fenAtStart, 'to', state.fen);
-        return;
+        throw new Error('Engine worker out of sync FEN');
       }
       const from = best.slice(0, 2) as Square;
       const to = best.slice(2, 4) as Square;
@@ -266,13 +264,11 @@ export const createGameStore = () => {
     if (moveCount < 20) {
       return;
     }
-    console.log('checkTrainingOpeningEnd', moveCount);
     const fenAtStart = state.fen;
     // const ENGINE_DEPTH = 15;
     getEvaluation(newFen /*opt ENGINE_DEPTH*/).then((score: number) => {
       if (state.fen !== fenAtStart) {
-        console.log('Skipping stale training eval:', fenAtStart, '->', state.fen);
-        return;
+        throw new Error('Engine worker out of sync FEN');
       }
       setState('trainingEvalScore', score);
       setState('isGameOver', true);
