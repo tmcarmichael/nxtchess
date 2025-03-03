@@ -17,7 +17,7 @@ import {
 } from '../../../services/chessGameService';
 import { useGameStore } from '../../../store/GameContext';
 import ChessEvalBar from '../ChessEvalBar/ChessEvalBar';
-import { getEvaluation } from '../../../services/chessEngineService';
+import { getEvaluation } from '../../../services/engine/evalEngineWorker';
 import ChessEndModal from '../ChessEndModal/ChessEndModal';
 import ChessPromotionModal from '../../chess/ChessPromotionModal/ChessPromotionModal';
 import ChessBoard from '../../chess/ChessBoard/ChessBoard';
@@ -76,7 +76,7 @@ const ChessBoardController: ParentComponent = () => {
   createEffect(() => {
     if (state.mode === 'training') {
       const currentFen = state.fen;
-      getEvaluation(currentFen).then((score) => {
+      getEvaluation(currentFen).then((score: number) => {
         setEvalScore(score ?? null);
       });
     }
@@ -97,7 +97,7 @@ const ChessBoardController: ParentComponent = () => {
   };
 
   const handleSquareClick = (square: Square) => {
-    if (state.isGameOver) return;
+    if (state.isGameOver || state.isAiThinking) return;
     resetViewIfNeeded();
     const currentSelection = selectedSquare();
     if (!currentSelection) {
@@ -115,7 +115,7 @@ const ChessBoardController: ParentComponent = () => {
   };
 
   const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
-    if (state.isGameOver || !isPlayerTurn(square)) return;
+    if (state.isGameOver || !isPlayerTurn(square) || state.isAiThinking) return;
     resetViewIfNeeded();
     setDraggedPiece({ square, piece });
     setCursorPosition({ x: event.clientX, y: event.clientY });

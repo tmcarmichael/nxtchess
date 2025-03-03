@@ -38,21 +38,21 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
   const navigate = useNavigate();
   const [_, actions] = useGameStore();
 
-  const [ratedMode, setRatedMode] = createSignal<RatedMode>('casual');
-  const [difficulty, setDifficulty] = createSignal<number>(3);
-  const [opponentStyle, setOpponentStyle] = createSignal<OpponentStyle>('balanced');
-  const [gamePhase, setGamePhase] = createSignal<GamePhase>('opening');
+  const [localRatedMode, setLocalRatedMode] = createSignal<RatedMode>('casual');
+  const [localDifficulty, setLocalDifficulty] = createSignal<number>(3);
+  const [localOpponentStyle, localSetOpponentStyle] = createSignal<OpponentStyle>('balanced');
+  const [localGamePhase, setLocalGamePhase] = createSignal<GamePhase>('opening');
 
   const handleStartTraining = () => {
     const DEV_TRAINING_MINUTES = 5;
     const DEV_TRAINING_SIDE = 'w';
     const DEV_TRAINING_MODE = 'training';
 
-    actions.startNewGame(DEV_TRAINING_MINUTES, difficulty(), DEV_TRAINING_SIDE, {
+    actions.startNewGame(DEV_TRAINING_MINUTES, localDifficulty(), DEV_TRAINING_SIDE, {
       mode: DEV_TRAINING_MODE,
-      isRated: ratedMode() === 'rated',
-      opponentStyle: opponentStyle(),
-      gamePhase: gamePhase(),
+      trainingIsRated: localRatedMode() === 'rated',
+      trainingOpponentStyle: localOpponentStyle(),
+      trainingGamePhase: localGamePhase(),
     });
 
     navigate('/training');
@@ -71,35 +71,35 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
           <button
             classList={{
               [styles.toggleButton]: true,
-              [styles.selectedToggle]: ratedMode() === 'rated',
+              [styles.selectedToggle]: localRatedMode() === 'rated',
             }}
             disabled
-            onClick={() => setRatedMode('rated')}
+            onClick={() => setLocalRatedMode('rated')}
           >
             Rated
           </button>
           <button
             classList={{
               [styles.toggleButton]: true,
-              [styles.selectedToggle]: ratedMode() === 'casual',
+              [styles.selectedToggle]: localRatedMode() === 'casual',
             }}
-            onClick={() => setRatedMode('casual')}
+            onClick={() => setLocalRatedMode('casual')}
           >
             Casual
           </button>
         </div>
 
-        <Show when={ratedMode() === 'casual'}>
+        <Show when={localRatedMode() === 'casual'}>
           <div class={styles.settingRow}>
-            <label class={styles.rangeSliderLabel}>Difficulty: {difficulty()}</label>
+            <label class={styles.rangeSliderLabel}>Difficulty: {localDifficulty()}</label>
             <div class={styles.rangeSliderContainer}>
               <input
                 class={styles.rangeSlider}
                 type="range"
                 min="1"
                 max="10"
-                value={difficulty()}
-                onInput={(e) => setDifficulty(+e.currentTarget.value)}
+                value={localDifficulty()}
+                onInput={(e) => setLocalDifficulty(+e.currentTarget.value)}
               />
             </div>
           </div>
@@ -113,9 +113,9 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
                 <div
                   classList={{
                     [styles.styleIconContainer]: true,
-                    [styles.selectedIcon]: styleObj.value === opponentStyle(),
+                    [styles.selectedIcon]: styleObj.value === localOpponentStyle(),
                   }}
-                  onClick={() => setOpponentStyle(styleObj.value)}
+                  onClick={() => localSetOpponentStyle(styleObj.value)}
                 >
                   <img src={styleObj.icon} alt={styleObj.label} class={styles.opponentIcon} />
                   <span class={styles.iconLabel}>{styleObj.label}</span>
@@ -133,10 +133,10 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
                 <button
                   classList={{
                     [styles.toggleButton]: true,
-                    [styles.selectedToggle]: phase.value === gamePhase(),
+                    [styles.selectedToggle]: phase.value === localGamePhase(),
                   }}
                   disabled={phase.value !== 'opening'}
-                  onClick={() => setGamePhase(phase.value)}
+                  onClick={() => setLocalGamePhase(phase.value)}
                 >
                   {phase.label}
                 </button>
