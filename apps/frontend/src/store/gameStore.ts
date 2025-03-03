@@ -2,10 +2,10 @@ import { createStore } from 'solid-js/store';
 import { Chess } from 'chess.js';
 import { batch } from 'solid-js';
 import { Side, BoardSquare, Square, PromotionPiece, GameState } from '../types';
-import { initEngine, getBestMove } from '../services/chessEngineService';
+import { initAiEngine, getBestMove } from '../services/engine/aiEngineWorker';
+import { initEvalEngine, getEvaluation } from '../services/engine/evalEngineWorker';
 import { fenToBoard, captureCheck, handleCapturedPiece } from '../services/chessGameService';
 import { DIFFICULTY_VALUES_ELO } from '../utils';
-import { getEvaluation } from '../services/chessEngineService';
 
 interface GameStoreState {
   fen: string;
@@ -29,12 +29,13 @@ interface GameStoreState {
   viewMoveIndex: number;
   viewFen: string;
   mode: 'play' | 'training' | 'analysis';
-  isRated: boolean;
-  opponentStyle: 'aggressive' | 'defensive' | 'balanced' | 'positional' | 'random' | null;
-  gamePhase: 'opening' | 'middlegame' | 'endgame' | null;
-  availableHints: number;
-  usedHints: number;
+  trainingIsRated: boolean;
+  trainingOpponentStyle: 'aggressive' | 'defensive' | 'balanced' | 'positional' | 'random' | null;
+  trainingGamePhase: 'opening' | 'middlegame' | 'endgame' | null;
+  trainingAvailableHints: number;
+  trainingUsedHints: number;
   trainingEvalScore: number | null;
+  isAiThinking: boolean;
 }
 
 export const createGameStore = () => {
@@ -64,12 +65,13 @@ export const createGameStore = () => {
     viewMoveIndex: -1,
     viewFen: chess.fen(),
     mode: 'play',
-    isRated: false,
-    opponentStyle: null,
-    gamePhase: null,
-    availableHints: 0,
-    usedHints: 0,
+    trainingIsRated: false,
+    trainingOpponentStyle: null,
+    trainingGamePhase: null,
+    trainingAvailableHints: 0,
+    trainingUsedHints: 0,
     trainingEvalScore: null,
+    isAiThinking: false,
   });
 
   const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): GameState => {
@@ -101,11 +103,18 @@ export const createGameStore = () => {
   };
 
   const performAIMove = async () => {
-    if (state.isGameOver || state.currentTurn !== state.aiSide) return;
+    if (state.isGameOver || state.currentTurn !== state.aiSide || state.isAiThinking) return;
+    // console.log('fen', state.fen, 'last move', state.lastMove);
+    setState('isAiThinking', true);
     try {
+      const fenAtStart = state.fen;
       const best = await getBestMove(state.fen);
       if (!best) {
         throw Error('No AI best move');
+      }
+      if (state.fen !== fenAtStart) {
+        console.log('Skipping stale AI move. fen changed from', fenAtStart, 'to', state.fen);
+        return;
       }
       const from = best.slice(0, 2) as Square;
       const to = best.slice(2, 4) as Square;
@@ -126,19 +135,18 @@ export const createGameStore = () => {
         }
         setState('fen', updatedState.fen);
         setState('lastMove', { from, to });
-
         const hist = chess.history();
         setState('moveHistory', hist);
         setState('viewMoveIndex', hist.length - 1);
         setState('boardSquares', fenToBoard(updatedState.fen));
         setState('viewFen', updatedState.fen);
-
         setState('currentTurn', state.currentTurn === 'w' ? 'b' : 'w');
       });
-
       if (!state.isGameOver) afterMoveChecks(updatedState.fen);
     } catch (err) {
       console.error('Engine error:', err);
+    } finally {
+      setState('isAiThinking', false);
     }
   };
 
@@ -148,10 +156,16 @@ export const createGameStore = () => {
     side: Side,
     options?: {
       mode?: 'play' | 'training' | 'analysis';
-      isRated?: boolean;
-      opponentStyle?: 'aggressive' | 'defensive' | 'balanced' | 'positional' | 'random' | null;
-      gamePhase?: 'opening' | 'middlegame' | 'endgame';
-      availableHints?: number;
+      trainingIsRated?: boolean;
+      trainingOpponentStyle?:
+        | 'aggressive'
+        | 'defensive'
+        | 'balanced'
+        | 'positional'
+        | 'random'
+        | null;
+      trainingGamePhase?: 'opening' | 'middlegame' | 'endgame';
+      trainingAvailableHints?: number;
     }
   ) => {
     if (timerId) clearInterval(timerId);
@@ -182,20 +196,23 @@ export const createGameStore = () => {
         viewMoveIndex: -1,
         viewFen: chess.fen(),
         mode,
-        isRated: options?.isRated ?? false,
-        opponentStyle: options?.opponentStyle ?? null,
-        gamePhase: options?.gamePhase ?? null,
-        availableHints: options?.availableHints ?? 0,
-        usedHints: 0,
+        trainingIsRated: options?.trainingIsRated ?? false,
+        trainingOpponentStyle: options?.trainingOpponentStyle ?? null,
+        trainingGamePhase: options?.trainingGamePhase ?? null,
+        trainingAvailableHints: options?.trainingAvailableHints ?? 0,
+        trainingUsedHints: 0,
+        isAiThinking: false,
       });
     });
 
     if (mode === 'play') {
       startTimer();
+    } else {
+      initEvalEngine();
     }
 
     const elo = DIFFICULTY_VALUES_ELO[newDifficultyLevel - 1] ?? 600;
-    initEngine(elo).then(() => {
+    initAiEngine(elo).then(() => {
       if (side === 'b') {
         performAIMove();
       }
@@ -210,7 +227,7 @@ export const createGameStore = () => {
     if (checkForTerminal(chessFen, currentTurn)) {
       return;
     }
-    checkTrainingOpeningEnd(chessFen, newFen);
+    checkTrainingOpeningEnd(newFen);
   };
 
   const updateCheckedKingSquare = (chessFen: Chess, currentTurn: 'w' | 'b', newFen: string) => {
@@ -241,17 +258,22 @@ export const createGameStore = () => {
     return false;
   };
 
-  const checkTrainingOpeningEnd = (chessFen: Chess, newFen: string) => {
-    if (state.mode !== 'training' || state.gamePhase !== 'opening') {
+  const checkTrainingOpeningEnd = (newFen: string) => {
+    if (state.mode !== 'training' || state.trainingGamePhase !== 'opening') {
       return;
     }
     const moveCount = state.moveHistory.length;
-    console.log('checkTrainingOpeningEnd ', moveCount);
     if (moveCount < 20) {
       return;
     }
-    const ENGINE_DEPTH = 15;
-    getEvaluation(newFen, ENGINE_DEPTH).then((score) => {
+    console.log('checkTrainingOpeningEnd', moveCount);
+    const fenAtStart = state.fen;
+    // const ENGINE_DEPTH = 15;
+    getEvaluation(newFen /*opt ENGINE_DEPTH*/).then((score: number) => {
+      if (state.fen !== fenAtStart) {
+        console.log('Skipping stale training eval:', fenAtStart, '->', state.fen);
+        return;
+      }
       setState('trainingEvalScore', score);
       setState('isGameOver', true);
       setState('gameWinner', null);
@@ -308,6 +330,7 @@ export const createGameStore = () => {
   const viewMoveIndex = () => state.viewMoveIndex;
   const viewFen = () => state.viewFen;
   const trainingEvalScore = () => state.trainingEvalScore;
+  const isAiThinking = () => state.isAiThinking;
 
   const setFen = (value: string) => setState('fen', value);
   const setWhiteTime = (value: number | ((prev: number) => number)) => setState('whiteTime', value);
@@ -332,6 +355,7 @@ export const createGameStore = () => {
   const setViewMoveIndex = (value: number) => setState('viewMoveIndex', value);
   const setViewFen = (value: string) => setState('viewFen', value);
   const setTrainingEvalScore = (value: number | null) => setState('trainingEvalScore', value);
+  const setIsAiThinking = (value: boolean) => setState('isAiThinking', value);
 
   const actions = {
     performAIMove,
@@ -363,6 +387,7 @@ export const createGameStore = () => {
     viewMoveIndex,
     viewFen,
     trainingEvalScore,
+    isAiThinking,
 
     setFen,
     setWhiteTime,
@@ -384,6 +409,7 @@ export const createGameStore = () => {
     setViewMoveIndex,
     setViewFen,
     setTrainingEvalScore,
+    setIsAiThinking,
   };
 
   return [state, actions] as const;
