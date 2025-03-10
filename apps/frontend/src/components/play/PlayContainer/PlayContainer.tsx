@@ -1,6 +1,6 @@
 import { createSignal, Show, ParentComponent } from 'solid-js';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
-import PlayControlsPanel from '../PlayControlsPanel/PlayControlsPanel';
+import PlayControlPanel from '../PlayControlPanel/PlayControlPanel';
 import PlayModal from '../PlayModal/PlayModal';
 import PlayNavigationPanel from '../PlayNavigationPanel/PlayNavigationPanel';
 import styles from './PlayContainer.module.css';
@@ -21,7 +21,7 @@ const PlayContainer: ParentComponent = () => {
           <ChessBoardController />
         </div>
         <div class={styles.panelWrapper}>
-          <PlayControlsPanel />
+          <PlayControlPanel />
         </div>
       </div>
     </div>

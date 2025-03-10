@@ -3,6 +3,7 @@ import { createSignal, onMount, onCleanup, Component, createMemo } from 'solid-j
 import { useGameStore } from '../../../store/GameContext';
 import { getRandomQuickPlayConfig } from '../../../services/chessGameService';
 import styles from './HomeSiteHero.module.css';
+import { StartGameOptions } from '../../../types';
 
 const HomeSiteHero: Component = () => {
   const navigate = useNavigate();
@@ -24,10 +25,16 @@ const HomeSiteHero: Component = () => {
     clearInterval(intervalId);
   });
 
-  const [quickPlayTime, quickPlayDifficulty, quickPlaySide] = getRandomQuickPlayConfig();
   const handlePlayNow = () => {
+    const [quickPlayTime, quickPlayDifficulty, quickPlaySide] = getRandomQuickPlayConfig();
+    const playGameConfig: StartGameOptions = {
+      side: quickPlaySide,
+      mode: 'play',
+      newTimeControl: quickPlayTime,
+      newDifficultyLevel: quickPlayDifficulty,
+    };
     navigate('/play', { replace: true });
-    actions.startNewGame(quickPlayTime, quickPlayDifficulty, quickPlaySide);
+    actions.startNewGame(playGameConfig);
   };
 
   const knightStyle = createMemo(() => ({

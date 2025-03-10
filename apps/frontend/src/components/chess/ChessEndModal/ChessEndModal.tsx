@@ -17,8 +17,8 @@ interface GameOverInfo {
 const getGameOverInfoTraining = (finalEvalScore: number | null): GameOverInfo => {
   const score = finalEvalScore ?? 0;
   return {
-    heading: 'Opening Training Complete',
-    message: `Final engine eval: ${score.toFixed(2)}.`,
+    heading: 'Training Round Complete',
+    message: `Final engine eval: ${score.toFixed(2)}`,
   };
 };
 
