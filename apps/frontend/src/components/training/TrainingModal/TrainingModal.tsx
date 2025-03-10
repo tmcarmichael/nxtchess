@@ -1,15 +1,15 @@
 import { createSignal, Show, For, ParentComponent, splitProps } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useGameStore } from '../../../store/GameContext';
-import { RatedMode, OpponentStyle, GamePhase } from '../../../types';
+import { RatedMode, AIPlayStyle, GamePhase, Side, StartGameOptions } from '../../../types';
 import styles from './TrainingModal.module.css';
 
 interface TrainingModalProps {
   onClose: () => void;
 }
 
-interface OpponentStyleOption {
-  value: OpponentStyle;
+interface AIPlayStyleOption {
+  value: AIPlayStyle;
   label: string;
   icon: string;
 }
@@ -19,7 +19,7 @@ interface GamePhaseOption {
   label: string;
 }
 
-const OPPONENT_STYLES: OpponentStyleOption[] = [
+const OPPONENT_STYLES: AIPlayStyleOption[] = [
   { value: 'aggressive', label: 'Aggressive', icon: '/assets/trainingModeAggressive.svg' },
   { value: 'defensive', label: 'Defensive', icon: '/assets/trainingModeDefensive.svg' },
   { value: 'balanced', label: 'Balanced', icon: '/assets/trainingModeBalanced.svg' },
@@ -40,21 +40,20 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
 
   const [localRatedMode, setLocalRatedMode] = createSignal<RatedMode>('casual');
   const [localDifficulty, setLocalDifficulty] = createSignal<number>(3);
-  const [localOpponentStyle, localSetOpponentStyle] = createSignal<OpponentStyle>('balanced');
+  const [localAIPlayStyle, localSetAIPlayStyle] = createSignal<AIPlayStyle>('balanced');
   const [localGamePhase, setLocalGamePhase] = createSignal<GamePhase>('opening');
+  const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
 
   const handleStartTraining = () => {
-    const DEV_TRAINING_MINUTES = 5;
-    const DEV_TRAINING_SIDE = 'w';
-    const DEV_TRAINING_MODE = 'training';
-
-    actions.startNewGame(DEV_TRAINING_MINUTES, localDifficulty(), DEV_TRAINING_SIDE, {
-      mode: DEV_TRAINING_MODE,
+    const trainingGameConfig: StartGameOptions = {
+      side: localPlayerColor(),
+      mode: 'training',
+      newDifficultyLevel: localDifficulty(),
       trainingIsRated: localRatedMode() === 'rated',
-      trainingOpponentStyle: localOpponentStyle(),
+      trainingAIPlayStyle: localAIPlayStyle(),
       trainingGamePhase: localGamePhase(),
-    });
-
+    };
+    actions.startNewGame(trainingGameConfig);
     navigate('/training');
     local.onClose();
   };
@@ -106,6 +105,30 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
         </Show>
 
         <div class={styles.settingRow}>
+          <label class={styles.label}>Play As:</label>
+          <div class={styles.knightSelector}>
+            <div
+              classList={{
+                [styles.knightButton]: true,
+                [styles.selectedKnight]: localPlayerColor() === 'w',
+              }}
+              onClick={() => setLocalPlayerColor('w')}
+            >
+              <img src="/assets/wN.svg" alt="White Knight" />
+            </div>
+            <div
+              classList={{
+                [styles.knightButton]: true,
+                [styles.selectedKnight]: localPlayerColor() === 'b',
+              }}
+              onClick={() => setLocalPlayerColor('b')}
+            >
+              <img src="/assets/bN.svg" alt="Black Knight" />
+            </div>
+          </div>
+        </div>
+
+        <div class={styles.settingRow}>
           <label class={styles.label}>Opponent Style:</label>
           <div class={styles.styleSelector}>
             <For each={OPPONENT_STYLES}>
@@ -113,9 +136,9 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
                 <div
                   classList={{
                     [styles.styleIconContainer]: true,
-                    [styles.selectedIcon]: styleObj.value === localOpponentStyle(),
+                    [styles.selectedIcon]: styleObj.value === localAIPlayStyle(),
                   }}
-                  onClick={() => localSetOpponentStyle(styleObj.value)}
+                  onClick={() => localSetAIPlayStyle(styleObj.value)}
                 >
                   <img src={styleObj.icon} alt={styleObj.label} class={styles.opponentIcon} />
                   <span class={styles.iconLabel}>{styleObj.label}</span>

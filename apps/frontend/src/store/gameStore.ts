@@ -1,8 +1,19 @@
 import { createStore } from 'solid-js/store';
 import { Chess } from 'chess.js';
 import { batch } from 'solid-js';
-import { Side, BoardSquare, Square, PromotionPiece, GameState } from '../types';
-import { initAiEngine, getBestMove } from '../services/engine/aiEngineWorker';
+import {
+  Side,
+  BoardSquare,
+  Square,
+  PromotionPiece,
+  GameOverReason,
+  GameMode,
+  GameWinner,
+  AIPlayStyle,
+  GamePhase,
+  StartGameOptions,
+} from '../types';
+import { initAiEngine, computeAiMove } from '../services/engine/aiEngineWorker';
 import { initEvalEngine, getEvaluation } from '../services/engine/evalEngineWorker';
 import { fenToBoard, captureCheck, handleCapturedPiece } from '../services/chessGameService';
 import { DIFFICULTY_VALUES_ELO } from '../utils';
@@ -17,8 +28,8 @@ interface GameStoreState {
   playerColor: Side;
   boardView: Side;
   isGameOver: boolean;
-  gameOverReason: 'checkmate' | 'stalemate' | 'time' | null;
-  gameWinner: Side | 'draw' | null;
+  gameOverReason: GameOverReason;
+  gameWinner: GameWinner;
   capturedWhite: string[];
   capturedBlack: string[];
   boardSquares: BoardSquare[];
@@ -28,10 +39,10 @@ interface GameStoreState {
   moveHistory: string[];
   viewMoveIndex: number;
   viewFen: string;
-  mode: 'play' | 'training' | 'analysis';
+  mode: GameMode;
   trainingIsRated: boolean;
-  trainingOpponentStyle: 'aggressive' | 'defensive' | 'balanced' | 'positional' | 'random' | null;
-  trainingGamePhase: 'opening' | 'middlegame' | 'endgame' | null;
+  trainingAIPlayStyle: AIPlayStyle;
+  trainingGamePhase: GamePhase;
   trainingAvailableHints: number;
   trainingUsedHints: number;
   trainingEvalScore: number | null;
@@ -66,7 +77,7 @@ export const createGameStore = () => {
     viewFen: chess.fen(),
     mode: 'play',
     trainingIsRated: false,
-    trainingOpponentStyle: null,
+    trainingAIPlayStyle: null,
     trainingGamePhase: null,
     trainingAvailableHints: 0,
     trainingUsedHints: 0,
@@ -74,15 +85,12 @@ export const createGameStore = () => {
     isAiThinking: false,
   });
 
-  const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): GameState => {
+  const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): string => {
     const move = chess.move({ from, to, promotion });
     if (!move) {
       throw new Error(`Invalid move from ${from} to ${to} (promotion=${promotion})`);
     }
-    return {
-      fen: chess.fen(),
-      isGameOver: chess.isGameOver(),
-    };
+    return chess.fen();
   };
 
   const startTimer = () => {
@@ -99,7 +107,30 @@ export const createGameStore = () => {
         setState('blackTime', (t) => Math.max(0, t - 1));
         if (state.blackTime < 1) handleTimeOut('w');
       }
-    }, 1000) as unknown as number;
+    }, 1000) as number;
+  };
+
+  const applyAIMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
+    const fenAfterMove = updateGameState(from, to, promotion);
+    batch(() => {
+      const captured = captureCheck(to, fenToBoard(state.fen));
+      if (captured) {
+        handleCapturedPiece(
+          captured,
+          (newWhitePieces) => setState('capturedWhite', newWhitePieces),
+          (newBlackPieces) => setState('capturedBlack', newBlackPieces)
+        );
+      }
+      setState('fen', fenAfterMove);
+      setState('lastMove', { from, to });
+      const hist = chess.history();
+      setState('moveHistory', hist);
+      setState('viewMoveIndex', hist.length - 1);
+      setState('boardSquares', fenToBoard(fenAfterMove));
+      setState('viewFen', fenAfterMove);
+      setState('currentTurn', state.currentTurn === 'w' ? 'b' : 'w');
+    });
+    if (!state.isGameOver) afterMoveChecks(fenAfterMove);
   };
 
   const performAIMove = async () => {
@@ -107,69 +138,31 @@ export const createGameStore = () => {
     setState('isAiThinking', true);
     try {
       const fenAtStart = state.fen;
-      const best = await getBestMove(state.fen);
-      if (!best) {
-        throw Error('No AI best move');
-      }
-      if (state.fen !== fenAtStart) {
-        throw new Error('Engine worker out of sync FEN');
-      }
-      const from = best.slice(0, 2) as Square;
-      const to = best.slice(2, 4) as Square;
-      const promo = best.length === 5 ? best[4] : null;
-
-      const updatedState = promo
-        ? updateGameState(from, to, promo as PromotionPiece)
-        : updateGameState(from, to);
-
-      batch(() => {
-        const captured = captureCheck(to, fenToBoard(state.fen));
-        if (captured) {
-          handleCapturedPiece(
-            captured,
-            (fn) => setState('capturedBlack', fn),
-            (fn) => setState('capturedWhite', fn)
-          );
-        }
-        setState('fen', updatedState.fen);
-        setState('lastMove', { from, to });
-        const hist = chess.history();
-        setState('moveHistory', hist);
-        setState('viewMoveIndex', hist.length - 1);
-        setState('boardSquares', fenToBoard(updatedState.fen));
-        setState('viewFen', updatedState.fen);
-        setState('currentTurn', state.currentTurn === 'w' ? 'b' : 'w');
-      });
-      if (!state.isGameOver) afterMoveChecks(updatedState.fen);
+      const { from, to, promotion } = await computeAiMove(state.fen);
+      if (state.fen !== fenAtStart) throw new Error('Engine worker out of sync FEN');
+      applyAIMove(from as Square, to as Square, promotion as PromotionPiece | undefined);
     } catch (err) {
-      console.error('Engine error:', err);
+      console.error('AI move error:', err);
     } finally {
       setState('isAiThinking', false);
     }
   };
 
-  const startNewGame = (
-    newTimeControl: number,
-    newDifficultyLevel: number,
-    side: Side,
-    options?: {
-      mode?: 'play' | 'training' | 'analysis';
-      trainingIsRated?: boolean;
-      trainingOpponentStyle?:
-        | 'aggressive'
-        | 'defensive'
-        | 'balanced'
-        | 'positional'
-        | 'random'
-        | null;
-      trainingGamePhase?: 'opening' | 'middlegame' | 'endgame';
-      trainingAvailableHints?: number;
-    }
-  ) => {
+  const startNewGame = (options: StartGameOptions) => {
     if (timerId) clearInterval(timerId);
     chess = new Chess();
     chessGameHistory.reset();
-    const mode = options?.mode ?? 'play';
+
+    const {
+      side,
+      mode = 'play',
+      newTimeControl = 5,
+      newDifficultyLevel = 3,
+      trainingIsRated = false,
+      trainingAIPlayStyle = 'balanced',
+      trainingGamePhase = 'opening',
+      trainingAvailableHints = 0,
+    } = options;
 
     batch(() => {
       setState({
@@ -194,10 +187,10 @@ export const createGameStore = () => {
         viewMoveIndex: -1,
         viewFen: chess.fen(),
         mode,
-        trainingIsRated: options?.trainingIsRated ?? false,
-        trainingOpponentStyle: options?.trainingOpponentStyle ?? null,
-        trainingGamePhase: options?.trainingGamePhase ?? null,
-        trainingAvailableHints: options?.trainingAvailableHints ?? 0,
+        trainingIsRated: trainingIsRated,
+        trainingAIPlayStyle: trainingAIPlayStyle,
+        trainingGamePhase: trainingGamePhase,
+        trainingAvailableHints: trainingAvailableHints,
         trainingUsedHints: 0,
         isAiThinking: false,
       });
@@ -327,6 +320,11 @@ export const createGameStore = () => {
   const viewFen = () => state.viewFen;
   const trainingEvalScore = () => state.trainingEvalScore;
   const isAiThinking = () => state.isAiThinking;
+  const trainingIsRated = () => state.trainingIsRated;
+  const trainingAIPlayStyle = () => state.trainingAIPlayStyle;
+  const trainingGamePhase = () => state.trainingGamePhase;
+  const trainingAvailableHints = () => state.trainingAvailableHints;
+  const trainingUsedHints = () => state.trainingUsedHints;
 
   const setFen = (value: string) => setState('fen', value);
   const setWhiteTime = (value: number | ((prev: number) => number)) => setState('whiteTime', value);
@@ -337,8 +335,7 @@ export const createGameStore = () => {
   const setPlayerColor = (value: Side | ((prev: Side) => Side)) => setState('playerColor', value);
   const setBoardView = (value: Side | ((prev: Side) => Side)) => setState('boardView', value);
   const setIsGameOver = (value: boolean) => setState('isGameOver', value);
-  const setGameOverReason = (value: 'checkmate' | 'stalemate' | 'time' | null) =>
-    setState('gameOverReason', value);
+  const setGameOverReason = (value: GameOverReason) => setState('gameOverReason', value);
   const setGameWinner = (value: Side | 'draw' | null) => setState('gameWinner', value);
   const setCapturedWhite = (value: string[] | ((prev: string[]) => string[])) =>
     setState('capturedWhite', value);
@@ -384,6 +381,11 @@ export const createGameStore = () => {
     viewFen,
     trainingEvalScore,
     isAiThinking,
+    trainingIsRated,
+    trainingAIPlayStyle,
+    trainingGamePhase,
+    trainingAvailableHints,
+    trainingUsedHints,
 
     setFen,
     setWhiteTime,

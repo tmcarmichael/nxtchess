@@ -1,0 +1,143 @@
+.panel {
+  display: flex;
+  margin-top: 186px;
+  width: 360px;
+  height: 380px;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: rgba(80, 80, 80, 0.25);
+  border: 1px solid #444;
+  border-radius: 8px;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.buttonPanel {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.gamePanelButton {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: rgba(81, 81, 81, 0.35);
+  border: 1px solid #444;
+  border-radius: 6px;
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.2);
+  color: #c3c3c3;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease-in-out;
+}
+
+.gamePanelButton:hover {
+  background-color: #3f3f3f;
+  color: #fff;
+  transform: scale(1.02);
+}
+
+.gamePanelButton:active {
+  background-color: #666;
+  transform: scale(0.98);
+}
+
+.playerInfo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0;
+  gap: 5px;
+  font-size: 1rem;
+  color: #c3c3c3;
+}
+
+.AIPlayStyle {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #a2ffa2;
+}
+
+.AIPlayStyleLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #c3c3c3;
+}
+
+.difficulty {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #a2ffa2;
+}
+
+.difficultyLabel {
+  font-weight: 200;
+  color: #c3c3c3;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.materialContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100px;
+  color: #ddd;
+  margin-top: auto;
+}
+
+.materialDiff {
+  font-weight: 600;
+  color: #c3c3c3;
+  font-size: 0.9rem;
+  margin-top: 0.8rem;
+}
+
+.capturesContainer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border: 1px solid #444;
+  border-radius: 8px;
+  height: 60px;
+  width: 320px;
+  overflow: hidden;
+  background-color: rgba(81, 81, 81, 0.35);
+}
+
+.capturesContainer .capturesRow {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  flex-wrap: nowrap;
+  height: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.capturedPiece {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+}
+
+.capturedPiece:not(:first-child) {
+  margin-left: -6px;
+}
+
+.capturedPiece img {
+  display: block;
+  width: 24px;
+  height: 24px;
+  cursor: default;
+}

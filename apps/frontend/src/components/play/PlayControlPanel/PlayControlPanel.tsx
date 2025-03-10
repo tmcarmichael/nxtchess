@@ -1,15 +1,15 @@
 import { For, Show, createSignal, createMemo, batch, ParentComponent } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { computeMaterial, fenToBoard } from '../../../services/chessGameService';
-import { PieceType } from '../../../types';
+import { PieceType, StartGameOptions, GameMode } from '../../../types';
 import { useGameStore } from '../../../store/GameContext';
 import Piece from '../../chess/ChessPiece/ChessPiece';
 import ResignModal from '../PlayResignModal/PlayResignModal';
 import ChessClock from '../../chess/ChessClock/ChessClock';
 import { DIFFICULTY_VALUES_ELO } from '../../../utils';
-import styles from './PlayControlsPanel.module.css';
+import styles from './PlayControlPanel.module.css';
 
-const PlayControlsPanel: ParentComponent = () => {
+const PlayControlPanel: ParentComponent = () => {
   const navigate = useNavigate();
   const [_, actions] = useGameStore();
 
@@ -20,7 +20,13 @@ const PlayControlsPanel: ParentComponent = () => {
   };
 
   const handleReplay = () => {
-    actions.startNewGame(5, 3, actions.playerColor() === 'w' ? 'b' : 'w');
+    const newSide = actions.playerColor() === 'w' ? 'b' : 'w';
+    const mode: GameMode = 'play';
+    const playGameConfig: StartGameOptions = {
+      side: newSide,
+      mode: mode,
+    };
+    actions.startNewGame(playGameConfig);
     setShowResignModal(false);
   };
 
@@ -110,7 +116,8 @@ const PlayControlsPanel: ParentComponent = () => {
             </div>
           </Show>
           <div class={styles.difficulty}>
-            <span>Difficulty: {DIFFICULTY_VALUES_ELO[actions.difficulty() - 1]} ELO</span>
+            <span class={styles.difficultyLabel}>Difficulty: </span>
+            <span>{` ${DIFFICULTY_VALUES_ELO[actions.difficulty() - 1]} ELO`}</span>
           </div>
           <div class={styles.materialContainer}>
             <div class={styles.materialDiff}>
@@ -160,4 +167,4 @@ const PlayControlsPanel: ParentComponent = () => {
   );
 };
 
-export default PlayControlsPanel;
+export default PlayControlPanel;

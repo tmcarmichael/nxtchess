@@ -8,10 +8,12 @@
 
 .barBackground {
   position: relative;
+  margin-top: 1.2rem;
   width: 0.8rem;
-  height: 46.6rem;
+  height: 740px;
   background-color: #ccc;
   border-radius: 4px;
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2);
   overflow: hidden;
 }
 

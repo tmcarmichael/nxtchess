@@ -8,7 +8,7 @@ import {
   createEffect,
 } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { Square, PromotionPiece, Side, GameState } from '../../../types';
+import { Square, PromotionPiece, Side } from '../../../types';
 import {
   fenToBoard,
   getLegalMoves,
@@ -154,8 +154,8 @@ const ChessBoardController: ParentComponent = () => {
     }
     try {
       const captured = captureCheck(to, board());
-      const updatedState = updateGameState(from, to);
-      applyMove(from, to, updatedState, captured);
+      const updatedFen = updateGameState(from, to);
+      applyMove(from, to, updatedFen, captured);
     } catch (err: any) {
       console.error('Invalid move:', err.message);
     } finally {
@@ -163,33 +163,30 @@ const ChessBoardController: ParentComponent = () => {
     }
   };
 
-  const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): GameState => {
+  const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): string => {
     const chess = actions.getChessInstance();
     const move = chess.move({ from, to, promotion });
     if (!move) {
       throw new Error(`Invalid move from ${from} to ${to} (promotion=${promotion})`);
     }
-    return {
-      fen: chess.fen(),
-      isGameOver: chess.isGameOver(),
-    };
+    return chess.fen();
   };
 
-  const applyMove = (from: Square, to: Square, updatedState: { fen: string }, captured: any) => {
+  const applyMove = (from: Square, to: Square, updatedFen: string, captured: any) => {
     batch(() => {
       if (captured) {
         handleCapturedPiece(captured, actions.setCapturedBlack, actions.setCapturedWhite);
       }
-      actions.setFen(updatedState.fen);
+      actions.setFen(updatedFen);
       actions.setLastMove({ from, to });
       const hist = actions.getChessInstance().history();
       actions.setMoveHistory(hist);
       actions.setViewMoveIndex(hist.length - 1);
-      actions.setViewFen(updatedState.fen);
+      actions.setViewFen(updatedFen);
     });
-    actions.setBoardSquares(fenToBoard(updatedState.fen));
+    actions.setBoardSquares(fenToBoard(updatedFen));
     actions.setCurrentTurn((prev) => (prev === 'w' ? 'b' : 'w'));
-    actions.afterMoveChecks(updatedState.fen);
+    actions.afterMoveChecks(updatedFen);
     if (!state.isGameOver && state.currentTurn === state.aiSide) {
       actions.performAIMove();
     }
@@ -198,8 +195,8 @@ const ChessBoardController: ParentComponent = () => {
   const finalizePromotion = (from: Square, to: Square, promoPiece: PromotionPiece) => {
     try {
       const captured = captureCheck(to, board());
-      const updatedState = updateGameState(from, to, promoPiece);
-      applyMove(from, to, updatedState, captured);
+      const updatedFen = updateGameState(from, to, promoPiece);
+      applyMove(from, to, updatedFen, captured);
     } catch (err: any) {
       console.error('Invalid promotion move:', err.message);
     } finally {

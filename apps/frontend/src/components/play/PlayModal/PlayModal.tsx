@@ -1,7 +1,7 @@
 import { createSignal, splitProps, Component } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useGameStore } from '../../../store/GameContext';
-import { Side } from '../../../types';
+import { GameMode, Side, StartGameOptions } from '../../../types';
 import {
   TIME_VALUES_MINUTES,
   DIFFICULTY_VALUES_ELO,
@@ -25,8 +25,15 @@ const PlayModal: Component<PlayModalProps> = (props) => {
     const selectedTime = TIME_VALUES_MINUTES[localTimeIndex()];
     const selectedLevel = localDifficultyIndex() + 1;
     const chosenSide = localPlayerColor();
+    const mode: GameMode = 'play';
+    const playGameConfig: StartGameOptions = {
+      side: chosenSide,
+      mode: mode,
+      newTimeControl: selectedTime,
+      newDifficultyLevel: selectedLevel,
+    };
     navigate('/play', { replace: true });
-    actions.startNewGame(selectedTime, selectedLevel, chosenSide);
+    actions.startNewGame(playGameConfig);
     local.onClose();
   };
 

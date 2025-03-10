@@ -109,7 +109,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .rangeSliderLabel {
@@ -237,7 +237,7 @@
   transform: scale(1.1);
   box-shadow: 0 0 12px rgba(56, 255, 189, 0.5);
   background: radial-gradient(circle, rgba(24, 143, 83, 0.6) 25%, rgba(24, 143, 83, 0.4) 70%);
-  animation: pulseCenter 1.8s ease-in-out infinite;
+  animation: iconPulseCenter 1.8s ease-in-out infinite;
 }
 .opponentIcon {
   width: 64px;
@@ -248,7 +248,7 @@
   font-size: 0.75rem;
   color: #ccc;
 }
-@keyframes pulseCenter {
+@keyframes iconPulseCenter {
   0% {
     transform: scale(1);
     opacity: 0.7;
@@ -301,5 +301,67 @@
   .opponentIcon {
     width: 24px;
     height: 24px;
+  }
+}
+
+.knightSelector {
+  display: flex;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.knightButton {
+  width: 64px;
+  height: 64px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.knightButton img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.knightButton:hover {
+  transform: scale(1.2);
+}
+
+.selectedKnight {
+  transform: scale(1.2);
+}
+
+.selectedKnight::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(24, 143, 83, 0.6) 25%, rgba(24, 143, 83, 0) 70%);
+  animation: pulseCenter 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseCenter {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.7;
   }
 }
