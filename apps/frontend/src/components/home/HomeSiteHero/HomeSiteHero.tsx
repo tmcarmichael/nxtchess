@@ -1,7 +1,7 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, onMount, onCleanup, Component, createMemo } from 'solid-js';
-import { useGameStore } from '../../../store/GameContext';
-import { getRandomQuickPlayConfig } from '../../../services/chessGameService';
+import { useGameStore } from '../../../store';
+import { getRandomQuickPlayConfig } from '../../../services/game';
 import styles from './HomeSiteHero.module.css';
 import { StartGameOptions } from '../../../types';
 

@@ -1,12 +1,4 @@
-import {
-  createSignal,
-  batch,
-  Show,
-  onMount,
-  onCleanup,
-  ParentComponent,
-  createEffect,
-} from 'solid-js';
+import { createSignal, batch, Show, ParentComponent, createEffect, splitProps } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Square, PromotionPiece, Side } from '../../../types';
 import {
@@ -14,19 +6,26 @@ import {
   getLegalMoves,
   captureCheck,
   handleCapturedPiece,
-} from '../../../services/chessGameService';
-import { useGameStore } from '../../../store/GameContext';
+  prepareMove,
+  canMovePieceAt,
+} from '../../../services/game';
+import { useGameStore } from '../../../store';
+import { useKeyboardNavigation } from '../../../shared';
 import ChessEvalBar from '../ChessEvalBar/ChessEvalBar';
-import { getEvaluation } from '../../../services/engine/evalEngineWorker';
+import { getEvaluation } from '../../../services/engine';
 import ChessEndModal from '../ChessEndModal/ChessEndModal';
 import ChessPromotionModal from '../../chess/ChessPromotionModal/ChessPromotionModal';
 import ChessBoard from '../../chess/ChessBoard/ChessBoard';
-import PlayModal from '../../play/PlayModal/PlayModal';
-import TrainingModal from '../../training/TrainingModal/TrainingModal';
+import ChessEngineOverlay from '../ChessEngineOverlay/ChessEngineOverlay';
 import styles from './ChessBoardController.module.css';
 
-const ChessBoardController: ParentComponent = () => {
-  const [state, actions] = useGameStore();
+interface ChessBoardControllerProps {
+  onRequestNewGame?: () => void;
+}
+
+const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props) => {
+  const [local] = splitProps(props, ['onRequestNewGame']);
+  const [state, actions, derived] = useGameStore();
   const navigate = useNavigate();
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
@@ -40,37 +39,23 @@ const ChessBoardController: ParentComponent = () => {
     color: Side;
   } | null>(null);
   const [evalScore, setEvalScore] = createSignal<number | null>(null);
-  const [showPlayModal, setShowPlayModal] = createSignal(false);
-  const [showTrainingModal, setShowTrainingModal] = createSignal(false);
   const [showEndModal, setShowEndModal] = createSignal(false);
 
-  const board = () => fenToBoard(state.viewFen);
-
-  onMount(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (state.isGameOver) return;
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        const newIndex = state.viewMoveIndex - 1;
-        if (newIndex >= 0) {
-          actions.setViewMoveIndex(newIndex);
-          actions.jumpToMoveIndex(newIndex);
-        }
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        const newIndex = state.viewMoveIndex + 1;
-        if (newIndex <= state.moveHistory.length - 1) {
-          actions.setViewMoveIndex(newIndex);
-          actions.jumpToMoveIndex(newIndex);
-        }
-      } else if (e.key === 'f') {
-        actions.setBoardView((c) => (c === 'w' ? 'b' : 'w'));
+  useKeyboardNavigation({
+    onPrevious: () => {
+      const newIndex = state.viewMoveIndex - 1;
+      if (newIndex >= 0) {
+        actions.jumpToMoveIndex(newIndex);
       }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    onCleanup(() => {
-      window.removeEventListener('keydown', handleKeyDown);
-    });
+    },
+    onNext: () => {
+      const newIndex = state.viewMoveIndex + 1;
+      if (newIndex <= state.moveHistory.length - 1) {
+        actions.jumpToMoveIndex(newIndex);
+      }
+    },
+    onFlip: actions.flipBoardView,
+    enabled: () => !state.isGameOver,
   });
 
   createEffect(() => {
@@ -89,20 +74,22 @@ const ChessBoardController: ParentComponent = () => {
   });
 
   const resetViewIfNeeded = () => {
-    if (state.viewFen !== state.fen) {
-      actions.setViewFen(state.fen);
+    if (derived.isViewingHistory()) {
       const hist = actions.getChessInstance().history();
-      actions.setViewMoveIndex(hist.length - 1);
+      batch(() => {
+        actions.setState('viewFen', state.fen);
+        actions.setState('viewMoveIndex', hist.length - 1);
+      });
     }
   };
 
   const handleSquareClick = (square: Square) => {
-    if (state.isGameOver || state.isAiThinking) return;
+    if (!derived.canMove()) return;
     resetViewIfNeeded();
     const currentSelection = selectedSquare();
     if (!currentSelection) {
-      const piece = board().find((sq) => sq.square === square)?.piece;
-      if (piece && isPlayerTurn(square)) {
+      const piece = derived.currentBoard().find((sq) => sq.square === square)?.piece;
+      if (piece && canMovePiece(square)) {
         selectSquare(square);
       }
       return;
@@ -115,7 +102,7 @@ const ChessBoardController: ParentComponent = () => {
   };
 
   const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
-    if (state.isGameOver || !isPlayerTurn(square) || state.isAiThinking) return;
+    if (!derived.canMove() || !canMovePiece(square)) return;
     resetViewIfNeeded();
     setDraggedPiece({ square, piece });
     setCursorPosition({ x: event.clientX, y: event.clientY });
@@ -142,18 +129,17 @@ const ChessBoardController: ParentComponent = () => {
   };
 
   const executeMove = (from: Square, to: Square) => {
-    const movingPiece = board().find((sq) => sq.square === from)?.piece;
-    if (!movingPiece) {
+    const board = derived.currentBoard();
+    const movePrep = prepareMove(from, to, board);
+
+    if (movePrep.needsPromotion) {
+      setPendingPromotion(movePrep.promotionInfo);
       clearDraggingState();
       return;
     }
-    if (isPawnPromotion(movingPiece, to)) {
-      setPendingPromotion({ from, to, color: movingPiece[0] as Side });
-      clearDraggingState();
-      return;
-    }
+
     try {
-      const captured = captureCheck(to, board());
+      const captured = captureCheck(to, board);
       const updatedFen = updateGameState(from, to);
       applyMove(from, to, updatedFen, captured);
     } catch (err: any) {
@@ -173,19 +159,23 @@ const ChessBoardController: ParentComponent = () => {
   };
 
   const applyMove = (from: Square, to: Square, updatedFen: string, captured: any) => {
+    const hist = actions.getChessInstance().history();
     batch(() => {
       if (captured) {
-        handleCapturedPiece(captured, actions.setCapturedBlack, actions.setCapturedWhite);
+        handleCapturedPiece(
+          captured,
+          (pieces) => actions.setState('capturedBlack', pieces),
+          (pieces) => actions.setState('capturedWhite', pieces)
+        );
       }
-      actions.setFen(updatedFen);
-      actions.setLastMove({ from, to });
-      const hist = actions.getChessInstance().history();
-      actions.setMoveHistory(hist);
-      actions.setViewMoveIndex(hist.length - 1);
-      actions.setViewFen(updatedFen);
+      actions.setState('fen', updatedFen);
+      actions.setState('lastMove', { from, to });
+      actions.setState('moveHistory', hist);
+      actions.setState('viewMoveIndex', hist.length - 1);
+      actions.setState('viewFen', updatedFen);
+      actions.setState('boardSquares', fenToBoard(updatedFen));
+      actions.setState('currentTurn', (prev) => (prev === 'w' ? 'b' : 'w'));
     });
-    actions.setBoardSquares(fenToBoard(updatedFen));
-    actions.setCurrentTurn((prev) => (prev === 'w' ? 'b' : 'w'));
     actions.afterMoveChecks(updatedFen);
     if (!state.isGameOver && state.currentTurn === state.aiSide) {
       actions.performAIMove();
@@ -194,7 +184,7 @@ const ChessBoardController: ParentComponent = () => {
 
   const finalizePromotion = (from: Square, to: Square, promoPiece: PromotionPiece) => {
     try {
-      const captured = captureCheck(to, board());
+      const captured = captureCheck(to, derived.currentBoard());
       const updatedFen = updateGameState(from, to, promoPiece);
       applyMove(from, to, updatedFen, captured);
     } catch (err: any) {
@@ -205,11 +195,9 @@ const ChessBoardController: ParentComponent = () => {
     }
   };
 
-  const isPlayerTurn = (square: Square) => {
-    if (state.currentTurn !== state.playerColor) return false;
-    const sideToMove = state.fen.split(' ')[1];
-    const piece = board().find((sq) => sq.square === square)?.piece;
-    return !!piece && piece[0] === sideToMove;
+  const canMovePiece = (square: Square) => {
+    if (!derived.isPlayerTurn()) return false;
+    return canMovePieceAt(state.fen, square, state.playerColor, derived.currentBoard());
   };
 
   const selectSquare = (square: Square) => {
@@ -227,21 +215,9 @@ const ChessBoardController: ParentComponent = () => {
     });
   };
 
-  const isPawnPromotion = (piece: string | null, to: Square) => {
-    if (!piece || !piece.endsWith('P')) return false;
-    const rank = parseInt(to[1], 10);
-    return (piece.startsWith('w') && rank === 8) || (piece.startsWith('b') && rank === 1);
-  };
-
   const handlePlayAgain = () => {
     setShowEndModal(false);
-    if (state.mode === 'play') {
-      setShowPlayModal(true);
-    } else if (state.mode === 'training') {
-      setShowTrainingModal(true);
-    } else {
-      setShowPlayModal(true);
-    }
+    local.onRequestNewGame?.();
   };
 
   const handlePromotionChoice = (pieceType: PromotionPiece) => {
@@ -251,6 +227,7 @@ const ChessBoardController: ParentComponent = () => {
   };
 
   const handleCloseEndGame = () => {
+    actions.exitGame();
     navigate('/');
   };
 
@@ -263,7 +240,7 @@ const ChessBoardController: ParentComponent = () => {
 
         <div class={styles.chessBoardContainer}>
           <ChessBoard
-            board={board}
+            board={derived.currentBoard}
             highlightedMoves={highlightedMoves}
             selectedSquare={selectedSquare}
             draggedPiece={draggedPiece}
@@ -275,6 +252,12 @@ const ChessBoardController: ParentComponent = () => {
             checkedKingSquare={() => state.checkedKingSquare}
             boardView={() => state.boardView}
             activePieceColor={() => state.currentTurn}
+          />
+          <ChessEngineOverlay
+            isLoading={derived.isEngineLoading()}
+            hasError={derived.hasEngineError()}
+            errorMessage={state.engineError}
+            onRetry={actions.retryEngineInit}
           />
         </div>
       </div>
@@ -294,14 +277,6 @@ const ChessBoardController: ParentComponent = () => {
           onPromote={handlePromotionChoice}
           onClose={() => setPendingPromotion(null)}
         />
-      </Show>
-
-      <Show when={showPlayModal()}>
-        <PlayModal onClose={() => setShowPlayModal(false)} />
-      </Show>
-
-      <Show when={showTrainingModal()}>
-        <TrainingModal onClose={() => setShowTrainingModal(false)} />
       </Show>
     </div>
   );

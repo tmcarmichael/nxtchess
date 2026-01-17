@@ -1,4 +1,4 @@
-import { AIPlayStyle } from '../types';
+import { AIPlayStyle } from '../../types';
 
 export const TIME_VALUES_MINUTES = [1, 2, 3, 5, 10, 15, 30];
 export const DIFFICULTY_VALUES_LEVEL = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];

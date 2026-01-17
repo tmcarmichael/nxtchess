@@ -1,5 +1,5 @@
 import { createMemo, splitProps, Component } from 'solid-js';
-import { useGameStore } from '../../../store/GameContext';
+import { useGameStore } from '../../../store';
 import styles from './ChessClock.module.css';
 
 interface GameClockProps {

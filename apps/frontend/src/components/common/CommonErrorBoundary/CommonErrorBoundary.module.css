@@ -1,0 +1,66 @@
+.errorContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+  background-color: var(--bg-secondary, #1a1a1a);
+  border-radius: 8px;
+}
+
+.errorContent {
+  text-align: center;
+  max-width: 400px;
+}
+
+.errorTitle {
+  color: var(--text-error, #ef4444);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.errorMessage {
+  color: var(--text-secondary, #a0a0a0);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.errorActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.retryButton {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--accent-primary, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.retryButton:hover {
+  background-color: var(--accent-primary-hover, #2563eb);
+}
+
+.homeButton {
+  padding: 0.75rem 1.5rem;
+  background-color: transparent;
+  color: var(--text-secondary, #a0a0a0);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.homeButton:hover {
+  background-color: var(--bg-tertiary, #2a2a2a);
+  color: var(--text-primary, #ffffff);
+}

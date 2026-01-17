@@ -1,9 +1,9 @@
-import { createContext, useContext } from 'solid-js';
+import { createContext, useContext, JSX } from 'solid-js';
 import { createUserStore } from './userStore';
 
 const UserContext = createContext<ReturnType<typeof createUserStore> | null>(null);
 
-export const UserProvider = (props: { children: any }) => {
+export const UserProvider = (props: { children: JSX.Element }) => {
   const [state, actions] = createUserStore();
 
   return <UserContext.Provider value={[state, actions]}>{props.children}</UserContext.Provider>;
