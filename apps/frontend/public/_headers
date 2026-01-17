@@ -1,0 +1,15 @@
+# Hashed assets - cache forever (Vite adds content hash to filenames)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML - always revalidate
+/*.html
+  Cache-Control: no-cache
+
+# WASM files - cache 1 week
+/*.wasm
+  Cache-Control: public, max-age=604800
+
+# Service worker (if added later) - always revalidate
+/sw.js
+  Cache-Control: no-cache

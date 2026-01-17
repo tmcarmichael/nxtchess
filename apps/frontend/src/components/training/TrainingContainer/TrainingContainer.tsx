@@ -1,9 +1,8 @@
-import { ParentComponent, Show, createSignal } from 'solid-js';
+import { ParentComponent, createSignal } from 'solid-js';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
 import TrainingControlPanel from '../TrainingControlPanel/TrainingControlPanel';
 import TrainingModal from '../TrainingModal/TrainingModal';
-import CommonErrorBoundary from '../../common/CommonErrorBoundary/CommonErrorBoundary';
-import styles from './TrainingContainer.module.css';
+import { GameContainer } from '../../game';
 
 const TrainingContainer: ParentComponent = () => {
   const [showTrainingModal, setShowTrainingModal] = createSignal(false);
@@ -13,19 +12,13 @@ const TrainingContainer: ParentComponent = () => {
   };
 
   return (
-    <CommonErrorBoundary>
-      <div class={styles.trainingContainer}>
-        <Show when={showTrainingModal()}>
-          <TrainingModal onClose={() => setShowTrainingModal(false)} />
-        </Show>
-        <div class={styles.trainingLayout}>
-          <div class={styles.boardWrapper}>
-            <ChessBoardController onRequestNewGame={handleRequestNewGame} />
-          </div>
-          <TrainingControlPanel />
-        </div>
-      </div>
-    </CommonErrorBoundary>
+    <GameContainer
+      layout="two-column"
+      showModal={showTrainingModal()}
+      modalContent={<TrainingModal onClose={() => setShowTrainingModal(false)} />}
+      boardContent={<ChessBoardController onRequestNewGame={handleRequestNewGame} />}
+      rightPanel={<TrainingControlPanel />}
+    />
   );
 };
 

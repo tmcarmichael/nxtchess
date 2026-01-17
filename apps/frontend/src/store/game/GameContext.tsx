@@ -1,6 +1,7 @@
 import { createContext, useContext, onCleanup, JSX } from 'solid-js';
 import { createGameStore } from './gameStore';
-import { terminateAiEngine, terminateEvalEngine } from '../../services/engine';
+import { terminateAiEngine, terminateEvalEngine, enginePool } from '../../services/engine';
+import { sessionManager } from '../../services/game';
 
 type GameStoreValue = ReturnType<typeof createGameStore>;
 
@@ -10,9 +11,18 @@ export const GameProvider = (props: { children: JSX.Element }) => {
   const [state, actions, derived] = createGameStore();
 
   onCleanup(() => {
+    // Clear timers
     actions.clearGameTimer();
+
+    // Terminate legacy singleton engines
     terminateAiEngine();
     terminateEvalEngine();
+
+    // Terminate all pooled engines
+    enginePool.terminateAll();
+
+    // Clean up all sessions
+    sessionManager.destroyAllSessions();
   });
 
   return (

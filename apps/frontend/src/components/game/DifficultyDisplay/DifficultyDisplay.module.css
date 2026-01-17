@@ -1,0 +1,12 @@
+.difficulty {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #a2ffa2;
+}
+
+.difficultyLabel {
+  font-weight: 200;
+  color: #c3c3c3;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}

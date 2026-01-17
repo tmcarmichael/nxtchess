@@ -1,14 +1,7 @@
 import { createSignal, batch, Show, ParentComponent, createEffect, splitProps } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Square, PromotionPiece, Side } from '../../../types';
-import {
-  fenToBoard,
-  getLegalMoves,
-  captureCheck,
-  handleCapturedPiece,
-  prepareMove,
-  canMovePieceAt,
-} from '../../../services/game';
+import { getLegalMoves, prepareMove, canMovePieceAt } from '../../../services/game';
 import { useGameStore } from '../../../store';
 import { useKeyboardNavigation } from '../../../shared';
 import ChessEvalBar from '../ChessEvalBar/ChessEvalBar';
@@ -128,71 +121,23 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     clearDraggingState();
   };
 
-  const executeMove = (from: Square, to: Square) => {
+  const executeMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
     const board = derived.currentBoard();
     const movePrep = prepareMove(from, to, board);
 
-    if (movePrep.needsPromotion) {
+    if (movePrep.needsPromotion && !promotion) {
       setPendingPromotion(movePrep.promotionInfo);
       clearDraggingState();
       return;
     }
 
-    try {
-      const captured = captureCheck(to, board);
-      const updatedFen = updateGameState(from, to);
-      applyMove(from, to, updatedFen, captured);
-    } catch (err: any) {
-      console.error('Invalid move:', err.message);
-    } finally {
-      clearDraggingState();
-    }
-  };
-
-  const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): string => {
-    const chess = actions.getChessInstance();
-    const move = chess.move({ from, to, promotion });
-    if (!move) {
-      throw new Error(`Invalid move from ${from} to ${to} (promotion=${promotion})`);
-    }
-    return chess.fen();
-  };
-
-  const applyMove = (from: Square, to: Square, updatedFen: string, captured: any) => {
-    const hist = actions.getChessInstance().history();
-    batch(() => {
-      if (captured) {
-        handleCapturedPiece(
-          captured,
-          (pieces) => actions.setState('capturedBlack', pieces),
-          (pieces) => actions.setState('capturedWhite', pieces)
-        );
-      }
-      actions.setState('fen', updatedFen);
-      actions.setState('lastMove', { from, to });
-      actions.setState('moveHistory', hist);
-      actions.setState('viewMoveIndex', hist.length - 1);
-      actions.setState('viewFen', updatedFen);
-      actions.setState('boardSquares', fenToBoard(updatedFen));
-      actions.setState('currentTurn', (prev) => (prev === 'w' ? 'b' : 'w'));
-    });
-    actions.afterMoveChecks(updatedFen);
-    if (!state.isGameOver && state.currentTurn === state.aiSide) {
-      actions.performAIMove();
-    }
+    actions.applyPlayerMove(from, to, promotion);
+    clearDraggingState();
   };
 
   const finalizePromotion = (from: Square, to: Square, promoPiece: PromotionPiece) => {
-    try {
-      const captured = captureCheck(to, derived.currentBoard());
-      const updatedFen = updateGameState(from, to, promoPiece);
-      applyMove(from, to, updatedFen, captured);
-    } catch (err: any) {
-      console.error('Invalid promotion move:', err.message);
-    } finally {
-      clearDraggingState();
-      setPendingPromotion(null);
-    }
+    executeMove(from, to, promoPiece);
+    setPendingPromotion(null);
   };
 
   const canMovePiece = (square: Square) => {
