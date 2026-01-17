@@ -1,5 +1,5 @@
 import { For, createMemo, createEffect, on, Component } from 'solid-js';
-import { useGameStore } from '../../../store/GameContext';
+import { useGameStore } from '../../../store';
 import styles from './PlayNavigationPanel.module.css';
 
 const PlayNavigationPanel: Component = () => {

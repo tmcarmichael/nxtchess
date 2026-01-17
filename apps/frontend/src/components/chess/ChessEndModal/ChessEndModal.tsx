@@ -1,11 +1,17 @@
 import { splitProps, Component } from 'solid-js';
-import { useGameStore } from '../../../store/GameContext';
+import { useGameStore } from '../../../store';
 import styles from './ChessEndModal.module.css';
 
 interface ChessEndModalProps {
   onClose: () => void;
   onPlayAgain: () => void;
-  gameOverReason: 'checkmate' | 'stalemate' | 'time' | 'trainingOpeningComplete' | null;
+  gameOverReason:
+    | 'checkmate'
+    | 'stalemate'
+    | 'time'
+    | 'resignation'
+    | 'trainingOpeningComplete'
+    | null;
   gameWinner: 'w' | 'b' | 'draw' | null;
 }
 
@@ -45,6 +51,11 @@ const getGameOverInfoPlay = (
       return {
         heading: 'Time Out',
         message: `${winnerName} wins on time.`,
+      };
+    case 'resignation':
+      return {
+        heading: 'Resignation',
+        message: `${winnerName} wins by resignation.`,
       };
     default:
       return {

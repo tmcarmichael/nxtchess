@@ -1,2 +1,2 @@
-export * from './debug';
+export * from './env';
 export * from './constants';

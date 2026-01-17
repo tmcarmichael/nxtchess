@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.solidjs.com*)",
+      "Bash(yarn type:check:*)",
+      "Bash(yarn build:*)",
+      "Bash(npx vite build)",
+      "Bash(yarn format)",
+      "Bash(done)",
+      "Bash(wc:*)",
+      "Bash(find:*)"
+    ]
+  }
+}

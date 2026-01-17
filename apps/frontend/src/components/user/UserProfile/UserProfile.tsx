@@ -1,6 +1,6 @@
 import { createEffect, Show } from 'solid-js';
 import { useParams } from '@solidjs/router';
-import { useUserStore } from '../../../store/UserContext';
+import { useUserStore } from '../../../store';
 import { SolidApexCharts } from 'solid-apexcharts';
 import styles from './UserProfile.module.css';
 

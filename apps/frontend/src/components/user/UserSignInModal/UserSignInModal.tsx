@@ -1,6 +1,6 @@
 import { splitProps, Component } from 'solid-js';
 import { useSearchParams } from '@solidjs/router';
-import { BACKEND_URL } from '../../../config/env';
+import { BACKEND_URL } from '../../../shared';
 import styles from './UserSignInModal.module.css';
 
 interface SignInModalProps {
