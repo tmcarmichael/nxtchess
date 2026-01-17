@@ -21,7 +21,15 @@ import {
   initEvalEngine,
   getEvaluation,
 } from '../../services/engine';
-import { transition, canMakeMove, shouldRunTimer } from '../../services/game';
+import {
+  transition,
+  canMakeMove,
+  shouldRunTimer,
+  getTurnFromFen,
+  makePiece,
+  sessionManager,
+  GameSession,
+} from '../../services/game';
 
 export type EngineStatus = 'idle' | 'loading' | 'ready' | 'error';
 import {
@@ -30,9 +38,11 @@ import {
   handleCapturedPiece,
   computeMaterial,
 } from '../../services/game';
-import { DIFFICULTY_VALUES_ELO, capitalizeFirst } from '../../shared';
+import { DIFFICULTY_VALUES_ELO, capitalizeFirst, generateSessionId } from '../../shared';
 
 interface GameStoreState {
+  // Session tracking
+  currentSessionId: string | null;
   // Game lifecycle
   lifecycle: GameLifecycle;
   // Core game state
@@ -72,12 +82,17 @@ interface GameStoreState {
 }
 
 export const createGameStore = () => {
+  // Legacy chess instances for backward compatibility
   let chess = new Chess();
   const chessGameHistory = new Chess();
+
+  // Current session reference (synced with sessionManager)
+  let currentSession: GameSession | null = null;
 
   let timerId: number | undefined;
   let pendingGameConfig: StartGameOptions | null = null;
   const [state, setState] = createStore<GameStoreState>({
+    currentSessionId: null,
     lifecycle: 'idle',
     fen: chess.fen(),
     whiteTime: 300,
@@ -111,6 +126,48 @@ export const createGameStore = () => {
     engineError: null,
   });
 
+  // ============================================================================
+  // Session Synchronization
+  // ============================================================================
+
+  const syncStoreFromSession = (session: GameSession) => {
+    const sessionState = session.currentState;
+    batch(() => {
+      setState('fen', sessionState.fen);
+      setState('moveHistory', [...sessionState.moveHistory]);
+      setState('whiteTime', sessionState.times.white);
+      setState('blackTime', sessionState.times.black);
+      setState('capturedWhite', [...sessionState.capturedPieces.white]);
+      setState('capturedBlack', [...sessionState.capturedPieces.black]);
+      setState('lifecycle', sessionState.lifecycle);
+      setState('currentTurn', sessionState.currentTurn);
+      setState('isGameOver', sessionState.isGameOver);
+      setState('gameOverReason', sessionState.gameOverReason);
+      setState('gameWinner', sessionState.gameWinner);
+      setState('lastMove', sessionState.lastMove);
+      setState('checkedKingSquare', sessionState.checkedKingSquare);
+      setState('viewMoveIndex', sessionState.viewMoveIndex);
+      setState('viewFen', sessionState.viewFen);
+      setState('boardSquares', fenToBoard(sessionState.viewFen));
+      setState('trainingEvalScore', sessionState.trainingEvalScore);
+      setState('trainingUsedHints', sessionState.usedHints);
+    });
+  };
+
+  // Subscribe to session events
+  sessionManager.onEvent((event) => {
+    if (event.sessionId !== state.currentSessionId) return;
+
+    const session = sessionManager.getSession(event.sessionId);
+    if (session) {
+      syncStoreFromSession(session);
+    }
+  });
+
+  // ============================================================================
+  // Legacy Move Update (still used for direct chess updates)
+  // ============================================================================
+
   const updateGameState = (from: Square, to: Square, promotion?: PromotionPiece): string => {
     const move = chess.move({ from, to, promotion });
     if (!move) {
@@ -134,30 +191,74 @@ export const createGameStore = () => {
         setState('blackTime', (t) => Math.max(0, t - 1));
         if (state.blackTime < 1) handleTimeOut('w');
       }
+
+      // Sync times to session if available
+      if (currentSession) {
+        sessionManager.applyCommand(currentSession.sessionId, {
+          type: 'UPDATE_TIMES',
+          payload: { times: { white: state.whiteTime, black: state.blackTime } },
+        });
+      }
     }, 1000) as number;
   };
 
-  const applyAIMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
-    const fenAfterMove = updateGameState(from, to, promotion);
-    batch(() => {
-      const captured = captureCheck(to, fenToBoard(state.fen));
-      if (captured) {
-        handleCapturedPiece(
-          captured,
-          (newWhitePieces) => setState('capturedWhite', newWhitePieces),
-          (newBlackPieces) => setState('capturedBlack', newBlackPieces)
-        );
+  const applyMove = (from: Square, to: Square, promotion?: PromotionPiece): boolean => {
+    // Use session if available
+    if (currentSession) {
+      const result = sessionManager.applyCommand(currentSession.sessionId, {
+        type: 'APPLY_MOVE',
+        payload: { from, to, promotion },
+      });
+
+      if (result.success) {
+        // Sync legacy chess instance
+        chess.move({ from, to, promotion });
+        syncStoreFromSession(currentSession);
+        return true;
       }
-      setState('fen', fenAfterMove);
-      setState('lastMove', { from, to });
-      const hist = chess.history();
-      setState('moveHistory', hist);
-      setState('viewMoveIndex', hist.length - 1);
-      setState('boardSquares', fenToBoard(fenAfterMove));
-      setState('viewFen', fenAfterMove);
-      setState('currentTurn', state.currentTurn === 'w' ? 'b' : 'w');
-    });
-    if (!state.isGameOver) afterMoveChecks(fenAfterMove);
+      return false;
+    } else {
+      // Legacy path
+      const fenAfterMove = updateGameState(from, to, promotion);
+      batch(() => {
+        const captured = captureCheck(to, fenToBoard(state.fen));
+        if (captured) {
+          handleCapturedPiece(
+            captured,
+            (newWhitePieces) => setState('capturedWhite', newWhitePieces),
+            (newBlackPieces) => setState('capturedBlack', newBlackPieces)
+          );
+        }
+        setState('fen', fenAfterMove);
+        setState('lastMove', { from, to });
+        const hist = chess.history();
+        setState('moveHistory', hist);
+        setState('viewMoveIndex', hist.length - 1);
+        setState('boardSquares', fenToBoard(fenAfterMove));
+        setState('viewFen', fenAfterMove);
+        setState('currentTurn', state.currentTurn === 'w' ? 'b' : 'w');
+      });
+      return true;
+    }
+  };
+
+  const applyPlayerMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
+    const success = applyMove(from, to, promotion);
+    if (!success) return;
+
+    if (!state.isGameOver) afterMoveChecks(state.fen);
+
+    // Trigger AI move if it's AI's turn
+    if (!state.isGameOver && state.currentTurn === state.aiSide) {
+      performAIMove();
+    }
+  };
+
+  const applyAIMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
+    const success = applyMove(from, to, promotion);
+    if (!success) return;
+
+    if (!state.isGameOver) afterMoveChecks(state.fen);
   };
 
   const performAIMove = async () => {
@@ -197,9 +298,38 @@ export const createGameStore = () => {
       trainingAvailableHints = 0,
     } = options;
 
+    // Create a new session
+    const sessionId = generateSessionId();
+    const session = sessionManager.createSession({
+      sessionId,
+      mode,
+      playerColor: side,
+      opponentType: 'ai',
+      timeControl: { initialTime: newTimeControl * 60 },
+      difficulty: newDifficultyLevel,
+      aiPlayStyle: trainingAIPlayStyle,
+      gamePhase: trainingGamePhase,
+      isRated: trainingIsRated,
+      availableHints: trainingAvailableHints,
+    });
+
+    currentSession = session;
+    sessionManager.setActiveSession(sessionId);
+
+    // Transition session to initializing
+    sessionManager.applyCommand(sessionId, {
+      type: 'SYNC_STATE',
+      payload: {
+        state: {
+          lifecycle: transition('idle', 'START_GAME'),
+        },
+      },
+    });
+
     // Transition to initializing state
     batch(() => {
       setState({
+        currentSessionId: sessionId,
         lifecycle: transition(state.lifecycle, 'START_GAME'),
         fen: chess.fen(),
         timeControl: newTimeControl,
@@ -245,6 +375,16 @@ export const createGameStore = () => {
 
     try {
       await initAiEngine(elo, aiPlayStyle);
+
+      // Transition session to playing state
+      sessionManager.applyCommand(sessionId, {
+        type: 'SYNC_STATE',
+        payload: {
+          state: {
+            lifecycle: transition('initializing', 'ENGINE_READY'),
+          },
+        },
+      });
 
       // Transition to playing state
       batch(() => {
@@ -298,6 +438,18 @@ export const createGameStore = () => {
     try {
       await initAiEngine(elo, trainingAIPlayStyle);
 
+      // Transition session to playing state if exists
+      if (currentSession) {
+        sessionManager.applyCommand(currentSession.sessionId, {
+          type: 'SYNC_STATE',
+          payload: {
+            state: {
+              lifecycle: transition('initializing', 'ENGINE_READY'),
+            },
+          },
+        });
+      }
+
       // Transition to playing state
       batch(() => {
         setState('lifecycle', transition(state.lifecycle, 'ENGINE_READY'));
@@ -331,7 +483,7 @@ export const createGameStore = () => {
   const afterMoveChecks = (newFen: string) => {
     if (state.isGameOver) return;
     const chessFen = new Chess(newFen);
-    const currentTurn = newFen.split(' ')[1] as 'w' | 'b';
+    const currentTurn = getTurnFromFen(newFen);
     updateCheckedKingSquare(chessFen, currentTurn, newFen);
     if (checkForTerminal(chessFen, currentTurn)) {
       return;
@@ -339,10 +491,10 @@ export const createGameStore = () => {
     checkTrainingOpeningEnd(newFen);
   };
 
-  const updateCheckedKingSquare = (chessFen: Chess, currentTurn: 'w' | 'b', newFen: string) => {
+  const updateCheckedKingSquare = (chessFen: Chess, currentTurn: Side, newFen: string) => {
     if (chessFen.isCheck()) {
       const kingSquare = fenToBoard(newFen).find(
-        ({ piece }) => piece === currentTurn + 'K'
+        ({ piece }) => piece === makePiece(currentTurn, 'K')
       )?.square;
       setState('checkedKingSquare', kingSquare ?? null);
     } else {
@@ -350,9 +502,18 @@ export const createGameStore = () => {
     }
   };
 
-  const checkForTerminal = (chessFen: Chess, currentTurn: 'w' | 'b'): boolean => {
+  const checkForTerminal = (chessFen: Chess, currentTurn: Side): boolean => {
     if (chessFen.isCheckmate()) {
       const winner = currentTurn === 'w' ? 'b' : 'w';
+
+      // Update session if exists
+      if (currentSession) {
+        sessionManager.applyCommand(currentSession.sessionId, {
+          type: 'END_GAME',
+          payload: { reason: 'checkmate', winner },
+        });
+      }
+
       batch(() => {
         setState('lifecycle', transition(state.lifecycle, 'GAME_OVER'));
         setState('gameWinner', winner);
@@ -362,6 +523,14 @@ export const createGameStore = () => {
       return true;
     }
     if (chessFen.isStalemate()) {
+      // Update session if exists
+      if (currentSession) {
+        sessionManager.applyCommand(currentSession.sessionId, {
+          type: 'END_GAME',
+          payload: { reason: 'stalemate', winner: 'draw' },
+        });
+      }
+
       batch(() => {
         setState('lifecycle', transition(state.lifecycle, 'GAME_OVER'));
         setState('gameWinner', 'draw');
@@ -387,6 +556,15 @@ export const createGameStore = () => {
       if (state.fen !== fenAtStart) {
         throw new Error('Engine worker out of sync FEN');
       }
+
+      // Update session if exists
+      if (currentSession) {
+        sessionManager.applyCommand(currentSession.sessionId, {
+          type: 'END_GAME',
+          payload: { reason: null, winner: null, evalScore: score },
+        });
+      }
+
       batch(() => {
         setState('lifecycle', transition(state.lifecycle, 'GAME_OVER'));
         setState('trainingEvalScore', score);
@@ -399,6 +577,15 @@ export const createGameStore = () => {
 
   const handleTimeOut = (winnerColor: Side) => {
     if (timerId) clearInterval(timerId);
+
+    // Update session if exists
+    if (currentSession) {
+      sessionManager.applyCommand(currentSession.sessionId, {
+        type: 'TIMEOUT',
+        payload: { losingColor: winnerColor === 'w' ? 'b' : 'w' },
+      });
+    }
+
     batch(() => {
       setState('lifecycle', transition(state.lifecycle, 'GAME_OVER'));
       setState('gameOverReason', 'time');
@@ -408,6 +595,20 @@ export const createGameStore = () => {
   };
 
   const jumpToMoveIndex = (targetIndex: number) => {
+    // Use session if available
+    if (currentSession) {
+      const result = sessionManager.applyCommand(currentSession.sessionId, {
+        type: 'NAVIGATE_HISTORY',
+        payload: { targetIndex },
+      });
+
+      if (result.success) {
+        syncStoreFromSession(currentSession);
+        return;
+      }
+    }
+
+    // Legacy path
     const history = state.moveHistory;
     const clamped = Math.min(Math.max(0, targetIndex), history.length - 1);
 
@@ -427,6 +628,30 @@ export const createGameStore = () => {
   };
 
   const takeBack = () => {
+    // Use session if available
+    if (currentSession) {
+      const result = sessionManager.applyCommand(currentSession.sessionId, {
+        type: 'TAKE_BACK',
+        payload: { playerColor: state.playerColor },
+      });
+
+      if (result.success) {
+        // Sync legacy chess instance
+        chess.undo();
+        if (chess.turn() !== state.playerColor) {
+          chess.undo();
+        }
+        syncStoreFromSession(currentSession);
+
+        // If player is black and board is reset, trigger AI move
+        if (currentSession.moveHistory.length === 0 && state.playerColor === 'b') {
+          performAIMove();
+        }
+        return;
+      }
+    }
+
+    // Legacy path
     const undone1 = chess.undo();
     if (!undone1) return;
 
@@ -488,6 +713,15 @@ export const createGameStore = () => {
     if (!canMakeMove(state.lifecycle)) return;
     if (timerId) clearInterval(timerId);
     const winner = state.playerColor === 'w' ? 'b' : 'w';
+
+    // Update session if exists
+    if (currentSession) {
+      sessionManager.applyCommand(currentSession.sessionId, {
+        type: 'RESIGN',
+        payload: { resigningSide: state.playerColor },
+      });
+    }
+
     batch(() => {
       setState('lifecycle', transition(state.lifecycle, 'GAME_OVER'));
       setState('gameOverReason', 'resignation');
@@ -498,7 +732,15 @@ export const createGameStore = () => {
 
   const exitGame = () => {
     if (timerId) clearInterval(timerId);
+
+    // Clean up session
+    if (currentSession) {
+      sessionManager.destroySession(currentSession.sessionId);
+      currentSession = null;
+    }
+
     batch(() => {
+      setState('currentSessionId', null);
       setState('lifecycle', transition(state.lifecycle, 'EXIT_GAME'));
       setState('isGameOver', false);
       setState('gameOverReason', null);
@@ -560,6 +802,9 @@ export const createGameStore = () => {
 
     /** Whether the game is initializing */
     isInitializing: () => state.lifecycle === 'initializing',
+
+    /** Get the current session (if any) */
+    currentSession: () => currentSession,
   };
 
   const actions = {
@@ -570,6 +815,7 @@ export const createGameStore = () => {
     retryEngineInit,
 
     // Game play actions
+    applyPlayerMove,
     performAIMove,
     handleTimeOut,
     jumpToMoveIndex,
@@ -578,9 +824,14 @@ export const createGameStore = () => {
     flipBoardView,
     clearGameTimer,
 
-    // Direct access
-    getChessInstance: () => chess,
+    // Direct access (backward compatibility)
+    /** @deprecated Use session methods instead. Provided for backward compatibility. */
+    getChessInstance: () => currentSession?.getChessInstance() ?? chess,
     setState,
+
+    // Session access
+    getCurrentSession: () => currentSession,
+    getSessionManager: () => sessionManager,
   };
 
   return [state, actions, derived] as const;

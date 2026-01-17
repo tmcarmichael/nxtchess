@@ -1,10 +1,9 @@
-import { createSignal, Show, ParentComponent } from 'solid-js';
+import { createSignal, ParentComponent } from 'solid-js';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
 import PlayControlPanel from '../PlayControlPanel/PlayControlPanel';
 import PlayModal from '../PlayModal/PlayModal';
 import PlayNavigationPanel from '../PlayNavigationPanel/PlayNavigationPanel';
-import CommonErrorBoundary from '../../common/CommonErrorBoundary/CommonErrorBoundary';
-import styles from './PlayContainer.module.css';
+import { GameContainer } from '../../game';
 
 const PlayContainer: ParentComponent = () => {
   const [showPlayModal, setShowPlayModal] = createSignal(false);
@@ -14,24 +13,14 @@ const PlayContainer: ParentComponent = () => {
   };
 
   return (
-    <CommonErrorBoundary>
-      <div class={styles.gameContainer}>
-        <Show when={showPlayModal()}>
-          <PlayModal onClose={() => setShowPlayModal(false)} />
-        </Show>
-        <div class={styles.gameLayout}>
-          <div class={styles.panelWrapper}>
-            <PlayNavigationPanel />
-          </div>
-          <div class={styles.boardWrapper}>
-            <ChessBoardController onRequestNewGame={handleRequestNewGame} />
-          </div>
-          <div class={styles.panelWrapper}>
-            <PlayControlPanel />
-          </div>
-        </div>
-      </div>
-    </CommonErrorBoundary>
+    <GameContainer
+      layout="three-column"
+      showModal={showPlayModal()}
+      modalContent={<PlayModal onClose={() => setShowPlayModal(false)} />}
+      leftPanel={<PlayNavigationPanel />}
+      boardContent={<ChessBoardController onRequestNewGame={handleRequestNewGame} />}
+      rightPanel={<PlayControlPanel />}
+    />
   );
 };
 

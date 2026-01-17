@@ -1,4 +1,5 @@
 import { StockfishEngine, EngineError } from './StockfishEngine';
+import { engineService } from './engineService';
 
 // Configuration
 const ENGINE_EVAL_TIMEOUT_MS = 10000; // 10 seconds for evaluation
@@ -9,16 +10,25 @@ export { EngineError };
 // Keep EvalEngineError as alias for backwards compatibility
 export { EngineError as EvalEngineError };
 
+// Legacy singleton engine for backward compatibility
 const evalEngine = new StockfishEngine({
   name: 'Eval Engine',
   initTimeoutMs: 10000,
   operationTimeoutMs: ENGINE_EVAL_TIMEOUT_MS,
 });
 
+/**
+ * Initialize the eval engine for single-game mode (backward compatibility).
+ * For multi-game support, use engineService.initEvalEngine(gameId).
+ */
 export const initEvalEngine = async (): Promise<void> => {
   await evalEngine.init();
 };
 
+/**
+ * Get position evaluation for single-game mode (backward compatibility).
+ * For multi-game support, use engineService.getEvaluation(gameId, fen, depth).
+ */
 export const getEvaluation = async (fen: string, depth?: number): Promise<number> => {
   if (!evalEngine.isInitialized) {
     // Return 0 instead of throwing - evaluation is non-critical
@@ -73,8 +83,45 @@ export const getEvaluation = async (fen: string, depth?: number): Promise<number
   }
 };
 
+/**
+ * Terminate the eval engine for single-game mode (backward compatibility).
+ * For multi-game support, use engineService.releaseEvalEngine(gameId).
+ */
 export const terminateEvalEngine = () => {
   evalEngine.terminate();
 };
 
+/**
+ * Check if the eval engine is initialized for single-game mode.
+ * For multi-game support, use engineService.isEvalEngineInitialized(gameId).
+ */
 export const isEvalEngineInitialized = () => evalEngine.isInitialized;
+
+// ============================================================================
+// Multi-game API (forwards to engineService)
+// ============================================================================
+
+/**
+ * Initialize eval engine for a specific game.
+ */
+export const initEvalEngineForGame = async (gameId: string): Promise<void> => {
+  return engineService.initEvalEngine(gameId);
+};
+
+/**
+ * Get position evaluation for a specific game.
+ */
+export const getEvaluationForGame = async (
+  gameId: string,
+  fen: string,
+  depth?: number
+): Promise<number> => {
+  return engineService.getEvaluation(gameId, fen, depth);
+};
+
+/**
+ * Release eval engine for a specific game.
+ */
+export const releaseEvalEngineForGame = (gameId: string) => {
+  engineService.releaseEvalEngine(gameId);
+};

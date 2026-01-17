@@ -1,6 +1,7 @@
 import { JSX, splitProps, For, Component, createMemo } from 'solid-js';
 import Piece from '../ChessPiece/ChessPiece';
 import { PieceType, BoardSquare, Square, Side } from '../../../types';
+import { isPieceSide } from '../../../services/game';
 import styles from './ChessBoard.module.css';
 
 interface ChessBoardProps {
@@ -71,7 +72,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
         isHighlighted &&
         !!piece &&
         !!local.activePieceColor() &&
-        piece[0] !== local.activePieceColor();
+        !isPieceSide(piece, local.activePieceColor());
       const isCheckedKing = checkedSquare === square;
       const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
       const view = local.boardView();

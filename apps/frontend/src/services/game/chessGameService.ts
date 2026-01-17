@@ -1,5 +1,7 @@
 import { Chess } from 'chess.js';
 import { Square, BoardSquare, PIECE_VALUES, PromotionPiece, Side } from '../../types';
+import { getTurnFromFen } from './fenUtils';
+import { getPieceColor, makePiece } from './pieceUtils';
 
 // ============================================================================
 // Types
@@ -93,7 +95,7 @@ export const canMovePieceAt = (
   playerColor: Side,
   board: BoardSquare[]
 ): boolean => {
-  const sideToMove = fen.split(' ')[1];
+  const sideToMove = getTurnFromFen(fen);
   if (sideToMove !== playerColor) return false;
 
   const piece = board.find((sq) => sq.square === square)?.piece;
@@ -107,10 +109,8 @@ export const isPawnPromotion = (piece: string | null, to: Square): boolean => {
   return (piece.startsWith('w') && rank === 8) || (piece.startsWith('b') && rank === 1);
 };
 
-/** Get the piece color from a piece string (e.g., 'wP' -> 'w') */
-export const getPieceColor = (piece: string): Side => {
-  return piece[0] as Side;
-};
+// getPieceColor is now imported from pieceUtils.ts
+export { getPieceColor } from './pieceUtils';
 
 // ============================================================================
 // Capture Functions
@@ -164,7 +164,7 @@ export const handleCapturedPiece = (
 
 /** Find the king's square for the given color */
 const findKingSquare = (board: BoardSquare[], color: Side): Square | null => {
-  const kingPiece = color + 'K';
+  const kingPiece = makePiece(color, 'K');
   const kingSquare = board.find((sq) => sq.piece === kingPiece);
   return kingSquare?.square ?? null;
 };
@@ -205,7 +205,7 @@ export const executeMove = (
   // Find checked king if in check
   let checkedKingSquare: Square | null = null;
   if (isCheck) {
-    const currentTurn = newFen.split(' ')[1] as Side;
+    const currentTurn = getTurnFromFen(newFen);
     checkedKingSquare = findKingSquare(newBoard, currentTurn);
   }
 

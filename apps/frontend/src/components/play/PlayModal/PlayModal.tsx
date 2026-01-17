@@ -3,6 +3,7 @@ import { useNavigate } from '@solidjs/router';
 import { useGameStore } from '../../../store';
 import { GameMode, Side, StartGameOptions } from '../../../types';
 import { TIME_VALUES_MINUTES } from '../../../shared';
+import { preferences } from '../../../services';
 import { ChessGameModal } from '../../chess/ChessGameModal';
 import { ChessSideSelector } from '../../chess/ChessSideSelector';
 import { ChessDifficultySlider } from '../../chess/ChessDifficultySlider';
@@ -16,15 +17,32 @@ const PlayModal: Component<PlayModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose']);
   const [_, actions] = useGameStore();
   const navigate = useNavigate();
-  const [localTimeIndex, setLocalTimeIndex] = createSignal(TIME_VALUES_MINUTES.indexOf(5));
-  const [localDifficultyIndex, setLocalDifficultyIndex] = createSignal(3);
-  const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
+
+  // Load saved preferences with bounds validation
+  const savedPrefs = preferences.get();
+  const safeTimeIndex = Math.min(
+    Math.max(0, savedPrefs.lastTimeIndex),
+    TIME_VALUES_MINUTES.length - 1
+  );
+  const safeDifficultyIndex = Math.min(Math.max(0, savedPrefs.lastDifficultyIndex), 7);
+
+  const [localTimeIndex, setLocalTimeIndex] = createSignal(safeTimeIndex);
+  const [localDifficultyIndex, setLocalDifficultyIndex] = createSignal(safeDifficultyIndex);
+  const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>(savedPrefs.lastPlayerColor);
 
   const handleStartGame = () => {
     const selectedTime = TIME_VALUES_MINUTES[localTimeIndex()];
     const selectedLevel = localDifficultyIndex() + 1;
     const chosenSide = localPlayerColor();
     const mode: GameMode = 'play';
+
+    // Save preferences for next session
+    preferences.set({
+      lastTimeIndex: localTimeIndex(),
+      lastDifficultyIndex: localDifficultyIndex(),
+      lastPlayerColor: chosenSide,
+    });
+
     const playGameConfig: StartGameOptions = {
       side: chosenSide,
       mode: mode,
