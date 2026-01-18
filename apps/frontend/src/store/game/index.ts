@@ -1,2 +1,17 @@
-export { GameProvider, useGameStore } from './GameContext';
-export { createGameStore, type EngineStatus } from './gameStore';
+// Context and hooks
+export { GameProvider, useGameStore, useGame, type GameContextValue } from './GameContext';
+
+// Individual stores (for advanced usage)
+export {
+  createTimerStore,
+  createEngineStore,
+  createMultiplayerStore,
+  createUIStore,
+  createChessStore,
+  type TimerStore,
+  type EngineStore,
+  type EngineStatus,
+  type MultiplayerStore,
+  type UIStore,
+  type ChessStore,
+} from './stores';

@@ -1,4 +1,13 @@
-import { createSignal, batch, Show, ParentComponent, createEffect, splitProps } from 'solid-js';
+import {
+  createSignal,
+  batch,
+  Show,
+  ParentComponent,
+  createEffect,
+  splitProps,
+  on,
+  onCleanup,
+} from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { Square, PromotionPiece, Side } from '../../../types';
 import { getLegalMoves, prepareMove, canMovePieceAt } from '../../../services/game';
@@ -51,28 +60,35 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     enabled: () => !state.isGameOver,
   });
 
-  createEffect(() => {
-    if (state.mode === 'training') {
-      const currentFen = state.fen;
-      getEvaluation(currentFen).then((score: number) => {
-        setEvalScore(score ?? null);
-      });
-    }
-  });
+  // Only re-evaluate when FEN or mode changes (not on every state update)
+  createEffect(
+    on(
+      () => [state.fen, state.mode] as const,
+      ([currentFen, mode]) => {
+        if (mode === 'training') {
+          getEvaluation(currentFen).then((score: number) => {
+            setEvalScore(score ?? null);
+          });
+        }
+      }
+    )
+  );
 
-  createEffect(() => {
-    if (state.isGameOver) {
-      setShowEndModal(true);
-    }
-  });
+  createEffect(
+    on(
+      () => state.isGameOver,
+      (isGameOver) => {
+        if (isGameOver) {
+          setShowEndModal(true);
+        }
+      }
+    )
+  );
 
   const resetViewIfNeeded = () => {
     if (derived.isViewingHistory()) {
-      const hist = actions.getChessInstance().history();
-      batch(() => {
-        actions.setState('viewFen', state.fen);
-        actions.setState('viewMoveIndex', hist.length - 1);
-      });
+      // Jump to latest move to reset view
+      actions.jumpToMoveIndex(state.moveHistory.length - 1);
     }
   };
 
@@ -104,11 +120,20 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     event.dataTransfer?.setDragImage(new Image(), 0, 0);
   };
 
+  // RAF-throttled mouse move to prevent 60+ style recalcs/second
+  let rafId: number | null = null;
   const handleMouseMove = (e: MouseEvent) => {
     if (draggedPiece()) {
-      setCursorPosition({ x: e.clientX, y: e.clientY });
+      if (rafId !== null) return; // Skip if RAF pending
+      rafId = requestAnimationFrame(() => {
+        setCursorPosition({ x: e.clientX, y: e.clientY });
+        rafId = null;
+      });
     }
   };
+  onCleanup(() => {
+    if (rafId !== null) cancelAnimationFrame(rafId);
+  });
 
   const handleMouseUp = (targetSquare: Square) => {
     if (state.isGameOver) return;

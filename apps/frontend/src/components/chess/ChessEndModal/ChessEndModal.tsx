@@ -26,10 +26,7 @@ const getGameOverInfoTraining = (finalEvalScore: number | null): GameOverInfo =>
   };
 };
 
-const getGameOverInfoPlay = (
-  reason: ExtendedGameOverReason,
-  winner: GameWinner
-): GameOverInfo => {
+const getGameOverInfoPlay = (reason: ExtendedGameOverReason, winner: GameWinner): GameOverInfo => {
   if (winner === 'draw') {
     return { heading: 'Draw', message: '' };
   }

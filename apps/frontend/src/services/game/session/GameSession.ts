@@ -117,6 +117,12 @@ export class GameSession {
           return this.handleUpdateTimes(command.payload);
         case 'NAVIGATE_HISTORY':
           return this.handleNavigateHistory(command.payload);
+        case 'OPTIMISTIC_MOVE':
+          return this.handleOptimisticMove(command.payload);
+        case 'CONFIRM_MOVE':
+          return this.handleConfirmMove(command.payload);
+        case 'REJECT_MOVE':
+          return this.handleRejectMove(command.payload);
         default:
           return {
             success: false,
@@ -475,6 +481,81 @@ export class GameSession {
     return { success: true, newState: this._state };
   }
 
+  private handleOptimisticMove(payload: {
+    from: Square;
+    to: Square;
+    promotion?: PromotionPiece;
+  }): CommandResult {
+    // Save rollback point before optimistic update
+    this.pushStateHistory();
+
+    // Apply the move using normal handler
+    const result = this.handleApplyMove(payload);
+    if (!result.success) {
+      return result;
+    }
+
+    // Clear any previous move error on successful optimistic move
+    this._state = {
+      ...this._state,
+      moveError: null,
+    };
+
+    return { success: true, newState: this._state };
+  }
+
+  private handleConfirmMove(payload: {
+    serverFen: string;
+    whiteTimeMs: number;
+    blackTimeMs: number;
+  }): CommandResult {
+    // Server confirmed the move - update confirmed index and sync times
+    this._state = {
+      ...this._state,
+      lastConfirmedMoveIndex: this._state.moveHistory.length - 1,
+      moveError: null,
+      times: {
+        white: payload.whiteTimeMs / 1000,
+        black: payload.blackTimeMs / 1000,
+      },
+    };
+
+    return { success: true, newState: this._state };
+  }
+
+  private handleRejectMove(payload: { serverFen: string; reason: string }): CommandResult {
+    // Rollback to last confirmed state
+    const rollbackIndex = this._state.lastConfirmedMoveIndex;
+
+    // Reset chess instance and replay moves up to confirmed point
+    this.chess.reset();
+    for (let i = 0; i <= rollbackIndex; i++) {
+      if (i >= 0 && i < this._state.moveHistory.length) {
+        this.chess.move(this._state.moveHistory[i]);
+      }
+    }
+
+    // Sync to authoritative server state
+    this.chess.load(payload.serverFen);
+    this.boardCache.load(payload.serverFen);
+
+    const newHistory = this.chess.history();
+
+    this._state = {
+      ...this._state,
+      fen: payload.serverFen,
+      viewFen: payload.serverFen,
+      moveHistory: newHistory,
+      viewMoveIndex: newHistory.length - 1,
+      currentTurn: this.boardCache.turn as 'w' | 'b',
+      lastMove: null,
+      checkedKingSquare: this.boardCache.checkedKingSquare,
+      moveError: payload.reason,
+    };
+
+    return { success: true, newState: this._state };
+  }
+
   // ============================================================================
   // Private Helper Methods
   // ============================================================================
@@ -498,6 +579,8 @@ export class GameSession {
       viewFen: INITIAL_FEN,
       trainingEvalScore: null,
       usedHints: 0,
+      lastConfirmedMoveIndex: -1,
+      moveError: null,
     };
   }
 

@@ -20,6 +20,9 @@ export type {
   EndGameCommand,
   UpdateTimesCommand,
   NavigateHistoryCommand,
+  OptimisticMoveCommand,
+  ConfirmMoveCommand,
+  RejectMoveCommand,
   GameCommand,
   // Results
   CommandSuccess,

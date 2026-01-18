@@ -24,7 +24,10 @@
       "Bash(yarn format)",
       "Bash(ls:*)",
       "Bash(wc:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(xargs:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ]
   }
 }

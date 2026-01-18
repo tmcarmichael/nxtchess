@@ -2,7 +2,7 @@
 export type {
   ConnectionState,
   PlayerInfo,
-  TimeControl,
+  TimeControl as SyncTimeControl,
   ClientMessage,
   GameCreateData,
   GameJoinData,
