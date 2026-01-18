@@ -27,6 +27,7 @@ const (
 type Client struct {
 	ID     string
 	UserID string // Empty for anonymous users
+	IP     string // Client IP for connection limiting
 	Hub    *Hub
 	Conn   *websocket.Conn
 	Send   chan []byte

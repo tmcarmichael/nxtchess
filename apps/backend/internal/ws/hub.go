@@ -21,6 +21,9 @@ type Hub struct {
 
 	// Game manager for game-related operations
 	games *GameManager
+
+	// Connection limiter callback for cleanup
+	onDisconnect func(ip string)
 }
 
 // NewHub creates a new Hub
@@ -54,6 +57,11 @@ func (h *Hub) Run() {
 				if gameID := client.GetGameID(); gameID != "" {
 					h.games.HandleDisconnect(client, gameID)
 				}
+
+				// Notify connection limiter
+				if h.onDisconnect != nil && client.IP != "" {
+					h.onDisconnect(client.IP)
+				}
 			}
 			h.mu.Unlock()
 			logger.Info("Client disconnected", logger.F("clientId", client.ID, "totalClients", len(h.clients)))
@@ -73,6 +81,11 @@ func (h *Hub) GetClientCount() int {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	return len(h.clients)
+}
+
+// SetOnDisconnect sets the callback for when a client disconnects
+func (h *Hub) SetOnDisconnect(fn func(ip string)) {
+	h.onDisconnect = fn
 }
 
 // HandleMessage routes a message to the appropriate handler

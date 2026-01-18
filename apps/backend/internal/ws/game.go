@@ -44,9 +44,59 @@ type GameManager struct {
 
 // NewGameManager creates a new game manager
 func NewGameManager(hub *Hub) *GameManager {
-	return &GameManager{
+	gm := &GameManager{
 		games: make(map[string]*GameState),
 		hub:   hub,
+	}
+	// Start garbage collection goroutine
+	go gm.garbageCollect()
+	return gm
+}
+
+// garbageCollect periodically removes ended games from memory
+func (gm *GameManager) garbageCollect() {
+	ticker := time.NewTicker(1 * time.Minute)
+	for range ticker.C {
+		now := time.Now()
+		toDelete := []string{}
+
+		// Phase 1: Collect candidates with read lock to minimize contention
+		gm.mu.RLock()
+		for id, game := range gm.games {
+			game.mu.RLock()
+			shouldDelete := false
+			if game.Status == "ended" && now.Sub(game.LastMoveAt) > 5*time.Minute {
+				shouldDelete = true
+			} else if game.Status == "waiting" && now.Sub(game.CreatedAt) > 30*time.Minute {
+				shouldDelete = true
+			}
+			game.mu.RUnlock()
+
+			if shouldDelete {
+				toDelete = append(toDelete, id)
+			}
+		}
+		gm.mu.RUnlock()
+
+		// Phase 2: Delete with write lock only if needed
+		if len(toDelete) > 0 {
+			gm.mu.Lock()
+			for _, id := range toDelete {
+				if game, exists := gm.games[id]; exists {
+					game.mu.RLock()
+					stillExpired := (game.Status == "ended" && now.Sub(game.LastMoveAt) > 5*time.Minute) ||
+						(game.Status == "waiting" && now.Sub(game.CreatedAt) > 30*time.Minute)
+					game.mu.RUnlock()
+					if stillExpired {
+						delete(gm.games, id)
+					}
+				}
+			}
+			remaining := len(gm.games)
+			gm.mu.Unlock()
+
+			logger.Info("Game garbage collection", logger.F("removed", len(toDelete), "remaining", remaining))
+		}
 	}
 }
 
