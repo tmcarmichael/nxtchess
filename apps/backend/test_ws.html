@@ -1,0 +1,273 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WebSocket Test - NXT Chess</title>
+    <style>
+      body {
+        font-family: monospace;
+        padding: 20px;
+        background: #1a1a1a;
+        color: #fff;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #4ade80;
+      }
+      .panel {
+        background: #2a2a2a;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 8px;
+      }
+      button {
+        background: #4ade80;
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        margin: 5px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      button:hover {
+        background: #22c55e;
+      }
+      button:disabled {
+        background: #555;
+        color: #888;
+        cursor: not-allowed;
+      }
+      input {
+        background: #333;
+        border: 1px solid #555;
+        color: #fff;
+        padding: 8px;
+        margin: 5px;
+        border-radius: 4px;
+      }
+      #log {
+        background: #000;
+        padding: 10px;
+        height: 300px;
+        overflow-y: auto;
+        font-size: 12px;
+        border-radius: 4px;
+      }
+      .sent {
+        color: #4ade80;
+      }
+      .received {
+        color: #60a5fa;
+      }
+      .error {
+        color: #f87171;
+      }
+      .info {
+        color: #fbbf24;
+      }
+      .status {
+        padding: 5px 10px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+      .connected {
+        background: #22c55e;
+      }
+      .disconnected {
+        background: #ef4444;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔌 WebSocket Test</h1>
+
+      <div class="panel">
+        <strong>Status:</strong>
+        <span id="status" class="status disconnected">Disconnected</span>
+        <span id="clientInfo"></span>
+      </div>
+
+      <div class="panel">
+        <h3>Connection</h3>
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+        <button onclick="ping()">Ping</button>
+      </div>
+
+      <div class="panel">
+        <h3>Game Actions</h3>
+        <button onclick="createGame()">Create Game</button>
+        <input type="text" id="gameIdInput" placeholder="Game ID" />
+        <button onclick="joinGame()">Join Game</button>
+      </div>
+
+      <div class="panel">
+        <h3>Move (when in game)</h3>
+        <input type="text" id="fromSquare" placeholder="From (e.g., e2)" style="width: 80px" />
+        <input type="text" id="toSquare" placeholder="To (e.g., e4)" style="width: 80px" />
+        <button onclick="makeMove()">Make Move</button>
+        <button onclick="resign()">Resign</button>
+      </div>
+
+      <div class="panel">
+        <h3>Log</h3>
+        <button onclick="clearLog()">Clear</button>
+        <div id="log"></div>
+      </div>
+    </div>
+
+    <script>
+      let ws = null;
+      let currentGameId = null;
+
+      function log(msg, type = "info") {
+        const logDiv = document.getElementById("log");
+        const time = new Date().toLocaleTimeString();
+        logDiv.innerHTML += `<div class="${type}">[${time}] ${msg}</div>`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      function updateStatus(connected) {
+        const status = document.getElementById("status");
+        if (connected) {
+          status.textContent = "Connected";
+          status.className = "status connected";
+        } else {
+          status.textContent = "Disconnected";
+          status.className = "status disconnected";
+        }
+      }
+
+      function connect() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          log("Already connected", "error");
+          return;
+        }
+
+        const wsUrl = "ws://localhost:8080/ws";
+        log(`Connecting to ${wsUrl}...`, "info");
+
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          log("Connected!", "info");
+          updateStatus(true);
+        };
+
+        ws.onclose = (e) => {
+          log(`Disconnected (code: ${e.code}, reason: ${e.reason || "none"})`, "info");
+          updateStatus(false);
+          ws = null;
+        };
+
+        ws.onerror = (e) => {
+          log("WebSocket error", "error");
+          console.error(e);
+        };
+
+        ws.onmessage = (e) => {
+          const msg = JSON.parse(e.data);
+          log(`← ${JSON.stringify(msg, null, 2)}`, "received");
+
+          // Handle specific message types
+          if (msg.type === "GAME_CREATED" || msg.type === "GAME_JOINED") {
+            currentGameId = msg.data.gameId;
+            document.getElementById("gameIdInput").value = currentGameId;
+            document.getElementById("clientInfo").textContent =
+              `Game: ${currentGameId}, Color: ${msg.data.color}`;
+          }
+          if (msg.type === "GAME_STARTED") {
+            log(`Game started! FEN: ${msg.data.fen}`, "info");
+          }
+          if (msg.type === "GAME_ENDED") {
+            log(`Game ended! Winner: ${msg.data.result}, Reason: ${msg.data.reason}`, "info");
+            currentGameId = null;
+          }
+        };
+      }
+
+      function disconnect() {
+        if (ws) {
+          ws.close();
+        }
+      }
+
+      function send(msg) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          log("Not connected!", "error");
+          return;
+        }
+        const json = JSON.stringify(msg);
+        log(`→ ${json}`, "sent");
+        ws.send(json);
+      }
+
+      function ping() {
+        send({ type: "PING" });
+      }
+
+      function createGame() {
+        send({
+          type: "GAME_CREATE",
+          data: {
+            timeControl: { initialTime: 600, increment: 0 },
+          },
+        });
+      }
+
+      function joinGame() {
+        const gameId = document.getElementById("gameIdInput").value.trim();
+        if (!gameId) {
+          log("Enter a game ID", "error");
+          return;
+        }
+        send({
+          type: "GAME_JOIN",
+          data: { gameId: gameId },
+        });
+      }
+
+      function makeMove() {
+        if (!currentGameId) {
+          log("Not in a game!", "error");
+          return;
+        }
+        const from = document.getElementById("fromSquare").value.trim();
+        const to = document.getElementById("toSquare").value.trim();
+        if (!from || !to) {
+          log("Enter from and to squares", "error");
+          return;
+        }
+        send({
+          type: "MOVE",
+          data: {
+            gameId: currentGameId,
+            from: from,
+            to: to,
+          },
+        });
+      }
+
+      function resign() {
+        if (!currentGameId) {
+          log("Not in a game!", "error");
+          return;
+        }
+        send({
+          type: "RESIGN",
+          data: { gameId: currentGameId },
+        });
+      }
+
+      function clearLog() {
+        document.getElementById("log").innerHTML = "";
+      }
+
+      // TEST: Auto-connect on page load
+      // connect();
+    </script>
+  </body>
+</html>

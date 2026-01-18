@@ -2,14 +2,15 @@ package controllers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/httpx"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/middleware"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/models"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/validation"
 )
 
 func UserProfileHandler(w http.ResponseWriter, r *http.Request) {
@@ -21,8 +22,8 @@ func UserProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := database.GetUserProfileByUsername(searchedUsername)
 	if err != nil {
-		log.Printf("[UserProfileHandler] DB error: %v", err)
-		httpx.WriteJSONError(w, http.StatusInternalServerError, "Internal Server Error")
+		logger.Error("Failed to get user profile", logger.F("username", searchedUsername, "error", err.Error()))
+		httpx.WriteJSONError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	if user == nil {
@@ -47,7 +48,7 @@ func CheckUsernameHandler(w http.ResponseWriter, r *http.Request) {
 
 	username, err := database.GetUsernameByID(userID)
 	if err != nil {
-		log.Printf("[CheckUsernameHandler] DB error: %v", err)
+		logger.Error("Failed to get username", logger.F("userId", userID, "error", err.Error()))
 		httpx.WriteJSONError(w, http.StatusInternalServerError, "Database error")
 		return
 	}
@@ -78,9 +79,19 @@ func SetUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	taken, err := database.UsernameExists(req.Username)
+	// Validate username
+	if err := validation.ValidateUsername(req.Username); err != nil {
+		httpx.WriteJSONError(w, http.StatusBadRequest, err.Message)
+		return
+	}
+
+	// Sanitize username
+	username := validation.SanitizeUsername(req.Username)
+
+	// Check if already taken
+	taken, err := database.UsernameExists(username)
 	if err != nil {
-		log.Printf("[SetUsernameHandler] error checking username: %v", err)
+		logger.Error("Failed to check username availability", logger.F("username", username, "error", err.Error()))
 		httpx.WriteJSONError(w, http.StatusInternalServerError, "Database error")
 		return
 	}
@@ -89,14 +100,16 @@ func SetUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := database.UpsertUsername(userID, req.Username); err != nil {
-		log.Printf("[SetUsernameHandler] upsert error: %v", err)
+	// Set the username
+	if err := database.UpsertUsername(userID, username); err != nil {
+		logger.Error("Failed to set username", logger.F("userId", userID, "username", username, "error", err.Error()))
 		httpx.WriteJSONError(w, http.StatusInternalServerError, "Failed to set username")
 		return
 	}
 
-	log.Printf("[SetUsernameHandler] Upsert succeeded for userID=%s, username=%s", userID, req.Username)
+	logger.Info("Username set", logger.F("userId", userID, "username", username))
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{
-		"message": "Username set successfully",
+		"message":  "Username set successfully",
+		"username": username,
 	})
 }

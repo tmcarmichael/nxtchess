@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 type Config struct {
 	Port                string
+	Environment         string // "development" or "production"
+	LogLevel            string // "DEBUG", "INFO", "WARN", "ERROR"
+	LogJSON             bool   // true for JSON output (production)
 	GoogleClientID      string
 	GoogleClientSecret  string
 	GitHubClientID      string
@@ -18,14 +22,38 @@ type Config struct {
 	BackendURL          string
 }
 
+// IsProd returns true if running in production environment
+func (c *Config) IsProd() bool {
+	return c.Environment == "production"
+}
+
 func Load() *Config {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
+	env := strings.ToLower(os.Getenv("ENV"))
+	if env == "" {
+		env = "development"
+	}
+
+	logLevel := strings.ToUpper(os.Getenv("LOG_LEVEL"))
+	if logLevel == "" {
+		if env == "production" {
+			logLevel = "INFO"
+		} else {
+			logLevel = "DEBUG"
+		}
+	}
+
+	logJSON := os.Getenv("LOG_JSON") == "true" || env == "production"
+
 	cfg := &Config{
-		Port:                os.Getenv("PORT"),
+		Port:                port,
+		Environment:         env,
+		LogLevel:            logLevel,
+		LogJSON:             logJSON,
 		GoogleClientID:      os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret:  os.Getenv("GOOGLE_CLIENT_SECRET"),
 		GitHubClientID:      os.Getenv("GITHUB_CLIENT_ID"),
@@ -54,7 +82,7 @@ func Load() *Config {
 	if cfg.FrontendURL == "" {
 		cfg.FrontendURL = "http://localhost:5173"
 	}
-	log.Printf("[Config] Loaded Configuration: FRONTEND_URL=%s, BACKEND_URL=%s, PORT=%s", cfg.FrontendURL, cfg.BackendURL, port)
+	log.Printf("[Config] Loaded: ENV=%s, FRONTEND_URL=%s, BACKEND_URL=%s, PORT=%s", cfg.Environment, cfg.FrontendURL, cfg.BackendURL, cfg.Port)
 
 	return cfg
 }

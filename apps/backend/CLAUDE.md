@@ -17,64 +17,107 @@ go run cmd/server/main.go     # Run locally (requires running DB/Redis)
 go build -o server cmd/server/main.go  # Build binary
 ```
 
-No tests exist yet in this codebase.
-
 ## Architecture
 
 ### Entry Point and Routing
 `cmd/server/main.go` initializes all services and registers Chi routes:
-- OAuth routes: `/auth/{google,github,discord}/{login,callback}`
-- Protected routes (require session): `/profile/{username}`, `/check-username`, `/set-username`
+- WebSocket: `GET /ws` (multiplayer game connections)
+- OAuth routes: `/auth/{google,github,discord}/{login,callback}` (rate limited: 10/min)
+- Logout: `POST /auth/logout` (rate limited: 10/min)
+- Health routes: `/health`, `/health/live`, `/health/ready` (no rate limit)
+- Protected routes (require session, rate limited: 60/min): `/profile/{username}`, `/check-username`, `/set-username`
 
 ### Package Structure
 ```
 internal/
-├── auth/           # OAuth handlers (google, github, discord)
+├── auth/           # OAuth provider system (generic handlers + provider configs)
 ├── config/         # Environment config loader (config.Load())
-├── controllers/    # HTTP handlers (profile operations)
-├── database/       # Direct SQL queries against postgres (no ORM)
-├── httpx/          # JSON response helpers
-├── middleware/     # CORS, Recovery, Session auth
+├── controllers/    # HTTP handlers (profile, auth operations)
+├── database/       # Direct SQL queries with connection pooling
+├── httpx/          # JSON response helpers, secure cookie factory
+├── logger/         # Structured logging with levels (DEBUG/INFO/WARN/ERROR)
+├── middleware/     # CORS, Recovery, Security, Session, RateLimit
 ├── models/         # Data structures (Profile, Game, PublicProfile)
 ├── sessions/       # Redis session store operations
+├── validation/     # Input validation (username rules, etc.)
+├── ws/             # WebSocket hub, client, game management for multiplayer
 └── utils/          # Random string generation, auth redirects
 ```
 
 ### Key Patterns
 
+**Structured Logging**: Use `logger.Info()`, `logger.Error()`, etc. with `logger.F()` for fields:
+```go
+logger.Info("User logged in", logger.F("userId", id, "provider", "google"))
+```
+
+**Input Validation**: Use `validation.ValidateUsername()` and similar functions:
+```go
+if err := validation.ValidateUsername(username); err != nil {
+    httpx.WriteJSONError(w, http.StatusBadRequest, err.Message)
+    return
+}
+```
+
+**Rate Limiting**: Three preset limiters available:
+- `NewAuthRateLimiter()` - 10/min, burst 5 (auth endpoints)
+- `NewAPIRateLimiter()` - 60/min, burst 20 (general API)
+- `NewStrictRateLimiter()` - 5/min, burst 3 (sensitive operations)
+
+**OAuth Provider System**: Generic handlers in `auth/oauth.go` with provider-specific configs in `auth/providers.go`.
+
 **Session Authentication**: Cookie-based sessions stored in Redis (24h TTL). Session middleware extracts `session_token` cookie, looks up userID in Redis, and attaches to request context via `middleware.UserIDFromContext()`.
 
-**Database Layer**: Uses `database/sql` directly with `lib/pq`. All queries are in `database/*.go`. Global `database.DB` is initialized once in `main.go`.
+**Security Middleware**: Adds headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, CSP, HSTS in production).
 
-**OAuth Flow**:
-1. `/auth/{provider}/login` - Generate state, set cookie, redirect to provider
-2. `/auth/{provider}/callback` - Validate state, exchange code, create session, upsert profile, redirect to frontend
+**Secure Cookies**: Use `httpx.NewSecureCookie(cfg, name, value, maxAge)` which sets `Secure` and `SameSite` based on environment.
 
-**Response Helpers**: Use `httpx.WriteJSON()` and `httpx.WriteJSONError()` for consistent JSON responses.
+### Middleware Stack
+Order matters - applied from outermost to innermost:
+1. CORS (allows cross-origin requests from frontend)
+2. Recovery (panic handling, hides details in production)
+3. Security (security headers)
+4. Rate Limiting (per route group)
+5. Session (authentication for protected routes)
+
+### Health Checks
+- `GET /health` - Full health with DB/Redis status (JSON)
+- `GET /health/live` - Liveness probe (always 200 if running)
+- `GET /health/ready` - Readiness probe (checks DB + Redis)
 
 ## Database Schema
 
-Profiles table (PostgreSQL):
-- `user_id` (TEXT, PK) - OAuth provider's user ID
-- `username` (TEXT, nullable, unique)
-- `rating` (INT)
+See `db/init.sql` for full schema. Key tables:
+- `profiles` - user_id (PK), username, rating, created_at
+- `games` - game_id (UUID), pgn, playerW_id, playerB_id, result, created_at (FK to profiles)
+- `rating_history` - user_id (FK), rating, created_at
+
+Migrations in `db/migrations/` for existing databases.
 
 ## Environment Variables
 
-Required for OAuth (copy from `.env.example`):
-```
+See `.env.example` for all options. Key variables:
+
+```bash
+# Server
+ENV=development|production
+LOG_LEVEL=DEBUG|INFO|WARN|ERROR
+LOG_JSON=true|false
+
+# Database (with connection pooling)
+DATABASE_URL=postgres://...
+DB_MAX_OPEN_CONNS=25
+DB_MAX_IDLE_CONNS=5
+DB_CONN_MAX_LIFETIME_MINS=5
+
+# URLs
+FRONTEND_URL=http://localhost:5173
+BACKEND_URL=http://localhost:8080
+
+# OAuth (optional - missing providers are skipped)
 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
 GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET
 DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET
-```
-
-Service URLs:
-```
-DATABASE_URL="postgres://postgres:postgres@db:5432/chess_db?sslmode=disable"
-REDIS_PORT="redis:6379"
-FRONTEND_URL="http://localhost:5173"
-BACKEND_URL="http://localhost:8080"
-PORT="8080"
 ```
 
 ## Adding New Endpoints
@@ -82,5 +125,70 @@ PORT="8080"
 1. Add handler in `internal/controllers/`
 2. Use `middleware.UserIDFromContext()` for authenticated user
 3. Use `httpx.WriteJSON/WriteJSONError` for responses
-4. Register route in `cmd/server/main.go` (inside `pr.Group` for protected routes)
-5. Add any new DB queries in `internal/database/`
+4. Use `logger.Info/Error` for logging
+5. Use `validation.*` for input validation
+6. Register route in `cmd/server/main.go` (choose appropriate rate limit group)
+7. Add any new DB queries in `internal/database/`
+
+## Adding New OAuth Provider
+
+1. Add client ID/secret to `config.Config`
+2. Create `initProviderName()` in `auth/providers.go`
+3. Call it from `InitOAuthProviders()`
+4. Add routes in `main.go` under the auth rate limiter group
+
+## Username Validation Rules
+
+Validated in `validation.ValidateUsername()`:
+- Length: 3-20 characters
+- Format: starts with letter, alphanumeric + underscore only
+- No consecutive underscores
+- Reserved names blocked (admin, system, etc.)
+- Basic offensive content filter
+
+## WebSocket Multiplayer Protocol
+
+Connect to `ws://localhost:8080/ws` for multiplayer games. Session cookie is optional (allows anonymous play).
+
+### Message Format
+```json
+// Client → Server
+{ "type": "MESSAGE_TYPE", "data": { ... } }
+
+// Server → Client
+{ "type": "MESSAGE_TYPE", "data": { ... } }
+```
+
+### Client → Server Messages
+| Type | Data | Description |
+|------|------|-------------|
+| `PING` | none | Heartbeat |
+| `GAME_CREATE` | `{timeControl?}` | Create new game (you play white) |
+| `GAME_JOIN` | `{gameId}` | Join existing game (you play black) |
+| `MOVE` | `{gameId, from, to, promotion?}` | Make a move |
+| `RESIGN` | `{gameId}` | Resign from game |
+| `GAME_LEAVE` | `{gameId}` | Leave/cancel game |
+
+### Server → Client Messages
+| Type | Data | Description |
+|------|------|-------------|
+| `PONG` | none | Heartbeat response |
+| `ERROR` | `{code, message}` | Error occurred |
+| `GAME_CREATED` | `{gameId, color}` | Game created, waiting for opponent |
+| `GAME_JOINED` | `{gameId, color}` | Successfully joined game |
+| `GAME_STARTED` | `{gameId, fen, whitePlayer, blackPlayer}` | Game started |
+| `MOVE_ACCEPTED` | `{gameId, from, to, fen, moveNum}` | Your move was accepted |
+| `MOVE_REJECTED` | `{gameId, reason, fen, moveNum}` | Your move was rejected |
+| `OPPONENT_MOVE` | `{gameId, from, to, fen, moveNum}` | Opponent made a move |
+| `GAME_ENDED` | `{gameId, result, reason}` | Game ended |
+| `OPPONENT_LEFT` | `{gameId}` | Opponent disconnected |
+
+### Testing
+Open `test_ws.html` in browser to test WebSocket connections interactively.
+
+### Game Flow
+1. Player A: `GAME_CREATE` → receives `GAME_CREATED` with gameId
+2. Player A: Share gameId with Player B
+3. Player B: `GAME_JOIN` with gameId → both receive `GAME_STARTED`
+4. Players alternate: `MOVE` → sender gets `MOVE_ACCEPTED`, opponent gets `OPPONENT_MOVE`
+5. Game ends: both receive `GAME_ENDED` with result and reason
