@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+See also: [Root CLAUDE.md](../../CLAUDE.md) for full-stack commands and frontend info.
+
 ## Development Commands
 
 ```bash

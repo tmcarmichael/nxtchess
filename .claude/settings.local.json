@@ -2,13 +2,29 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:docs.solidjs.com*)",
+      "WebFetch(domain:go.dev/doc/*)",
+      "WebFetch(domain:pkg.go.dev/*)",
+      "WebFetch(domain:www.typescriptlang.org/docs/*)",
+      "WebFetch(domain:vite.dev/*)",
+      "WebFetch(domain:go-chi.io/*)",
+      "WebFetch(domain:redis.io/docs/*)",
+      "WebFetch(domain:www.postgresql.org/docs/*)",
+      "WebFetch(domain:developer.mozilla.org/*)",
+      "Bash(make:*)",
+      "Bash(go test:*)",
+      "Bash(go mod tidy)",
+      "Bash(go vet:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
       "Bash(yarn type:check:*)",
       "Bash(yarn build:*)",
+      "Bash(yarn dev)",
       "Bash(npx vite build)",
       "Bash(yarn format)",
-      "Bash(done)",
+      "Bash(ls:*)",
       "Bash(wc:*)",
-      "Bash(find:*)"
+      "Bash(tree:*)"
     ]
   }
 }
