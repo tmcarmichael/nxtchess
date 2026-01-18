@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -63,4 +64,29 @@ func GetSessionUserID(token string) (string, bool) {
 		return "", false
 	}
 	return userID, true
+}
+
+// Close closes the Redis client connection
+func Close() error {
+	if rdb != nil {
+		log.Println("[Sessions] Closing Redis connection...")
+		return rdb.Close()
+	}
+	return nil
+}
+
+// Ping checks Redis connectivity
+func Ping() error {
+	if rdb == nil {
+		return fmt.Errorf("redis not initialized")
+	}
+	return rdb.Ping(ctx).Err()
+}
+
+// DeleteSession removes a session token from Redis
+func DeleteSession(token string) error {
+	if rdb == nil {
+		return fmt.Errorf("redis not initialized")
+	}
+	return rdb.Del(ctx, token).Err()
 }
