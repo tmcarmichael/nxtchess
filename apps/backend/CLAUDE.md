@@ -31,6 +31,7 @@ go build -o server cmd/server/main.go  # Build binary
 ```
 internal/
 ├── auth/           # OAuth provider system (generic handlers + provider configs)
+├── chess/          # Chess move validation wrapper (uses notnil/chess)
 ├── config/         # Environment config loader (config.Load())
 ├── controllers/    # HTTP handlers (profile, auth operations)
 ├── database/       # Direct SQL queries with connection pooling
@@ -177,18 +178,39 @@ Connect to `ws://localhost:8080/ws` for multiplayer games. Session cookie is opt
 | `GAME_CREATED` | `{gameId, color}` | Game created, waiting for opponent |
 | `GAME_JOINED` | `{gameId, color}` | Successfully joined game |
 | `GAME_STARTED` | `{gameId, fen, whitePlayer, blackPlayer}` | Game started |
-| `MOVE_ACCEPTED` | `{gameId, from, to, fen, moveNum}` | Your move was accepted |
-| `MOVE_REJECTED` | `{gameId, reason, fen, moveNum}` | Your move was rejected |
-| `OPPONENT_MOVE` | `{gameId, from, to, fen, moveNum}` | Opponent made a move |
-| `GAME_ENDED` | `{gameId, result, reason}` | Game ended |
+| `MOVE_ACCEPTED` | `{gameId, from, to, san, fen, moveNum, isCheck?}` | Your move was accepted |
+| `MOVE_REJECTED` | `{gameId, reason, fen, moveNum}` | Your move was rejected (illegal move) |
+| `OPPONENT_MOVE` | `{gameId, from, to, san, fen, moveNum, isCheck?}` | Opponent made a move |
+| `GAME_ENDED` | `{gameId, result, reason}` | Game ended (checkmate, stalemate, resignation, etc.) |
 | `OPPONENT_LEFT` | `{gameId}` | Opponent disconnected |
+| `TIME_UPDATE` | `{gameId, whiteTime, blackTime}` | Periodic clock update (ms) |
+
+### Server-Side Move Validation
+
+Moves are validated server-side using the `internal/chess` package (wraps `github.com/notnil/chess`):
+- Validates move legality (piece can make that move)
+- Validates turn order (correct player's turn)
+- Detects check, checkmate, stalemate
+- Detects draw conditions (insufficient material, threefold repetition, fifty-move rule)
+- Returns SAN notation (e.g., "e4", "Nxf3+", "O-O")
+
+### Time Controls
+
+Games support chess clocks with increment:
+- Set via `timeControl: { initialTime: 600, increment: 5 }` in `GAME_CREATE` (seconds)
+- Clock starts when second player joins (game becomes active)
+- Active player's clock decrements; opponent's clock is paused
+- Increment added after each move
+- Timeout results in loss for the player whose time expires
+- Times reported in milliseconds via `TIME_UPDATE` (every second) and in move responses
 
 ### Testing
 Open `test_ws.html` in browser to test WebSocket connections interactively.
 
 ### Game Flow
-1. Player A: `GAME_CREATE` → receives `GAME_CREATED` with gameId
+1. Player A: `GAME_CREATE` with optional timeControl → receives `GAME_CREATED` with gameId
 2. Player A: Share gameId with Player B
-3. Player B: `GAME_JOIN` with gameId → both receive `GAME_STARTED`
-4. Players alternate: `MOVE` → sender gets `MOVE_ACCEPTED`, opponent gets `OPPONENT_MOVE`
-5. Game ends: both receive `GAME_ENDED` with result and reason
+3. Player B: `GAME_JOIN` with gameId → both receive `GAME_STARTED` (clock starts for white)
+4. Players alternate: `MOVE` → sender gets `MOVE_ACCEPTED`, opponent gets `OPPONENT_MOVE` (both include current times)
+5. Both players receive `TIME_UPDATE` every second with current clock times
+6. Game ends: both receive `GAME_ENDED` with result and reason (timeout, checkmate, resignation, etc.)

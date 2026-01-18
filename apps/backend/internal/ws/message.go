@@ -39,6 +39,7 @@ const (
 	MsgTypeMoveRejected = "MOVE_REJECTED"
 	MsgTypeOpponentMove = "OPPONENT_MOVE"
 	MsgTypeOpponentLeft = "OPPONENT_LEFT"
+	MsgTypeTimeUpdate   = "TIME_UPDATE"
 
 	// Matchmaking responses (future)
 	MsgTypeMatchmakingWaiting = "MATCHMAKING_WAITING"
@@ -95,6 +96,8 @@ type GameStartedData struct {
 	WhitePlayer PlayerInfo   `json:"whitePlayer"`
 	BlackPlayer PlayerInfo   `json:"blackPlayer"`
 	TimeControl *TimeControl `json:"timeControl,omitempty"`
+	WhiteTimeMs int          `json:"whiteTimeMs,omitempty"` // initial time in milliseconds
+	BlackTimeMs int          `json:"blackTimeMs,omitempty"` // initial time in milliseconds
 }
 
 // PlayerInfo contains info about a player
@@ -123,13 +126,15 @@ type MoveData struct {
 
 // MoveAcceptedData confirms a move was accepted
 type MoveAcceptedData struct {
-	GameID    string `json:"gameId"`
-	From      string `json:"from"`
-	To        string `json:"to"`
-	FEN       string `json:"fen"`
-	MoveNum   int    `json:"moveNum"`
-	WhiteTime int    `json:"whiteTime,omitempty"` // remaining seconds
-	BlackTime int    `json:"blackTime,omitempty"`
+	GameID      string `json:"gameId"`
+	From        string `json:"from"`
+	To          string `json:"to"`
+	SAN         string `json:"san"` // Standard algebraic notation (e.g., "e4", "Nxf3+")
+	FEN         string `json:"fen"`
+	MoveNum     int    `json:"moveNum"`
+	IsCheck     bool   `json:"isCheck,omitempty"`
+	WhiteTimeMs int    `json:"whiteTimeMs,omitempty"` // remaining milliseconds
+	BlackTimeMs int    `json:"blackTimeMs,omitempty"`
 }
 
 // MoveRejectedData indicates a move was rejected
@@ -142,19 +147,28 @@ type MoveRejectedData struct {
 
 // OpponentMoveData notifies client of opponent's move
 type OpponentMoveData struct {
-	GameID    string `json:"gameId"`
-	From      string `json:"from"`
-	To        string `json:"to"`
-	Promotion string `json:"promotion,omitempty"`
-	FEN       string `json:"fen"`
-	MoveNum   int    `json:"moveNum"`
-	WhiteTime int    `json:"whiteTime,omitempty"`
-	BlackTime int    `json:"blackTime,omitempty"`
+	GameID      string `json:"gameId"`
+	From        string `json:"from"`
+	To          string `json:"to"`
+	Promotion   string `json:"promotion,omitempty"`
+	SAN         string `json:"san"` // Standard algebraic notation
+	FEN         string `json:"fen"`
+	MoveNum     int    `json:"moveNum"`
+	IsCheck     bool   `json:"isCheck,omitempty"`
+	WhiteTimeMs int    `json:"whiteTimeMs,omitempty"` // remaining milliseconds
+	BlackTimeMs int    `json:"blackTimeMs,omitempty"`
 }
 
 // ResignData is sent by client to resign
 type ResignData struct {
 	GameID string `json:"gameId"`
+}
+
+// TimeUpdateData is sent periodically to update clocks
+type TimeUpdateData struct {
+	GameID    string `json:"gameId"`
+	WhiteTime int    `json:"whiteTime"` // milliseconds remaining
+	BlackTime int    `json:"blackTime"` // milliseconds remaining
 }
 
 // ErrorData contains error information

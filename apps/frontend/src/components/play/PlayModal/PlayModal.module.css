@@ -283,6 +283,135 @@
     transform 0.2s ease;
 }
 
+/* Opponent Type Selector */
+.opponentSelector {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.opponentButton {
+  flex: 1;
+  max-width: 140px;
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.opponentButton:hover:not(.opponentButtonActive) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #aaa;
+}
+
+.opponentButtonActive {
+  background: rgba(24, 143, 83, 0.5);
+  color: #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Create/Join Mode Selector */
+.modeSelector {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.modeButton {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modeButton:hover:not(.modeButtonActive) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #aaa;
+}
+
+.modeButtonActive {
+  background: rgba(24, 143, 83, 0.4);
+  border-color: rgba(24, 143, 83, 0.6);
+  color: #e0e0e0;
+}
+
+/* Time Control Button Group */
+.timeButtonGroup {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.timeButton {
+  padding: 0.5rem 1rem;
+  min-width: 70px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeButton:hover:not(.timeButtonActive) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #aaa;
+}
+
+.timeButtonActive {
+  background: rgba(24, 143, 83, 0.4);
+  border-color: rgba(24, 143, 83, 0.6);
+  color: #e0e0e0;
+}
+
+/* Game ID Input */
+.gameIdInput {
+  width: 100%;
+  max-width: 280px;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #e0e0e0;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.gameIdInput::placeholder {
+  color: #666;
+}
+
+.gameIdInput:focus {
+  border-color: rgba(24, 143, 83, 0.6);
+}
+
+.errorText {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: #ef4444;
+}
+
 @media (max-width: 480px) {
   .modalContent {
     padding: 1.5rem;

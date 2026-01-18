@@ -1,16 +1,24 @@
-import { generateSessionId } from '../../shared';
-import type { GameSession } from '../game/session/GameSession';
-import type { GameCommand, GameSessionState } from '../game/session/types';
+import { BACKEND_URL } from '../../shared/config/env';
 import type {
   ConnectionState,
-  OutboundMessage,
-  InboundMessage,
-  PendingCommand,
   SyncEvent,
   SyncEventHandler,
   SyncServiceConfig,
+  ServerMessage,
+  GameCreatedData,
+  GameJoinedData,
+  GameStartedData,
+  MoveAcceptedData,
+  MoveRejectedData,
+  OpponentMoveData,
+  GameEndedData,
+  TimeUpdateData,
+  OpponentLeftData,
+  ErrorData,
+  TimeControl,
+  MsgType,
 } from './types';
-import type { Square, PromotionPiece, Side } from '../../types';
+import { MsgType as MT } from './types';
 
 // ============================================================================
 // Default Configuration
@@ -21,8 +29,19 @@ const DEFAULT_CONFIG: SyncServiceConfig = {
   reconnectAttempts: 5,
   reconnectDelayMs: 1000,
   pingIntervalMs: 30000,
-  commandTimeoutMs: 10000,
 };
+
+// ============================================================================
+// Build WebSocket URL from backend URL
+// ============================================================================
+
+function buildWsUrl(backendUrl: string): string {
+  // Convert http(s) to ws(s)
+  const url = new URL(backendUrl);
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+  url.pathname = '/ws';
+  return url.toString();
+}
 
 // ============================================================================
 // GameSyncService Class
@@ -34,19 +53,23 @@ export class GameSyncService {
   private connectionState: ConnectionState = 'disconnected';
   private reconnectCount = 0;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
-  private commandTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  // Pending commands for optimistic updates
-  private pendingCommands: Map<string, PendingCommand> = new Map();
+  // Current game ID
+  private currentGameId: string | null = null;
+
+  // Message queue for messages sent before connection is ready
+  private messageQueue: { type: string; data?: unknown }[] = [];
 
   // Event handlers
   private eventHandlers: Set<SyncEventHandler> = new Set();
 
-  // Game session reference
-  private session: GameSession | null = null;
-
   constructor(config: Partial<SyncServiceConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    // Auto-set server URL from env if not provided
+    if (!this.config.serverUrl && BACKEND_URL) {
+      this.config.serverUrl = buildWsUrl(BACKEND_URL);
+    }
   }
 
   // ============================================================================
@@ -64,7 +87,7 @@ export class GameSyncService {
     }
 
     if (this.ws && this.connectionState === 'connected') {
-      return; // Already connected
+      return;
     }
 
     this.setConnectionState('connecting');
@@ -72,21 +95,10 @@ export class GameSyncService {
     try {
       this.ws = new WebSocket(this.config.serverUrl);
 
-      this.ws.onopen = () => {
-        this.handleOpen();
-      };
-
-      this.ws.onclose = (event) => {
-        this.handleClose(event);
-      };
-
-      this.ws.onerror = (event) => {
-        this.handleError(event);
-      };
-
-      this.ws.onmessage = (event) => {
-        this.handleMessage(event);
-      };
+      this.ws.onopen = () => this.handleOpen();
+      this.ws.onclose = (event) => this.handleClose(event);
+      this.ws.onerror = (event) => this.handleError(event);
+      this.ws.onmessage = (event) => this.handleMessage(event);
     } catch (err) {
       console.error('GameSyncService: Failed to create WebSocket:', err);
       this.setConnectionState('disconnected');
@@ -95,7 +107,7 @@ export class GameSyncService {
 
   disconnect(): void {
     this.stopPing();
-    this.clearAllTimeouts();
+    this.clearReconnectTimeout();
 
     if (this.ws) {
       this.ws.close();
@@ -104,95 +116,61 @@ export class GameSyncService {
 
     this.setConnectionState('disconnected');
     this.reconnectCount = 0;
+    this.currentGameId = null;
+    this.messageQueue = [];
   }
 
   getConnectionState(): ConnectionState {
     return this.connectionState;
   }
 
-  // ============================================================================
-  // Session Binding
-  // ============================================================================
-
-  bindSession(session: GameSession): void {
-    this.session = session;
+  isConnected(): boolean {
+    return this.connectionState === 'connected';
   }
 
-  unbindSession(): void {
-    this.session = null;
+  getCurrentGameId(): string | null {
+    return this.currentGameId;
   }
 
   // ============================================================================
-  // Command Sending with Optimistic Updates
+  // Game Actions
   // ============================================================================
 
-  sendMove(gameId: string, from: Square, to: Square, promotion?: PromotionPiece): void {
-    if (!this.session) {
-      console.error('GameSyncService: No session bound');
-      return;
+  createGame(timeControl?: TimeControl): void {
+    this.send({
+      type: MT.GAME_CREATE,
+      data: timeControl ? { timeControl } : undefined,
+    });
+  }
+
+  joinGame(gameId: string): void {
+    this.send({
+      type: MT.GAME_JOIN,
+      data: { gameId },
+    });
+  }
+
+  leaveGame(gameId: string): void {
+    this.send({
+      type: MT.GAME_LEAVE,
+      data: { gameId },
+    });
+    if (this.currentGameId === gameId) {
+      this.currentGameId = null;
     }
+  }
 
-    const commandId = generateSessionId();
-    const previousState = { ...this.session.currentState };
-
-    // Optimistic update
-    const command: GameCommand = {
-      type: 'APPLY_MOVE',
-      payload: { from, to, promotion },
-    };
-
-    const result = this.session.applyCommand(command);
-
-    if (!result.success) {
-      console.error('GameSyncService: Optimistic move failed:', result.error);
-      return;
-    }
-
-    // Store pending command for potential rollback
-    this.pendingCommands.set(commandId, {
-      id: commandId,
-      gameId,
-      command,
-      optimisticState: previousState,
-      sentAt: Date.now(),
-      retryCount: 0,
-    });
-
-    // Set timeout for command
-    this.setCommandTimeout(commandId);
-
-    // Send to server
+  sendMove(gameId: string, from: string, to: string, promotion?: string): void {
     this.send({
-      type: 'GAME:MOVE',
-      payload: {
-        gameId,
-        commandId,
-        from,
-        to,
-        promotion,
-        timestamp: Date.now(),
-      },
+      type: MT.MOVE,
+      data: { gameId, from, to, promotion },
     });
   }
 
-  sendResign(gameId: string, resigningSide: Side): void {
+  resign(gameId: string): void {
     this.send({
-      type: 'GAME:RESIGN',
-      payload: { gameId, resigningSide },
-    });
-  }
-
-  joinGame(gameId: string, userId?: string): void {
-    this.send({
-      type: 'GAME:JOIN',
-      payload: { gameId, userId },
-    });
-  }
-
-  createGame(timeControl: number, increment?: number, playerColor?: Side): void {
-    this.send({
-      type: 'GAME:CREATE',
-      payload: { timeControl, increment, playerColor },
+      type: MT.RESIGN,
+      data: { gameId },
     });
   }
 
@@ -215,6 +193,7 @@ export class GameSyncService {
     this.setConnectionState('connected');
     this.reconnectCount = 0;
     this.startPing();
+    this.flushMessageQueue();
   }
 
   private handleClose(event: CloseEvent): void {
@@ -232,14 +211,14 @@ export class GameSyncService {
     console.error('GameSyncService: WebSocket error:', event);
     this.emitEvent({
       type: 'error',
-      data: { message: 'WebSocket error' },
+      data: { code: 'WS_ERROR', message: 'WebSocket error' },
       timestamp: Date.now(),
     });
   }
 
   private handleMessage(event: MessageEvent): void {
     try {
-      const message = JSON.parse(event.data) as InboundMessage;
+      const message = JSON.parse(event.data) as ServerMessage;
       this.processMessage(message);
     } catch (err) {
       console.error('GameSyncService: Failed to parse message:', err);
@@ -250,187 +229,171 @@ export class GameSyncService {
   // Private Methods - Message Processing
   // ============================================================================
 
-  private processMessage(message: InboundMessage): void {
-    switch (message.type) {
-      case 'GAME:MOVE_ACCEPTED':
-        this.handleMoveAccepted(message.payload);
+  private processMessage(message: ServerMessage): void {
+    const { type, data } = message;
+
+    switch (type) {
+      case MT.PONG:
+        // Heartbeat response - no action needed
         break;
 
-      case 'GAME:MOVE_REJECTED':
-        this.handleMoveRejected(message.payload);
-        break;
-
-      case 'GAME:OPPONENT_MOVE':
-        this.handleOpponentMove(message.payload);
-        break;
-
-      case 'GAME:STATE':
-        this.handleStateSync(message.payload);
-        break;
-
-      case 'GAME:ENDED':
-        this.handleGameEnded(message.payload);
-        break;
-
-      case 'GAME:CREATED':
+      case MT.GAME_CREATED: {
+        const payload = data as GameCreatedData;
+        this.currentGameId = payload.gameId;
         this.emitEvent({
           type: 'game:created',
-          data: message.payload,
+          data: payload,
           timestamp: Date.now(),
         });
         break;
+      }
 
-      case 'GAME:JOINED':
+      case MT.GAME_JOINED: {
+        const payload = data as GameJoinedData;
+        this.currentGameId = payload.gameId;
         this.emitEvent({
           type: 'game:joined',
-          data: message.payload,
+          data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.GAME_STARTED: {
+        const payload = data as GameStartedData;
+        this.currentGameId = payload.gameId;
+        this.emitEvent({
+          type: 'game:started',
+          data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.GAME_NOT_FOUND:
+        this.emitEvent({
+          type: 'game:not_found',
+          data,
           timestamp: Date.now(),
         });
         break;
 
-      case 'PONG':
-        // Latency measurement could be done here
+      case MT.GAME_FULL:
+        this.emitEvent({
+          type: 'game:full',
+          data,
+          timestamp: Date.now(),
+        });
         break;
 
-      case 'ERROR':
+      case MT.GAME_ENDED: {
+        const payload = data as GameEndedData;
+        this.emitEvent({
+          type: 'game:ended',
+          data: payload,
+          timestamp: Date.now(),
+        });
+        this.currentGameId = null;
+        break;
+      }
+
+      case MT.MOVE_ACCEPTED: {
+        const payload = data as MoveAcceptedData;
+        this.emitEvent({
+          type: 'game:move_accepted',
+          data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.MOVE_REJECTED: {
+        const payload = data as MoveRejectedData;
+        this.emitEvent({
+          type: 'game:move_rejected',
+          data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.OPPONENT_MOVE: {
+        const payload = data as OpponentMoveData;
+        this.emitEvent({
+          type: 'game:opponent_move',
+          data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.OPPONENT_LEFT: {
+        const payload = data as OpponentLeftData;
+        this.emitEvent({
+          type: 'game:opponent_left',
+          data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.TIME_UPDATE: {
+        const payload = data as TimeUpdateData;
+        this.emitEvent({
+          type: 'game:time_update',
+          data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.ERROR: {
+        const payload = data as ErrorData;
         this.emitEvent({
           type: 'error',
-          data: message.payload,
+          data: payload,
           timestamp: Date.now(),
         });
         break;
+      }
+
+      default:
+        console.warn('GameSyncService: Unknown message type:', type);
     }
-  }
-
-  private handleMoveAccepted(payload: {
-    gameId: string;
-    commandId: string;
-    serverTimestamp: number;
-  }): void {
-    const { commandId } = payload;
-
-    // Clear timeout
-    this.clearCommandTimeout(commandId);
-
-    // Remove from pending
-    this.pendingCommands.delete(commandId);
-
-    this.emitEvent({
-      type: 'game:move_accepted',
-      data: payload,
-      timestamp: Date.now(),
-    });
-  }
-
-  private handleMoveRejected(payload: {
-    gameId: string;
-    commandId: string;
-    reason: string;
-    correctState: Partial<GameSessionState>;
-  }): void {
-    const { commandId, correctState } = payload;
-
-    // Clear timeout
-    this.clearCommandTimeout(commandId);
-
-    // Get pending command
-    const pending = this.pendingCommands.get(commandId);
-    this.pendingCommands.delete(commandId);
-
-    // Rollback to server state
-    if (this.session) {
-      this.session.applyCommand({
-        type: 'SYNC_STATE',
-        payload: { state: correctState },
-      });
-    }
-
-    this.emitEvent({
-      type: 'game:move_rejected',
-      data: { ...payload, rolledBackFrom: pending?.optimisticState },
-      timestamp: Date.now(),
-    });
-  }
-
-  private handleOpponentMove(payload: {
-    gameId: string;
-    from: Square;
-    to: Square;
-    promotion?: PromotionPiece;
-    newFen: string;
-    serverTimestamp: number;
-  }): void {
-    const { from, to, promotion } = payload;
-
-    if (this.session) {
-      this.session.applyCommand({
-        type: 'APPLY_MOVE',
-        payload: { from, to, promotion },
-      });
-    }
-
-    this.emitEvent({
-      type: 'game:opponent_move',
-      data: payload,
-      timestamp: Date.now(),
-    });
-  }
-
-  private handleStateSync(payload: { gameId: string; state: Partial<GameSessionState> }): void {
-    if (this.session) {
-      this.session.applyCommand({
-        type: 'SYNC_STATE',
-        payload: { state: payload.state },
-      });
-    }
-
-    this.emitEvent({
-      type: 'game:state_sync',
-      data: payload,
-      timestamp: Date.now(),
-    });
-  }
-
-  private handleGameEnded(payload: {
-    gameId: string;
-    reason: string;
-    winner: Side | 'draw' | null;
-    finalState: Partial<GameSessionState>;
-  }): void {
-    if (this.session) {
-      this.session.applyCommand({
-        type: 'SYNC_STATE',
-        payload: { state: payload.finalState },
-      });
-    }
-
-    this.emitEvent({
-      type: 'game:ended',
-      data: payload,
-      timestamp: Date.now(),
-    });
   }
 
   // ============================================================================
   // Private Methods - Utilities
   // ============================================================================
 
-  private send(message: OutboundMessage): void {
+  private send(message: { type: string; data?: unknown }): void {
     if (this.ws && this.connectionState === 'connected') {
       this.ws.send(JSON.stringify(message));
+    } else if (this.connectionState === 'connecting') {
+      // Queue message to be sent when connection opens
+      this.messageQueue.push(message);
     } else {
-      console.warn('GameSyncService: Cannot send message - not connected');
+      // Not connected and not connecting - message will be lost
     }
   }
 
-  private setConnectionState(state: ConnectionState): void {
-    const previousState = this.connectionState;
-    this.connectionState = state;
+  private flushMessageQueue(): void {
+    if (this.messageQueue.length > 0 && this.ws && this.connectionState === 'connected') {
+      for (const message of this.messageQueue) {
+        this.ws.send(JSON.stringify(message));
+      }
+      this.messageQueue = [];
+    }
+  }
 
-    if (previousState !== state) {
+  private setConnectionState(newState: ConnectionState): void {
+    const previousState = this.connectionState;
+    this.connectionState = newState;
+
+    if (previousState !== newState) {
       this.emitEvent({
         type: 'connection:state_changed',
-        data: { previousState, currentState: state },
+        data: { previousState, currentState: newState },
         timestamp: Date.now(),
       });
     }
@@ -447,20 +410,24 @@ export class GameSyncService {
 
     const delay = this.config.reconnectDelayMs * Math.pow(2, this.reconnectCount - 1);
 
-    setTimeout(() => {
+    this.reconnectTimeout = setTimeout(() => {
       if (this.connectionState === 'reconnecting') {
         this.connect();
       }
     }, delay);
   }
 
+  private clearReconnectTimeout(): void {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+  }
+
   private startPing(): void {
     this.stopPing();
     this.pingInterval = setInterval(() => {
-      this.send({
-        type: 'PING',
-        payload: { timestamp: Date.now() },
-      });
+      this.send({ type: MT.PING });
     }, this.config.pingIntervalMs);
   }
 
@@ -469,54 +436,6 @@ export class GameSyncService {
       clearInterval(this.pingInterval);
       this.pingInterval = null;
     }
-  }
-
-  private setCommandTimeout(commandId: string): void {
-    const timeout = setTimeout(() => {
-      this.handleCommandTimeout(commandId);
-    }, this.config.commandTimeoutMs);
-
-    this.commandTimeouts.set(commandId, timeout);
-  }
-
-  private clearCommandTimeout(commandId: string): void {
-    const timeout = this.commandTimeouts.get(commandId);
-    if (timeout) {
-      clearTimeout(timeout);
-      this.commandTimeouts.delete(commandId);
-    }
-  }
-
-  private clearAllTimeouts(): void {
-    for (const timeout of this.commandTimeouts.values()) {
-      clearTimeout(timeout);
-    }
-    this.commandTimeouts.clear();
-  }
-
-  private handleCommandTimeout(commandId: string): void {
-    const pending = this.pendingCommands.get(commandId);
-    if (!pending) return;
-
-    // Rollback optimistic update
-    if (this.session) {
-      this.session.applyCommand({
-        type: 'SYNC_STATE',
-        payload: { state: pending.optimisticState },
-      });
-    }
-
-    this.pendingCommands.delete(commandId);
-
-    this.emitEvent({
-      type: 'game:move_rejected',
-      data: {
-        commandId,
-        reason: 'Command timed out',
-        rolledBackFrom: pending.optimisticState,
-      },
-      timestamp: Date.now(),
-    });
   }
 
   private emitEvent(event: SyncEvent): void {

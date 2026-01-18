@@ -13,6 +13,8 @@ import {
   GamePhase,
   GameLifecycle,
   StartGameOptions,
+  MultiplayerGameOptions,
+  OpponentType,
 } from '../../types';
 import {
   initAiEngine,
@@ -39,6 +41,16 @@ import {
   computeMaterial,
 } from '../../services/game';
 import { DIFFICULTY_VALUES_ELO, capitalizeFirst, generateSessionId } from '../../shared';
+import {
+  gameSyncService,
+  GameStartedData,
+  GameJoinedData,
+  OpponentMoveData,
+  MoveAcceptedData,
+  GameEndedData,
+  TimeUpdateData,
+  SyncEvent,
+} from '../../services/sync';
 
 interface GameStoreState {
   // Session tracking
@@ -79,6 +91,11 @@ interface GameStoreState {
   // Engine state
   engineStatus: EngineStatus;
   engineError: string | null;
+  // Multiplayer state
+  opponentType: OpponentType;
+  multiplayerGameId: string | null;
+  isWaitingForOpponent: boolean;
+  opponentUsername: string | null;
 }
 
 export const createGameStore = () => {
@@ -124,6 +141,10 @@ export const createGameStore = () => {
     isAiThinking: false,
     engineStatus: 'idle',
     engineError: null,
+    opponentType: 'ai',
+    multiplayerGameId: null,
+    isWaitingForOpponent: false,
+    opponentUsername: null,
   });
 
   // ============================================================================
@@ -733,6 +754,11 @@ export const createGameStore = () => {
   const exitGame = () => {
     if (timerId) clearInterval(timerId);
 
+    // Clean up multiplayer connection
+    if (state.multiplayerGameId) {
+      gameSyncService.leaveGame(state.multiplayerGameId);
+    }
+
     // Clean up session
     if (currentSession) {
       sessionManager.destroySession(currentSession.sessionId);
@@ -745,7 +771,353 @@ export const createGameStore = () => {
       setState('isGameOver', false);
       setState('gameOverReason', null);
       setState('gameWinner', null);
+      setState('multiplayerGameId', null);
+      setState('isWaitingForOpponent', false);
+      setState('opponentUsername', null);
+      setState('opponentType', 'ai');
     });
+  };
+
+  // ============================================================================
+  // Multiplayer Game Functions
+  // ============================================================================
+
+  let syncEventUnsubscribe: (() => void) | null = null;
+
+  const handleSyncEvent = (event: SyncEvent) => {
+    switch (event.type) {
+      case 'game:created': {
+        const data = event.data as { gameId: string; color: 'white' | 'black' };
+        batch(() => {
+          setState('multiplayerGameId', data.gameId);
+          setState('playerColor', data.color === 'white' ? 'w' : 'b');
+          setState('boardView', data.color === 'white' ? 'w' : 'b');
+          setState('isWaitingForOpponent', true);
+        });
+        break;
+      }
+
+      case 'game:joined': {
+        const data = event.data as GameJoinedData;
+        batch(() => {
+          setState('multiplayerGameId', data.gameId);
+          setState('playerColor', data.color === 'white' ? 'w' : 'b');
+          setState('boardView', data.color === 'white' ? 'w' : 'b');
+          setState('opponentUsername', data.opponent ?? null);
+          // Still waiting for GAME_STARTED to begin playing
+        });
+        break;
+      }
+
+      case 'game:started': {
+        const data = event.data as GameStartedData;
+        const playerIsWhite = state.playerColor === 'w';
+        const opponentInfo = playerIsWhite ? data.blackPlayer : data.whitePlayer;
+
+        chess = new Chess(data.fen);
+
+        batch(() => {
+          setState('lifecycle', 'playing');
+          setState('fen', data.fen);
+          setState('viewFen', data.fen);
+          setState('boardSquares', fenToBoard(data.fen));
+          setState('isWaitingForOpponent', false);
+          setState('opponentUsername', opponentInfo.username ?? null);
+          setState('whiteTime', Math.floor(data.whiteTimeMs / 1000));
+          setState('blackTime', Math.floor(data.blackTimeMs / 1000));
+          setState('currentTurn', 'w');
+          setState('engineStatus', 'ready');
+        });
+        break;
+      }
+
+      case 'game:move_accepted': {
+        const data = event.data as MoveAcceptedData;
+        // Update times from server
+        batch(() => {
+          if (data.whiteTimeMs !== undefined) {
+            setState('whiteTime', Math.floor(data.whiteTimeMs / 1000));
+          }
+          if (data.blackTimeMs !== undefined) {
+            setState('blackTime', Math.floor(data.blackTimeMs / 1000));
+          }
+        });
+        break;
+      }
+
+      case 'game:opponent_move': {
+        const data = event.data as OpponentMoveData;
+
+        // Apply opponent's move
+        const move = chess.move({
+          from: data.from as Square,
+          to: data.to as Square,
+          promotion: data.promotion as PromotionPiece | undefined,
+        });
+
+        if (move) {
+          const captured = captureCheck(data.to as Square, fenToBoard(state.fen));
+
+          batch(() => {
+            if (captured) {
+              handleCapturedPiece(
+                captured,
+                (newWhitePieces) => setState('capturedWhite', newWhitePieces),
+                (newBlackPieces) => setState('capturedBlack', newBlackPieces)
+              );
+            }
+            setState('fen', data.fen);
+            setState('viewFen', data.fen);
+            setState('boardSquares', fenToBoard(data.fen));
+            setState('lastMove', { from: data.from as Square, to: data.to as Square });
+            setState('moveHistory', [...state.moveHistory, data.san]);
+            setState('viewMoveIndex', state.moveHistory.length);
+            setState('currentTurn', state.currentTurn === 'w' ? 'b' : 'w');
+
+            if (data.whiteTimeMs !== undefined) {
+              setState('whiteTime', Math.floor(data.whiteTimeMs / 1000));
+            }
+            if (data.blackTimeMs !== undefined) {
+              setState('blackTime', Math.floor(data.blackTimeMs / 1000));
+            }
+
+            // Update check status
+            if (data.isCheck) {
+              const currentTurn = getTurnFromFen(data.fen);
+              const kingSquare = fenToBoard(data.fen).find(
+                ({ piece }) => piece === makePiece(currentTurn, 'K')
+              )?.square;
+              setState('checkedKingSquare', kingSquare ?? null);
+            } else {
+              setState('checkedKingSquare', null);
+            }
+          });
+        }
+        break;
+      }
+
+      case 'game:time_update': {
+        const data = event.data as TimeUpdateData;
+        batch(() => {
+          setState('whiteTime', Math.floor(data.whiteTime / 1000));
+          setState('blackTime', Math.floor(data.blackTime / 1000));
+        });
+        break;
+      }
+
+      case 'game:ended': {
+        const data = event.data as GameEndedData;
+        let winner: GameWinner = null;
+        if (data.result === 'white') winner = 'w';
+        else if (data.result === 'black') winner = 'b';
+        else if (data.result === 'draw') winner = 'draw';
+
+        let reason: GameOverReason = null;
+        if (data.reason === 'checkmate') reason = 'checkmate';
+        else if (data.reason === 'stalemate') reason = 'stalemate';
+        else if (data.reason === 'timeout') reason = 'time';
+        else if (data.reason === 'resignation') reason = 'resignation';
+
+        batch(() => {
+          setState('lifecycle', 'ended');
+          setState('isGameOver', true);
+          setState('gameWinner', winner);
+          setState('gameOverReason', reason);
+        });
+        break;
+      }
+
+      case 'game:opponent_left': {
+        // Opponent disconnected - for now, just end the game
+        // Future: could show reconnection timer or handle differently
+        break;
+      }
+
+      case 'error': {
+        const data = event.data as { message: string };
+        console.error('Game sync error:', data.message);
+        break;
+      }
+    }
+  };
+
+  const startMultiplayerGame = async (options: MultiplayerGameOptions) => {
+    if (timerId) clearInterval(timerId);
+    chess = new Chess();
+
+    const { side, mode = 'play', newTimeControl = 5, increment = 0 } = options;
+
+    // Reset state for new multiplayer game
+    // Note: engineStatus is 'ready' immediately since multiplayer doesn't need Stockfish
+    batch(() => {
+      setState({
+        currentSessionId: null,
+        lifecycle: 'initializing',
+        fen: chess.fen(),
+        timeControl: newTimeControl,
+        difficulty: 0,
+        whiteTime: newTimeControl * 60,
+        blackTime: newTimeControl * 60,
+        playerColor: side,
+        boardView: side,
+        aiSide: side === 'w' ? 'b' : 'w',
+        currentTurn: 'w',
+        checkedKingSquare: null,
+        lastMove: null,
+        isGameOver: false,
+        gameOverReason: null,
+        gameWinner: null,
+        capturedWhite: [],
+        capturedBlack: [],
+        boardSquares: fenToBoard(chess.fen()),
+        moveHistory: [],
+        viewMoveIndex: -1,
+        viewFen: chess.fen(),
+        mode,
+        isAiThinking: false,
+        engineStatus: 'ready',
+        engineError: null,
+        opponentType: 'human',
+        multiplayerGameId: null,
+        isWaitingForOpponent: true,
+        opponentUsername: null,
+      });
+    });
+
+    // Subscribe to sync events
+    if (syncEventUnsubscribe) {
+      syncEventUnsubscribe();
+    }
+    syncEventUnsubscribe = gameSyncService.onEvent(handleSyncEvent);
+
+    // Connect to WebSocket and create game
+    gameSyncService.connect();
+    gameSyncService.createGame({
+      initialTime: newTimeControl * 60,
+      increment,
+    });
+  };
+
+  const applyMultiplayerMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
+    if (state.opponentType !== 'human' || !state.multiplayerGameId) {
+      return;
+    }
+
+    // Send move to server - server will validate and broadcast
+    gameSyncService.sendMove(
+      state.multiplayerGameId,
+      from,
+      to,
+      promotion
+    );
+
+    // Optimistic update: apply move locally
+    const move = chess.move({ from, to, promotion });
+    if (move) {
+      const captured = captureCheck(to, fenToBoard(state.fen));
+
+      batch(() => {
+        if (captured) {
+          handleCapturedPiece(
+            captured,
+            (newWhitePieces) => setState('capturedWhite', newWhitePieces),
+            (newBlackPieces) => setState('capturedBlack', newBlackPieces)
+          );
+        }
+        setState('fen', chess.fen());
+        setState('viewFen', chess.fen());
+        setState('boardSquares', fenToBoard(chess.fen()));
+        setState('lastMove', { from, to });
+        setState('moveHistory', [...state.moveHistory, move.san]);
+        setState('viewMoveIndex', state.moveHistory.length);
+        setState('currentTurn', state.currentTurn === 'w' ? 'b' : 'w');
+
+        // Update check status
+        if (chess.isCheck()) {
+          const currentTurn = getTurnFromFen(chess.fen());
+          const kingSquare = fenToBoard(chess.fen()).find(
+            ({ piece }) => piece === makePiece(currentTurn, 'K')
+          )?.square;
+          setState('checkedKingSquare', kingSquare ?? null);
+        } else {
+          setState('checkedKingSquare', null);
+        }
+      });
+
+      // Check for game over
+      if (chess.isCheckmate()) {
+        batch(() => {
+          setState('lifecycle', 'ended');
+          setState('isGameOver', true);
+          setState('gameWinner', state.currentTurn === 'w' ? 'b' : 'w');
+          setState('gameOverReason', 'checkmate');
+        });
+      } else if (chess.isStalemate()) {
+        batch(() => {
+          setState('lifecycle', 'ended');
+          setState('isGameOver', true);
+          setState('gameWinner', 'draw');
+          setState('gameOverReason', 'stalemate');
+        });
+      }
+    }
+  };
+
+  const resignMultiplayer = () => {
+    if (state.multiplayerGameId) {
+      gameSyncService.resign(state.multiplayerGameId);
+    }
+  };
+
+  const joinMultiplayerGame = (gameId: string) => {
+    if (timerId) clearInterval(timerId);
+    chess = new Chess();
+
+    // Reset state for joining a multiplayer game
+    batch(() => {
+      setState({
+        currentSessionId: null,
+        lifecycle: 'initializing',
+        fen: chess.fen(),
+        timeControl: 0, // Will be set when game starts
+        difficulty: 0,
+        whiteTime: 0,
+        blackTime: 0,
+        playerColor: 'b', // Joiner typically gets black, server will confirm
+        boardView: 'b',
+        aiSide: 'w',
+        currentTurn: 'w',
+        checkedKingSquare: null,
+        lastMove: null,
+        isGameOver: false,
+        gameOverReason: null,
+        gameWinner: null,
+        capturedWhite: [],
+        capturedBlack: [],
+        boardSquares: fenToBoard(chess.fen()),
+        moveHistory: [],
+        viewMoveIndex: -1,
+        viewFen: chess.fen(),
+        mode: 'play',
+        isAiThinking: false,
+        engineStatus: 'ready',
+        engineError: null,
+        opponentType: 'human',
+        multiplayerGameId: gameId,
+        isWaitingForOpponent: true,
+        opponentUsername: null,
+      });
+    });
+
+    // Subscribe to sync events
+    if (syncEventUnsubscribe) {
+      syncEventUnsubscribe();
+    }
+    syncEventUnsubscribe = gameSyncService.onEvent(handleSyncEvent);
+
+    // Connect to WebSocket and join game
+    gameSyncService.connect();
+    gameSyncService.joinGame(gameId);
   };
 
   // Derived state - computed values that depend on store state
@@ -805,6 +1177,12 @@ export const createGameStore = () => {
 
     /** Get the current session (if any) */
     currentSession: () => currentSession,
+
+    /** Whether this is a multiplayer game */
+    isMultiplayer: () => state.opponentType === 'human',
+
+    /** Whether waiting for opponent to join */
+    isWaitingForOpponent: () => state.isWaitingForOpponent,
   };
 
   const actions = {
@@ -823,6 +1201,12 @@ export const createGameStore = () => {
     afterMoveChecks,
     flipBoardView,
     clearGameTimer,
+
+    // Multiplayer actions
+    startMultiplayerGame,
+    joinMultiplayerGame,
+    applyMultiplayerMove,
+    resignMultiplayer,
 
     // Direct access (backward compatibility)
     /** @deprecated Use session methods instead. Provided for backward compatibility. */

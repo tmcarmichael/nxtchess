@@ -15,6 +15,7 @@ const NotFoundPage = lazy(
 export const routes: RouteDefinition[] = [
   { path: '/', component: HomeContainer },
   { path: '/play', component: PlayContainer },
+  { path: '/play/:gameId', component: PlayContainer },
   { path: '/training', component: TrainingContainer },
   { path: '/username-setup', component: UsernameSetup },
   { path: '/profile/:username', component: UserProfile },

@@ -1,0 +1,46 @@
+# Caddyfile for nxtchess
+# Set DOMAIN env var in production (e.g., DOMAIN=chess.example.com), defaults to localhost
+
+{$DOMAIN:localhost} {
+    # Frontend - serve the SPA
+    handle {
+        reverse_proxy frontend:80
+    }
+
+    # Backend API
+    handle /api/* {
+        reverse_proxy backend:8080
+    }
+
+    # Backend health checks
+    handle /health* {
+        reverse_proxy backend:8080
+    }
+
+    # Backend auth routes
+    handle /auth/* {
+        reverse_proxy backend:8080
+    }
+
+    # WebSocket for multiplayer
+    handle /ws {
+        reverse_proxy backend:8080
+    }
+
+    # Security headers
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Enable compression
+    encode gzip zstd
+
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}

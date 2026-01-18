@@ -6,26 +6,30 @@ import (
 	"sync"
 	"time"
 
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/chess"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 )
 
 // GameState represents the state of an active game
 type GameState struct {
-	ID          string
-	WhitePlayer *Client
-	BlackPlayer *Client
-	FEN         string
-	MoveHistory []string
-	MoveNum     int
-	Status      string // "waiting", "active", "ended"
-	Result      string // "", "white", "black", "draw"
+	ID           string
+	WhitePlayer  *Client
+	BlackPlayer  *Client
+	FEN          string
+	MoveHistory  []string
+	MoveNum      int
+	Status       string // "waiting", "active", "ended"
+	Result       string // "", "white", "black", "draw"
 	ResultReason string // "checkmate", "resignation", "timeout", "stalemate", etc.
-	TimeControl *TimeControl
-	WhiteTime   int // remaining seconds
-	BlackTime   int
-	LastMoveAt  time.Time
-	CreatedAt   time.Time
-	mu          sync.RWMutex
+	TimeControl  *TimeControl
+	WhiteTimeMs  int64     // remaining milliseconds for white
+	BlackTimeMs  int64     // remaining milliseconds for black
+	LastMoveAt   time.Time // when the clock started for current player
+	CreatedAt    time.Time
+	chessGame    *chess.Game   // Server-side chess validation
+	stopClock    chan struct{} // signal to stop the clock goroutine
+	clockRunning bool          // whether the clock is currently ticking
+	mu           sync.RWMutex
 }
 
 // Initial FEN for standard chess
@@ -46,6 +50,124 @@ func NewGameManager(hub *Hub) *GameManager {
 	}
 }
 
+// startClock starts the clock goroutine for a game
+// Must be called with game.mu held
+func (gm *GameManager) startClock(game *GameState) {
+	if game.TimeControl == nil || game.clockRunning {
+		return
+	}
+
+	game.stopClock = make(chan struct{})
+	game.clockRunning = true
+	game.LastMoveAt = time.Now()
+
+	go gm.runClock(game)
+}
+
+// runClock is the goroutine that manages the game clock
+func (gm *GameManager) runClock(game *GameState) {
+	ticker := time.NewTicker(100 * time.Millisecond) // Tick every 100ms for precision
+	defer ticker.Stop()
+
+	lastUpdate := time.Now()
+	lastTick := time.Now()
+
+	for {
+		select {
+		case <-game.stopClock:
+			return
+		case now := <-ticker.C:
+			game.mu.Lock()
+
+			if game.Status != "active" {
+				game.mu.Unlock()
+				return
+			}
+
+			// Calculate elapsed time since last tick
+			elapsed := now.Sub(lastTick).Milliseconds()
+			lastTick = now
+
+			// Determine whose clock to decrement
+			isWhiteTurn := game.chessGame.IsWhiteTurn()
+
+			// Decrement the active player's time
+			if isWhiteTurn {
+				game.WhiteTimeMs -= elapsed
+				if game.WhiteTimeMs < 0 {
+					game.WhiteTimeMs = 0
+				}
+			} else {
+				game.BlackTimeMs -= elapsed
+				if game.BlackTimeMs < 0 {
+					game.BlackTimeMs = 0
+				}
+			}
+
+			// Check for timeout (flag fall)
+			if (isWhiteTurn && game.WhiteTimeMs <= 0) || (!isWhiteTurn && game.BlackTimeMs <= 0) {
+				// Time's up!
+				winner := "black"
+				if !isWhiteTurn {
+					winner = "white"
+				}
+
+				game.Status = "ended"
+				game.Result = winner
+				game.ResultReason = "timeout"
+				game.clockRunning = false
+
+				logger.Info("Game ended by timeout", logger.F("gameId", game.ID, "winner", winner))
+
+				// Notify both players
+				endedData := GameEndedData{
+					GameID: game.ID,
+					Result: winner,
+					Reason: "timeout",
+				}
+
+				if game.WhitePlayer != nil {
+					game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+				}
+				if game.BlackPlayer != nil {
+					game.BlackPlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+				}
+
+				game.mu.Unlock()
+				return
+			}
+
+			// Send time update every second (or so)
+			if now.Sub(lastUpdate) >= time.Second {
+				lastUpdate = now
+				timeUpdate := TimeUpdateData{
+					GameID:    game.ID,
+					WhiteTime: int(game.WhiteTimeMs),
+					BlackTime: int(game.BlackTimeMs),
+				}
+
+				if game.WhitePlayer != nil {
+					game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeTimeUpdate, timeUpdate))
+				}
+				if game.BlackPlayer != nil {
+					game.BlackPlayer.SendMessage(NewServerMessage(MsgTypeTimeUpdate, timeUpdate))
+				}
+			}
+
+			game.mu.Unlock()
+		}
+	}
+}
+
+// stopClockForGame stops the clock goroutine
+// Must be called with game.mu held
+func (game *GameState) stopClockGoroutine() {
+	if game.clockRunning && game.stopClock != nil {
+		close(game.stopClock)
+		game.clockRunning = false
+	}
+}
+
 // generateGameID creates a random game ID
 func generateGameID() string {
 	bytes := make([]byte, 8)
@@ -57,6 +179,9 @@ func generateGameID() string {
 func (gm *GameManager) CreateGame(client *Client, data *GameCreateData) {
 	gameID := generateGameID()
 
+	// Initialize server-side chess game for validation
+	chessGame := chess.NewGame()
+
 	game := &GameState{
 		ID:          gameID,
 		WhitePlayer: client,
@@ -65,13 +190,14 @@ func (gm *GameManager) CreateGame(client *Client, data *GameCreateData) {
 		MoveNum:     1,
 		Status:      "waiting",
 		CreatedAt:   time.Now(),
+		chessGame:   chessGame,
 	}
 
-	// Set time control if provided
+	// Set time control if provided (convert seconds to milliseconds)
 	if data != nil && data.TimeControl != nil {
 		game.TimeControl = data.TimeControl
-		game.WhiteTime = data.TimeControl.InitialTime
-		game.BlackTime = data.TimeControl.InitialTime
+		game.WhiteTimeMs = int64(data.TimeControl.InitialTime) * 1000
+		game.BlackTimeMs = int64(data.TimeControl.InitialTime) * 1000
 	}
 
 	gm.mu.Lock()
@@ -150,10 +276,15 @@ func (gm *GameManager) JoinGame(client *Client, gameID string) {
 		WhitePlayer: whiteInfo,
 		BlackPlayer: blackInfo,
 		TimeControl: game.TimeControl,
+		WhiteTimeMs: int(game.WhiteTimeMs),
+		BlackTimeMs: int(game.BlackTimeMs),
 	}
 
 	game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeGameStarted, startedData))
 	client.SendMessage(NewServerMessage(MsgTypeGameStarted, startedData))
+
+	// Start the clock if time control is set
+	gm.startClock(game)
 }
 
 // HandleMove processes a move from a client
@@ -173,16 +304,16 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 	// Check game is active
 	if game.Status != "active" {
 		client.SendMessage(NewServerMessage(MsgTypeMoveRejected, MoveRejectedData{
-			GameID: data.GameID,
-			Reason: "Game is not active",
-			FEN:    game.FEN,
+			GameID:  data.GameID,
+			Reason:  "Game is not active",
+			FEN:     game.FEN,
 			MoveNum: game.MoveNum,
 		}))
 		return
 	}
 
-	// Determine if it's this player's turn
-	isWhiteTurn := game.MoveNum%2 == 1 // Odd moves are white's
+	// Determine if it's this player's turn using the chess library
+	isWhiteTurn := game.chessGame.IsWhiteTurn()
 	isWhitePlayer := game.WhitePlayer != nil && game.WhitePlayer.ID == client.ID
 	isBlackPlayer := game.BlackPlayer != nil && game.BlackPlayer.ID == client.ID
 
@@ -196,41 +327,51 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 		return
 	}
 
-	// TODO: Validate move with chess library
-	// For now, we trust the client and just relay the move
-	// In Phase 2, we'll add notnil/chess for server-side validation
+	// Validate move with chess library
+	result := game.chessGame.TryMove(data.From, data.To, data.Promotion)
 
-	// Record the move
+	if !result.Valid {
+		client.SendMessage(NewServerMessage(MsgTypeMoveRejected, MoveRejectedData{
+			GameID:  data.GameID,
+			Reason:  result.ErrorMsg,
+			FEN:     game.FEN,
+			MoveNum: game.MoveNum,
+		}))
+		return
+	}
+
+	// Move was valid - update game state
 	moveNotation := data.From + data.To
 	if data.Promotion != "" {
 		moveNotation += data.Promotion
 	}
 	game.MoveHistory = append(game.MoveHistory, moveNotation)
-	game.MoveNum++
+	game.FEN = result.NewFEN
+	game.MoveNum = result.MoveNum
 	game.LastMoveAt = time.Now()
 
-	// Note: FEN update should come from chess library validation
-	// For now, client will track FEN - this is temporary
-	// game.FEN = newFEN // TODO: Update from chess lib
+	// Add increment to the player who just moved (if time control is set)
+	if game.TimeControl != nil && game.TimeControl.Increment > 0 {
+		incrementMs := int64(game.TimeControl.Increment) * 1000
+		if isWhitePlayer {
+			game.WhiteTimeMs += incrementMs
+		} else {
+			game.BlackTimeMs += incrementMs
+		}
+	}
 
 	logger.Debug("Move made", logger.F(
 		"gameId", data.GameID,
 		"move", moveNotation,
+		"san", result.SAN,
 		"moveNum", game.MoveNum,
+		"isCheck", result.IsCheck,
+		"gameOver", result.GameOver,
+		"whiteTimeMs", game.WhiteTimeMs,
+		"blackTimeMs", game.BlackTimeMs,
 	))
 
-	// Send acceptance to moving player
-	client.SendMessage(NewServerMessage(MsgTypeMoveAccepted, MoveAcceptedData{
-		GameID:    data.GameID,
-		From:      data.From,
-		To:        data.To,
-		FEN:       game.FEN,
-		MoveNum:   game.MoveNum,
-		WhiteTime: game.WhiteTime,
-		BlackTime: game.BlackTime,
-	}))
-
-	// Send move to opponent
+	// Get opponent reference
 	var opponent *Client
 	if isWhitePlayer {
 		opponent = game.BlackPlayer
@@ -238,17 +379,63 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 		opponent = game.WhitePlayer
 	}
 
+	// Send acceptance to moving player
+	client.SendMessage(NewServerMessage(MsgTypeMoveAccepted, MoveAcceptedData{
+		GameID:      data.GameID,
+		From:        data.From,
+		To:          data.To,
+		SAN:         result.SAN,
+		FEN:         game.FEN,
+		MoveNum:     game.MoveNum,
+		IsCheck:     result.IsCheck,
+		WhiteTimeMs: int(game.WhiteTimeMs),
+		BlackTimeMs: int(game.BlackTimeMs),
+	}))
+
+	// Send move to opponent
 	if opponent != nil {
 		opponent.SendMessage(NewServerMessage(MsgTypeOpponentMove, OpponentMoveData{
-			GameID:    data.GameID,
-			From:      data.From,
-			To:        data.To,
-			Promotion: data.Promotion,
-			FEN:       game.FEN,
-			MoveNum:   game.MoveNum,
-			WhiteTime: game.WhiteTime,
-			BlackTime: game.BlackTime,
+			GameID:      data.GameID,
+			From:        data.From,
+			To:          data.To,
+			Promotion:   data.Promotion,
+			SAN:         result.SAN,
+			FEN:         game.FEN,
+			MoveNum:     game.MoveNum,
+			IsCheck:     result.IsCheck,
+			WhiteTimeMs: int(game.WhiteTimeMs),
+			BlackTimeMs: int(game.BlackTimeMs),
 		}))
+	}
+
+	// Check for game over (checkmate, stalemate, draw conditions)
+	if result.GameOver {
+		game.Status = "ended"
+		game.Result = string(result.Result)
+		game.ResultReason = string(result.Reason)
+
+		// Stop the clock
+		game.stopClockGoroutine()
+
+		logger.Info("Game ended", logger.F(
+			"gameId", data.GameID,
+			"result", game.Result,
+			"reason", game.ResultReason,
+		))
+
+		endedData := GameEndedData{
+			GameID: data.GameID,
+			Result: game.Result,
+			Reason: game.ResultReason,
+		}
+
+		// Notify both players
+		if game.WhitePlayer != nil {
+			game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+		}
+		if game.BlackPlayer != nil {
+			game.BlackPlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+		}
 	}
 }
 
@@ -280,6 +467,9 @@ func (gm *GameManager) HandleResign(client *Client, gameID string) {
 	game.Status = "ended"
 	game.Result = winner
 	game.ResultReason = "resignation"
+
+	// Stop the clock
+	game.stopClockGoroutine()
 
 	logger.Info("Game ended by resignation", logger.F("gameId", gameID, "winner", winner))
 
@@ -332,6 +522,9 @@ func (gm *GameManager) LeaveGame(client *Client, gameID string) {
 		game.Status = "ended"
 		game.Result = winner
 		game.ResultReason = "abandonment"
+
+		// Stop the clock
+		game.stopClockGoroutine()
 
 		// Notify opponent
 		var opponent *Client
@@ -393,6 +586,9 @@ func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
 		game.Status = "ended"
 		game.Result = winner
 		game.ResultReason = "disconnection"
+
+		// Stop the clock
+		game.stopClockGoroutine()
 
 		if opponent != nil {
 			opponent.SendMessage(NewServerMessage(MsgTypeGameEnded, GameEndedData{

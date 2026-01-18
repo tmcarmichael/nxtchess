@@ -99,9 +99,18 @@
 
       <div class="panel">
         <h3>Game Actions</h3>
-        <button onclick="createGame()">Create Game</button>
+        <button onclick="createGame()">Create Game (10+0)</button>
+        <button onclick="createGameBlitz()">Create Game (3+2)</button>
         <input type="text" id="gameIdInput" placeholder="Game ID" />
         <button onclick="joinGame()">Join Game</button>
+      </div>
+
+      <div class="panel">
+        <h3>Clock</h3>
+        <div style="display: flex; gap: 20px; font-size: 24px; font-family: monospace;">
+          <div>White: <span id="whiteClock">--:--</span></div>
+          <div>Black: <span id="blackClock">--:--</span></div>
+        </div>
       </div>
 
       <div class="panel">
@@ -170,7 +179,11 @@
 
         ws.onmessage = (e) => {
           const msg = JSON.parse(e.data);
-          log(`← ${JSON.stringify(msg, null, 2)}`, "received");
+
+          // Don't log TIME_UPDATE to avoid spam
+          if (msg.type !== "TIME_UPDATE") {
+            log(`← ${JSON.stringify(msg, null, 2)}`, "received");
+          }
 
           // Handle specific message types
           if (msg.type === "GAME_CREATED" || msg.type === "GAME_JOINED") {
@@ -181,12 +194,38 @@
           }
           if (msg.type === "GAME_STARTED") {
             log(`Game started! FEN: ${msg.data.fen}`, "info");
+            updateClocks(msg.data.whiteTimeMs, msg.data.blackTimeMs);
+          }
+          if (msg.type === "MOVE_ACCEPTED" || msg.type === "OPPONENT_MOVE") {
+            let moveInfo = msg.type === "MOVE_ACCEPTED" ? `Move accepted: ${msg.data.san}` : `Opponent played: ${msg.data.san}`;
+            if (msg.data.isCheck) moveInfo += " (CHECK!)";
+            log(moveInfo, "info");
+            updateClocks(msg.data.whiteTimeMs, msg.data.blackTimeMs);
+          }
+          if (msg.type === "TIME_UPDATE") {
+            updateClocks(msg.data.whiteTime, msg.data.blackTime);
+          }
+          if (msg.type === "MOVE_REJECTED") {
+            log(`Move rejected: ${msg.data.reason}`, "error");
           }
           if (msg.type === "GAME_ENDED") {
             log(`Game ended! Winner: ${msg.data.result}, Reason: ${msg.data.reason}`, "info");
             currentGameId = null;
           }
         };
+      }
+
+      function formatTime(ms) {
+        if (ms === undefined || ms === null) return "--:--";
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+      }
+
+      function updateClocks(whiteMs, blackMs) {
+        document.getElementById("whiteClock").textContent = formatTime(whiteMs);
+        document.getElementById("blackClock").textContent = formatTime(blackMs);
       }
 
       function disconnect() {
@@ -214,6 +253,15 @@
           type: "GAME_CREATE",
           data: {
             timeControl: { initialTime: 600, increment: 0 },
+          },
+        });
+      }
+
+      function createGameBlitz() {
+        send({
+          type: "GAME_CREATE",
+          data: {
+            timeControl: { initialTime: 180, increment: 2 },
           },
         });
       }

@@ -34,6 +34,7 @@ coverage/
 .env
 .env.deploy
 .env.local
+.env.prod
 
 # Go
 *.exe
