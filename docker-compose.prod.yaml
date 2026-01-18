@@ -18,6 +18,8 @@ services:
       - backend
     networks:
       - nxtchess_network
+    mem_limit: 128m
+    cpus: 0.25
 
   frontend:
     build:
@@ -31,6 +33,8 @@ services:
       - "80"
     networks:
       - nxtchess_network
+    mem_limit: 256m
+    cpus: 0.5
 
   backend:
     build:
@@ -45,9 +49,11 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     networks:
       - nxtchess_network
+    mem_limit: 512m
+    cpus: 0.5
 
   db:
     image: postgres:15-alpine
@@ -69,17 +75,29 @@ services:
       retries: 5
     networks:
       - nxtchess_network
+    mem_limit: 1g
+    cpus: 1.0
 
   redis:
     image: redis:7-alpine
     container_name: nxtchess_redis
     restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
     expose:
       - "6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     networks:
       - nxtchess_network
+    mem_limit: 256m
+    cpus: 0.25
 
 networks:
   nxtchess_network:

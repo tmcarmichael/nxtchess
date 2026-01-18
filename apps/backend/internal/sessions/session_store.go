@@ -19,14 +19,20 @@ var (
 )
 
 func InitRedis() {
-	redisAddr := os.Getenv("REDIS_PORT")
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		// Fallback to legacy env var name
+		redisAddr = os.Getenv("REDIS_PORT")
+	}
 	if redisAddr == "" {
 		redisAddr = "redis:6379"
 	}
 
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
-		Password: "",
+		Password: redisPassword,
 		DB:       0,
 	})
 

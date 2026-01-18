@@ -16,8 +16,7 @@ var DB *sql.DB
 func InitPostgres() {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "postgres://postgres:postgres@db:5432/chess_db?sslmode=disable"
-		log.Println("[Database] Using default DSN")
+		log.Fatal("[Database] DATABASE_URL environment variable is required")
 	}
 
 	db, err := sql.Open("postgres", dsn)

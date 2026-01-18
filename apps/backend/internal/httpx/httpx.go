@@ -36,3 +36,29 @@ func NewSecureCookie(cfg *config.Config, name, value string, maxAge int) *http.C
 		SameSite: http.SameSiteLaxMode,
 	}
 }
+
+// GetClientIP extracts the client IP from an HTTP request.
+// Checks X-Forwarded-For and X-Real-IP headers for proxy support,
+// falls back to RemoteAddr with port stripped.
+func GetClientIP(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		for i := 0; i < len(xff); i++ {
+			if xff[i] == ',' {
+				return xff[:i]
+			}
+		}
+		return xff
+	}
+
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		return xri
+	}
+
+	addr := r.RemoteAddr
+	for i := len(addr) - 1; i >= 0; i-- {
+		if addr[i] == ':' {
+			return addr[:i]
+		}
+	}
+	return addr
+}

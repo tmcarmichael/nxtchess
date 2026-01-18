@@ -6,7 +6,7 @@ GRANT USAGE ON SCHEMA public TO anon;
 CREATE TABLE IF NOT EXISTS profiles (
     user_id    TEXT PRIMARY KEY,
     username   TEXT UNIQUE,
-    rating     INT NOT NULL DEFAULT 1500,
+    rating     INT NOT NULL DEFAULT 1500 CHECK (rating >= 0 AND rating <= 4000),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 GRANT SELECT, INSERT, UPDATE ON profiles TO anon;
@@ -29,6 +29,8 @@ GRANT SELECT, INSERT, UPDATE ON games TO anon;
 CREATE INDEX IF NOT EXISTS games_playerW_id_idx ON games(playerW_id);
 CREATE INDEX IF NOT EXISTS games_playerB_id_idx ON games(playerB_id);
 CREATE INDEX IF NOT EXISTS games_created_at_idx ON games(created_at DESC);
+CREATE INDEX IF NOT EXISTS games_result_idx ON games(result);
+CREATE INDEX IF NOT EXISTS games_created_result_idx ON games(created_at DESC, result);
 
 -- Rating history with foreign key constraint
 CREATE TABLE IF NOT EXISTS rating_history (
