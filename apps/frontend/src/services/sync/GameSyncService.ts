@@ -16,7 +16,6 @@ import type {
   OpponentLeftData,
   ErrorData,
   TimeControl,
-  MsgType,
 } from './types';
 import { MsgType as MT } from './types';
 

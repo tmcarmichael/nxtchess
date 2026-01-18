@@ -34,6 +34,7 @@ Entry point `src/index.tsx` wraps the app in `UserProvider` → `GameProvider` �
 **Container components** (`PlayContainer`, `TrainingContainer`) compose the controller with mode-specific panels and modals.
 
 **Component organization**:
+
 - `chess/` — Reusable chess UI (ChessBoard, ChessBoardController, ChessPiece, ChessClock, ChessEvalBar, etc.)
 - `game/` — Game layout components (GameContainer, GameInfoPanel, ButtonPanel, PlayerColorDisplay)
 - `play/` — Multiplayer mode (PlayContainer, PlayModal, PlayControlPanel, PlayResignModal)
@@ -55,6 +56,7 @@ Access via `useGameStore()` hook which returns `[state, actions]`.
 ### Services Layer
 
 **Engine services** (`services/engine/`):
+
 - `aiEngineWorker.ts` — AI move computation via Stockfish with ELO limiting and playstyle options
 - `evalEngineWorker.ts` — Position evaluation (used in training mode for eval bar)
 - `EnginePool.ts` — Multi-engine management for concurrent games
@@ -63,6 +65,7 @@ Access via `useGameStore()` hook which returns `[state, actions]`.
 - Both workers support single-game (`computeAiMove`) and multi-game (`computeAiMoveForGame`) APIs
 
 **Game services** (`services/game/`):
+
 - `chessGameService.ts` — Game rule enforcement
 - `gameLifecycle.ts` — State transitions
 - `session/` — Session management layer:
@@ -70,15 +73,18 @@ Access via `useGameStore()` hook which returns `[state, actions]`.
   - `SessionManager.ts` — Singleton managing multiple concurrent sessions
 
 **Sync services** (`services/sync/`):
+
 - `GameSyncService.ts` — WebSocket client for multiplayer
 - `useGameSync.ts` — SolidJS integration hook
 - Message types: GAME_CREATE, GAME_JOIN, MOVE, RESIGN, etc.
 
 **Persistence** (`services/persistence/`):
+
 - `GamePersistence.ts` — LocalStorage session storage
 - `useAutoPersist.ts` — Auto-save hook with `createAutoPersist()` and `recoverActiveSession()`
 
 **Preferences** (`services/preferences/`):
+
 - `PreferencesService.ts` — User settings storage (singleton `preferences`)
 
 ### Key Types (`src/types/`)

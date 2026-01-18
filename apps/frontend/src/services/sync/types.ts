@@ -1,6 +1,3 @@
-import type { Square, PromotionPiece, Side } from '../../types';
-import type { GameSessionState, GameCommand } from '../game/session/types';
-
 // ============================================================================
 // Connection State
 // ============================================================================

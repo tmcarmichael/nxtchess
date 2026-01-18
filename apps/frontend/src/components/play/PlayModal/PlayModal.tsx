@@ -1,7 +1,7 @@
 import { createSignal, splitProps, Component, Show, For } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useGameStore } from '../../../store';
-import { GameMode, Side, StartGameOptions } from '../../../types';
+import { Side, StartGameOptions } from '../../../types';
 import { TIME_VALUES_MINUTES } from '../../../shared';
 import { preferences } from '../../../services';
 import { ChessGameModal } from '../../chess/ChessGameModal';
@@ -21,7 +21,7 @@ interface PlayModalProps {
 
 const PlayModal: Component<PlayModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose']);
-  const [state, actions] = useGameStore();
+  const [, actions] = useGameStore();
   const navigate = useNavigate();
 
   // Load saved preferences with bounds validation

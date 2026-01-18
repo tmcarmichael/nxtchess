@@ -76,6 +76,10 @@ export interface GameSessionState {
   // Training mode specific
   trainingEvalScore: number | null;
   usedHints: number;
+
+  // Multiplayer optimistic update state
+  lastConfirmedMoveIndex: number;
+  moveError: string | null;
 }
 
 // ============================================================================
@@ -160,6 +164,32 @@ export interface NavigateHistoryCommand {
   };
 }
 
+export interface OptimisticMoveCommand {
+  type: 'OPTIMISTIC_MOVE';
+  payload: {
+    from: Square;
+    to: Square;
+    promotion?: PromotionPiece;
+  };
+}
+
+export interface ConfirmMoveCommand {
+  type: 'CONFIRM_MOVE';
+  payload: {
+    serverFen: string;
+    whiteTimeMs: number;
+    blackTimeMs: number;
+  };
+}
+
+export interface RejectMoveCommand {
+  type: 'REJECT_MOVE';
+  payload: {
+    serverFen: string;
+    reason: string;
+  };
+}
+
 export type GameCommand =
   | ApplyMoveCommand
   | SyncStateCommand
@@ -169,7 +199,10 @@ export type GameCommand =
   | TakeBackCommand
   | EndGameCommand
   | UpdateTimesCommand
-  | NavigateHistoryCommand;
+  | NavigateHistoryCommand
+  | OptimisticMoveCommand
+  | ConfirmMoveCommand
+  | RejectMoveCommand;
 
 // ============================================================================
 // Command Result Types
