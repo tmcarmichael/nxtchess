@@ -140,3 +140,49 @@ exec-db: init
 exec-redis: init
 	echo "$(COLOR_YELLOW)Launching redis-cli in 'redis' container.$(COLOR_RESET)"
 	docker compose -f $(COMPOSE_FILE) --profile $(PROFILES) exec redis redis-cli
+
+# ===========================================
+# Production Commands
+# ===========================================
+
+PROD_COMPOSE_FILE := docker-compose.prod.yaml
+PROD_ENV_FILE     := .env.prod
+
+.PHONY: prod-check-env prod-build prod-up prod-down prod-logs prod-restart
+
+## prod-check-env: Verify production .env.prod exists
+prod-check-env: check-docker check-docker-daemon
+	@if [ ! -f "$(PROD_ENV_FILE)" ]; then \
+	  echo "$(COLOR_RED)ERROR: $(PROD_ENV_FILE) not found.$(COLOR_RESET)"; \
+	  echo "$(COLOR_YELLOW)Copy .env.prod.example to .env.prod and fill in the values.$(COLOR_RESET)"; \
+	  exit 1; \
+	fi
+	@echo "$(COLOR_GREEN)Production environment file found.$(COLOR_RESET)"
+
+## prod-build: Build production Docker images
+prod-build: prod-check-env ## Build production images
+	@echo "$(COLOR_YELLOW)Building production images...$(COLOR_RESET)"
+	docker compose -f $(PROD_COMPOSE_FILE) --env-file $(PROD_ENV_FILE) build
+
+## prod-up: Start production stack (detached)
+prod-up: prod-check-env ## Start production (detached)
+	@echo "$(COLOR_YELLOW)Starting production stack...$(COLOR_RESET)"
+	docker compose -f $(PROD_COMPOSE_FILE) --env-file $(PROD_ENV_FILE) up -d
+
+## prod-down: Stop production stack
+prod-down: prod-check-env ## Stop production stack
+	@echo "$(COLOR_YELLOW)Stopping production stack...$(COLOR_RESET)"
+	docker compose -f $(PROD_COMPOSE_FILE) --env-file $(PROD_ENV_FILE) down
+
+## prod-logs: Follow production logs
+prod-logs: prod-check-env ## Tail production logs
+	@echo "$(COLOR_YELLOW)Following production logs (Ctrl+C to quit)...$(COLOR_RESET)"
+	docker compose -f $(PROD_COMPOSE_FILE) --env-file $(PROD_ENV_FILE) logs -f
+
+## prod-restart: Rebuild and restart production
+prod-restart: prod-build prod-down prod-up ## Rebuild & restart production
+	@echo "$(COLOR_GREEN)Production stack restarted.$(COLOR_RESET)"
+
+## prod-status: Show production container status
+prod-status: prod-check-env ## Show container status
+	docker compose -f $(PROD_COMPOSE_FILE) --env-file $(PROD_ENV_FILE) ps

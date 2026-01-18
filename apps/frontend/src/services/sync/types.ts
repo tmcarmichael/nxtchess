@@ -8,174 +8,162 @@ import type { GameSessionState, GameCommand } from '../game/session/types';
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 
 // ============================================================================
-// Outbound Messages (Client → Server)
+// Player Info
 // ============================================================================
 
-export interface GameMoveMessage {
-  type: 'GAME:MOVE';
-  payload: {
-    gameId: string;
-    commandId: string;
-    from: Square;
-    to: Square;
-    promotion?: PromotionPiece;
-    timestamp: number;
-  };
+export interface PlayerInfo {
+  id: string;
+  username?: string;
+  rating?: number;
 }
 
-export interface GameResignMessage {
-  type: 'GAME:RESIGN';
-  payload: {
-    gameId: string;
-    resigningSide: Side;
-  };
+// ============================================================================
+// Time Control
+// ============================================================================
+
+export interface TimeControl {
+  initialTime: number; // seconds
+  increment: number; // seconds per move
 }
 
-export interface GameJoinMessage {
-  type: 'GAME:JOIN';
-  payload: {
-    gameId: string;
-    userId?: string;
-  };
+// ============================================================================
+// Outbound Messages (Client → Server)
+// Matches backend internal/ws/message.go
+// ============================================================================
+
+export interface ClientMessage {
+  type: string;
+  data?: unknown;
 }
 
-export interface GameCreateMessage {
-  type: 'GAME:CREATE';
-  payload: {
-    timeControl: number;
-    increment?: number;
-    playerColor?: Side;
-  };
+export interface GameCreateData {
+  timeControl?: TimeControl;
 }
 
-export interface PingMessage {
-  type: 'PING';
-  payload: {
-    timestamp: number;
-  };
+export interface GameJoinData {
+  gameId: string;
 }
 
-export type OutboundMessage =
-  | GameMoveMessage
-  | GameResignMessage
-  | GameJoinMessage
-  | GameCreateMessage
-  | PingMessage;
+export interface MoveData {
+  gameId: string;
+  from: string;
+  to: string;
+  promotion?: string; // "q", "r", "b", "n"
+}
+
+export interface ResignData {
+  gameId: string;
+}
 
 // ============================================================================
 // Inbound Messages (Server → Client)
+// Matches backend internal/ws/message.go
 // ============================================================================
 
-export interface GameStateMessage {
-  type: 'GAME:STATE';
-  payload: {
-    gameId: string;
-    state: Partial<GameSessionState>;
-  };
-}
-
-export interface MoveAcceptedMessage {
-  type: 'GAME:MOVE_ACCEPTED';
-  payload: {
-    gameId: string;
-    commandId: string;
-    serverTimestamp: number;
-  };
-}
-
-export interface MoveRejectedMessage {
-  type: 'GAME:MOVE_REJECTED';
-  payload: {
-    gameId: string;
-    commandId: string;
-    reason: string;
-    correctState: Partial<GameSessionState>;
-  };
-}
-
-export interface OpponentMoveMessage {
-  type: 'GAME:OPPONENT_MOVE';
-  payload: {
-    gameId: string;
-    from: Square;
-    to: Square;
-    promotion?: PromotionPiece;
-    newFen: string;
-    serverTimestamp: number;
-  };
-}
-
-export interface GameEndedMessage {
-  type: 'GAME:ENDED';
-  payload: {
-    gameId: string;
-    reason: string;
-    winner: Side | 'draw' | null;
-    finalState: Partial<GameSessionState>;
-  };
-}
-
-export interface GameCreatedMessage {
-  type: 'GAME:CREATED';
-  payload: {
-    gameId: string;
-    playerColor: Side;
-    opponentId?: string;
-    opponentUsername?: string;
-  };
-}
-
-export interface GameJoinedMessage {
-  type: 'GAME:JOINED';
-  payload: {
-    gameId: string;
-    playerColor: Side;
-    opponentId?: string;
-    opponentUsername?: string;
-    state: Partial<GameSessionState>;
-  };
-}
-
-export interface PongMessage {
-  type: 'PONG';
-  payload: {
-    timestamp: number;
-    serverTimestamp: number;
-  };
-}
-
-export interface ErrorMessage {
-  type: 'ERROR';
-  payload: {
-    code: string;
-    message: string;
-    gameId?: string;
-  };
-}
-
-export type InboundMessage =
-  | GameStateMessage
-  | MoveAcceptedMessage
-  | MoveRejectedMessage
-  | OpponentMoveMessage
-  | GameEndedMessage
-  | GameCreatedMessage
-  | GameJoinedMessage
-  | PongMessage
-  | ErrorMessage;
-
-// ============================================================================
-// Pending Command Tracking (for optimistic updates)
-// ============================================================================
-
-export interface PendingCommand {
-  id: string;
+export interface GameCreatedData {
   gameId: string;
-  command: GameCommand;
-  optimisticState: GameSessionState;
-  sentAt: number;
-  retryCount: number;
+  color: 'white' | 'black';
 }
+
+export interface GameJoinedData {
+  gameId: string;
+  color: 'white' | 'black';
+  opponent?: string;
+}
+
+export interface GameStartedData {
+  gameId: string;
+  fen: string;
+  whitePlayer: PlayerInfo;
+  blackPlayer: PlayerInfo;
+  timeControl?: TimeControl;
+  whiteTimeMs: number;
+  blackTimeMs: number;
+}
+
+export interface MoveAcceptedData {
+  gameId: string;
+  from: string;
+  to: string;
+  san: string;
+  fen: string;
+  moveNum: number;
+  isCheck?: boolean;
+  whiteTimeMs?: number;
+  blackTimeMs?: number;
+}
+
+export interface MoveRejectedData {
+  gameId: string;
+  reason: string;
+  fen: string;
+  moveNum: number;
+}
+
+export interface OpponentMoveData {
+  gameId: string;
+  from: string;
+  to: string;
+  promotion?: string;
+  san: string;
+  fen: string;
+  moveNum: number;
+  isCheck?: boolean;
+  whiteTimeMs?: number;
+  blackTimeMs?: number;
+}
+
+export interface GameEndedData {
+  gameId: string;
+  result: 'white' | 'black' | 'draw';
+  reason: 'checkmate' | 'resignation' | 'timeout' | 'stalemate' | 'agreement';
+}
+
+export interface TimeUpdateData {
+  gameId: string;
+  whiteTime: number; // milliseconds
+  blackTime: number; // milliseconds
+}
+
+export interface OpponentLeftData {
+  gameId: string;
+}
+
+export interface ErrorData {
+  code: string;
+  message: string;
+}
+
+export interface ServerMessage {
+  type: string;
+  data?: unknown;
+}
+
+// Message type constants (matching backend)
+export const MsgType = {
+  // Client → Server
+  PING: 'PING',
+  GAME_CREATE: 'GAME_CREATE',
+  GAME_JOIN: 'GAME_JOIN',
+  GAME_LEAVE: 'GAME_LEAVE',
+  MOVE: 'MOVE',
+  RESIGN: 'RESIGN',
+
+  // Server → Client
+  PONG: 'PONG',
+  ERROR: 'ERROR',
+  GAME_CREATED: 'GAME_CREATED',
+  GAME_JOINED: 'GAME_JOINED',
+  GAME_STARTED: 'GAME_STARTED',
+  GAME_NOT_FOUND: 'GAME_NOT_FOUND',
+  GAME_FULL: 'GAME_FULL',
+  GAME_ENDED: 'GAME_ENDED',
+  MOVE_ACCEPTED: 'MOVE_ACCEPTED',
+  MOVE_REJECTED: 'MOVE_REJECTED',
+  OPPONENT_MOVE: 'OPPONENT_MOVE',
+  OPPONENT_LEFT: 'OPPONENT_LEFT',
+  TIME_UPDATE: 'TIME_UPDATE',
+} as const;
 
 // ============================================================================
 // Sync Service Events
@@ -183,13 +171,17 @@ export interface PendingCommand {
 
 export type SyncEventType =
   | 'connection:state_changed'
+  | 'game:created'
+  | 'game:joined'
+  | 'game:started'
+  | 'game:not_found'
+  | 'game:full'
+  | 'game:ended'
   | 'game:move_accepted'
   | 'game:move_rejected'
   | 'game:opponent_move'
-  | 'game:state_sync'
-  | 'game:ended'
-  | 'game:created'
-  | 'game:joined'
+  | 'game:opponent_left'
+  | 'game:time_update'
   | 'error';
 
 export interface SyncEvent {
@@ -209,5 +201,4 @@ export interface SyncServiceConfig {
   reconnectAttempts: number;
   reconnectDelayMs: number;
   pingIntervalMs: number;
-  commandTimeoutMs: number;
 }

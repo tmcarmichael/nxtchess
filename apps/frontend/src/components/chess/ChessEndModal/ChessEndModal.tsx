@@ -1,18 +1,16 @@
-import { splitProps, Component } from 'solid-js';
+import { splitProps, Component, Show } from 'solid-js';
 import { useGameStore } from '../../../store';
+import type { GameOverReason, GameWinner } from '../../../types';
 import styles from './ChessEndModal.module.css';
+
+// Extended reason type to include training-specific reasons
+type ExtendedGameOverReason = GameOverReason | 'trainingOpeningComplete';
 
 interface ChessEndModalProps {
   onClose: () => void;
   onPlayAgain: () => void;
-  gameOverReason:
-    | 'checkmate'
-    | 'stalemate'
-    | 'time'
-    | 'resignation'
-    | 'trainingOpeningComplete'
-    | null;
-  gameWinner: 'w' | 'b' | 'draw' | null;
+  gameOverReason: ExtendedGameOverReason;
+  gameWinner: GameWinner;
 }
 
 interface GameOverInfo {
@@ -29,8 +27,8 @@ const getGameOverInfoTraining = (finalEvalScore: number | null): GameOverInfo =>
 };
 
 const getGameOverInfoPlay = (
-  reason: ChessEndModalProps['gameOverReason'],
-  winner: 'w' | 'b' | 'draw' | null
+  reason: ExtendedGameOverReason,
+  winner: GameWinner
 ): GameOverInfo => {
   if (winner === 'draw') {
     return { heading: 'Draw', message: '' };
@@ -69,6 +67,8 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose', 'onPlayAgain', 'gameOverReason', 'gameWinner']);
   const [state] = useGameStore();
 
+  const isMultiplayer = () => state.opponentType === 'human';
+
   const getGameOverInfo = (): GameOverInfo => {
     if (state.mode === 'training') {
       return getGameOverInfoTraining(state.trainingEvalScore);
@@ -76,7 +76,16 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
     return getGameOverInfoPlay(local.gameOverReason, local.gameWinner);
   };
 
+  // For multiplayer, show if player won/lost/drew
+  const getPlayerResult = (): string | null => {
+    if (!isMultiplayer()) return null;
+    if (local.gameWinner === 'draw') return 'Draw';
+    if (local.gameWinner === state.playerColor) return 'You Won!';
+    return 'You Lost';
+  };
+
   const { heading, message } = getGameOverInfo();
+  const playerResult = getPlayerResult();
 
   return (
     <div class={styles.modalOverlay} onClick={local.onClose}>
@@ -84,11 +93,14 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
         <button class={styles.closeButton} onClick={local.onClose} aria-label="Close">
           <span class={styles.closeIcon}>&times;</span>
         </button>
-        <h1>{heading}</h1>
+        <Show when={playerResult}>
+          <h1 class={styles.playerResult}>{playerResult}</h1>
+        </Show>
+        <h2>{heading}</h2>
         <p>{message}</p>
         <div class={styles.actions}>
           <button class={styles.playAgainButton} onClick={local.onPlayAgain}>
-            Play Again
+            {isMultiplayer() ? 'New Game' : 'Play Again'}
           </button>
           <button onClick={local.onClose}>Exit</button>
         </div>

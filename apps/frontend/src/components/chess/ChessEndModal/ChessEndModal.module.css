@@ -48,12 +48,17 @@
 
 .modalContent h1,
 .modalContent h2 {
-  margin: 0 0 1.5rem;
-  padding-bottom: 1rem;
+  margin: 0 0 1rem;
   font-size: 1.45rem;
   font-weight: 600;
   color: #b0b0b0;
   letter-spacing: 0.5px;
+}
+
+.playerResult {
+  font-size: 1.8rem;
+  color: #4ade80;
+  margin-bottom: 0.5rem;
 }
 
 .modalContent p {

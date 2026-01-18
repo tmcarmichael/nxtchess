@@ -1,34 +1,32 @@
 import { createSignal, onCleanup, Accessor } from 'solid-js';
-import { gameSyncService, GameSyncService } from './GameSyncService';
-import type { GameSession } from '../game/session/GameSession';
-import type { ConnectionState, SyncEvent } from './types';
-import type { Square, PromotionPiece, Side } from '../../types';
+import { gameSyncService } from './GameSyncService';
+import type { ConnectionState, SyncEvent, TimeControl } from './types';
+import type { Square, PromotionPiece } from '../../types';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export interface GameSyncHookConfig {
-  serverUrl: string;
-  autoConnect?: boolean;
-}
-
-export interface GameSyncResult {
+export interface UseGameSyncResult {
   // Connection state
   connectionState: Accessor<ConnectionState>;
   isConnected: Accessor<boolean>;
   isConnecting: Accessor<boolean>;
   isReconnecting: Accessor<boolean>;
 
+  // Game state
+  currentGameId: Accessor<string | null>;
+
   // Connection controls
   connect: () => void;
   disconnect: () => void;
 
   // Game actions
+  createGame: (timeControl?: TimeControl) => void;
+  joinGame: (gameId: string) => void;
+  leaveGame: () => void;
   sendMove: (from: Square, to: Square, promotion?: PromotionPiece) => void;
   resign: () => void;
-  joinGame: (gameId: string) => void;
-  createGame: (timeControl: number, increment?: number, playerColor?: Side) => void;
 
   // Event subscription
   onSyncEvent: (handler: (event: SyncEvent) => void) => () => void;
@@ -38,91 +36,108 @@ export interface GameSyncResult {
 }
 
 // ============================================================================
-// createGameSync Hook
+// useGameSync Hook
 // ============================================================================
 
-export function createGameSync(
-  getSession: () => GameSession | null,
-  config: GameSyncHookConfig
-): GameSyncResult {
-  const [connectionState, setConnectionState] = createSignal<ConnectionState>('disconnected');
+export function useGameSync(): UseGameSyncResult {
+  const [connectionState, setConnectionState] = createSignal<ConnectionState>(
+    gameSyncService.getConnectionState()
+  );
+  const [currentGameId, setCurrentGameId] = createSignal<string | null>(
+    gameSyncService.getCurrentGameId()
+  );
   const [lastError, setLastError] = createSignal<string | null>(null);
 
-  // Subscribe to connection state changes
+  // Subscribe to events
   const unsubscribe = gameSyncService.onEvent((event) => {
-    if (event.type === 'connection:state_changed') {
-      const data = event.data as { currentState: ConnectionState };
-      setConnectionState(data.currentState);
-    }
+    switch (event.type) {
+      case 'connection:state_changed': {
+        const data = event.data as { currentState: ConnectionState };
+        setConnectionState(data.currentState);
+        break;
+      }
 
-    if (event.type === 'error') {
-      const data = event.data as { message: string };
-      setLastError(data.message);
-    }
+      case 'game:created':
+      case 'game:joined':
+      case 'game:started': {
+        const data = event.data as { gameId: string };
+        setCurrentGameId(data.gameId);
+        setLastError(null);
+        break;
+      }
 
-    if (event.type === 'game:move_rejected') {
-      const data = event.data as { reason: string };
-      setLastError(data.reason);
+      case 'game:ended':
+        setCurrentGameId(null);
+        break;
+
+      case 'game:not_found':
+        setLastError('Game not found');
+        break;
+
+      case 'game:full':
+        setLastError('Game is full');
+        break;
+
+      case 'game:move_rejected': {
+        const data = event.data as { reason: string };
+        setLastError(data.reason);
+        break;
+      }
+
+      case 'error': {
+        const data = event.data as { message: string };
+        setLastError(data.message);
+        break;
+      }
     }
   });
-
-  // Bind/unbind session
-  const bindCurrentSession = () => {
-    const session = getSession();
-    if (session) {
-      gameSyncService.bindSession(session);
-    }
-  };
-
-  // Connect
-  const connect = () => {
-    bindCurrentSession();
-    gameSyncService.connect(config.serverUrl);
-  };
-
-  // Disconnect
-  const disconnect = () => {
-    gameSyncService.disconnect();
-    gameSyncService.unbindSession();
-  };
-
-  // Auto-connect if configured
-  if (config.autoConnect) {
-    connect();
-  }
 
   // Cleanup on unmount
   onCleanup(() => {
-    disconnect();
     unsubscribe();
   });
 
-  // Game actions
-  const sendMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
-    const session = getSession();
-    if (!session) {
-      console.warn('useGameSync: No session available');
-      return;
-    }
-    gameSyncService.sendMove(session.sessionId, from, to, promotion);
+  // Connection controls
+  const connect = () => {
+    gameSyncService.connect();
   };
 
-  const resign = () => {
-    const session = getSession();
-    if (!session) {
-      console.warn('useGameSync: No session available');
-      return;
-    }
-    const playerColor = session.config.playerColor;
-    gameSyncService.sendResign(session.sessionId, playerColor);
+  const disconnect = () => {
+    gameSyncService.disconnect();
+    setCurrentGameId(null);
+  };
+
+  // Game actions
+  const createGame = (timeControl?: TimeControl) => {
+    gameSyncService.createGame(timeControl);
   };
 
   const joinGame = (gameId: string) => {
     gameSyncService.joinGame(gameId);
   };
 
-  const createGame = (timeControl: number, increment?: number, playerColor?: Side) => {
-    gameSyncService.createGame(timeControl, increment, playerColor);
+  const leaveGame = () => {
+    const gameId = currentGameId();
+    if (gameId) {
+      gameSyncService.leaveGame(gameId);
+      setCurrentGameId(null);
+    }
+  };
+
+  const sendMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
+    const gameId = currentGameId();
+    if (gameId) {
+      gameSyncService.sendMove(gameId, from, to, promotion);
+    } else {
+      console.warn('useGameSync: No active game');
+    }
+  };
+
+  const resign = () => {
+    const gameId = currentGameId();
+    if (gameId) {
+      gameSyncService.resign(gameId);
+    }
   };
 
   const onSyncEvent = (handler: (event: SyncEvent) => void) => {
@@ -134,107 +149,14 @@ export function createGameSync(
     isConnected: () => connectionState() === 'connected',
     isConnecting: () => connectionState() === 'connecting',
     isReconnecting: () => connectionState() === 'reconnecting',
+    currentGameId,
     connect,
     disconnect,
+    createGame,
+    joinGame,
+    leaveGame,
     sendMove,
     resign,
-    joinGame,
-    createGame,
-    onSyncEvent,
-    lastError,
-  };
-}
-
-// ============================================================================
-// Alternative: Factory for custom GameSyncService instance
-// ============================================================================
-
-export function createGameSyncWithService(
-  service: GameSyncService,
-  getSession: () => GameSession | null,
-  config: GameSyncHookConfig
-): GameSyncResult {
-  const [connectionState, setConnectionState] = createSignal<ConnectionState>('disconnected');
-  const [lastError, setLastError] = createSignal<string | null>(null);
-
-  const unsubscribe = service.onEvent((event) => {
-    if (event.type === 'connection:state_changed') {
-      const data = event.data as { currentState: ConnectionState };
-      setConnectionState(data.currentState);
-    }
-
-    if (event.type === 'error') {
-      const data = event.data as { message: string };
-      setLastError(data.message);
-    }
-
-    if (event.type === 'game:move_rejected') {
-      const data = event.data as { reason: string };
-      setLastError(data.reason);
-    }
-  });
-
-  const bindCurrentSession = () => {
-    const session = getSession();
-    if (session) {
-      service.bindSession(session);
-    }
-  };
-
-  const connect = () => {
-    bindCurrentSession();
-    service.connect(config.serverUrl);
-  };
-
-  const disconnect = () => {
-    service.disconnect();
-    service.unbindSession();
-  };
-
-  if (config.autoConnect) {
-    connect();
-  }
-
-  onCleanup(() => {
-    disconnect();
-    unsubscribe();
-  });
-
-  const sendMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
-    const session = getSession();
-    if (!session) return;
-    service.sendMove(session.sessionId, from, to, promotion);
-  };
-
-  const resign = () => {
-    const session = getSession();
-    if (!session) return;
-    service.sendResign(session.sessionId, session.config.playerColor);
-  };
-
-  const joinGame = (gameId: string) => {
-    service.joinGame(gameId);
-  };
-
-  const createGame = (timeControl: number, increment?: number, playerColor?: Side) => {
-    service.createGame(timeControl, increment, playerColor);
-  };
-
-  const onSyncEvent = (handler: (event: SyncEvent) => void) => {
-    return service.onEvent(handler);
-  };
-
-  return {
-    connectionState,
-    isConnected: () => connectionState() === 'connected',
-    isConnecting: () => connectionState() === 'connecting',
-    isReconnecting: () => connectionState() === 'reconnecting',
-    connect,
-    disconnect,
-    sendMove,
-    resign,
-    joinGame,
-    createGame,
     onSyncEvent,
     lastError,
   };

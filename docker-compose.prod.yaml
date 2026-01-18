@@ -1,0 +1,92 @@
+# Production Docker Compose
+# Usage: docker compose -f docker-compose.prod.yaml up -d
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: nxtchess_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - nxtchess_network
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: ${BACKEND_URL}
+    container_name: nxtchess_frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - nxtchess_network
+
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: nxtchess_backend
+    restart: unless-stopped
+    env_file: .env.prod
+    expose:
+      - "8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - nxtchess_network
+
+  db:
+    image: postgres:15-alpine
+    container_name: nxtchess_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-chess_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-chess_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nxtchess_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: nxtchess_redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nxtchess_network
+
+networks:
+  nxtchess_network:
+    driver: bridge
+
+volumes:
+  db_data:
+  redis_data:
+  caddy_data:
+  caddy_config:

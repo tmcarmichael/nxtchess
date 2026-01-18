@@ -131,7 +131,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       return;
     }
 
-    actions.applyPlayerMove(from, to, promotion);
+    // Use multiplayer move if this is a human vs human game
+    if (derived.isMultiplayer()) {
+      actions.applyMultiplayerMove(from, to, promotion);
+    } else {
+      actions.applyPlayerMove(from, to, promotion);
+    }
     clearDraggingState();
   };
 
@@ -204,6 +209,35 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
             errorMessage={state.engineError}
             onRetry={actions.retryEngineInit}
           />
+          {/* Waiting for opponent overlay for multiplayer */}
+          <Show when={state.isWaitingForOpponent}>
+            <div class={styles.waitingOverlay}>
+              <div class={styles.waitingContent}>
+                <div class={styles.spinner} />
+                <h3>Waiting for Opponent</h3>
+                <Show
+                  when={state.multiplayerGameId}
+                  fallback={<p class={styles.waitingHint}>Connecting to server...</p>}
+                >
+                  <p class={styles.waitingHint}>Share this link with your opponent:</p>
+                  <div class={styles.gameUrlContainer}>
+                    <code class={styles.gameUrl}>
+                      {`${window.location.origin}/play/${state.multiplayerGameId}`}
+                    </code>
+                    <button
+                      class={styles.copyButton}
+                      onClick={() => {
+                        const url = `${window.location.origin}/play/${state.multiplayerGameId}`;
+                        navigator.clipboard.writeText(url);
+                      }}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </Show>
+              </div>
+            </div>
+          </Show>
         </div>
       </div>
 

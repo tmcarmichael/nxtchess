@@ -1,32 +1,35 @@
 // Sync types
 export type {
   ConnectionState,
-  OutboundMessage,
-  InboundMessage,
-  GameMoveMessage,
-  GameResignMessage,
-  GameJoinMessage,
-  GameCreateMessage,
-  PingMessage,
-  GameStateMessage,
-  MoveAcceptedMessage,
-  MoveRejectedMessage,
-  OpponentMoveMessage,
-  GameEndedMessage,
-  GameCreatedMessage,
-  GameJoinedMessage,
-  PongMessage,
-  ErrorMessage,
-  PendingCommand,
+  PlayerInfo,
+  TimeControl,
+  ClientMessage,
+  GameCreateData,
+  GameJoinData,
+  MoveData,
+  ResignData,
+  ServerMessage,
+  GameCreatedData,
+  GameJoinedData,
+  GameStartedData,
+  MoveAcceptedData,
+  MoveRejectedData,
+  OpponentMoveData,
+  GameEndedData,
+  TimeUpdateData,
+  OpponentLeftData,
+  ErrorData,
   SyncEventType,
   SyncEvent,
   SyncEventHandler,
   SyncServiceConfig,
 } from './types';
 
+export { MsgType } from './types';
+
 // Sync service
 export { GameSyncService, gameSyncService } from './GameSyncService';
 
 // Sync hook
-export { createGameSync, createGameSyncWithService } from './useGameSync';
-export type { GameSyncHookConfig, GameSyncResult } from './useGameSync';
+export { useGameSync } from './useGameSync';
+export type { UseGameSyncResult } from './useGameSync';

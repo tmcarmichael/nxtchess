@@ -1,31 +1,32 @@
-# PROD BUILD
-FROM node:20-bullseye-slim AS build
+# Production Dockerfile for SolidJS frontend
+# Multi-stage build: Node for build, Nginx for serving
+
+# Build stage
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install dependencies
 COPY package.json yarn.lock ./
+RUN corepack enable && yarn install --frozen-lockfile
 
-RUN corepack enable \
-    && yarn install --frozen-lockfile
-
+# Copy source and build
 COPY . .
 
-ARG VITE_DEBUG
-ARG VITE_APP_TITLE
-ARG VITE_APP_VERSION
+# Build args for environment variables at build time
 ARG VITE_BACKEND_URL
-
-ENV VITE_DEBUG=$VITE_DEBUG
-ENV VITE_APP_TITLE=$VITE_APP_TITLE
-ENV VITE_APP_VERSION=$VITE_APP_VERSION
 ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
 
 RUN yarn build
 
-# PROD STAGE
-FROM nginx:alpine AS production
+# Runtime stage
+FROM nginx:alpine
 
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy built files
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
