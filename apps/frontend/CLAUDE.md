@@ -18,11 +18,13 @@ yarn format:check  # Verify formatting (runs in prebuild)
 
 ### Routing & Providers
 
-Entry point `src/index.tsx` wraps the app in `UserProvider` → `GameProvider` → `Router`. Routes:
+Entry point `src/index.tsx` wraps the app in `UserProvider` → `GameProvider` → `Router`. All routes use lazy loading. Routes:
 
 - `/` → HomeContainer
-- `/play` → PlayContainer (timed games vs AI)
+- `/play` → PlayContainer (multiplayer or vs AI)
+- `/play/:gameId` → PlayContainer (join multiplayer game via URL)
 - `/training` → TrainingContainer (untimed practice with eval)
+- `/username-setup` → UsernameSetup
 - `/profile/:username` → UserProfile
 
 ### Component Patterns
@@ -30,6 +32,14 @@ Entry point `src/index.tsx` wraps the app in `UserProvider` → `GameProvider` �
 **Controller/Presenter separation**: `ChessBoardController` handles all game logic (move validation, drag/drop, promotion, AI triggers). `ChessBoard` is purely presentational—receives callbacks and renders squares.
 
 **Container components** (`PlayContainer`, `TrainingContainer`) compose the controller with mode-specific panels and modals.
+
+**Component organization**:
+- `chess/` — Reusable chess UI (ChessBoard, ChessBoardController, ChessPiece, ChessClock, ChessEvalBar, etc.)
+- `game/` — Game layout components (GameContainer, GameInfoPanel, ButtonPanel, PlayerColorDisplay)
+- `play/` — Multiplayer mode (PlayContainer, PlayModal, PlayControlPanel, PlayResignModal)
+- `training/` — Training mode (TrainingContainer, TrainingModal, TrainingControlPanel)
+- `user/` — Auth & profile (UserSignInModal, UserProfile, UsernameSetup)
+- `common/` — Shared layout (CommonSiteHeader, CommonSiteFooter, CommonErrorBoundary)
 
 ### State Management
 
@@ -42,23 +52,55 @@ Entry point `src/index.tsx` wraps the app in `UserProvider` → `GameProvider` �
 
 Access via `useGameStore()` hook which returns `[state, actions]`.
 
-### Engine Workers
+### Services Layer
 
-Two separate Web Workers prevent UCI command race conditions:
+**Engine services** (`services/engine/`):
+- `aiEngineWorker.ts` — AI move computation via Stockfish with ELO limiting and playstyle options
+- `evalEngineWorker.ts` — Position evaluation (used in training mode for eval bar)
+- `EnginePool.ts` — Multi-engine management for concurrent games
+- `ResilientEngine.ts` — Auto-recovery wrapper for engine failures
+- Two separate Web Workers prevent UCI command race conditions
+- Both workers support single-game (`computeAiMove`) and multi-game (`computeAiMoveForGame`) APIs
 
-- `aiEngineWorker.ts`: AI move computation via Stockfish with ELO limiting and playstyle options
-- `evalEngineWorker.ts`: Position evaluation (used in training mode for eval bar)
+**Game services** (`services/game/`):
+- `chessGameService.ts` — Game rule enforcement
+- `gameLifecycle.ts` — State transitions
+- `session/` — Session management layer:
+  - `GameSession.ts` — Single game session with commands (ApplyMove, Resign, Timeout)
+  - `SessionManager.ts` — Singleton managing multiple concurrent sessions
 
-Both use the same pattern: `init*Engine()` → `waitForReady()` → UCI commands.
+**Sync services** (`services/sync/`):
+- `GameSyncService.ts` — WebSocket client for multiplayer
+- `useGameSync.ts` — SolidJS integration hook
+- Message types: GAME_CREATE, GAME_JOIN, MOVE, RESIGN, etc.
+
+**Persistence** (`services/persistence/`):
+- `GamePersistence.ts` — LocalStorage session storage
+- `useAutoPersist.ts` — Auto-save hook with `createAutoPersist()` and `recoverActiveSession()`
+
+**Preferences** (`services/preferences/`):
+- `PreferencesService.ts` — User settings storage (singleton `preferences`)
 
 ### Key Types (`src/types/`)
 
 ```typescript
 Side = 'w' | 'b'
 GameMode = 'play' | 'training' | 'analysis'
+OpponentType = 'ai' | 'human'
+RatedMode = 'rated' | 'casual'
 AIPlayStyle = 'aggressive' | 'defensive' | 'balanced' | 'random' | 'positional'
 GamePhase = 'opening' | 'middlegame' | 'endgame'
-Square = 'a1' | 'a2' | ... (chess squares)
+Square = 'a1' | 'a2' | ... (64 chess squares)
+PieceType = 'wP' | 'bP' | 'wN' | ... (all pieces)
+PromotionPiece = 'q' | 'r' | 'b' | 'n'
+```
+
+### Shared Utilities (`src/shared/`)
+
+```
+config/      constants.ts (TIME_VALUES, DIFFICULTY_PRESETS), env.ts
+hooks/       useKeyboardNavigation.ts (Arrow keys, 'f' to flip)
+utils/       debug.ts, generateId.ts, stringUtils.ts
 ```
 
 ### CSS Modules
@@ -67,7 +109,7 @@ All components use `.module.css` files. Import as `styles` and reference as `sty
 
 ### Keyboard Shortcuts
 
-Defined in `ChessBoardController`:
+Defined in `useKeyboardNavigation` hook, used by `ChessBoardController`:
 
 - `ArrowLeft/Right`: Navigate move history
 - `f`: Flip board view
