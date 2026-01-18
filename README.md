@@ -1,10 +1,10 @@
-# nxtchess
+# NxtChess
 
 [![Status](https://img.shields.io/badge/status-alpha-blue)](#)
 [![License](https://img.shields.io/github/license/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/blob/main/LICENSE)
 [![Issues](https://img.shields.io/github/issues/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/issues)
 
-nxtchess is a multiplayer chess platform with AI training modes. Play anonymous games via shareable links or sign in to track ratings and game history.
+NxtChess is a multiplayer chess platform with AI training modes. Play anonymous games via shareable links or sign in to track ratings and game history.
 
 ## Features
 

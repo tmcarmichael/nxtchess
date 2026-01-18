@@ -43,7 +43,7 @@ const CommonSiteHeader: ParentComponent = () => {
     <>
       <header class={styles.headerRoot}>
         <div class={styles.headerLeft} onClick={() => navigate('/')}>
-          nxtchess
+          NxtChess
         </div>
         <div class={styles.headerCenter}>
           <For each={NAV_ITEMS}>
