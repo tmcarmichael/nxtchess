@@ -1,20 +1,28 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   GameContainer - Obsidian Arena Theme
+   Main game layout with dramatic board presentation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .gameContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   text-align: center;
-  padding: 8rem 1rem 2rem;
+  padding: 6rem var(--space-md) var(--space-xl);
   box-sizing: border-box;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
 }
 
 .gameLayout {
   display: flex;
   align-items: flex-start;
-  gap: 2rem;
-  margin-top: 7rem;
+  gap: var(--space-2xl);
+  margin-top: 5rem;
   min-height: 70vh;
-  max-width: 2000px;
+  max-width: 1400px;
   justify-content: center;
 }
 
@@ -24,10 +32,29 @@
   justify-content: center;
   align-items: center;
   min-height: 500px;
-  margin-top: 100px;
+  margin-top: 80px;
+  position: relative;
+}
+
+/* Ambient glow behind the board */
+.boardWrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(ellipse at center, var(--accent-ghost) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.5;
 }
 
 .panelWrapper {
-  width: 350px;
+  width: 360px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }

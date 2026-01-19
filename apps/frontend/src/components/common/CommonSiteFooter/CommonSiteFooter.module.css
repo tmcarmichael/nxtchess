@@ -1,50 +1,58 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   CommonSiteFooter - Obsidian Arena Theme
+   Minimal floating footer with refined styling
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .footer {
   position: fixed;
-  bottom: 0;
+  bottom: var(--space-md);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  padding: 1rem;
-  background-color: #222;
   align-items: center;
-  gap: 10px;
-  padding: 10px 15px;
-  background: rgba(20, 20, 20, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  background: rgba(10, 10, 10, 0.8);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-lg);
   max-width: 500px;
+  z-index: 100;
 }
 
 .footerList {
   list-style: none;
   display: flex;
-  gap: 1rem;
+  gap: var(--space-lg);
   margin: 0;
   padding: 0;
-  font-size: 0.7rem;
-  color: #888;
+}
+
+.footerList li {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .footerList a {
-  color: #888 !important;
-  text-decoration: none !important;
-  transition: none !important;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
 .footerList a:visited {
-  color: #888 !important;
-  text-decoration: none !important;
+  color: var(--text-muted);
 }
 
 .footerList a:hover {
-  color: #2adeae !important;
+  color: var(--accent);
 }
 
 .footerList a:active {
-  color: #888 !important;
-  text-decoration: none !important;
+  color: var(--text-secondary);
 }

@@ -1,31 +1,38 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ChessPiece - Obsidian Arena Theme
+   Pieces with refined shadows and smooth interactions
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .piece {
   width: 90px;
   height: 90px;
   user-select: none;
   cursor: grab;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
   transition:
-    transform 0.2s ease-in-out,
-    filter 0.2s ease-in-out;
+    transform var(--transition-fast),
+    filter var(--transition-fast);
   will-change: transform;
   backface-visibility: hidden;
 }
 
 .piece:hover {
-  transform: scale(1.02);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25)) brightness(1.1);
+  transform: scale(1.04);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35)) brightness(1.08);
 }
 
 .piece:active {
   cursor: grabbing;
-  transform: scale(1.1);
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3)) brightness(1.15);
+  transform: scale(1.12);
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4)) brightness(1.1);
 }
 
+/* White pieces - slightly brighter */
 .piece[src*='w'] {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) brightness(1.05);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) brightness(1.02);
 }
 
+/* Black pieces - deeper shadow for contrast */
 .piece[src*='b'] {
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3)) brightness(0.95);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35)) brightness(0.98);
 }

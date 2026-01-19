@@ -1,170 +1,187 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   UserSignInModal - Obsidian Arena Theme
+   Authentication modal with OAuth buttons
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .modalOverlay {
   position: fixed;
   inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(2px);
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 9999;
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  animation: fadeIn var(--transition-slow) ease-out forwards;
 }
 
 .modalContent {
   position: relative;
   width: 90%;
-  max-width: 440px;
-  padding: 2rem;
+  max-width: 420px;
+  padding: var(--space-xl);
   text-align: center;
-  color: #c5c5c5;
-  background: linear-gradient(145deg, rgba(42, 42, 42, 0.7), rgba(51, 51, 51, 0.7));
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.5),
-    0 2px 4px rgba(255, 255, 255, 0.05);
-  animation: slideUp 0.3s ease-out forwards;
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  animation: slideUp var(--transition-slow) ease-out forwards;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* Accent line */
+.modalContent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  border-radius: var(--radius-full);
+  opacity: 0.6;
 }
 
 .modalContent h2 {
-  margin: 0 0 1.5rem;
-  font-size: 1.45rem;
-  font-weight: 600;
-  color: #b0b0b0;
-  letter-spacing: 0.5px;
+  margin: var(--space-sm) 0 var(--space-lg);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Close Button
+   ───────────────────────────────────────────────────────────────────────────── */
 
 .closeButton {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: var(--space-md);
+  right: var(--space-md);
   width: 2rem;
   height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.056);
-  border: none;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  color: #a0a0a0;
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 1.25rem;
+  color: var(--text-muted);
   cursor: pointer;
   transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #d4d4d4;
+  background: var(--surface-4);
+  color: var(--text-primary);
+  transform: rotate(90deg);
 }
 
 .closeIcon {
-  position: relative;
-  top: -2px;
-  font-size: 1.5rem;
-  color: #888;
-  transition:
-    color 0.2s ease,
-    transform 0.2s ease;
+  font-size: 1.1rem;
+  line-height: 1;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Sign In Options
+   ───────────────────────────────────────────────────────────────────────────── */
 
 .signInOptions {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
 }
 
 .signInButton {
-  padding: 0.75rem 1.2rem;
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
   font-weight: 600;
-  background: rgba(21, 125, 73, 0.6);
-  color: #bebebe;
-  border: 1px solid #2d2d2d;
-  border-radius: 6px;
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--accent-muted);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition:
-    background-color 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-  box-shadow: 0 1px 4px rgba(58, 58, 58, 0.3);
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .signInButton:hover {
-  transform: scale(1.02);
-  background-color: rgba(25, 154, 90, 0.5);
-  box-shadow: 0 4px 12px rgba(22, 22, 22, 0.8);
+  transform: translateY(-2px);
+  background: var(--accent-muted);
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(0, 255, 209, 0.2);
 }
 
 .signInButton:active {
-  background-color: rgba(21, 130, 75, 0.6);
-  transform: scale(0.98);
+  transform: translateY(0);
 }
 
-@media (max-width: 480px) {
-  .modalContent {
-    padding: 1.5rem;
-  }
-}
+/* ─────────────────────────────────────────────────────────────────────────────
+   Error Banner
+   ───────────────────────────────────────────────────────────────────────────── */
 
 .errorBanner {
-  margin: 1rem 0;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  background-color: rgba(200, 25, 25, 0.15);
-  border: 1px solid rgba(255, 0, 0, 0.3);
-  color: #ffc7c7;
-  font-weight: 500;
+  margin: var(--space-md) 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background-color: var(--error-muted);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #fca5a5;
   text-align: left;
 }
 
 .errorBanner p {
   margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
   line-height: 1.4;
 }
 
 .errorBanner button {
-  margin-top: 0.5rem;
-  padding: 0.3rem 0.6rem;
+  margin-top: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  color: #ffc7c7;
-  background-color: rgba(255, 0, 0, 0.25);
+  color: #fca5a5;
+  background-color: rgba(248, 113, 113, 0.2);
   transition:
-    background-color 0.2s ease,
-    transform 0.2s ease;
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .errorBanner button:hover {
-  background-color: rgba(255, 0, 0, 0.35);
-  transform: scale(1.02);
+  background-color: rgba(248, 113, 113, 0.3);
 }
 
 .errorBanner button:active {
-  background-color: rgba(255, 0, 0, 0.45);
   transform: scale(0.98);
+}
+
+@media (max-width: 480px) {
+  .modalContent {
+    padding: var(--space-lg);
+    margin: var(--space-md);
+  }
 }

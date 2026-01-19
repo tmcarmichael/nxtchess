@@ -1,3 +1,8 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   CommonSiteHeader - Obsidian Arena Theme
+   Fixed navigation with monospace branding and refined interactions
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .headerRoot {
   position: fixed;
   top: 0;
@@ -5,105 +10,147 @@
   width: 100%;
   height: 4rem;
   z-index: 999;
-  background: rgba(20, 20, 20, 0.18);
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Logo / Brand
+   ───────────────────────────────────────────────────────────────────────────── */
 
 .headerLeft {
   position: absolute;
   left: 3rem;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 2rem;
-  font-weight: 600;
-  color: #e8e8e8;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color var(--transition-fast);
+  text-decoration: none;
 }
+
 .headerLeft:hover {
-  color: rgba(42, 222, 174, 0.8);
+  color: var(--accent);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Navigation Center
+   ───────────────────────────────────────────────────────────────────────────── */
 
 .headerCenter {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.05);
-  padding: 1.05rem 4rem;
+  background: var(--surface-1);
+  padding: var(--space-sm) var(--space-xl);
   display: flex;
-  gap: 2.4rem;
-  border: 1px solid rgba(104, 104, 104, 0.2);
-  border-radius: 6px;
+  gap: var(--space-xl);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
 }
 
 .navItem {
-  font-family: 'Inter', 'Open Sans', 'Arial', 'sans-serif';
-  font-size: 1.3rem;
-  font-weight: 500;
-  letter-spacing: 0px;
-  color: #adadad;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
   cursor: pointer;
   text-transform: uppercase;
   position: relative;
+  padding: var(--space-xs) 0;
   transition:
-    color 0.2s,
-    transform 0.2s,
-    text-shadow 0.2s;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    color var(--transition-fast),
+    transform var(--transition-fast);
+  text-decoration: none;
 }
+
+/* Underline animation */
 .navItem::after {
+  content: '';
   position: absolute;
   left: 0;
-  bottom: -2px;
+  bottom: 0;
   height: 2px;
   width: 0;
-  background-color: rgba(42, 222, 174, 0.85);
-  transition: width 0.2s;
+  background: var(--accent);
+  transition: width var(--transition-base);
 }
+
 .navItem:hover {
-  color: rgba(42, 222, 174, 0.85);
-  transform: scale(1.05);
+  color: var(--accent);
 }
+
 .navItem:hover::after {
   width: 100%;
 }
 
+/* Active nav state */
+.navItem.active {
+  color: var(--accent);
+}
+
+.navItem.active::after {
+  width: 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   User Section (Right)
+   ───────────────────────────────────────────────────────────────────────────── */
+
 .headerRight {
   position: absolute;
-  right: 5rem;
-  top: 30%;
-  font-family: 'Inter', 'Open Sans', 'Arial', 'sans-serif';
-  font-size: 1.4rem;
-  letter-spacing: 0.5px;
-  font-weight: 550;
-  color: rgb(105, 163, 255);
-  cursor: pointer;
-  transition:
-    color 0.2s,
-    transform 0.2s;
+  right: 3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
 }
 
 .usernameText {
-  display: inline-block;
-  color: rgba(63, 134, 247, 0.778);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+  text-decoration: none;
 }
+
 .usernameText:hover {
-  color: rgba(86, 151, 255, 0.897);
-  transform: scale(1.03);
+  opacity: 0.8;
 }
 
 .signOutText {
-  display: inline-block;
-  padding-left: 1rem;
-  color: #b51c1cb7;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding-left: var(--space-md);
+  color: var(--error);
+  opacity: 0.7;
+  cursor: pointer;
   transition:
-    color 0.2s,
-    transform 0.2s;
+    opacity var(--transition-fast),
+    color var(--transition-fast);
 }
+
 .signOutText:hover {
-  color: #d22121c7;
-  transform: scale(1.03);
+  opacity: 1;
+  color: var(--error);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Tooltip
+   ───────────────────────────────────────────────────────────────────────────── */
 
 .tooltip {
   position: relative;
@@ -112,15 +159,45 @@
 .tooltip:hover::after {
   content: attr(data-tooltip);
   position: absolute;
-  background: rgba(50, 50, 50, 0.55);
-  color: #a7a7a7;
-  padding: 6px 10px;
-  border-radius: 4px;
-  bottom: -40px;
+  background: var(--surface-3);
+  color: var(--text-secondary);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  bottom: -36px;
   left: 50%;
+  transform: translateX(-50%);
   white-space: nowrap;
+  font-family: var(--font-body);
   font-size: 0.7rem;
   pointer-events: none;
   z-index: 9999;
-  opacity: 1;
+  box-shadow: var(--shadow-md);
+  animation: fadeIn var(--transition-fast) ease-out;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Sign In Button (when not logged in)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.signInButton {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-xs) var(--space-md);
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.signInButton:hover {
+  background: var(--accent);
+  color: var(--surface-0);
 }

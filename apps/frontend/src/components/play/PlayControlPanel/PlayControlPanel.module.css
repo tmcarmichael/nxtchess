@@ -1,25 +1,58 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PlayControlPanel - Obsidian Arena Theme
+   Game control panel with clock display
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .panel {
   display: flex;
   width: 360px;
-  height: 382px;
+  min-height: 380px;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  background-color: rgba(80, 80, 80, 0.25);
-  border: 1px solid #444;
-  border-radius: 8px;
-  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
+  padding: var(--space-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  gap: var(--space-md);
 }
 
 .clockLayout {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  transform: translateY(6.5rem);
+  gap: var(--space-md);
+  flex: 1;
+  justify-content: center;
 }
 
 .clockWrapper {
   display: flex;
   justify-content: center;
+}
+
+.panelTitle {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.statusText {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.statusText.waiting {
+  color: var(--warning);
+}
+
+.statusText.playing {
+  color: var(--accent);
 }
