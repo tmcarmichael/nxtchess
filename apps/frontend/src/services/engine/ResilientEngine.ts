@@ -1,4 +1,4 @@
-import { StockfishEngine, EngineError, EngineConfig } from './StockfishEngine';
+import { StockfishEngine, EngineError, type EngineConfig } from './StockfishEngine';
 
 // ============================================================================
 // Types

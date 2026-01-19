@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, Accessor } from 'solid-js';
+import { createSignal, onCleanup, type Accessor } from 'solid-js';
 import { gameSyncService } from './GameSyncService';
 import type { ConnectionState, SyncEvent, TimeControl } from './types';
 import type { Square, PromotionPiece } from '../../types';

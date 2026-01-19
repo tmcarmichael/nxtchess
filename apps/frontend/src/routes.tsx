@@ -1,5 +1,5 @@
+import { type RouteDefinition } from '@solidjs/router';
 import { lazy } from 'solid-js';
-import { RouteDefinition } from '@solidjs/router';
 
 const HomeContainer = lazy(() => import('./components/home/HomeContainer/HomeContainer'));
 const PlayContainer = lazy(() => import('./components/play/PlayContainer/PlayContainer'));

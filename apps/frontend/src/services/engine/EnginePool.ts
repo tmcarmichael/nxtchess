@@ -1,4 +1,8 @@
-import { ResilientEngine, ResilientEngineConfig, EngineEventHandler } from './ResilientEngine';
+import {
+  ResilientEngine,
+  type ResilientEngineConfig,
+  type EngineEventHandler,
+} from './ResilientEngine';
 
 // ============================================================================
 // Types

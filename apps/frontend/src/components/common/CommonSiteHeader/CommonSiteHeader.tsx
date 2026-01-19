@@ -1,5 +1,5 @@
-import { createSignal, Show, For, createEffect, ParentComponent } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
+import { createSignal, Show, For, createEffect, type ParentComponent } from 'solid-js';
 import { useUserStore } from '../../../store';
 import PlayModal from '../../play/PlayModal/PlayModal';
 import TrainingModal from '../../training/TrainingModal/TrainingModal';

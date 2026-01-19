@@ -1,4 +1,6 @@
-import { createContext, useContext, onCleanup, JSX } from 'solid-js';
+import { createContext, useContext, onCleanup, type JSX } from 'solid-js';
+import { sessionManager } from '../../services/game';
+import { createGameActions, type GameActions } from './createGameActions';
 import {
   createChessStore,
   createTimerStore,
@@ -12,8 +14,6 @@ import {
   type UIStore,
   type MultiplayerEventCallbacks,
 } from './stores';
-import { createGameActions, type GameActions } from './createGameActions';
-import { sessionManager } from '../../services/game';
 
 // ============================================================================
 // Context Value Type

@@ -1,4 +1,4 @@
-import { createContext, useContext, JSX } from 'solid-js';
+import { createContext, useContext, type JSX } from 'solid-js';
 import { createUserStore } from './userStore';
 
 const UserContext = createContext<ReturnType<typeof createUserStore> | null>(null);

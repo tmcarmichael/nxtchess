@@ -1,4 +1,4 @@
-import { Side, PieceType } from '../../types';
+import { type Side, type PieceType } from '../../types';
 
 /**
  * Piece string utilities.

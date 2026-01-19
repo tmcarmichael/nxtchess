@@ -1,5 +1,5 @@
-import { StockfishEngine, EngineError } from './StockfishEngine';
 import { engineService } from './engineService';
+import { StockfishEngine, EngineError } from './StockfishEngine';
 
 // Configuration
 const ENGINE_EVAL_TIMEOUT_MS = 10000; // 10 seconds for evaluation

@@ -1,6 +1,6 @@
-import { ParentComponent } from 'solid-js';
-import CommonSiteHeader from './components/common/CommonSiteHeader/CommonSiteHeader';
+import { type ParentComponent } from 'solid-js';
 import CommonSiteFooter from './components/common/CommonSiteFooter/CommonSiteFooter';
+import CommonSiteHeader from './components/common/CommonSiteHeader/CommonSiteHeader';
 
 const App: ParentComponent = (props) => (
   <>

@@ -1,12 +1,12 @@
-import { createSignal, splitProps, Component, Show, For } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { useGame } from '../../../store';
-import { Side, StartGameOptions } from '../../../types';
-import { TIME_VALUES_MINUTES } from '../../../shared';
+import { createSignal, splitProps, type Component, Show, For } from 'solid-js';
 import { preferences } from '../../../services';
+import { TIME_VALUES_MINUTES } from '../../../shared';
+import { useGame } from '../../../store';
+import { type Side, type StartGameOptions } from '../../../types';
+import { ChessDifficultySlider } from '../../chess/ChessDifficultySlider';
 import { ChessGameModal } from '../../chess/ChessGameModal';
 import { ChessSideSelector } from '../../chess/ChessSideSelector';
-import { ChessDifficultySlider } from '../../chess/ChessDifficultySlider';
 import styles from './PlayModal.module.css';
 
 type OpponentType = 'ai' | 'human';

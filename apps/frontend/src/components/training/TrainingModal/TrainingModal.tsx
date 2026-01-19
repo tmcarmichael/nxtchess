@@ -1,7 +1,13 @@
-import { createSignal, Show, For, ParentComponent, splitProps } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
+import { createSignal, Show, For, type ParentComponent, splitProps } from 'solid-js';
 import { useGame } from '../../../store';
-import { RatedMode, AIPlayStyle, GamePhase, Side, StartGameOptions } from '../../../types';
+import {
+  type RatedMode,
+  type AIPlayStyle,
+  type GamePhase,
+  type Side,
+  type StartGameOptions,
+} from '../../../types';
 import { ChessGameModal } from '../../chess/ChessGameModal';
 import { ChessSideSelector } from '../../chess/ChessSideSelector';
 import styles from './TrainingModal.module.css';

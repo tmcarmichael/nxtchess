@@ -1,4 +1,4 @@
-import { ParentComponent } from 'solid-js';
+import { type ParentComponent } from 'solid-js';
 import styles from './ButtonPanel.module.css';
 
 const ButtonPanel: ParentComponent = (props) => {

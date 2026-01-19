@@ -1,4 +1,4 @@
-import { Side } from '../../types';
+import { type Side } from '../../types';
 
 /**
  * FEN (Forsyth–Edwards Notation) utility functions.

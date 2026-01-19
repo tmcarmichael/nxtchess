@@ -1,4 +1,4 @@
-import { onMount, onCleanup, Accessor } from 'solid-js';
+import { onMount, onCleanup, type Accessor } from 'solid-js';
 
 interface KeyboardNavigationOptions {
   /** Called when left arrow is pressed */

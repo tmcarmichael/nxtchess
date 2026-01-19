@@ -1,17 +1,17 @@
+import { useLocation, useSearchParams } from '@solidjs/router';
 import {
-  JSX,
+  type JSX,
   splitProps,
-  ParentComponent,
+  type ParentComponent,
   createSignal,
   createEffect,
   onMount,
   onCleanup,
   Show,
 } from 'solid-js';
-import { useLocation, useSearchParams } from '@solidjs/router';
-import HomeSiteHero from '../HomeSiteHero/HomeSiteHero';
-import SignInModal from '../../user/UserSignInModal/UserSignInModal';
 import { enginePool } from '../../../services';
+import SignInModal from '../../user/UserSignInModal/UserSignInModal';
+import HomeSiteHero from '../HomeSiteHero/HomeSiteHero';
 import styles from './HomeContainer.module.css';
 
 interface HomeContainerProps {

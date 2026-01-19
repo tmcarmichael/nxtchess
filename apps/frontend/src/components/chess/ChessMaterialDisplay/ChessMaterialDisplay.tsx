@@ -1,5 +1,5 @@
-import { For, Show, Component, Accessor } from 'solid-js';
-import { PieceType } from '../../../types';
+import { For, Show, type Component, type Accessor } from 'solid-js';
+import { type PieceType } from '../../../types';
 import Piece from '../ChessPiece/ChessPiece';
 import styles from './ChessMaterialDisplay.module.css';
 

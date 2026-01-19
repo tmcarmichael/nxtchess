@@ -1,4 +1,4 @@
-import { Component } from 'solid-js';
+import { type Component } from 'solid-js';
 import { DIFFICULTY_VALUES_ELO } from '../../../shared';
 import styles from './DifficultyDisplay.module.css';
 

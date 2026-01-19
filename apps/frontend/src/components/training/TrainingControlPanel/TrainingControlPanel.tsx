@@ -1,4 +1,4 @@
-import { ParentComponent } from 'solid-js';
+import { type ParentComponent } from 'solid-js';
 import { useGame } from '../../../store';
 import { ButtonPanel, GamePanelButton, GameInfoPanel } from '../../game';
 import styles from './TrainingControlPanel.module.css';

@@ -1,4 +1,4 @@
-import { Component, Accessor } from 'solid-js';
+import { type Component, type Accessor } from 'solid-js';
 import { DIFFICULTY_VALUES_ELO, DIFFICULTY_VALUES_LEVEL } from '../../../shared';
 import styles from './ChessDifficultySlider.module.css';
 

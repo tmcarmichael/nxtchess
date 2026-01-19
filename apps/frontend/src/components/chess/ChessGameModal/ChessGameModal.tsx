@@ -1,4 +1,4 @@
-import { ParentComponent, JSX } from 'solid-js';
+import { type ParentComponent, type JSX } from 'solid-js';
 import styles from './ChessGameModal.module.css';
 
 interface ChessGameModalProps {
