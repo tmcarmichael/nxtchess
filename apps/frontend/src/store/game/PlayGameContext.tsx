@@ -210,3 +210,11 @@ export const usePlayGame = () => {
   }
   return ctx;
 };
+
+/**
+ * Optional variant that returns null when outside provider.
+ * Use this when component may render outside PlayGameProvider (e.g., modals in header).
+ */
+export const usePlayGameOptional = (): PlayGameContextValue | null => {
+  return useContext(PlayGameContext) ?? null;
+};
