@@ -4,6 +4,8 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .piece {
+  position: relative;
+  z-index: 1;
   width: 90px;
   height: 90px;
   user-select: none;

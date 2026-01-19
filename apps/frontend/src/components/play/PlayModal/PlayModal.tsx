@@ -2,8 +2,8 @@ import { useNavigate } from '@solidjs/router';
 import { createSignal, splitProps, type Component, Show, For } from 'solid-js';
 import { preferences } from '../../../services/preferences/PreferencesService';
 import { TIME_VALUES_MINUTES } from '../../../shared/config/constants';
-import { usePlayGame } from '../../../store/game/PlayGameContext';
-import { type Side, type StartGameOptions } from '../../../types/game';
+import { usePlayGameOptional } from '../../../store/game/PlayGameContext';
+import { type Side, type StartGameOptions, type MultiplayerGameOptions } from '../../../types/game';
 import ChessDifficultySlider from '../../chess/ChessDifficultySlider/ChessDifficultySlider';
 import ChessGameModal from '../../chess/ChessGameModal/ChessGameModal';
 import ChessSideSelector from '../../chess/ChessSideSelector/ChessSideSelector';
@@ -21,7 +21,7 @@ interface PlayModalProps {
 
 const PlayModal: Component<PlayModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose']);
-  const { actions } = usePlayGame();
+  const gameContext = usePlayGameOptional();
   const navigate = useNavigate();
 
   // Load saved preferences with bounds validation
@@ -56,17 +56,24 @@ const PlayModal: Component<PlayModalProps> = (props) => {
         // Navigate to game URL - PlayContainer will auto-join
         navigate(`/play/${gameId}`, { replace: true });
       } else {
-        // Create new game - start first, then navigate to /play
-        // PlayContainer will update URL to /play/:gameId when gameId is received
-        actions.startMultiplayerGame({
+        // Create new multiplayer game
+        const multiplayerConfig: MultiplayerGameOptions = {
           side: localPlayerColor(),
           mode: 'play',
           newTimeControl: humanTimeMinutes(),
-        });
-        navigate('/play', { replace: true });
+        };
+
+        if (gameContext) {
+          // Inside provider - call action directly
+          gameContext.actions.startMultiplayerGame(multiplayerConfig);
+          navigate('/play', { replace: true });
+        } else {
+          // Outside provider (header modal) - navigate with state
+          navigate('/play', { replace: true, state: { multiplayerCreate: multiplayerConfig } });
+        }
       }
     } else {
-      // AI game (existing flow)
+      // AI game
       const selectedTime = TIME_VALUES_MINUTES[localTimeIndex()];
       const selectedLevel = localDifficultyIndex() + 1;
       const chosenSide = localPlayerColor();
@@ -84,8 +91,15 @@ const PlayModal: Component<PlayModalProps> = (props) => {
         newTimeControl: selectedTime,
         newDifficultyLevel: selectedLevel,
       };
-      navigate('/play', { replace: true });
-      actions.startNewGame(playGameConfig);
+
+      if (gameContext) {
+        // Inside provider - call action directly
+        gameContext.actions.startNewGame(playGameConfig);
+        navigate('/play', { replace: true });
+      } else {
+        // Outside provider (header modal) - navigate with state
+        navigate('/play', { replace: true, state: { quickPlay: playGameConfig } });
+      }
     }
 
     local.onClose();

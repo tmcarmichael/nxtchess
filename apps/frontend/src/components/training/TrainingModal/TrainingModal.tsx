@@ -1,6 +1,6 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, Show, For, type ParentComponent, splitProps } from 'solid-js';
-import { useTrainingGame } from '../../../store/game/TrainingGameContext';
+import { useTrainingGameOptional } from '../../../store/game/TrainingGameContext';
 import {
   type RatedMode,
   type AIPlayStyle,
@@ -44,7 +44,7 @@ const GAME_PHASES: GamePhaseOption[] = [
 const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose']);
   const navigate = useNavigate();
-  const { actions } = useTrainingGame();
+  const gameContext = useTrainingGameOptional();
 
   const [localRatedMode, setLocalRatedMode] = createSignal<RatedMode>('casual');
   const [localDifficulty, setLocalDifficulty] = createSignal<number>(3);
@@ -61,8 +61,16 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
       trainingAIPlayStyle: localAIPlayStyle(),
       trainingGamePhase: localGamePhase(),
     };
-    actions.startNewGame(trainingGameConfig);
-    navigate('/training');
+
+    if (gameContext) {
+      // Inside provider - call action directly
+      gameContext.actions.startNewGame(trainingGameConfig);
+      navigate('/training');
+    } else {
+      // Outside provider (header modal) - navigate with state
+      navigate('/training', { state: { quickStart: trainingGameConfig } });
+    }
+
     local.onClose();
   };
 
