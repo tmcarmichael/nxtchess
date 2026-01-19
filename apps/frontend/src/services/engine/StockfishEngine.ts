@@ -1,4 +1,4 @@
-import 'stockfish/src/stockfish-16.1.js';
+// Note: We use stockfishWorker.ts which wraps stockfish and configures WASM location
 
 // ============================================================================
 // Types
@@ -68,7 +68,9 @@ export class StockfishEngine {
     this._isInitialized = false;
 
     try {
-      this.worker = new Worker(new URL('stockfish/src/stockfish-16.1.js', import.meta.url));
+      this.worker = new Worker(new URL('./stockfishWorker.ts', import.meta.url), {
+        type: 'module',
+      });
 
       this.worker.onerror = (e) => {
         console.error(`${this.config.name} worker error:`, e);
