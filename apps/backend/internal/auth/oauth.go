@@ -6,15 +6,20 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"golang.org/x/oauth2"
 
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/httpx"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/sessions"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/utils"
 )
+
+// oauthTimeout is the timeout for OAuth token exchange and user info requests
+const oauthTimeout = 30 * time.Second
 
 // OAuthProvider defines the configuration for an OAuth provider
 type OAuthProvider struct {
@@ -69,40 +74,53 @@ func CallbackHandler(providerName string, cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		provider := GetProvider(providerName)
 		if provider == nil || provider.OAuthConfig == nil {
-			utils.AuthRedirectWithError(w, r, fmt.Sprintf("%s OAuth not configured", providerName), http.StatusInternalServerError, cfg)
+			logger.Error("OAuth provider not configured", logger.F("provider", providerName))
+			utils.AuthRedirectWithError(w, r, "Authentication service unavailable", http.StatusInternalServerError, cfg)
 			return
 		}
 
 		// Validate state parameter
 		stateParam := r.URL.Query().Get("state")
 		if stateParam == "" {
-			utils.AuthRedirectWithError(w, r, "Missing OAuth state parameter", http.StatusBadRequest, cfg)
+			utils.AuthRedirectWithError(w, r, "Invalid authentication request", http.StatusBadRequest, cfg)
 			return
 		}
 
 		stateCookie, err := r.Cookie(provider.StateCookie)
 		if err != nil {
-			utils.AuthRedirectWithError(w, r, "Missing or invalid state cookie", http.StatusBadRequest, cfg)
+			utils.AuthRedirectWithError(w, r, "Authentication session expired", http.StatusBadRequest, cfg)
 			return
 		}
 		if stateParam != stateCookie.Value {
-			utils.AuthRedirectWithError(w, r, "Invalid OAuth state parameter", http.StatusBadRequest, cfg)
+			logger.Warn("OAuth state mismatch", logger.F("provider", providerName))
+			utils.AuthRedirectWithError(w, r, "Invalid authentication request", http.StatusBadRequest, cfg)
 			return
 		}
 
-		// Exchange code for token
+		// Exchange code for token with timeout
 		code := r.URL.Query().Get("code")
-		token, err := provider.OAuthConfig.Exchange(context.Background(), code)
+		ctx, cancel := context.WithTimeout(r.Context(), oauthTimeout)
+		defer cancel()
+
+		token, err := provider.OAuthConfig.Exchange(ctx, code)
 		if err != nil {
-			utils.AuthRedirectWithError(w, r, "Failed to exchange token: "+err.Error(), http.StatusBadRequest, cfg)
+			logger.Error("OAuth token exchange failed", logger.F(
+				"provider", providerName,
+				"error", err.Error(),
+			))
+			utils.AuthRedirectWithError(w, r, "Authentication failed. Please try again.", http.StatusBadRequest, cfg)
 			return
 		}
 
-		// Fetch user info
-		client := provider.OAuthConfig.Client(context.Background(), token)
+		// Fetch user info with timeout
+		client := provider.OAuthConfig.Client(ctx, token)
 		resp, err := client.Get(provider.UserInfoURL)
 		if err != nil {
-			utils.AuthRedirectWithError(w, r, "Failed to get user info: "+err.Error(), http.StatusBadRequest, cfg)
+			logger.Error("OAuth user info fetch failed", logger.F(
+				"provider", providerName,
+				"error", err.Error(),
+			))
+			utils.AuthRedirectWithError(w, r, "Authentication failed. Please try again.", http.StatusBadRequest, cfg)
 			return
 		}
 		defer resp.Body.Close()
@@ -111,44 +129,71 @@ func CallbackHandler(providerName string, cfg *config.Config) http.HandlerFunc {
 		var bodyBytes []byte
 		bodyBytes, err = readBody(resp)
 		if err != nil {
-			utils.AuthRedirectWithError(w, r, "Failed to read user info: "+err.Error(), http.StatusInternalServerError, cfg)
+			logger.Error("OAuth user info read failed", logger.F(
+				"provider", providerName,
+				"error", err.Error(),
+			))
+			utils.AuthRedirectWithError(w, r, "Authentication failed. Please try again.", http.StatusInternalServerError, cfg)
 			return
 		}
 
 		// Extract user ID using provider-specific logic
 		userID, err := provider.ExtractUserID(bodyBytes)
 		if err != nil {
-			utils.AuthRedirectWithError(w, r, "Failed to parse user info: "+err.Error(), http.StatusInternalServerError, cfg)
+			logger.Error("OAuth user ID extraction failed", logger.F(
+				"provider", providerName,
+				"error", err.Error(),
+			))
+			utils.AuthRedirectWithError(w, r, "Authentication failed. Please try again.", http.StatusInternalServerError, cfg)
 			return
 		}
 
 		// Create session
 		sessionToken, err := sessions.GenerateSessionToken()
 		if err != nil {
-			utils.AuthRedirectWithError(w, r, "Failed to generate session token: "+err.Error(), http.StatusInternalServerError, cfg)
+			logger.Error("Session token generation failed", logger.F("error", err.Error()))
+			utils.AuthRedirectWithError(w, r, "Authentication failed. Please try again.", http.StatusInternalServerError, cfg)
 			return
 		}
 
 		if err := sessions.StoreSession(sessionToken, userID); err != nil {
-			utils.AuthRedirectWithError(w, r, "Failed to store session: "+err.Error(), http.StatusInternalServerError, cfg)
+			logger.Error("Session storage failed", logger.F(
+				"userID", userID,
+				"error", err.Error(),
+			))
+			utils.AuthRedirectWithError(w, r, "Authentication failed. Please try again.", http.StatusInternalServerError, cfg)
 			return
 		}
 
 		http.SetCookie(w, httpx.NewSecureCookie(cfg, "session_token", sessionToken, 86400))
 
-		// Upsert user profile
-		_, err = database.DB.Exec(`INSERT INTO profiles (user_id) VALUES ($1) ON CONFLICT DO NOTHING`, userID)
+		// Upsert user profile (reuse the OAuth context for timeout)
+		err = database.CreateProfileWithContext(ctx, userID)
 		if err != nil {
-			utils.AuthRedirectWithError(w, r, "Failed to create user profile: "+err.Error(), http.StatusInternalServerError, cfg)
+			logger.Error("Profile creation failed", logger.F(
+				"userID", userID,
+				"error", err.Error(),
+			))
+			utils.AuthRedirectWithError(w, r, "Authentication failed. Please try again.", http.StatusInternalServerError, cfg)
 			return
 		}
 
-		// Redirect based on username status
-		hasUsername, err := database.HasUsername(userID)
+		// Redirect based on username status (reuse the OAuth context)
+		hasUsername, err := database.HasUsernameWithContext(ctx, userID)
 		if err != nil {
-			utils.AuthRedirectWithError(w, r, "Database error: "+err.Error(), http.StatusInternalServerError, cfg)
+			logger.Error("Username check failed", logger.F(
+				"userID", userID,
+				"error", err.Error(),
+			))
+			utils.AuthRedirectWithError(w, r, "Authentication failed. Please try again.", http.StatusInternalServerError, cfg)
 			return
 		}
+
+		logger.Info("OAuth login successful", logger.F(
+			"provider", providerName,
+			"userID", userID,
+			"hasUsername", hasUsername,
+		))
 
 		if hasUsername {
 			http.Redirect(w, r, cfg.FrontendURL+"/", http.StatusSeeOther)

@@ -135,8 +135,8 @@ func generateClientID() string {
 
 // ServeHTTP handles the WebSocket upgrade request
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Get client IP for rate limiting
-	clientIP := httpx.GetClientIP(r)
+	// Get client IP for rate limiting (validates trusted proxy headers)
+	clientIP := httpx.GetClientIP(r, h.cfg)
 
 	// Check connection rate limit
 	if !h.connLimit.TryConnect(clientIP) {

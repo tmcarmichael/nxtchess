@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/httpx"
 )
 
@@ -12,10 +13,11 @@ import (
 type RateLimiter struct {
 	mu       sync.Mutex
 	clients  map[string]*bucket
-	rate     int           // tokens per interval
-	interval time.Duration // refill interval
-	burst    int           // max tokens (burst capacity)
-	cleanup  time.Duration // cleanup old entries interval
+	rate     int            // tokens per interval
+	interval time.Duration  // refill interval
+	burst    int            // max tokens (burst capacity)
+	cleanup  time.Duration  // cleanup old entries interval
+	cfg      *config.Config // for trusted proxy validation
 }
 
 type bucket struct {
@@ -93,7 +95,7 @@ func (rl *RateLimiter) Allow(key string) bool {
 // Middleware returns an HTTP middleware that rate limits requests
 func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		key := httpx.GetClientIP(r)
+		key := httpx.GetClientIP(r, rl.cfg)
 
 		if !rl.Allow(key) {
 			w.Header().Set("Retry-After", "60")
@@ -103,6 +105,11 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// SetConfig sets the config for trusted proxy validation
+func (rl *RateLimiter) SetConfig(cfg *config.Config) {
+	rl.cfg = cfg
 }
 
 // Common rate limiter presets

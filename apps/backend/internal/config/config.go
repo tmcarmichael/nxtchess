@@ -9,9 +9,9 @@ import (
 
 type Config struct {
 	Port                string
-	Environment         string // "development" or "production"
-	LogLevel            string // "DEBUG", "INFO", "WARN", "ERROR"
-	LogJSON             bool   // true for JSON output (production)
+	Environment         string   // "development" or "production"
+	LogLevel            string   // "DEBUG", "INFO", "WARN", "ERROR"
+	LogJSON             bool     // true for JSON output (production)
 	GoogleClientID      string
 	GoogleClientSecret  string
 	GitHubClientID      string
@@ -20,6 +20,7 @@ type Config struct {
 	DiscordClientSecret string
 	FrontendURL         string
 	BackendURL          string
+	TrustedProxies      []string // CIDRs or IPs of trusted reverse proxies
 }
 
 // IsProd returns true if running in production environment
@@ -49,6 +50,16 @@ func Load() *Config {
 
 	logJSON := os.Getenv("LOG_JSON") == "true" || env == "production"
 
+	// Parse trusted proxies (comma-separated CIDRs or IPs)
+	var trustedProxies []string
+	if tp := os.Getenv("TRUSTED_PROXIES"); tp != "" {
+		for _, p := range strings.Split(tp, ",") {
+			if trimmed := strings.TrimSpace(p); trimmed != "" {
+				trustedProxies = append(trustedProxies, trimmed)
+			}
+		}
+	}
+
 	cfg := &Config{
 		Port:                port,
 		Environment:         env,
@@ -62,6 +73,7 @@ func Load() *Config {
 		DiscordClientSecret: os.Getenv("DISCORD_CLIENT_SECRET"),
 		FrontendURL:         os.Getenv("FRONTEND_URL"),
 		BackendURL:          os.Getenv("BACKEND_URL"),
+		TrustedProxies:      trustedProxies,
 	}
 
 	// AUTH
