@@ -1,5 +1,33 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   GameInfoPanel - Obsidian Arena Theme
+   Game status and information display
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .infoPanel {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.infoPanelTitle {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.infoPanelValue {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
 }

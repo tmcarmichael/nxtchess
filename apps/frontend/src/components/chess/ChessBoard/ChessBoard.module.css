@@ -1,14 +1,7 @@
-:root {
-  --board-border: #2d2d2d;
-  --board-shadow: rgba(0, 0, 0, 0.2);
-  --light-square: #f0d9b5;
-  --dark-square: #b58863;
-  --selected-square: rgba(75, 127, 72, 0.782);
-  --highlight-dot: rgba(90, 130, 61, 0.75);
-  --enemy-dot: rgba(166, 52, 52, 0.9);
-  --last-move-border: rgb(63, 150, 72);
-  --checked-king-border: rgba(181, 0, 0, 0.6);
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   ChessBoard - Obsidian Arena Theme
+   The centerpiece of the application with dramatic grounding shadows
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 .boardContainer {
   display: flex;
@@ -16,7 +9,7 @@
   align-items: center;
   height: auto;
   min-height: 500px;
-  padding: 1rem;
+  padding: var(--space-md);
 }
 
 .board {
@@ -24,8 +17,19 @@
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  border: 2px solid #333;
-  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--surface-4);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-board);
+  overflow: hidden;
+  /* Subtle inner glow on the board edge */
+  outline: 1px solid var(--border-subtle);
+  outline-offset: -1px;
+}
+
+/* Active turn indicator - board glows when it's your move */
+.board[data-active-turn='true'] {
+  box-shadow: var(--shadow-board), var(--shadow-glow);
+  transition: box-shadow var(--transition-slow);
 }
 
 .square {
@@ -34,79 +38,151 @@
   height: 100%;
   min-width: 90px;
   min-height: 90px;
-  transition: background-color 0.3s ease;
+  transition: background-color var(--transition-base);
 }
 
 .square.light {
-  background-color: var(--light-square);
+  background-color: var(--board-light);
 }
 
 .square.dark {
-  background-color: var(--dark-square);
+  background-color: var(--board-dark);
 }
 
 .square.selected {
-  background-color: var(--selected-square);
+  background-color: var(--board-selected);
+  /* Layered selection effect */
+  box-shadow: inset 0 0 0 3px var(--accent-muted);
 }
 
+/* Valid move indicator dot */
 .highlightDot {
-  width: 25%;
-  height: 23%;
-  background-color: var(--highlight-dot);
+  width: 28%;
+  height: 28%;
+  background-color: var(--board-move-dot);
   border-radius: 50%;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity: 0.9;
-  transition: transform 0.2s ease;
+  opacity: 0.85;
+  transition:
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
   z-index: 2000;
+  /* Subtle inner shadow for depth */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .highlightDot:hover {
-  transform: translate(-50%, -50%) scale(1.2);
-  z-index: 2000;
+  transform: translate(-50%, -50%) scale(1.25);
+  opacity: 1;
 }
 
+/* Capture indicator - red ring instead of dot */
 .enemyDot {
-  background-color: var(--enemy-dot);
+  background-color: transparent;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 4px var(--board-capture-dot);
+  opacity: 0.9;
 }
 
+.enemyDot:hover {
+  transform: translate(-50%, -50%) scale(1);
+  box-shadow: inset 0 0 0 5px var(--error);
+  opacity: 1;
+}
+
+/* Dragged piece styling */
 .draggedPiece {
   position: fixed;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 10000;
   transform: translate(-50%, -50%);
   will-change: transform;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
 }
 
+/* Last move highlight */
 .lastMove {
-  box-shadow: inset 0 0 0 3px var(--last-move-border) !important;
-  opacity: 0.95;
-  transition: box-shadow 0.3s ease;
+  position: relative;
 }
 
+.lastMove::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--board-last-move);
+  pointer-events: none;
+  transition: background-color var(--transition-base);
+}
+
+/* Check indicator on king's square */
 .checkedKing {
-  box-shadow: inset 0 0 0 3px var(--checked-king-border);
-  transition: box-shadow 0.3s ease;
+  position: relative;
+  animation: checkPulse 1s ease-in-out infinite;
 }
 
+.checkedKing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, var(--board-check) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+@keyframes checkPulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 3px var(--error-muted);
+  }
+  50% {
+    box-shadow: inset 0 0 0 4px var(--error);
+  }
+}
+
+/* File labels (a-h) */
 .fileLabel {
   position: absolute;
-  bottom: 2px;
-  left: 2px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.6);
-  opacity: 0.7;
+  bottom: 3px;
+  left: 4px;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
 }
 
+/* Adapt label color to square */
+.light .fileLabel {
+  color: var(--board-dark);
+}
+
+.dark .fileLabel {
+  color: var(--board-light);
+}
+
+/* Rank labels (1-8) */
 .rankLabel {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.6);
-  opacity: 0.7;
+  top: 3px;
+  right: 4px;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+}
+
+.light .rankLabel {
+  color: var(--board-dark);
+}
+
+.dark .rankLabel {
+  color: var(--board-light);
 }

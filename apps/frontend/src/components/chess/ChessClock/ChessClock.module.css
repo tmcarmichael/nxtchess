@@ -1,17 +1,51 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ChessClock - Obsidian Arena Theme
+   Monospace precision timing display
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .gameClock {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  font-size: 1.2rem;
-  font-weight: 500;
-  background: #1e1e1e;
-  color: #dddddd;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(63, 63, 63, 0.45);
+  gap: var(--space-sm);
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  min-width: 100px;
+  text-align: center;
+}
+
+/* Active player's clock */
+.gameClock.active {
+  background: var(--surface-2);
+  border-color: var(--accent-muted);
+  box-shadow: 0 0 16px var(--accent-ghost);
+}
+
+/* Low time warning (under 30 seconds) */
+.gameClock.lowTime {
+  color: var(--warning);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+/* Critical time (under 10 seconds) */
+.gameClock.critical {
+  animation: clockUrgent 0.5s ease-in-out infinite;
+  border-color: var(--error-muted);
 }
 
 .label {
-  color: #bbb;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
 }

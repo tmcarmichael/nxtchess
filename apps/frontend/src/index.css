@@ -1,63 +1,322 @@
-/* Inter font with swap for immediate text rendering */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* ═══════════════════════════════════════════════════════════════════════════
+   OBSIDIAN ARENA - NXT Chess Design System
+   A refined dark theme with monospace precision and electric accents
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Typography: Space Mono for display, Outfit for body */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CSS Custom Properties - Design Tokens
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* ═══ Typography ═══ */
+  --font-display: 'Space Mono', 'SF Mono', 'Fira Code', monospace;
+  --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ═══ Accent Color System - Electric Teal ═══ */
+  --accent: #00ffd1;
+  --accent-bright: #33ffd9;
+  --accent-muted: rgba(0, 255, 209, 0.4);
+  --accent-subtle: rgba(0, 255, 209, 0.15);
+  --accent-ghost: rgba(0, 255, 209, 0.08);
+
+  /* ═══ Surface Elevation System ═══ */
+  --surface-0: #0a0a0a; /* Deepest: page background */
+  --surface-1: #111111; /* Recessed panels */
+  --surface-2: #181818; /* Default cards, modals */
+  --surface-3: #222222; /* Elevated: hover states */
+  --surface-4: #2a2a2a; /* Highest: active states, tooltips */
+
+  /* ═══ Border System ═══ */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-accent: rgba(0, 255, 209, 0.3);
+
+  /* ═══ Text Colors ═══ */
+  --text-primary: #f0f0f0;
+  --text-secondary: #a0a0a0;
+  --text-muted: #666666;
+  --text-accent: var(--accent);
+
+  /* ═══ Semantic Colors ═══ */
+  --success: #4ade80;
+  --success-muted: rgba(74, 222, 128, 0.3);
+  --error: #f87171;
+  --error-muted: rgba(248, 113, 113, 0.3);
+  --warning: #fbbf24;
+
+  /* ═══ Chess Board Colors ═══ */
+  --board-light: #e8d5b5;
+  --board-dark: #b08968;
+  --board-selected: rgba(0, 255, 209, 0.35);
+  --board-move-dot: rgba(0, 255, 209, 0.6);
+  --board-capture-dot: rgba(248, 113, 113, 0.7);
+  --board-last-move: rgba(0, 255, 209, 0.25);
+  --board-check: rgba(248, 113, 113, 0.5);
+
+  /* ═══ Shadow System (light from top-left) ═══ */
+  --shadow-xs: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 2px 2px 4px rgba(0, 0, 0, 0.35), -1px -1px 2px rgba(255, 255, 255, 0.02);
+  --shadow-md: 4px 4px 12px rgba(0, 0, 0, 0.45), -2px -2px 4px rgba(255, 255, 255, 0.02);
+  --shadow-lg: 8px 8px 24px rgba(0, 0, 0, 0.5), -4px -4px 8px rgba(255, 255, 255, 0.02);
+  --shadow-xl: 12px 12px 40px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 30px rgba(0, 255, 209, 0.15);
+  --shadow-board: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+
+  /* ═══ Transitions ═══ */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.3s ease;
+  --transition-spring: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ═══ Spacing Scale ═══ */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+
+  /* ═══ Border Radius ═══ */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Global Reset & Base Styles
+   ───────────────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 html,
 body {
-  margin: 0;
-  padding: 0;
   min-height: 100%;
   overflow-x: hidden;
 }
 
 body {
-  padding: 0;
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--surface-0);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   position: relative;
-  background: linear-gradient(120deg, #2a2a2a, #1b1b1b, #2a2a2a);
-  background-size: 400% 400%;
-  animation: gradientAnimation 100s linear infinite;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Ambient Background Effects
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Subtle gradient underlayer */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(0, 255, 209, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0, 255, 209, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Noise texture overlay for tactile depth */
 body::after {
   content: '';
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 100, 255, 0.1);
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.025;
   pointer-events: none;
-  animation: colorPulse 8s ease-in-out infinite;
+  z-index: 9998;
+  mix-blend-mode: overlay;
 }
 
-@keyframes gradientAnimation {
-  0% {
-    background-position: 0% 50%;
+/* ─────────────────────────────────────────────────────────────────────────────
+   Typography Utilities
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Display/heading text - technical monospace aesthetic */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* Body text */
+p,
+span,
+a,
+button,
+input,
+select,
+textarea,
+label {
+  font-family: var(--font-body);
+}
+
+/* Ensure user-select is off for interactive game elements */
+.no-select {
+  user-select: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Focus States (Accessibility)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Scrollbar Styling
+   ───────────────────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-4);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Selection Styling
+   ───────────────────────────────────────────────────────────────────────────── */
+
+::selection {
+  background: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Keyframe Animations
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
+  to {
+    opacity: 1;
   }
 }
 
-@keyframes colorPulse {
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
   0%,
   100% {
-    opacity: 0.05;
+    opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.25;
+    opacity: 0.7;
+    transform: scale(1.05);
   }
 }
 
-* {
-  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  user-select: none;
-  box-sizing: border-box;
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(0, 255, 209, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 255, 209, 0.35);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Clock urgency animation */
+@keyframes clockUrgent {
+  0%,
+  100% {
+    color: var(--error);
+  }
+  50% {
+    color: #fca5a5;
+  }
+}
+
+/* Selection pulse for knight/piece selection */
+@keyframes selectionPulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0.3;
+  }
 }

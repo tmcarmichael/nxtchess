@@ -1,101 +1,122 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ChessPromotionModal - Obsidian Arena Theme
+   Pawn promotion selection modal
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(6px);
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.25s ease-out;
-  z-index: 1000;
+  animation: fadeIn var(--transition-slow) ease-out;
+  z-index: 10000;
 }
 
 .modalContent {
-  background: linear-gradient(145deg, #2b2b2b, #363636);
-  padding: 2rem;
-  border-radius: 12px;
+  background: var(--surface-2);
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
   position: relative;
   text-align: center;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.3s ease-out;
+  box-shadow: var(--shadow-xl);
+  animation: slideUp var(--transition-slow) ease-out;
   width: 90%;
-  max-width: 480px;
+  max-width: 400px;
+}
+
+/* Accent line */
+.modalContent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  border-radius: var(--radius-full);
+  opacity: 0.6;
+}
+
+.modalContent h3 {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
 }
 
 .promotionOptions {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-md);
   justify-content: center;
   align-items: center;
-  margin-top: 1rem;
+  margin-top: var(--space-lg);
 }
 
 .promotionImage {
-  width: 90px;
+  width: 80px;
+  height: 80px;
   cursor: pointer;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
   transition:
-    transform 0.2s ease,
-    filter 0.2s ease;
+    transform var(--transition-fast),
+    filter var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .promotionImage:hover,
 .promotionImage:focus {
-  transform: translateY(-3px);
-  filter: brightness(1.15);
+  transform: translateY(-4px) scale(1.05);
+  filter: brightness(1.1);
+  background: var(--surface-4);
+  border-color: var(--accent-muted);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   outline: none;
 }
 
 .closeButton {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: transparent;
-  border: none;
-  border-radius: 50%;
-  width: 2.5rem;
-  height: 2.5rem;
+  top: var(--space-md);
+  right: var(--space-md);
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  width: 2rem;
+  height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 1.25rem;
   cursor: pointer;
-  color: #ccc;
+  color: var(--text-muted);
   transition:
-    transform 0.2s ease,
-    color 0.2s ease;
+    transform var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
 }
+
 .closeButton:hover,
 .closeButton:focus {
-  color: #fff;
-  transform: scale(1.1);
+  color: var(--text-primary);
+  background: var(--surface-4);
+  transform: rotate(90deg);
   outline: none;
 }
+
 .closeIcon {
-  position: relative;
-  top: -2px;
-  font-size: 1.5rem;
-  color: #888;
-  transition:
-    color 0.2s ease,
-    transform 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  font-size: 1.1rem;
+  line-height: 1;
 }

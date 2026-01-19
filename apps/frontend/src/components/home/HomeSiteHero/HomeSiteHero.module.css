@@ -1,44 +1,118 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   HomeSiteHero - Obsidian Arena Theme
+   Landing page hero with dramatic presentation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .hero {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 90vh;
   overflow: hidden;
+  gap: var(--space-xl);
 }
 
+/* Background knight decoration */
 .knight {
   position: absolute;
   user-select: none;
   pointer-events: none;
   height: 500px;
   max-height: 100%;
-  opacity: 0.02;
-  filter: grayscale(100%);
+  opacity: 0.03;
+  filter: grayscale(100%) brightness(1.2);
   transform-origin: center;
   z-index: 0;
-  animation: knightFloat 6s ease-in-out infinite alternate;
+  animation: knightFloat 8s ease-in-out infinite alternate;
 }
 
+@keyframes knightFloat {
+  0% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  100% {
+    transform: translateY(-20px) rotate(2deg);
+  }
+}
+
+/* Hero title */
+.heroTitle {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-size: 4rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.heroTitle span {
+  color: var(--accent);
+}
+
+/* Tagline */
+.heroTagline {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 400px;
+}
+
+/* Play Now CTA Button */
 .playNowButton {
   position: relative;
   z-index: 1;
-  padding: 1rem 2rem;
-  font-size: 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: var(--space-md) var(--space-2xl);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
   text-transform: uppercase;
-  color: #2adeaed6;
+  letter-spacing: 0.1em;
+  color: var(--accent);
   background: transparent;
-  border: 2px solid #2adeaeb5;
-  border-radius: 5px;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-  box-shadow: 0 0 10px rgba(42, 222, 174, 0.5);
+    transform var(--transition-base),
+    box-shadow var(--transition-base),
+    background var(--transition-base),
+    color var(--transition-base);
+  box-shadow: 0 0 20px var(--accent-ghost);
 }
 
 .playNowButton:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(42, 222, 174, 0.8);
+  transform: translateY(-3px);
+  background: var(--accent);
+  color: var(--surface-0);
+  box-shadow:
+    0 0 40px var(--accent-muted),
+    0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.playNowButton:active {
+  transform: translateY(-1px);
+}
+
+/* Ambient glow effect */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--accent-ghost) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+  animation: pulseGlow 4s ease-in-out infinite;
 }
