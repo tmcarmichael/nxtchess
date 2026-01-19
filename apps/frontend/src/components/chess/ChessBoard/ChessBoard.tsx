@@ -1,6 +1,7 @@
 import { type JSX, splitProps, For, type Component, createMemo } from 'solid-js';
-import { isPieceSide } from '../../../services/game';
-import { type PieceType, type BoardSquare, type Square, type Side } from '../../../types';
+import { isPieceSide } from '../../../services/game/pieceUtils';
+import { type PieceType, type BoardSquare, type Square } from '../../../types/chess';
+import { type Side } from '../../../types/game';
 import Piece from '../ChessPiece/ChessPiece';
 import styles from './ChessBoard.module.css';
 
@@ -101,7 +102,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
             <Piece
               type={props.piece as PieceType}
               draggable
-              onDragStart={(e: DragEvent) => local.onDragStart(props.square, props.piece, e)}
+              onDragStart={(e: DragEvent) => local.onDragStart(props.square, props.piece!, e)}
               style={{ opacity: isDragging ? 0.5 : 1, transition: 'opacity 0.2s ease' }}
             />
           )}

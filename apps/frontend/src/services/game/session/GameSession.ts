@@ -1,7 +1,7 @@
 import { Chess } from 'chess.js';
-import { getTurnFromFen } from '..';
 import { BoardCache } from '../BoardCache';
 import { processCapturedPiece } from '../chessGameService';
+import { getTurnFromFen } from '../fenUtils';
 import { transition } from '../gameLifecycle';
 import type {
   GameSessionConfig,
@@ -10,14 +10,8 @@ import type {
   GameCommand,
   CommandResult,
 } from './types';
-import type {
-  Square,
-  PromotionPiece,
-  Side,
-  GameOverReason,
-  GameWinner,
-  BoardSquare,
-} from '../../../types';
+import type { Square, PromotionPiece, BoardSquare } from '../../../types/chess';
+import type { Side, GameOverReason, GameWinner } from '../../../types/game';
 
 // ============================================================================
 // Constants

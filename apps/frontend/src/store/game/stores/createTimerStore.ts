@@ -1,5 +1,5 @@
 import { createStore, produce } from 'solid-js/store';
-import type { Side } from '../../../types';
+import type { Side } from '../../../types/game';
 
 interface TimerState {
   whiteTime: number;

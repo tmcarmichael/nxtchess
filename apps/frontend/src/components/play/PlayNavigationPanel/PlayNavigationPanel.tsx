@@ -1,9 +1,9 @@
 import { For, createMemo, createEffect, on, type Component } from 'solid-js';
-import { useGame } from '../../../store';
+import { useGame } from '../../../store/game/GameContext';
 import styles from './PlayNavigationPanel.module.css';
 
 const PlayNavigationPanel: Component = () => {
-  const { chess } = useGame();
+  const { chess, actions } = useGame();
 
   let movesContainerRef: HTMLDivElement | undefined;
   createEffect(
@@ -34,7 +34,7 @@ const PlayNavigationPanel: Component = () => {
   });
 
   const handleJumpToMoveIndex = (index: number) => {
-    chess.jumpToMoveIndex(index);
+    actions.jumpToMove(index);
   };
 
   const MoveRow: Component<{
@@ -76,13 +76,11 @@ const PlayNavigationPanel: Component = () => {
   };
 
   const goToPreviousMove = () => {
-    const newIndex = Math.max(0, chess.state.viewMoveIndex - 1);
-    handleJumpToMoveIndex(newIndex);
+    actions.jumpToPreviousMove();
   };
 
   const goToNextMove = () => {
-    const newIndex = Math.min(chess.state.moveHistory.length - 1, chess.state.viewMoveIndex + 1);
-    handleJumpToMoveIndex(newIndex);
+    actions.jumpToNextMove();
   };
 
   return (

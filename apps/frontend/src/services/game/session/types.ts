@@ -1,3 +1,4 @@
+import type { Square, PromotionPiece } from '../../../types/chess';
 import type {
   Side,
   GameMode,
@@ -5,9 +6,7 @@ import type {
   GameWinner,
   AIPlayStyle,
   GamePhase,
-  Square,
-  PromotionPiece,
-} from '../../../types';
+} from '../../../types/game';
 import type { GameLifecycle } from '../gameLifecycle';
 
 // ============================================================================

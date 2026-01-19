@@ -1,6 +1,6 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, Show, For, createEffect, type ParentComponent } from 'solid-js';
-import { useUserStore } from '../../../store';
+import { useUserStore } from '../../../store/user/UserContext';
 import PlayModal from '../../play/PlayModal/PlayModal';
 import TrainingModal from '../../training/TrainingModal/TrainingModal';
 import SignInModal from '../../user/UserSignInModal/UserSignInModal';

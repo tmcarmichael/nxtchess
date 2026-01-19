@@ -1,5 +1,6 @@
 import { Chess } from 'chess.js';
-import { type Square, type BoardSquare, type PromotionPiece, type Side } from '../../types';
+import { type Square, type BoardSquare, type PromotionPiece } from '../../types/chess';
+import { type Side } from '../../types/game';
 import { getTurnFromFen } from './fenUtils';
 import { getPieceColor, makePiece } from './pieceUtils';
 

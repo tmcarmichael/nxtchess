@@ -1,7 +1,7 @@
 import { useParams } from '@solidjs/router';
 import { SolidApexCharts } from 'solid-apexcharts';
 import { createEffect, Show } from 'solid-js';
-import { useUserStore } from '../../../store';
+import { useUserStore } from '../../../store/user/UserContext';
 import styles from './UserProfile.module.css';
 
 // DEV/TEST user profile rating graph

@@ -9,11 +9,16 @@ import {
   on,
   onCleanup,
 } from 'solid-js';
-import { getEvaluation } from '../../../services/engine';
-import { getLegalMoves, prepareMove, canMovePieceAt } from '../../../services/game';
-import { useKeyboardNavigation } from '../../../shared';
-import { useGame } from '../../../store';
-import { type Square, type PromotionPiece, type Side } from '../../../types';
+import { getEvaluation } from '../../../services/engine/evalEngineWorker';
+import {
+  getLegalMoves,
+  prepareMove,
+  canMovePieceAt,
+} from '../../../services/game/chessGameService';
+import { useKeyboardNavigation } from '../../../shared/hooks/useKeyboardNavigation';
+import { useGame } from '../../../store/game/GameContext';
+import { type Square, type PromotionPiece } from '../../../types/chess';
+import { type Side } from '../../../types/game';
 import ChessBoard from '../../chess/ChessBoard/ChessBoard';
 import ChessPromotionModal from '../../chess/ChessPromotionModal/ChessPromotionModal';
 import ChessEndModal from '../ChessEndModal/ChessEndModal';
@@ -44,19 +49,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   const [showEndModal, setShowEndModal] = createSignal(false);
 
   useKeyboardNavigation({
-    onPrevious: () => {
-      const newIndex = chess.state.viewMoveIndex - 1;
-      if (newIndex >= 0) {
-        chess.jumpToMoveIndex(newIndex);
-      }
-    },
-    onNext: () => {
-      const newIndex = chess.state.viewMoveIndex + 1;
-      if (newIndex <= chess.state.moveHistory.length - 1) {
-        chess.jumpToMoveIndex(newIndex);
-      }
-    },
-    onFlip: ui.flipBoard,
+    onPrevious: actions.jumpToPreviousMove,
+    onNext: actions.jumpToNextMove,
+    onFlip: actions.flipBoard,
     enabled: () => !chess.state.isGameOver,
   });
 

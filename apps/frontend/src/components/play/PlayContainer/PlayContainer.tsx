@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from '@solidjs/router';
 import { createSignal, createEffect, on, type ParentComponent } from 'solid-js';
-import { useGame } from '../../../store';
+import { useGame } from '../../../store/game/GameContext';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
-import { GameContainer } from '../../game';
+import GameContainer from '../../game/GameContainer/GameContainer';
 import PlayControlPanel from '../PlayControlPanel/PlayControlPanel';
 import PlayModal from '../PlayModal/PlayModal';
 import PlayNavigationPanel from '../PlayNavigationPanel/PlayNavigationPanel';

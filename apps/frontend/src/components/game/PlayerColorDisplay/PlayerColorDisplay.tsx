@@ -1,7 +1,7 @@
 import { Show, type Component } from 'solid-js';
 import Piece from '../../chess/ChessPiece/ChessPiece';
 import styles from './PlayerColorDisplay.module.css';
-import type { Side } from '../../../types';
+import type { Side } from '../../../types/game';
 
 interface PlayerColorDisplayProps {
   playerColor: Side;

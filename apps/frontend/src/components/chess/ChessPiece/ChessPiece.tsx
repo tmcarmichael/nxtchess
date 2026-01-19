@@ -1,5 +1,5 @@
 import { type JSX, splitProps, type Component } from 'solid-js';
-import { type PieceType } from '../../../types';
+import { type PieceType } from '../../../types/chess';
 import styles from './ChessPiece.module.css';
 
 interface GamePieceProps {

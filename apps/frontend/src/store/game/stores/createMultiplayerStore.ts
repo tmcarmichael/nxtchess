@@ -1,39 +1,40 @@
 import { batch } from 'solid-js';
 import { createStore } from 'solid-js/store';
-import {
-  gameSyncService,
-  type SyncEvent,
-  type GameCreatedData,
-  type GameJoinedData,
-  type GameStartedData,
-  type MoveAcceptedData,
-  type MoveRejectedData,
-  type OpponentMoveData,
-  type GameEndedData,
-  type TimeUpdateData,
-} from '../../../services/sync';
-import type { Side, GameWinner, GameOverReason } from '../../../types';
+import { gameSyncService } from '../../../services/sync/GameSyncService';
+import { TypedEventEmitter } from '../../../shared/utils/EventEmitter';
+import type {
+  SyncEvent,
+  GameCreatedData,
+  GameJoinedData,
+  GameStartedData,
+  MoveAcceptedData,
+  MoveRejectedData,
+  OpponentMoveData,
+  GameEndedData,
+  TimeUpdateData,
+} from '../../../services/sync/types';
+import type { Side, GameWinner, GameOverReason } from '../../../types/game';
 
 // ============================================================================
-// Callback Types for Event Handling
+// Event Types
 // ============================================================================
 
-export interface MultiplayerEventCallbacks {
-  onGameCreated: (data: { gameId: string; playerColor: Side }) => void;
-  onGameJoined: (data: { gameId: string; playerColor: Side; opponent: string | null }) => void;
-  onGameStarted: (data: {
+export interface MultiplayerEvents {
+  'game:created': { gameId: string; playerColor: Side };
+  'game:joined': { gameId: string; playerColor: Side; opponent: string | null };
+  'game:started': {
     gameId: string;
     opponent: string | null;
     whiteTimeMs: number;
     blackTimeMs: number;
-  }) => void;
-  onMoveAccepted: (data: {
+  };
+  'move:accepted': {
     fen: string;
     whiteTimeMs: number | undefined;
     blackTimeMs: number | undefined;
-  }) => void;
-  onMoveRejected: (data: { fen: string; reason: string }) => void;
-  onOpponentMove: (data: {
+  };
+  'move:rejected': { fen: string; reason: string };
+  'move:opponent': {
     fen: string;
     san: string;
     from: string;
@@ -41,14 +42,11 @@ export interface MultiplayerEventCallbacks {
     whiteTimeMs: number | undefined;
     blackTimeMs: number | undefined;
     isCheck: boolean | undefined;
-  }) => void;
-  onTimeUpdate: (data: { whiteTimeMs: number; blackTimeMs: number }) => void;
-  onGameEnded: (data: { reason: GameOverReason; winner: GameWinner }) => void;
-  onOpponentLeft: () => void;
-  onError: (message: string) => void;
-  // Needed for game:started to start timer with current turn
-  getCurrentTurn: () => Side;
-  getPlayerColor: () => Side;
+  };
+  'time:update': { whiteTimeMs: number; blackTimeMs: number };
+  'game:ended': { reason: GameOverReason; winner: GameWinner };
+  'game:opponent_left': void;
+  'game:error': { message: string };
 }
 
 // ============================================================================
@@ -64,24 +62,32 @@ interface MultiplayerState {
 
 export interface MultiplayerStore {
   state: MultiplayerState;
+  // Event subscription
+  on: <K extends keyof MultiplayerEvents>(
+    event: K,
+    handler: (data: MultiplayerEvents[K]) => void
+  ) => () => void;
+  // Connection
   connect: () => void;
   disconnect: () => void;
+  // Game actions
   createGame: (timeControl: number, increment?: number) => void;
   joinGame: (gameId: string) => void;
   sendMove: (from: string, to: string, promotion?: string) => void;
   resign: () => void;
   leave: () => void;
-  // For external state updates
+  // State setters
   setGameStarted: (gameId: string, opponent: string | null) => void;
   setGameId: (gameId: string) => void;
   setWaiting: (isWaiting: boolean) => void;
+  setPlayerColorGetter: (getter: () => Side) => void;
 }
 
 // ============================================================================
 // Store Factory
 // ============================================================================
 
-export const createMultiplayerStore = (callbacks?: MultiplayerEventCallbacks): MultiplayerStore => {
+export const createMultiplayerStore = (): MultiplayerStore => {
   const [state, setState] = createStore<MultiplayerState>({
     gameId: null,
     opponentUsername: null,
@@ -89,15 +95,16 @@ export const createMultiplayerStore = (callbacks?: MultiplayerEventCallbacks): M
     isConnected: false,
   });
 
+  const events = new TypedEventEmitter<MultiplayerEvents>();
+
   let unsubscribe: (() => void) | null = null;
+  let playerColorGetter: (() => Side) | null = null;
 
   // ============================================================================
   // Internal Event Handler
   // ============================================================================
 
   const handleSyncEvent = (event: SyncEvent) => {
-    if (!callbacks) return;
-
     switch (event.type) {
       case 'game:created': {
         const data = event.data as GameCreatedData;
@@ -105,8 +112,8 @@ export const createMultiplayerStore = (callbacks?: MultiplayerEventCallbacks): M
         batch(() => {
           setState('gameId', data.gameId);
           setState('isWaiting', true);
-          callbacks.onGameCreated({ gameId: data.gameId, playerColor });
         });
+        events.emit('game:created', { gameId: data.gameId, playerColor });
         break;
       }
 
@@ -117,37 +124,37 @@ export const createMultiplayerStore = (callbacks?: MultiplayerEventCallbacks): M
           setState('gameId', data.gameId);
           setState('opponentUsername', data.opponent ?? null);
           setState('isWaiting', false);
-          callbacks.onGameJoined({
-            gameId: data.gameId,
-            playerColor,
-            opponent: data.opponent ?? null,
-          });
+        });
+        events.emit('game:joined', {
+          gameId: data.gameId,
+          playerColor,
+          opponent: data.opponent ?? null,
         });
         break;
       }
 
       case 'game:started': {
         const data = event.data as GameStartedData;
-        const playerIsWhite = callbacks.getPlayerColor() === 'w';
+        const playerIsWhite = playerColorGetter?.() === 'w';
         const opponentInfo = playerIsWhite ? data.blackPlayer : data.whitePlayer;
 
         batch(() => {
           setState('gameId', data.gameId);
           setState('opponentUsername', opponentInfo.username ?? null);
           setState('isWaiting', false);
-          callbacks.onGameStarted({
-            gameId: data.gameId,
-            opponent: opponentInfo.username ?? null,
-            whiteTimeMs: data.whiteTimeMs,
-            blackTimeMs: data.blackTimeMs,
-          });
+        });
+        events.emit('game:started', {
+          gameId: data.gameId,
+          opponent: opponentInfo.username ?? null,
+          whiteTimeMs: data.whiteTimeMs,
+          blackTimeMs: data.blackTimeMs,
         });
         break;
       }
 
       case 'game:move_accepted': {
         const data = event.data as MoveAcceptedData;
-        callbacks.onMoveAccepted({
+        events.emit('move:accepted', {
           fen: data.fen,
           whiteTimeMs: data.whiteTimeMs,
           blackTimeMs: data.blackTimeMs,
@@ -157,13 +164,13 @@ export const createMultiplayerStore = (callbacks?: MultiplayerEventCallbacks): M
 
       case 'game:move_rejected': {
         const data = event.data as MoveRejectedData;
-        callbacks.onMoveRejected({ fen: data.fen, reason: data.reason });
+        events.emit('move:rejected', { fen: data.fen, reason: data.reason });
         break;
       }
 
       case 'game:opponent_move': {
         const data = event.data as OpponentMoveData;
-        callbacks.onOpponentMove({
+        events.emit('move:opponent', {
           fen: data.fen,
           san: data.san,
           from: data.from,
@@ -177,10 +184,7 @@ export const createMultiplayerStore = (callbacks?: MultiplayerEventCallbacks): M
 
       case 'game:time_update': {
         const data = event.data as TimeUpdateData;
-        callbacks.onTimeUpdate({
-          whiteTimeMs: data.whiteTime,
-          blackTimeMs: data.blackTime,
-        });
+        events.emit('time:update', { whiteTimeMs: data.whiteTime, blackTimeMs: data.blackTime });
         break;
       }
 
@@ -198,18 +202,18 @@ export const createMultiplayerStore = (callbacks?: MultiplayerEventCallbacks): M
         else if (data.reason === 'resignation') reason = 'resignation';
 
         setState('gameId', null);
-        callbacks.onGameEnded({ reason, winner });
+        events.emit('game:ended', { reason, winner });
         break;
       }
 
       case 'game:opponent_left': {
-        callbacks.onOpponentLeft();
+        events.emit('game:opponent_left', undefined as unknown as void);
         break;
       }
 
       case 'error': {
         const data = event.data as { message: string };
-        callbacks.onError(data.message);
+        events.emit('game:error', { message: data.message });
         break;
       }
     }
@@ -223,10 +227,22 @@ export const createMultiplayerStore = (callbacks?: MultiplayerEventCallbacks): M
     gameSyncService.connect();
     setState('isConnected', true);
 
-    // Subscribe to events if callbacks provided
-    if (callbacks && !unsubscribe) {
+    // Subscribe to sync service events
+    if (!unsubscribe) {
       unsubscribe = gameSyncService.onEvent(handleSyncEvent);
     }
+  };
+
+  // Event subscription method
+  const on = <K extends keyof MultiplayerEvents>(
+    event: K,
+    handler: (data: MultiplayerEvents[K]) => void
+  ): (() => void) => {
+    return events.on(event, handler);
+  };
+
+  const setPlayerColorGetter = (getter: () => Side) => {
+    playerColorGetter = getter;
   };
 
   const disconnect = () => {
@@ -291,6 +307,7 @@ export const createMultiplayerStore = (callbacks?: MultiplayerEventCallbacks): M
 
   return {
     state,
+    on,
     connect,
     disconnect,
     createGame,
@@ -301,5 +318,6 @@ export const createMultiplayerStore = (callbacks?: MultiplayerEventCallbacks): M
     setGameStarted,
     setGameId,
     setWaiting,
+    setPlayerColorGetter,
   };
 };

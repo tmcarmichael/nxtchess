@@ -4,13 +4,15 @@ import {
   computeAiMove,
   terminateAiEngine,
   EngineError,
+} from '../../../services/engine/aiEngineWorker';
+import { enginePool } from '../../../services/engine/EnginePool';
+import {
   initEvalEngine,
   getEvaluation,
   terminateEvalEngine,
-  enginePool,
-} from '../../../services/engine';
-import { DIFFICULTY_VALUES_ELO } from '../../../shared';
-import type { Side, AIPlayStyle } from '../../../types';
+} from '../../../services/engine/evalEngineWorker';
+import { DIFFICULTY_VALUES_ELO } from '../../../shared/config/constants';
+import type { Side, AIPlayStyle } from '../../../types/game';
 
 export type EngineStatus = 'idle' | 'loading' | 'ready' | 'error';
 

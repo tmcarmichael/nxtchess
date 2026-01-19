@@ -1,5 +1,5 @@
 import { type Component, type Accessor } from 'solid-js';
-import { DIFFICULTY_VALUES_ELO, DIFFICULTY_VALUES_LEVEL } from '../../../shared';
+import { DIFFICULTY_VALUES_ELO, DIFFICULTY_VALUES_LEVEL } from '../../../shared/config/constants';
 import styles from './ChessDifficultySlider.module.css';
 
 interface ChessDifficultySliderProps {

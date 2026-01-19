@@ -1,6 +1,6 @@
 import { createStore } from 'solid-js/store';
-import { getOpponentSide } from '../../../services/game';
-import type { Side } from '../../../types';
+import { getOpponentSide } from '../../../services/game/chessGameService';
+import type { Side } from '../../../types/game';
 
 interface UIState {
   boardView: Side;

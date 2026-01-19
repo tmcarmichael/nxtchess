@@ -40,7 +40,10 @@
       "Bash(basename:*)",
       "Bash(fi)",
       "Bash(done)",
-      "Bash(yarn test:*)"
+      "Bash(yarn test:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.solidjs.com)",
+      "Bash(yarn eslint:*)"
     ]
   }
 }

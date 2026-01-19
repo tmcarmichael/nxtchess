@@ -1,5 +1,5 @@
 import { splitProps, type Component, For } from 'solid-js';
-import { type PromotionPiece } from '../../../types';
+import { type PromotionPiece } from '../../../types/chess';
 import styles from './ChessPromotionModal.module.css';
 
 interface PromotionModalProps {

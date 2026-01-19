@@ -1,15 +1,17 @@
 import { useNavigate } from '@solidjs/router';
 import { Show, createSignal, type ParentComponent } from 'solid-js';
-import { useGame } from '../../../store';
-import { type StartGameOptions, type GameMode } from '../../../types';
+import { useGame } from '../../../store/game/GameContext';
+import { type StartGameOptions, type GameMode } from '../../../types/game';
 import ChessClock from '../../chess/ChessClock/ChessClock';
-import { ButtonPanel, GamePanelButton, GameInfoPanel } from '../../game';
+import ButtonPanel from '../../game/ButtonPanel/ButtonPanel';
+import GameInfoPanel from '../../game/GameInfoPanel/GameInfoPanel';
+import GamePanelButton from '../../game/GamePanelButton/GamePanelButton';
 import ResignModal from '../PlayResignModal/PlayResignModal';
 import styles from './PlayControlPanel.module.css';
 
 const PlayControlPanel: ParentComponent = () => {
   const navigate = useNavigate();
-  const { chess, engine, ui, actions, derived } = useGame();
+  const { chess, engine, actions, derived } = useGame();
 
   const [showResignModal, setShowResignModal] = createSignal(false);
 
@@ -45,10 +47,10 @@ const PlayControlPanel: ParentComponent = () => {
             <GamePanelButton onClick={handleResign} disabled={!derived.isPlaying()}>
               <span>Resign</span>
             </GamePanelButton>
-            <GamePanelButton onClick={ui.flipBoard}>
+            <GamePanelButton onClick={actions.flipBoard}>
               <span>Flip Board</span>
             </GamePanelButton>
-            <GamePanelButton onClick={chess.takeBack} disabled={!derived.isPlaying()}>
+            <GamePanelButton onClick={actions.takeBack} disabled={!derived.isPlaying()}>
               <span>Take Back</span>
             </GamePanelButton>
           </ButtonPanel>

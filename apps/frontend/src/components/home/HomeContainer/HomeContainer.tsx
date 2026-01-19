@@ -9,7 +9,7 @@ import {
   onCleanup,
   Show,
 } from 'solid-js';
-import { enginePool } from '../../../services';
+import { enginePool } from '../../../services/engine/EnginePool';
 import SignInModal from '../../user/UserSignInModal/UserSignInModal';
 import HomeSiteHero from '../HomeSiteHero/HomeSiteHero';
 import styles from './HomeContainer.module.css';
