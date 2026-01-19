@@ -1,13 +1,11 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, onMount, onCleanup, type Component, createMemo } from 'solid-js';
 import { getRandomQuickPlayConfig } from '../../../services/game/chessGameService';
-import { useGame } from '../../../store/game/GameContext';
 import { type StartGameOptions } from '../../../types/game';
 import styles from './HomeSiteHero.module.css';
 
 const HomeSiteHero: Component = () => {
   const navigate = useNavigate();
-  const { actions } = useGame();
   const [pos, setPos] = createSignal({ x: 0, y: 0, r: 0 });
   let intervalId: number | undefined;
 
@@ -27,14 +25,14 @@ const HomeSiteHero: Component = () => {
 
   const handlePlayNow = () => {
     const [quickPlayTime, quickPlayDifficulty, quickPlaySide] = getRandomQuickPlayConfig();
-    const playGameConfig: StartGameOptions = {
+    const quickPlayConfig: StartGameOptions = {
       side: quickPlaySide,
       mode: 'play',
       newTimeControl: quickPlayTime,
       newDifficultyLevel: quickPlayDifficulty,
     };
-    navigate('/play', { replace: true });
-    actions.startNewGame(playGameConfig);
+    // Pass config to PlayContainer via navigation state
+    navigate('/play', { replace: true, state: { quickPlay: quickPlayConfig } });
   };
 
   const knightStyle = createMemo(() => ({

@@ -1,59 +1,44 @@
-import { getOpponentSide } from '../../services/game/chessGameService';
-import { transition, canMakeMove } from '../../services/game/gameLifecycle';
-import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../shared/config/constants';
-import type { ChessStore } from './stores/createChessStore';
-import type { EngineStore } from './stores/createEngineStore';
-import type { MultiplayerStore } from './stores/createMultiplayerStore';
-import type { TimerStore } from './stores/createTimerStore';
-import type { UIStore } from './stores/createUIStore';
-import type { Square, PromotionPiece } from '../../types/chess';
-import type { Side, StartGameOptions, MultiplayerGameOptions } from '../../types/game';
+import { getOpponentSide } from '../../../services/game/chessGameService';
+import { transition, canMakeMove } from '../../../services/game/gameLifecycle';
+import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../../shared/config/constants';
+import type { Square, PromotionPiece } from '../../../types/chess';
+import type { Side, StartGameOptions } from '../../../types/game';
+import type { ChessStore } from '../stores/createChessStore';
+import type { EngineStore } from '../stores/createEngineStore';
+import type { TimerStore } from '../stores/createTimerStore';
+import type { UIStore } from '../stores/createUIStore';
+import type { SinglePlayerActions, CoreActions } from '../types';
 
 // ============================================================================
-// Types
+// Single Player Stores Interface
 // ============================================================================
 
-export interface GameStores {
+export interface SinglePlayerStores {
   chess: ChessStore;
   timer: TimerStore;
   engine: EngineStore;
-  multiplayer: MultiplayerStore;
   ui: UIStore;
-}
-
-export interface GameActions {
-  // Game lifecycle
-  startNewGame: (options: StartGameOptions) => Promise<void>;
-  startMultiplayerGame: (options: MultiplayerGameOptions) => Promise<void>;
-  joinMultiplayerGame: (gameId: string) => void;
-  exitGame: () => void;
-  retryEngineInit: () => Promise<void>;
-
-  // Moves
-  applyPlayerMove: (from: Square, to: Square, promotion?: PromotionPiece) => void;
-  applyMultiplayerMove: (from: Square, to: Square, promotion?: PromotionPiece) => void;
-  resign: () => void;
-  resignMultiplayer: () => void;
-  handleTimeOut: (winner: Side) => void;
-  takeBack: () => void;
-
-  // Navigation & UI
-  jumpToMove: (index: number) => void;
-  jumpToPreviousMove: () => void;
-  jumpToNextMove: () => void;
-  flipBoard: () => void;
 }
 
 // ============================================================================
 // Factory
 // ============================================================================
 
-export const createGameActions = (stores: GameStores): GameActions => {
-  const { chess, timer, engine, multiplayer, ui } = stores;
+export const createSinglePlayerActions = (
+  stores: SinglePlayerStores,
+  coreActions: CoreActions
+): SinglePlayerActions => {
+  const { chess, timer, engine, ui } = stores;
 
   // ============================================================================
   // Internal Helpers
   // ============================================================================
+
+  const handleTimeOut = (winner: Side) => {
+    timer.stop();
+    chess.endGame('time', winner);
+    ui.showEndModal();
+  };
 
   const performAIMove = async () => {
     if (
@@ -65,7 +50,6 @@ export const createGameActions = (stores: GameStores): GameActions => {
     }
 
     try {
-      // engine.getMove() manages isThinking state internally
       const fenAtStart = chess.state.fen;
       const move = await engine.getMove(chess.state.fen);
       if (!move) return;
@@ -108,12 +92,6 @@ export const createGameActions = (stores: GameStores): GameActions => {
   // ============================================================================
   // Public Actions
   // ============================================================================
-
-  const handleTimeOut = (winner: Side) => {
-    timer.stop();
-    chess.endGame('time', winner);
-    ui.showEndModal();
-  };
 
   const startNewGame = async (options: StartGameOptions) => {
     timer.stop();
@@ -182,35 +160,8 @@ export const createGameActions = (stores: GameStores): GameActions => {
       }
     } catch (err) {
       console.error('Engine initialization failed:', err);
-      // Transition to error state so user can retry
       chess.setLifecycle(transition('initializing', 'ENGINE_ERROR'));
     }
-  };
-
-  const startMultiplayerGame = async (options: MultiplayerGameOptions) => {
-    timer.stop();
-    ui.hideEndModal();
-
-    const { side, mode = 'play', newTimeControl = 5, increment = 0 } = options;
-
-    chess.resetForMultiplayer(mode);
-    chess.setPlayerColor(side);
-    ui.setBoardView(side);
-    timer.reset(newTimeControl);
-
-    // Connect and create game - multiplayer store handles event subscription internally
-    multiplayer.createGame(newTimeControl, increment);
-  };
-
-  const joinMultiplayerGame = (gameId: string) => {
-    timer.stop();
-    ui.hideEndModal();
-
-    chess.resetForMultiplayer('play');
-    // Note: playerColor will be set by onGameJoined callback when server assigns color
-
-    // Connect and join game - multiplayer store handles event subscription internally
-    multiplayer.joinGame(gameId);
   };
 
   const applyPlayerMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
@@ -227,35 +178,6 @@ export const createGameActions = (stores: GameStores): GameActions => {
     }
   };
 
-  const applyMultiplayerMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
-    if (chess.state.opponentType !== 'human' || !multiplayer.state.gameId) {
-      return;
-    }
-
-    // Send move to server
-    multiplayer.sendMove(from, to, promotion);
-
-    // Optimistic update
-    chess.applyOptimisticMove(from, to, promotion);
-  };
-
-  const exitGame = () => {
-    timer.stop();
-
-    // Clean up multiplayer
-    if (multiplayer.state.gameId) {
-      multiplayer.leave();
-    }
-
-    // Clean up engine
-    if (chess.state.sessionId) {
-      engine.release(chess.state.sessionId);
-    }
-
-    chess.exitGame();
-    chess.setLifecycle(transition(chess.state.lifecycle, 'EXIT_GAME'));
-  };
-
   const resign = () => {
     if (!canMakeMove(chess.state.lifecycle)) return;
     timer.stop();
@@ -263,20 +185,12 @@ export const createGameActions = (stores: GameStores): GameActions => {
     ui.showEndModal();
   };
 
-  const resignMultiplayer = () => {
-    if (multiplayer.state.gameId) {
-      multiplayer.resign();
-    }
-  };
-
   const retryEngineInit = async () => {
-    // Transition from error back to initializing
     chess.setLifecycle(transition('error', 'RETRY_ENGINE'));
 
     await engine.retry(() => {
       chess.setLifecycle(transition('initializing', 'ENGINE_READY'));
 
-      // Start timer for play mode
       if (chess.state.mode === 'play') {
         timer.start(
           () => chess.state.currentTurn,
@@ -284,63 +198,40 @@ export const createGameActions = (stores: GameStores): GameActions => {
         );
       }
 
-      // If player is black and game just started, AI moves first
       if (chess.state.playerColor === 'b' && chess.state.moveHistory.length === 0) {
         performAIMove();
       }
     });
   };
 
-  // ============================================================================
-  // Navigation & UI Actions
-  // ============================================================================
-
-  const jumpToMove = (index: number) => {
-    chess.jumpToMoveIndex(index);
-  };
-
-  const jumpToPreviousMove = () => {
-    const newIndex = chess.state.viewMoveIndex - 1;
-    if (newIndex >= 0) {
-      chess.jumpToMoveIndex(newIndex);
-    }
-  };
-
-  const jumpToNextMove = () => {
-    const newIndex = chess.state.viewMoveIndex + 1;
-    if (newIndex <= chess.state.moveHistory.length - 1) {
-      chess.jumpToMoveIndex(newIndex);
-    }
-  };
-
-  const flipBoard = () => {
-    ui.flipBoard();
-  };
-
   const takeBack = () => {
     chess.takeBack();
   };
 
-  return {
-    // Game lifecycle
-    startNewGame,
-    startMultiplayerGame,
-    joinMultiplayerGame,
-    exitGame,
-    retryEngineInit,
+  const exitGame = () => {
+    timer.stop();
 
-    // Moves
+    if (chess.state.sessionId) {
+      engine.release(chess.state.sessionId);
+    }
+
+    coreActions.exitGame();
+    chess.setLifecycle(transition(chess.state.lifecycle, 'EXIT_GAME'));
+  };
+
+  return {
+    // Core actions
+    ...coreActions,
+
+    // Single player actions
+    startNewGame,
     applyPlayerMove,
-    applyMultiplayerMove,
     resign,
-    resignMultiplayer,
+    retryEngineInit,
     handleTimeOut,
     takeBack,
 
-    // Navigation & UI
-    jumpToMove,
-    jumpToPreviousMove,
-    jumpToNextMove,
-    flipBoard,
+    // Override exitGame to add cleanup
+    exitGame,
   };
 };

@@ -1,10 +1,11 @@
 import { type ParentComponent, createSignal } from 'solid-js';
+import { TrainingGameProvider } from '../../../store/game/TrainingGameContext';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
 import GameContainer from '../../game/GameContainer/GameContainer';
 import TrainingControlPanel from '../TrainingControlPanel/TrainingControlPanel';
 import TrainingModal from '../TrainingModal/TrainingModal';
 
-const TrainingContainer: ParentComponent = () => {
+const TrainingContainerInner: ParentComponent = () => {
   const [showTrainingModal, setShowTrainingModal] = createSignal(false);
 
   const handleRequestNewGame = () => {
@@ -19,6 +20,15 @@ const TrainingContainer: ParentComponent = () => {
       boardContent={<ChessBoardController onRequestNewGame={handleRequestNewGame} />}
       rightPanel={<TrainingControlPanel />}
     />
+  );
+};
+
+// Wrap with provider
+const TrainingContainer: ParentComponent = () => {
+  return (
+    <TrainingGameProvider>
+      <TrainingContainerInner />
+    </TrainingGameProvider>
   );
 };
 

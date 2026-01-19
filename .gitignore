@@ -49,7 +49,5 @@ build/
 out/
 vendor/
 
-design-doc-frontend.txt
-design-doc-backend.txt
-
-db/migrations/
+# AI
+.claude/

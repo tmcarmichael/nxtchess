@@ -1,8 +1,8 @@
 // ============================================================================
-// Connection State
+// Connection State (re-exported from network module)
 // ============================================================================
 
-export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
+export type { ConnectionState } from '../network/ReconnectingWebSocket';
 
 // ============================================================================
 // Player Info

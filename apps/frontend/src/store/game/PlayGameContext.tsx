@@ -1,38 +1,20 @@
 import { createContext, useContext, onCleanup, type JSX } from 'solid-js';
 import { sessionManager } from '../../services/game/session/SessionManager';
-import { createGameActions, type GameActions } from './createGameActions';
-import { createChessStore, type ChessStore } from './stores/createChessStore';
-import { createEngineStore, type EngineStore } from './stores/createEngineStore';
-import { createMultiplayerStore, type MultiplayerStore } from './stores/createMultiplayerStore';
-import { createTimerStore, type TimerStore } from './stores/createTimerStore';
-import { createUIStore, type UIStore } from './stores/createUIStore';
+import { createCoreActions } from './actions/createCoreActions';
+import { createPlayActions } from './actions/createPlayActions';
+import { createChessStore } from './stores/createChessStore';
+import { createEngineStore } from './stores/createEngineStore';
+import { createMultiplayerStore } from './stores/createMultiplayerStore';
+import { createTimerStore } from './stores/createTimerStore';
+import { createUIStore } from './stores/createUIStore';
+import { UnifiedGameContextInstance, type UnifiedGameContext } from './useGameContext';
+import type { PlayGameContextValue } from './types';
 
 // ============================================================================
-// Context Value Type
+// Context
 // ============================================================================
 
-export interface GameContextValue {
-  chess: ChessStore;
-  timer: TimerStore;
-  engine: EngineStore;
-  multiplayer: MultiplayerStore;
-  ui: UIStore;
-  // High-level actions that coordinate across stores
-  actions: GameActions;
-  // Derived state that combines multiple stores
-  derived: {
-    isEngineReady: () => boolean;
-    isEngineLoading: () => boolean;
-    hasEngineError: () => boolean;
-    isPlaying: () => boolean;
-    isMultiplayer: () => boolean;
-    isWaitingForOpponent: () => boolean;
-    material: () => { diff: number };
-    formattedAIPlayStyle: () => string;
-  };
-}
-
-const GameContext = createContext<GameContextValue>();
+const PlayGameContext = createContext<PlayGameContextValue>();
 
 // ============================================================================
 // Helper: Convert ms to seconds
@@ -41,18 +23,24 @@ const GameContext = createContext<GameContextValue>();
 const msToSeconds = (ms: number) => Math.floor(ms / 1000);
 
 // ============================================================================
-// Game Provider
+// Piece Values for Material Calculation
 // ============================================================================
 
-export const GameProvider = (props: { children: JSX.Element }) => {
-  // Create stores that don't depend on others first
+const PIECE_VALUES: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+
+// ============================================================================
+// Play Game Provider
+// ============================================================================
+
+export const PlayGameProvider = (props: { children: JSX.Element }) => {
+  // Create all stores
   const chess = createChessStore();
   const timer = createTimerStore();
   const engine = createEngineStore();
   const ui = createUIStore();
-
-  // Create multiplayer store and subscribe to events
   const multiplayer = createMultiplayerStore();
+
+  // Set up multiplayer event handlers
   multiplayer.setPlayerColorGetter(() => chess.state.playerColor);
 
   multiplayer.on('game:created', ({ playerColor }) => {
@@ -116,17 +104,15 @@ export const GameProvider = (props: { children: JSX.Element }) => {
   });
 
   // ============================================================================
-  // High-Level Actions (via factory)
+  // Create Actions
   // ============================================================================
 
-  const actions = createGameActions({ chess, timer, engine, multiplayer, ui });
+  const coreActions = createCoreActions({ chess, ui });
+  const actions = createPlayActions({ chess, timer, engine, multiplayer, ui }, coreActions);
 
   // ============================================================================
   // Derived State
   // ============================================================================
-
-  // Piece values for material calculation
-  const PIECE_VALUES: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 
   const derived = {
     isEngineReady: () => engine.state.status === 'ready',
@@ -135,7 +121,6 @@ export const GameProvider = (props: { children: JSX.Element }) => {
     isPlaying: () => chess.state.lifecycle === 'playing',
     isMultiplayer: () => chess.state.opponentType === 'human',
     isWaitingForOpponent: () => multiplayer.state.isWaiting,
-    // Material advantage (positive = white has captured more, negative = black has captured more)
     material: () => {
       const whiteCaptured = chess.state.capturedWhite.reduce(
         (sum, p) => sum + (PIECE_VALUES[p.toLowerCase()] ?? 0),
@@ -147,7 +132,6 @@ export const GameProvider = (props: { children: JSX.Element }) => {
       );
       return { diff: whiteCaptured - blackCaptured };
     },
-    // Formatted AI play style (capitalized)
     formattedAIPlayStyle: () => {
       const style = chess.state.trainingAIPlayStyle;
       if (!style) return '';
@@ -169,27 +153,60 @@ export const GameProvider = (props: { children: JSX.Element }) => {
   // Context Value
   // ============================================================================
 
-  const value: GameContextValue = {
+  const value: PlayGameContextValue = {
     chess,
     timer,
+    ui,
     engine,
     multiplayer,
-    ui,
     actions,
     derived,
   };
 
-  return <GameContext.Provider value={value}>{props.children}</GameContext.Provider>;
+  // Unified context for shared components like ChessBoardController
+  const unifiedValue: UnifiedGameContext = {
+    chess,
+    ui,
+    engine: {
+      state: {
+        isThinking: engine.state.isThinking,
+        error: engine.state.error,
+      },
+    },
+    multiplayer,
+    actions: {
+      jumpToPreviousMove: actions.jumpToPreviousMove,
+      jumpToNextMove: actions.jumpToNextMove,
+      flipBoard: actions.flipBoard,
+      exitGame: actions.exitGame,
+      retryEngineInit: actions.retryEngineInit,
+      applyPlayerMove: actions.applyPlayerMove,
+      applyMultiplayerMove: actions.applyMultiplayerMove,
+    },
+    derived: {
+      isEngineLoading: derived.isEngineLoading,
+      hasEngineError: derived.hasEngineError,
+      isMultiplayer: derived.isMultiplayer,
+    },
+  };
+
+  return (
+    <PlayGameContext.Provider value={value}>
+      <UnifiedGameContextInstance.Provider value={unifiedValue}>
+        {props.children}
+      </UnifiedGameContextInstance.Provider>
+    </PlayGameContext.Provider>
+  );
 };
 
 // ============================================================================
-// Hooks
+// Hook
 // ============================================================================
 
-export const useGame = () => {
-  const ctx = useContext(GameContext);
+export const usePlayGame = () => {
+  const ctx = useContext(PlayGameContext);
   if (!ctx) {
-    throw new Error('useGame must be used within <GameProvider>');
+    throw new Error('usePlayGame must be used within <PlayGameProvider>');
   }
   return ctx;
 };

@@ -16,7 +16,7 @@ import {
   canMovePieceAt,
 } from '../../../services/game/chessGameService';
 import { useKeyboardNavigation } from '../../../shared/hooks/useKeyboardNavigation';
-import { useGame } from '../../../store/game/GameContext';
+import { useGameContext } from '../../../store/game/useGameContext';
 import { type Square, type PromotionPiece } from '../../../types/chess';
 import { type Side } from '../../../types/game';
 import ChessBoard from '../../chess/ChessBoard/ChessBoard';
@@ -32,7 +32,7 @@ interface ChessBoardControllerProps {
 
 const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props) => {
   const [local] = splitProps(props, ['onRequestNewGame']);
-  const { chess, engine, multiplayer, ui, actions, derived } = useGame();
+  const { chess, engine, multiplayer, ui, actions, derived } = useGameContext();
   const navigate = useNavigate();
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
@@ -154,7 +154,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     }
 
     // Use multiplayer move if this is a human vs human game
-    if (derived.isMultiplayer()) {
+    if (derived.isMultiplayer() && actions.applyMultiplayerMove) {
       actions.applyMultiplayerMove(from, to, promotion);
     } else {
       actions.applyPlayerMove(from, to, promotion);
@@ -237,24 +237,24 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
             onRetry={actions.retryEngineInit}
           />
           {/* Waiting for opponent overlay for multiplayer */}
-          <Show when={multiplayer.state.isWaiting}>
+          <Show when={multiplayer?.state.isWaiting}>
             <div class={styles.waitingOverlay}>
               <div class={styles.waitingContent}>
                 <div class={styles.spinner} />
                 <h3>Waiting for Opponent</h3>
                 <Show
-                  when={multiplayer.state.gameId}
+                  when={multiplayer?.state.gameId}
                   fallback={<p class={styles.waitingHint}>Connecting to server...</p>}
                 >
                   <p class={styles.waitingHint}>Share this link with your opponent:</p>
                   <div class={styles.gameUrlContainer}>
                     <code class={styles.gameUrl}>
-                      {`${window.location.origin}/play/${multiplayer.state.gameId}`}
+                      {`${window.location.origin}/play/${multiplayer?.state.gameId}`}
                     </code>
                     <button
                       class={styles.copyButton}
                       onClick={() => {
-                        const url = `${window.location.origin}/play/${multiplayer.state.gameId}`;
+                        const url = `${window.location.origin}/play/${multiplayer?.state.gameId}`;
                         navigator.clipboard.writeText(url);
                       }}
                     >
