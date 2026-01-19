@@ -1,5 +1,6 @@
 import { Chess, type Square as ChessSquare, type PieceSymbol, type Color } from 'chess.js';
-import type { Square, BoardSquare, Side } from '../../types';
+import type { Square, BoardSquare } from '../../types/chess';
+import type { Side } from '../../types/game';
 
 // ============================================================================
 // Types

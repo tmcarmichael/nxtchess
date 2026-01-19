@@ -1,4 +1,4 @@
-import type { Side } from '../../types';
+import type { Side } from '../../types/game';
 
 const STORAGE_KEY = 'nxtchess:prefs';
 

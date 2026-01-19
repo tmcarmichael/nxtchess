@@ -1,5 +1,5 @@
-import { PLAYSTYLE_PRESETS } from '../../shared';
-import { type AIPlayStyle } from './../../types';
+import { PLAYSTYLE_PRESETS } from '../../shared/config/constants';
+import { type AIPlayStyle } from '../../types/game';
 import { engineService } from './engineService';
 import { StockfishEngine, EngineError } from './StockfishEngine';
 

@@ -1,19 +1,11 @@
 import { createContext, useContext, onCleanup, type JSX } from 'solid-js';
-import { sessionManager } from '../../services/game';
+import { sessionManager } from '../../services/game/session/SessionManager';
 import { createGameActions, type GameActions } from './createGameActions';
-import {
-  createChessStore,
-  createTimerStore,
-  createEngineStore,
-  createMultiplayerStore,
-  createUIStore,
-  type ChessStore,
-  type TimerStore,
-  type EngineStore,
-  type MultiplayerStore,
-  type UIStore,
-  type MultiplayerEventCallbacks,
-} from './stores';
+import { createChessStore, type ChessStore } from './stores/createChessStore';
+import { createEngineStore, type EngineStore } from './stores/createEngineStore';
+import { createMultiplayerStore, type MultiplayerStore } from './stores/createMultiplayerStore';
+import { createTimerStore, type TimerStore } from './stores/createTimerStore';
+import { createUIStore, type UIStore } from './stores/createUIStore';
 
 // ============================================================================
 // Context Value Type
@@ -59,85 +51,69 @@ export const GameProvider = (props: { children: JSX.Element }) => {
   const engine = createEngineStore();
   const ui = createUIStore();
 
-  // Create multiplayer store with callbacks that reference other stores
-  const multiplayerCallbacks: MultiplayerEventCallbacks = {
-    onGameCreated: ({ playerColor }) => {
-      chess.setPlayerColor(playerColor);
-      ui.setBoardView(playerColor);
-    },
+  // Create multiplayer store and subscribe to events
+  const multiplayer = createMultiplayerStore();
+  multiplayer.setPlayerColorGetter(() => chess.state.playerColor);
 
-    onGameJoined: ({ playerColor }) => {
-      chess.setPlayerColor(playerColor);
-      ui.setBoardView(playerColor);
-      // Game joined means we're the second player, game starts immediately
-      chess.setLifecycle('playing');
-    },
+  multiplayer.on('game:created', ({ playerColor }) => {
+    chess.setPlayerColor(playerColor);
+    ui.setBoardView(playerColor);
+  });
 
-    onGameStarted: ({ whiteTimeMs, blackTimeMs }) => {
-      chess.setLifecycle('playing');
+  multiplayer.on('game:joined', ({ playerColor }) => {
+    chess.setPlayerColor(playerColor);
+    ui.setBoardView(playerColor);
+    chess.setLifecycle('playing');
+  });
+
+  multiplayer.on('game:started', ({ whiteTimeMs, blackTimeMs }) => {
+    chess.setLifecycle('playing');
+    timer.sync(msToSeconds(whiteTimeMs), msToSeconds(blackTimeMs));
+    timer.start(
+      () => chess.state.currentTurn,
+      () => {}
+    );
+  });
+
+  multiplayer.on('move:accepted', ({ fen, whiteTimeMs, blackTimeMs }) => {
+    chess.confirmMove(
+      fen,
+      whiteTimeMs ?? timer.state.whiteTime * 1000,
+      blackTimeMs ?? timer.state.blackTime * 1000
+    );
+    if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
       timer.sync(msToSeconds(whiteTimeMs), msToSeconds(blackTimeMs));
+    }
+  });
 
-      // Start timer for multiplayer - server handles actual timeout, this is for display
-      timer.start(
-        () => chess.state.currentTurn,
-        () => {} // Server sends game:ended on timeout, no client-side handling needed
-      );
-    },
+  multiplayer.on('move:rejected', ({ fen, reason }) => {
+    chess.rejectMove(fen, reason);
+  });
 
-    onMoveAccepted: ({ fen, whiteTimeMs, blackTimeMs }) => {
-      chess.confirmMove(
-        fen,
-        whiteTimeMs ?? timer.state.whiteTime * 1000,
-        blackTimeMs ?? timer.state.blackTime * 1000
-      );
-      if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
-        timer.sync(msToSeconds(whiteTimeMs), msToSeconds(blackTimeMs));
-      }
-    },
-
-    onMoveRejected: ({ fen, reason }) => {
-      chess.rejectMove(fen, reason);
-    },
-
-    onOpponentMove: ({ fen, san, from, to, whiteTimeMs, blackTimeMs, isCheck }) => {
-      chess.syncFromMultiplayer({
-        fen,
-        san,
-        from,
-        to,
-        whiteTimeMs,
-        blackTimeMs,
-        isCheck,
-      });
-
-      if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
-        timer.sync(msToSeconds(whiteTimeMs), msToSeconds(blackTimeMs));
-      }
-    },
-
-    onTimeUpdate: ({ whiteTimeMs, blackTimeMs }) => {
+  multiplayer.on('move:opponent', ({ fen, san, from, to, whiteTimeMs, blackTimeMs, isCheck }) => {
+    chess.syncFromMultiplayer({ fen, san, from, to, whiteTimeMs, blackTimeMs, isCheck });
+    if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
       timer.sync(msToSeconds(whiteTimeMs), msToSeconds(blackTimeMs));
-    },
+    }
+  });
 
-    onGameEnded: ({ reason, winner }) => {
-      timer.stop();
-      chess.endGame(reason, winner);
-      ui.showEndModal();
-    },
+  multiplayer.on('time:update', ({ whiteTimeMs, blackTimeMs }) => {
+    timer.sync(msToSeconds(whiteTimeMs), msToSeconds(blackTimeMs));
+  });
 
-    onOpponentLeft: () => {
-      console.log('Opponent left the game');
-    },
+  multiplayer.on('game:ended', ({ reason, winner }) => {
+    timer.stop();
+    chess.endGame(reason, winner);
+    ui.showEndModal();
+  });
 
-    onError: (message) => {
-      console.error('Game sync error:', message);
-    },
+  multiplayer.on('game:opponent_left', () => {
+    console.log('Opponent left the game');
+  });
 
-    getCurrentTurn: () => chess.state.currentTurn,
-    getPlayerColor: () => chess.state.playerColor,
-  };
-
-  const multiplayer = createMultiplayerStore(multiplayerCallbacks);
+  multiplayer.on('game:error', ({ message }) => {
+    console.error('Game sync error:', message);
+  });
 
   // ============================================================================
   // High-Level Actions (via factory)

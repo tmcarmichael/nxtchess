@@ -1,5 +1,5 @@
 import { type Component } from 'solid-js';
-import { DIFFICULTY_VALUES_ELO } from '../../../shared';
+import { DIFFICULTY_VALUES_ELO } from '../../../shared/config/constants';
 import styles from './DifficultyDisplay.module.css';
 
 interface DifficultyDisplayProps {

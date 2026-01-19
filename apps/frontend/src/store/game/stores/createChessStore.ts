@@ -1,13 +1,10 @@
 import { batch } from 'solid-js';
 import { createStore } from 'solid-js/store';
-import {
-  sessionManager,
-  type GameSession,
-  fenToBoard,
-  canMakeMove,
-  getOpponentSide,
-} from '../../../services/game';
-import { generateSessionId } from '../../../shared';
+import { fenToBoard, getOpponentSide } from '../../../services/game/chessGameService';
+import { canMakeMove } from '../../../services/game/gameLifecycle';
+import { sessionManager, type GameSession } from '../../../services/game/session/SessionManager';
+import { generateSessionId } from '../../../shared/utils/generateId';
+import type { Square, PromotionPiece, BoardSquare } from '../../../types/chess';
 import type {
   Side,
   GameMode,
@@ -15,12 +12,9 @@ import type {
   GameWinner,
   AIPlayStyle,
   GamePhase,
-  Square,
-  PromotionPiece,
-  BoardSquare,
   GameLifecycle,
   OpponentType,
-} from '../../../types';
+} from '../../../types/game';
 
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 

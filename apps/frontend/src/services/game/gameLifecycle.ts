@@ -2,11 +2,10 @@
 // Game Lifecycle State Machine
 // ============================================================================
 
-/**
- * Represents the lifecycle phases of a game session.
- * This is separate from GamePhase (opening/middlegame/endgame) which is training-specific.
- */
-export type GameLifecycle = 'idle' | 'initializing' | 'playing' | 'ended';
+import type { GameLifecycle } from '../../types/game';
+
+// Re-export for backward compatibility
+export type { GameLifecycle } from '../../types/game';
 
 /**
  * Events that can trigger state transitions in the game lifecycle.
@@ -30,11 +29,15 @@ const TRANSITIONS: Record<GameLifecycle, Partial<Record<GameLifecycleEvent, Game
   },
   initializing: {
     ENGINE_READY: 'playing',
-    ENGINE_ERROR: 'idle',
+    ENGINE_ERROR: 'error',
     EXIT_GAME: 'idle',
   },
   playing: {
     GAME_OVER: 'ended',
+    EXIT_GAME: 'idle',
+  },
+  error: {
+    RETRY_ENGINE: 'initializing',
     EXIT_GAME: 'idle',
   },
   ended: {

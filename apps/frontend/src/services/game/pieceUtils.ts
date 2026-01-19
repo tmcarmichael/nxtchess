@@ -1,4 +1,5 @@
-import { type Side, type PieceType } from '../../types';
+import { type PieceType } from '../../types/chess';
+import { type Side } from '../../types/game';
 
 /**
  * Piece string utilities.

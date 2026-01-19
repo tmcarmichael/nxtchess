@@ -1,5 +1,5 @@
 import { createStore } from 'solid-js/store';
-import { BACKEND_URL } from '../../shared/config';
+import { BACKEND_URL } from '../../shared/config/env';
 
 interface UserState {
   isLoggedIn: boolean;

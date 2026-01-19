@@ -1,16 +1,15 @@
 import { defineConfig } from 'vite';
 import solid from 'vite-plugin-solid';
-import path from 'path';
 
 export default defineConfig({
   plugins: [solid()],
   resolve: {
     alias: {
-      '@components': path.resolve(__dirname, 'src/components'),
-      '@services': path.resolve(__dirname, 'src/services'),
-      '@store': path.resolve(__dirname, 'src/store'),
-      '@shared': path.resolve(__dirname, 'src/shared'),
-      '@types': path.resolve(__dirname, 'src/types'),
+      '@components': '/src/components',
+      '@services': '/src/services',
+      '@store': '/src/store',
+      '@shared': '/src/shared',
+      '@types': '/src/types',
     },
   },
   server: {

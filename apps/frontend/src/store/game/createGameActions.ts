@@ -1,13 +1,13 @@
-import { transition, canMakeMove, getOpponentSide } from '../../services/game';
+import { getOpponentSide } from '../../services/game/chessGameService';
+import { transition, canMakeMove } from '../../services/game/gameLifecycle';
 import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../shared/config/constants';
-import type { ChessStore, TimerStore, EngineStore, MultiplayerStore, UIStore } from './stores';
-import type {
-  Side,
-  Square,
-  PromotionPiece,
-  StartGameOptions,
-  MultiplayerGameOptions,
-} from '../../types';
+import type { ChessStore } from './stores/createChessStore';
+import type { EngineStore } from './stores/createEngineStore';
+import type { MultiplayerStore } from './stores/createMultiplayerStore';
+import type { TimerStore } from './stores/createTimerStore';
+import type { UIStore } from './stores/createUIStore';
+import type { Square, PromotionPiece } from '../../types/chess';
+import type { Side, StartGameOptions, MultiplayerGameOptions } from '../../types/game';
 
 // ============================================================================
 // Types
@@ -22,16 +22,26 @@ export interface GameStores {
 }
 
 export interface GameActions {
+  // Game lifecycle
   startNewGame: (options: StartGameOptions) => Promise<void>;
   startMultiplayerGame: (options: MultiplayerGameOptions) => Promise<void>;
   joinMultiplayerGame: (gameId: string) => void;
+  exitGame: () => void;
+  retryEngineInit: () => Promise<void>;
+
+  // Moves
   applyPlayerMove: (from: Square, to: Square, promotion?: PromotionPiece) => void;
   applyMultiplayerMove: (from: Square, to: Square, promotion?: PromotionPiece) => void;
-  exitGame: () => void;
   resign: () => void;
   resignMultiplayer: () => void;
   handleTimeOut: (winner: Side) => void;
-  retryEngineInit: () => Promise<void>;
+  takeBack: () => void;
+
+  // Navigation & UI
+  jumpToMove: (index: number) => void;
+  jumpToPreviousMove: () => void;
+  jumpToNextMove: () => void;
+  flipBoard: () => void;
 }
 
 // ============================================================================
@@ -172,6 +182,8 @@ export const createGameActions = (stores: GameStores): GameActions => {
       }
     } catch (err) {
       console.error('Engine initialization failed:', err);
+      // Transition to error state so user can retry
+      chess.setLifecycle(transition('initializing', 'ENGINE_ERROR'));
     }
   };
 
@@ -258,6 +270,9 @@ export const createGameActions = (stores: GameStores): GameActions => {
   };
 
   const retryEngineInit = async () => {
+    // Transition from error back to initializing
+    chess.setLifecycle(transition('error', 'RETRY_ENGINE'));
+
     await engine.retry(() => {
       chess.setLifecycle(transition('initializing', 'ENGINE_READY'));
 
@@ -276,16 +291,56 @@ export const createGameActions = (stores: GameStores): GameActions => {
     });
   };
 
+  // ============================================================================
+  // Navigation & UI Actions
+  // ============================================================================
+
+  const jumpToMove = (index: number) => {
+    chess.jumpToMoveIndex(index);
+  };
+
+  const jumpToPreviousMove = () => {
+    const newIndex = chess.state.viewMoveIndex - 1;
+    if (newIndex >= 0) {
+      chess.jumpToMoveIndex(newIndex);
+    }
+  };
+
+  const jumpToNextMove = () => {
+    const newIndex = chess.state.viewMoveIndex + 1;
+    if (newIndex <= chess.state.moveHistory.length - 1) {
+      chess.jumpToMoveIndex(newIndex);
+    }
+  };
+
+  const flipBoard = () => {
+    ui.flipBoard();
+  };
+
+  const takeBack = () => {
+    chess.takeBack();
+  };
+
   return {
+    // Game lifecycle
     startNewGame,
     startMultiplayerGame,
     joinMultiplayerGame,
+    exitGame,
+    retryEngineInit,
+
+    // Moves
     applyPlayerMove,
     applyMultiplayerMove,
-    exitGame,
     resign,
     resignMultiplayer,
     handleTimeOut,
-    retryEngineInit,
+    takeBack,
+
+    // Navigation & UI
+    jumpToMove,
+    jumpToPreviousMove,
+    jumpToNextMove,
+    flipBoard,
   };
 };

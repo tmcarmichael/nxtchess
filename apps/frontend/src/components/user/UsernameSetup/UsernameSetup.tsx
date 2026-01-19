@@ -1,6 +1,6 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, type Component } from 'solid-js';
-import { useUserStore } from '../../../store';
+import { useUserStore } from '../../../store/user/UserContext';
 import styles from './UsernameSetup.module.css';
 
 const UsernameSetup: Component = () => {

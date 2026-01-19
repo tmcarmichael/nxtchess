@@ -1,5 +1,5 @@
 import { type Component, type Accessor } from 'solid-js';
-import { type Side } from '../../../types';
+import { type Side } from '../../../types/game';
 import styles from './ChessSideSelector.module.css';
 
 interface ChessSideSelectorProps {

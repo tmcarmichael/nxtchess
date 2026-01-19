@@ -1,8 +1,8 @@
-import { PLAYSTYLE_PRESETS } from '../../shared';
+import { PLAYSTYLE_PRESETS } from '../../shared/config/constants';
 import { enginePool } from './EnginePool';
 import { type ResilientEngine } from './ResilientEngine';
 import { EngineError } from './StockfishEngine';
-import type { AIPlayStyle } from '../../types';
+import type { AIPlayStyle } from '../../types/game';
 
 // ============================================================================
 // Configuration

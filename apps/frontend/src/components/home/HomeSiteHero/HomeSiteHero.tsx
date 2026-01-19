@@ -1,8 +1,8 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, onMount, onCleanup, type Component, createMemo } from 'solid-js';
-import { getRandomQuickPlayConfig } from '../../../services/game';
-import { useGame } from '../../../store';
-import { type StartGameOptions } from '../../../types';
+import { getRandomQuickPlayConfig } from '../../../services/game/chessGameService';
+import { useGame } from '../../../store/game/GameContext';
+import { type StartGameOptions } from '../../../types/game';
 import styles from './HomeSiteHero.module.css';
 
 const HomeSiteHero: Component = () => {
