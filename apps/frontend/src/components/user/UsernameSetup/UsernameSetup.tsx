@@ -1,5 +1,5 @@
-import { createSignal, Component } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
+import { createSignal, type Component } from 'solid-js';
 import { useUserStore } from '../../../store';
 import styles from './UsernameSetup.module.css';
 

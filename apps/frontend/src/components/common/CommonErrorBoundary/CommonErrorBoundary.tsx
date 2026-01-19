@@ -1,4 +1,4 @@
-import { ErrorBoundary, ParentComponent } from 'solid-js';
+import { ErrorBoundary, type ParentComponent } from 'solid-js';
 import styles from './CommonErrorBoundary.module.css';
 
 interface ErrorFallbackProps {

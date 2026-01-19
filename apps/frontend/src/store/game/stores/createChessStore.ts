@@ -1,5 +1,13 @@
-import { createStore } from 'solid-js/store';
 import { batch } from 'solid-js';
+import { createStore } from 'solid-js/store';
+import {
+  sessionManager,
+  type GameSession,
+  fenToBoard,
+  canMakeMove,
+  getOpponentSide,
+} from '../../../services/game';
+import { generateSessionId } from '../../../shared';
 import type {
   Side,
   GameMode,
@@ -13,14 +21,6 @@ import type {
   GameLifecycle,
   OpponentType,
 } from '../../../types';
-import {
-  sessionManager,
-  GameSession,
-  fenToBoard,
-  canMakeMove,
-  getOpponentSide,
-} from '../../../services/game';
-import { generateSessionId } from '../../../shared';
 
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 

@@ -1,11 +1,11 @@
-import { createSignal, createEffect, on, ParentComponent } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
+import { createSignal, createEffect, on, type ParentComponent } from 'solid-js';
+import { useGame } from '../../../store';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
+import { GameContainer } from '../../game';
 import PlayControlPanel from '../PlayControlPanel/PlayControlPanel';
 import PlayModal from '../PlayModal/PlayModal';
 import PlayNavigationPanel from '../PlayNavigationPanel/PlayNavigationPanel';
-import { GameContainer } from '../../game';
-import { useGame } from '../../../store';
 
 const PlayContainer: ParentComponent = () => {
   const params = useParams<{ gameId?: string }>();

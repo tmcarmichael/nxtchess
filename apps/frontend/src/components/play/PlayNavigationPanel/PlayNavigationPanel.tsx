@@ -1,4 +1,4 @@
-import { For, createMemo, createEffect, on, Component } from 'solid-js';
+import { For, createMemo, createEffect, on, type Component } from 'solid-js';
 import { useGame } from '../../../store';
 import styles from './PlayNavigationPanel.module.css';
 

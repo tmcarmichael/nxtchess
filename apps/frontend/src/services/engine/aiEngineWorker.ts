@@ -1,7 +1,7 @@
 import { PLAYSTYLE_PRESETS } from '../../shared';
-import { AIPlayStyle } from './../../types';
-import { StockfishEngine, EngineError } from './StockfishEngine';
+import { type AIPlayStyle } from './../../types';
 import { engineService } from './engineService';
+import { StockfishEngine, EngineError } from './StockfishEngine';
 
 // Configuration
 const ENGINE_THINK_TIME_MS = 1000; // How long engine thinks per move

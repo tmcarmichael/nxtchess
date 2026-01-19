@@ -1,7 +1,7 @@
-import { splitProps, Component, Show } from 'solid-js';
+import { splitProps, type Component, Show } from 'solid-js';
 import { useGame } from '../../../store';
-import type { GameOverReason, GameWinner } from '../../../types';
 import styles from './ChessEndModal.module.css';
+import type { GameOverReason, GameWinner } from '../../../types';
 
 // Extended reason type to include training-specific reasons
 type ExtendedGameOverReason = GameOverReason | 'trainingOpeningComplete';

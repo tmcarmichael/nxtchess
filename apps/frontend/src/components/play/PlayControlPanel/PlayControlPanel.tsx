@@ -1,10 +1,10 @@
-import { Show, createSignal, ParentComponent } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { StartGameOptions, GameMode } from '../../../types';
+import { Show, createSignal, type ParentComponent } from 'solid-js';
 import { useGame } from '../../../store';
+import { type StartGameOptions, type GameMode } from '../../../types';
+import ChessClock from '../../chess/ChessClock/ChessClock';
 import { ButtonPanel, GamePanelButton, GameInfoPanel } from '../../game';
 import ResignModal from '../PlayResignModal/PlayResignModal';
-import ChessClock from '../../chess/ChessClock/ChessClock';
 import styles from './PlayControlPanel.module.css';
 
 const PlayControlPanel: ParentComponent = () => {

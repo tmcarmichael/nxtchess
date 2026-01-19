@@ -1,5 +1,5 @@
-import { createStore } from 'solid-js/store';
 import { batch } from 'solid-js';
+import { createStore } from 'solid-js/store';
 import {
   gameSyncService,
   type SyncEvent,

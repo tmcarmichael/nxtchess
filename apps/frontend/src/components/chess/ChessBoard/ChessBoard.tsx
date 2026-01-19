@@ -1,7 +1,7 @@
-import { JSX, splitProps, For, Component, createMemo } from 'solid-js';
-import Piece from '../ChessPiece/ChessPiece';
-import { PieceType, BoardSquare, Square, Side } from '../../../types';
+import { type JSX, splitProps, For, type Component, createMemo } from 'solid-js';
 import { isPieceSide } from '../../../services/game';
+import { type PieceType, type BoardSquare, type Square, type Side } from '../../../types';
+import Piece from '../ChessPiece/ChessPiece';
 import styles from './ChessBoard.module.css';
 
 interface ChessBoardProps {
@@ -61,19 +61,19 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const checkedSquare = local.checkedKingSquare();
     const squares = memoizedBoardSquares();
 
-    const renderSquare = ({ square, piece }: BoardSquare): JSX.Element => {
-      const file = square[0];
-      const rank = square[1];
-      const isHighlighted = highlightSet().has(square);
-      const isSelected = selected === square;
-      const isDragging = dragState?.square === square;
-      const isLastMove = last !== null && (last.from === square || last.to === square);
+    const renderSquare = (props: BoardSquare): JSX.Element => {
+      const file = props.square[0];
+      const rank = props.square[1];
+      const isHighlighted = highlightSet().has(props.square);
+      const isSelected = selected === props.square;
+      const isDragging = dragState?.square === props.square;
+      const isLastMove = last !== null && (last.from === props.square || last.to === props.square);
       const isEnemyPiece =
         isHighlighted &&
-        !!piece &&
+        !!props.piece &&
         !!local.activePieceColor() &&
-        !isPieceSide(piece, local.activePieceColor());
-      const isCheckedKing = checkedSquare === square;
+        !isPieceSide(props.piece, local.activePieceColor());
+      const isCheckedKing = checkedSquare === props.square;
       const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
       const view = local.boardView();
       const showFile = (view === 'w' && rank === '1') || (view === 'b' && rank === '8');
@@ -89,19 +89,19 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
             [styles.lastMove]: isLastMove,
             [styles.checkedKing]: isCheckedKing,
           }}
-          onClick={() => local.onSquareClick(square)}
-          onMouseUp={() => local.onSquareMouseUp(square)}
+          onClick={() => local.onSquareClick(props.square)}
+          onMouseUp={() => local.onSquareMouseUp(props.square)}
         >
           {showFile && <span class={styles.fileLabel}>{file}</span>}
           {showRank && <span class={styles.rankLabel}>{rank}</span>}
           {isHighlighted && (
             <div class={`${styles.highlightDot} ${isEnemyPiece ? styles.enemyDot : ''}`} />
           )}
-          {piece && (
+          {props.piece && (
             <Piece
-              type={piece as PieceType}
+              type={props.piece as PieceType}
               draggable
-              onDragStart={(e: DragEvent) => local.onDragStart(square, piece, e)}
+              onDragStart={(e: DragEvent) => local.onDragStart(props.square, props.piece, e)}
               style={{ opacity: isDragging ? 0.5 : 1, transition: 'opacity 0.2s ease' }}
             />
           )}

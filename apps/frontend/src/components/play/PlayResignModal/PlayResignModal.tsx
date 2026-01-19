@@ -1,4 +1,4 @@
-import { splitProps, Component } from 'solid-js';
+import { splitProps, type Component } from 'solid-js';
 import styles from './PlayResignModal.module.css';
 
 interface ResignModalProps {

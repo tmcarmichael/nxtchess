@@ -18,7 +18,18 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["src/components/*"],
+      "@services/*": ["src/services/*"],
+      "@store": ["src/store"],
+      "@store/*": ["src/store/*"],
+      "@shared": ["src/shared"],
+      "@shared/*": ["src/shared/*"],
+      "@types": ["src/types"],
+      "@types/*": ["src/types/*"]
+    }
   },
   "include": ["src"]
 }

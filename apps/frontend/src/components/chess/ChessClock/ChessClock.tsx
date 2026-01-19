@@ -1,4 +1,4 @@
-import { createMemo, splitProps, Component } from 'solid-js';
+import { createMemo, splitProps, type Component } from 'solid-js';
 import { useGame } from '../../../store';
 import styles from './ChessClock.module.css';
 

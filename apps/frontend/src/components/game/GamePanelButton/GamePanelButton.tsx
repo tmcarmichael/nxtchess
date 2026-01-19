@@ -1,4 +1,4 @@
-import { ParentComponent } from 'solid-js';
+import { type ParentComponent } from 'solid-js';
 import styles from './GamePanelButton.module.css';
 
 interface GamePanelButtonProps {

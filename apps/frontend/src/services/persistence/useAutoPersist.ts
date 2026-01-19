@@ -1,6 +1,6 @@
-import { createEffect, onCleanup, createSignal, Accessor } from 'solid-js';
+import { createEffect, onCleanup, createSignal, type Accessor } from 'solid-js';
+import { type GameSession } from '../game/session/GameSession';
 import { gamePersistence } from './GamePersistence';
-import { GameSession } from '../game/session/GameSession';
 
 // ============================================================================
 // Types

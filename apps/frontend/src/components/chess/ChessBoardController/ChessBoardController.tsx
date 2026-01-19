@@ -1,24 +1,24 @@
+import { useNavigate } from '@solidjs/router';
 import {
   createSignal,
   batch,
   Show,
-  ParentComponent,
+  type ParentComponent,
   createEffect,
   splitProps,
   on,
   onCleanup,
 } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
-import { Square, PromotionPiece, Side } from '../../../types';
-import { getLegalMoves, prepareMove, canMovePieceAt } from '../../../services/game';
-import { useGame } from '../../../store';
-import { useKeyboardNavigation } from '../../../shared';
-import ChessEvalBar from '../ChessEvalBar/ChessEvalBar';
 import { getEvaluation } from '../../../services/engine';
-import ChessEndModal from '../ChessEndModal/ChessEndModal';
-import ChessPromotionModal from '../../chess/ChessPromotionModal/ChessPromotionModal';
+import { getLegalMoves, prepareMove, canMovePieceAt } from '../../../services/game';
+import { useKeyboardNavigation } from '../../../shared';
+import { useGame } from '../../../store';
+import { type Square, type PromotionPiece, type Side } from '../../../types';
 import ChessBoard from '../../chess/ChessBoard/ChessBoard';
+import ChessPromotionModal from '../../chess/ChessPromotionModal/ChessPromotionModal';
+import ChessEndModal from '../ChessEndModal/ChessEndModal';
 import ChessEngineOverlay from '../ChessEngineOverlay/ChessEngineOverlay';
+import ChessEvalBar from '../ChessEvalBar/ChessEvalBar';
 import styles from './ChessBoardController.module.css';
 
 interface ChessBoardControllerProps {

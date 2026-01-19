@@ -1,7 +1,7 @@
-import { enginePool } from './EnginePool';
-import { ResilientEngine } from './ResilientEngine';
-import { EngineError } from './StockfishEngine';
 import { PLAYSTYLE_PRESETS } from '../../shared';
+import { enginePool } from './EnginePool';
+import { type ResilientEngine } from './ResilientEngine';
+import { EngineError } from './StockfishEngine';
 import type { AIPlayStyle } from '../../types';
 
 // ============================================================================

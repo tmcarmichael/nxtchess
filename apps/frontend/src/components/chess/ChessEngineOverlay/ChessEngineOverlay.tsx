@@ -1,4 +1,4 @@
-import { Show, Component } from 'solid-js';
+import { Show, type Component } from 'solid-js';
 import styles from './ChessEngineOverlay.module.css';
 
 interface ChessEngineOverlayProps {

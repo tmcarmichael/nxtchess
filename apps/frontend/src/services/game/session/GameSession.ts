@@ -1,4 +1,15 @@
 import { Chess } from 'chess.js';
+import { getTurnFromFen } from '..';
+import { BoardCache } from '../BoardCache';
+import { processCapturedPiece } from '../chessGameService';
+import { transition } from '../gameLifecycle';
+import type {
+  GameSessionConfig,
+  GameSessionState,
+  GameSessionSnapshot,
+  GameCommand,
+  CommandResult,
+} from './types';
 import type {
   Square,
   PromotionPiece,
@@ -7,17 +18,6 @@ import type {
   GameWinner,
   BoardSquare,
 } from '../../../types';
-import { transition } from '../gameLifecycle';
-import { processCapturedPiece } from '../chessGameService';
-import { getTurnFromFen } from '..';
-import { BoardCache } from '../BoardCache';
-import type {
-  GameSessionConfig,
-  GameSessionState,
-  GameSessionSnapshot,
-  GameCommand,
-  CommandResult,
-} from './types';
 
 // ============================================================================
 // Constants
@@ -381,7 +381,7 @@ export class GameSession {
     }
 
     // Update captured pieces for first undo
-    let newCapturedPieces = { ...this._state.capturedPieces };
+    const newCapturedPieces = { ...this._state.capturedPieces };
     if (undone1.captured) {
       if (undone1.color === 'w') {
         newCapturedPieces.black = newCapturedPieces.black.slice(0, -1);

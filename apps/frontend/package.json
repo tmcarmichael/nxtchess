@@ -22,9 +22,24 @@
     "clear-cache": "yarn clear cache",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prebuild": "yarn format:check",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "prebuild": "yarn format:check && yarn lint",
     "preview": "vite preview",
-    "type:check": "tsc --noEmit"
+    "type:check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepare": "cd ../.. && husky apps/frontend/.husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@solidjs/router": "^0.15.3",
@@ -35,10 +50,22 @@
     "stockfish": "github:nmrugg/stockfish.js"
   },
   "devDependencies": {
+    "@solidjs/testing-library": "^0.8.10",
+    "@typescript-eslint/eslint-plugin": "^8.53.0",
+    "@typescript-eslint/parser": "^8.53.0",
+    "@vitest/coverage-v8": "^4.0.17",
+    "eslint": "^9.39.2",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-solid": "^0.14.5",
+    "husky": "^9.1.7",
+    "jsdom": "^27.4.0",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.4.2",
     "typescript": "~5.6.2",
     "vite": "^6.0.5",
-    "vite-plugin-solid": "^2.11.0"
+    "vite-plugin-solid": "^2.11.0",
+    "vitest": "^4.0.17"
   },
   "packageManager": "yarn@1.22.22"
 }

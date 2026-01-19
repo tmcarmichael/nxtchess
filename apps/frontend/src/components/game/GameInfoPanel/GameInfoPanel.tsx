@@ -1,9 +1,9 @@
-import { Component, JSX, Accessor } from 'solid-js';
-import type { Side } from '../../../types';
-import { PlayerColorDisplay } from '../PlayerColorDisplay';
-import { DifficultyDisplay } from '../DifficultyDisplay';
+import { type Component, type JSX, type Accessor } from 'solid-js';
 import { ChessMaterialDisplay } from '../../chess/ChessMaterialDisplay';
+import { DifficultyDisplay } from '../DifficultyDisplay';
+import { PlayerColorDisplay } from '../PlayerColorDisplay';
 import styles from './GameInfoPanel.module.css';
+import type { Side } from '../../../types';
 
 interface MaterialData {
   diff: number;

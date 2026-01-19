@@ -1,8 +1,8 @@
-import { ParentComponent, createSignal } from 'solid-js';
+import { type ParentComponent, createSignal } from 'solid-js';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
+import { GameContainer } from '../../game';
 import TrainingControlPanel from '../TrainingControlPanel/TrainingControlPanel';
 import TrainingModal from '../TrainingModal/TrainingModal';
-import { GameContainer } from '../../game';
 
 const TrainingContainer: ParentComponent = () => {
   const [showTrainingModal, setShowTrainingModal] = createSignal(false);

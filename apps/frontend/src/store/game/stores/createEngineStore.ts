@@ -1,5 +1,4 @@
 import { createStore } from 'solid-js/store';
-import type { Side, AIPlayStyle } from '../../../types';
 import {
   initAiEngine,
   computeAiMove,
@@ -11,6 +10,7 @@ import {
   enginePool,
 } from '../../../services/engine';
 import { DIFFICULTY_VALUES_ELO } from '../../../shared';
+import type { Side, AIPlayStyle } from '../../../types';
 
 export type EngineStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -122,7 +122,7 @@ export const createEngineStore = (): EngineStore => {
         pendingRetryConfig.aiPlayStyle
       );
       onSuccess?.();
-    } catch (e) {
+    } catch {
       // Error already handled in init
     }
   };

@@ -1,5 +1,6 @@
 import { transition, canMakeMove, getOpponentSide } from '../../services/game';
 import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../shared/config/constants';
+import type { ChessStore, TimerStore, EngineStore, MultiplayerStore, UIStore } from './stores';
 import type {
   Side,
   Square,
@@ -7,7 +8,6 @@ import type {
   StartGameOptions,
   MultiplayerGameOptions,
 } from '../../types';
-import type { ChessStore, TimerStore, EngineStore, MultiplayerStore, UIStore } from './stores';
 
 // ============================================================================
 // Types

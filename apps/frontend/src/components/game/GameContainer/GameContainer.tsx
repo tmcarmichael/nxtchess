@@ -1,4 +1,4 @@
-import { Show, Component, JSX } from 'solid-js';
+import { Show, type Component, type JSX } from 'solid-js';
 import CommonErrorBoundary from '../../common/CommonErrorBoundary/CommonErrorBoundary';
 import styles from './GameContainer.module.css';
 

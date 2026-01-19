@@ -1,4 +1,5 @@
 import { BACKEND_URL } from '../../shared/config/env';
+import { MsgType as MT } from './types';
 import type {
   ConnectionState,
   SyncEvent,
@@ -17,7 +18,6 @@ import type {
   ErrorData,
   TimeControl,
 } from './types';
-import { MsgType as MT } from './types';
 
 // ============================================================================
 // Default Configuration
