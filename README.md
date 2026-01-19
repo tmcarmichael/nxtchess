@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/blob/main/LICENSE)
 [![Issues](https://img.shields.io/github/issues/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/issues)
 
-[NxtChess](https://nxtchess-frontend-production.up.railway.app/) is a multiplayer chess platform with AI training modes. Play anonymous games via shareable links or sign in to track ratings and game history.
+NxtChess is a multiplayer chess platform with AI training modes. Play anonymous games via shareable links or sign in to track ratings and game history.
 
 ## Features
 
@@ -14,10 +14,6 @@
 - **Server-side Validation** — All moves validated server-side to prevent cheating
 
 ## Quick Start
-
-### Railway Early Alpha Build:
-
-https://nxtchess-frontend-production.up.railway.app/
 
 ### Dev localhost Build:
 
@@ -30,6 +26,10 @@ just dev
 Open [http://localhost:5173](http://localhost:5173). Press `Ctrl+C` to stop.
 
 For OAuth sign-in, add credentials to `apps/backend/.env` (see `.env.example`).
+
+### Railway Early Alpha Build:
+
+Adding soon
 
 ## Tech Stack
 
@@ -55,11 +55,10 @@ Run `just` to see all commands.
 
 ## Roadmap
 
-| Status  | Milestone                                                                                 |
-| ------- | ----------------------------------------------------------------------------------------- |
-| Done    | WebSocket multiplayer, server-side validation, time controls, AI training, OAuth, ratings |
-| Current | Game persistence, reconnection handling, premove support, UI lift                         |
-| Next    | CI/CD, observability, tournaments, social features, endgame/middlegame training modes     |
+| Status  | Milestone                                                                             |
+| ------- | ------------------------------------------------------------------------------------- |
+| Current | Game persistence, reconnection handling, premove support, UI lift                     |
+| Next    | CI/CD, observability, tournaments, social features, endgame/middlegame training modes |
 
 ## Architecture Northstar
 
