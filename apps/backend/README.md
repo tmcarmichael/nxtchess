@@ -24,14 +24,14 @@ Docker-Compose will pull .env variables and stand up:
 - PostgreSQL DB instance on 5432 - persistant user table, game table
 - Redis on 6379 - ephemeral session store and live game last move FEN/PGN
 
-Use the [project Makefile](https://github.com/tmcarmichael/nxtchess/blob/main/Makefile) with PROFILES=backend to target the backend only for dev. The clientID and secrets are required for sign-in to be sucessful.
+Use the [project justfile](https://github.com/tmcarmichael/nxtchess/blob/main/justfile) with PROFILES=backend to target the backend only for dev. The clientID and secrets are required for sign-in to be sucessful.
 
 ```bash
-make help
+just --list
 ```
 
 ```bash
-make up PROFILES=backend
+just up PROFILES=backend
 ```
 
 ---

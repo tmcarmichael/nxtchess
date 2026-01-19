@@ -28,14 +28,14 @@ yarn dev
 
 ### Docker Frontend:
 
-Use the [project Makefile](https://github.com/tmcarmichael/nxtchess/blob/main/Makefile) with PROFILES=frontend to target the frontend only for dev.
+Use the [project justfile](https://github.com/tmcarmichael/nxtchess/blob/main/justfile) with PROFILES=frontend to target the frontend only for dev.
 
 ```bash
-make help
+just --list
 ```
 
 ```bash
-make up PROFILES=frontend
+just up PROFILES=frontend
 ```
 
 ---
