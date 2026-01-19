@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/blob/main/LICENSE)
 [![Issues](https://img.shields.io/github/issues/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/issues)
 
-NxtChess is a multiplayer chess platform with AI training modes. Play anonymous games via shareable links or sign in to track ratings and game history.
+[NxtChess](https://nxtchess-frontend-production.up.railway.app/) is a multiplayer chess platform with AI training modes. Play anonymous games via shareable links or sign in to track ratings and game history.
 
 ## Features
 
@@ -14,6 +14,12 @@ NxtChess is a multiplayer chess platform with AI training modes. Play anonymous 
 - **Server-side Validation** — All moves validated server-side to prevent cheating
 
 ## Quick Start
+
+### Railway Early Alpha Build:
+
+https://nxtchess-frontend-production.up.railway.app/
+
+### Dev localhost Build:
 
 Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) and [Just](https://github.com/casey/just#installation).
 
@@ -52,8 +58,8 @@ Run `just` to see all commands.
 | Status  | Milestone                                                                                 |
 | ------- | ----------------------------------------------------------------------------------------- |
 | Done    | WebSocket multiplayer, server-side validation, time controls, AI training, OAuth, ratings |
-| Current | Production deployment, game persistence, reconnection handling                            |
-| Next    | CI/CD, observability, tournaments, social features                                        |
+| Current | Game persistence, reconnection handling, premove support, UI lift                         |
+| Next    | CI/CD, observability, tournaments, social features, endgame/middlegame training modes     |
 
 ## Architecture Northstar
 
