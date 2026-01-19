@@ -21,7 +21,90 @@ const (
 
 	// Maximum message size allowed from peer
 	maxMessageSize = 4096
+
+	// Message rate limiting
+	msgRateLimit    = 30               // max messages per interval
+	msgRateInterval = 10 * time.Second // rate limit window
+	msgRateBurst    = 10               // burst allowance
 )
+
+// MessageRateLimiter tracks message rates per client using token bucket
+type MessageRateLimiter struct {
+	mu          sync.Mutex
+	tokens      int
+	maxTokens   int
+	refillRate  int           // tokens per interval
+	interval    time.Duration // refill interval
+	lastRefill  time.Time
+	violations  int       // count of rate limit violations
+	blockedAt   time.Time // when client was blocked (if at all)
+	blockPeriod time.Duration
+}
+
+// NewMessageRateLimiter creates a rate limiter for WebSocket messages
+func NewMessageRateLimiter() *MessageRateLimiter {
+	return &MessageRateLimiter{
+		tokens:      msgRateBurst,
+		maxTokens:   msgRateBurst,
+		refillRate:  msgRateLimit,
+		interval:    msgRateInterval,
+		lastRefill:  time.Now(),
+		blockPeriod: 30 * time.Second, // block for 30s after repeated violations
+	}
+}
+
+// Allow checks if a message should be allowed
+func (r *MessageRateLimiter) Allow() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	now := time.Now()
+
+	// Check if client is blocked
+	if !r.blockedAt.IsZero() && now.Sub(r.blockedAt) < r.blockPeriod {
+		return false
+	}
+
+	// Refill tokens based on elapsed time
+	elapsed := now.Sub(r.lastRefill)
+	if elapsed >= r.interval {
+		tokensToAdd := int(elapsed/r.interval) * r.refillRate
+		r.tokens += tokensToAdd
+		if r.tokens > r.maxTokens {
+			r.tokens = r.maxTokens
+		}
+		r.lastRefill = now
+
+		// Reset violations if tokens are full (client behaved)
+		if r.tokens == r.maxTokens {
+			r.violations = 0
+			r.blockedAt = time.Time{}
+		}
+	}
+
+	if r.tokens > 0 {
+		r.tokens--
+		return true
+	}
+
+	// Rate limit exceeded
+	r.violations++
+
+	// Block client after 3 violations
+	if r.violations >= 3 {
+		r.blockedAt = now
+		logger.Warn("Client blocked for repeated rate limit violations")
+	}
+
+	return false
+}
+
+// IsBlocked returns true if the client is currently blocked
+func (r *MessageRateLimiter) IsBlocked() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return !r.blockedAt.IsZero() && time.Since(r.blockedAt) < r.blockPeriod
+}
 
 // Client represents a single WebSocket connection
 type Client struct {
@@ -35,16 +118,20 @@ type Client struct {
 	// Current game this client is in (if any)
 	GameID string
 	mu     sync.RWMutex
+
+	// Rate limiting for incoming messages
+	rateLimiter *MessageRateLimiter
 }
 
 // NewClient creates a new client
 func NewClient(id string, userID string, hub *Hub, conn *websocket.Conn) *Client {
 	return &Client{
-		ID:     id,
-		UserID: userID,
-		Hub:    hub,
-		Conn:   conn,
-		Send:   make(chan []byte, 256),
+		ID:          id,
+		UserID:      userID,
+		Hub:         hub,
+		Conn:        conn,
+		Send:        make(chan []byte, 256),
+		rateLimiter: NewMessageRateLimiter(),
 	}
 }
 
@@ -83,6 +170,19 @@ func (c *Client) ReadPump() {
 				logger.Warn("WebSocket unexpected close", logger.F("clientId", c.ID, "error", err.Error()))
 			}
 			break
+		}
+
+		// Check message rate limit
+		if !c.rateLimiter.Allow() {
+			if c.rateLimiter.IsBlocked() {
+				logger.Warn("Client blocked for rate limit abuse", logger.F("clientId", c.ID, "ip", c.IP))
+				c.SendMessage(NewErrorMessage("RATE_LIMITED", "Too many messages. You have been temporarily blocked."))
+				// Close connection for blocked clients
+				break
+			}
+			logger.Debug("Message rate limited", logger.F("clientId", c.ID))
+			c.SendMessage(NewErrorMessage("RATE_LIMITED", "Too many messages. Please slow down."))
+			continue
 		}
 
 		// Parse the message

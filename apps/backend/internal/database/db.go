@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -11,7 +12,20 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// DefaultQueryTimeout is the default timeout for database queries
+const DefaultQueryTimeout = 5 * time.Second
+
 var DB *sql.DB
+
+// QueryContext returns a context with the default query timeout
+func QueryContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), DefaultQueryTimeout)
+}
+
+// QueryContextWithTimeout returns a context with a custom timeout
+func QueryContextWithTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), timeout)
+}
 
 func InitPostgres() {
 	dsn := os.Getenv("DATABASE_URL")

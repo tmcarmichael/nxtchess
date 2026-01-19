@@ -47,22 +47,26 @@ func main() {
 	wsHandler := ws.NewHandler(wsHub, cfg)
 	logger.Info("WebSocket hub started")
 
-	// Create rate limiters
-	authRateLimiter := middleware.NewAuthRateLimiter()   // 10/min for auth endpoints
-	apiRateLimiter := middleware.NewAPIRateLimiter()     // 60/min for general API
+	// Create rate limiters with config for trusted proxy validation
+	authRateLimiter := middleware.NewAuthRateLimiter() // 10/min for auth endpoints
+	authRateLimiter.SetConfig(cfg)
+	apiRateLimiter := middleware.NewAPIRateLimiter() // 60/min for general API
+	apiRateLimiter.SetConfig(cfg)
 
 	r := chi.NewRouter()
 
-	// Global middleware
-	r.Use(middleware.Recovery(cfg))
-	r.Use(middleware.Security(cfg))
+	// Global middleware (order matters - outermost to innermost)
+	r.Use(middleware.RequestID)      // Add request ID for tracing (outermost)
+	r.Use(middleware.Recovery(cfg))  // Panic recovery
+	r.Use(middleware.Security(cfg))  // Security headers
+	r.Use(middleware.DefaultBodyLimit) // 1MB default body limit
 
 	// Health check endpoints (no rate limiting)
 	r.Get("/health", healthHandler)
 	r.Get("/health/live", livenessHandler)
 	r.Get("/health/ready", readinessHandler)
 
-	// WebSocket endpoint for multiplayer games
+	// WebSocket endpoint for multiplayer games (no body limit needed)
 	r.Get("/ws", wsHandler.ServeHTTP)
 
 	// OAuth routes with auth rate limiting
@@ -79,12 +83,14 @@ func main() {
 	// Logout endpoint (rate limited, no session required)
 	r.Group(func(lr chi.Router) {
 		lr.Use(authRateLimiter.Middleware)
+		lr.Use(middleware.SmallBodyLimit) // 64KB limit for JSON
 		lr.Post("/auth/logout", controllers.LogoutHandler(cfg))
 	})
 
 	// Protected session routes with API rate limiting
 	r.Group(func(pr chi.Router) {
 		pr.Use(apiRateLimiter.Middleware)
+		pr.Use(middleware.SmallBodyLimit) // 64KB limit for JSON API
 		pr.Use(middleware.Session)
 		pr.Get("/profile/{username}", controllers.UserProfileHandler)
 		pr.Get("/check-username", controllers.CheckUsernameHandler)
