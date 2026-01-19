@@ -262,6 +262,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                     </button>
                   </div>
                 </Show>
+                <button class={styles.cancelButton} onClick={actions.exitGame}>
+                  Cancel
+                </button>
               </div>
             </div>
           </Show>
