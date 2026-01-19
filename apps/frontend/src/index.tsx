@@ -2,16 +2,17 @@ import { Router } from '@solidjs/router';
 import { render } from 'solid-js/web';
 import App from './App';
 import { routes } from './routes';
-import { GameProvider } from './store/game/GameContext';
 import { UserProvider } from './store/user/UserContext';
 import './index.css';
+
+// Note: GameProvider is no longer global.
+// Each game mode (Play, Training) wraps itself with its own provider.
+// This ensures multiplayer code is not loaded on training pages and vice versa.
 
 render(
   () => (
     <UserProvider>
-      <GameProvider>
-        <Router root={App}>{routes}</Router>
-      </GameProvider>
+      <Router root={App}>{routes}</Router>
     </UserProvider>
   ),
   document.body

@@ -1,5 +1,5 @@
 import { createMemo, splitProps, type Component } from 'solid-js';
-import { useGame } from '../../../store/game/GameContext';
+import { usePlayGame } from '../../../store/game/PlayGameContext';
 import styles from './ChessClock.module.css';
 
 interface GameClockProps {
@@ -8,7 +8,7 @@ interface GameClockProps {
 
 const ChessClock: Component<GameClockProps> = (props) => {
   const [local] = splitProps(props, ['side']);
-  const { timer } = useGame();
+  const { timer } = usePlayGame();
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);

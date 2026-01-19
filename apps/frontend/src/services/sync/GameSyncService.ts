@@ -1,7 +1,7 @@
 import { BACKEND_URL } from '../../shared/config/env';
+import { ReconnectingWebSocket, type ConnectionState } from '../network/ReconnectingWebSocket';
 import { MsgType as MT } from './types';
 import type {
-  ConnectionState,
   SyncEvent,
   SyncEventHandler,
   SyncServiceConfig,
@@ -19,6 +19,9 @@ import type {
   TimeControl,
 } from './types';
 
+// Re-export ConnectionState for backward compatibility
+export type { ConnectionState } from '../network/ReconnectingWebSocket';
+
 // ============================================================================
 // Default Configuration
 // ============================================================================
@@ -35,7 +38,7 @@ const DEFAULT_CONFIG: SyncServiceConfig = {
 // ============================================================================
 
 function buildWsUrl(backendUrl: string): string {
-  // Convert http(s) to ws(s)
+  if (!backendUrl) return '';
   const url = new URL(backendUrl);
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
   url.pathname = '/ws';
@@ -48,11 +51,8 @@ function buildWsUrl(backendUrl: string): string {
 
 export class GameSyncService {
   private config: SyncServiceConfig;
-  private ws: WebSocket | null = null;
-  private connectionState: ConnectionState = 'disconnected';
-  private reconnectCount = 0;
+  private socket: ReconnectingWebSocket;
   private pingInterval: ReturnType<typeof setInterval> | null = null;
-  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Current game ID
   private currentGameId: string | null = null;
@@ -65,10 +65,30 @@ export class GameSyncService {
 
   constructor(config: Partial<SyncServiceConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+
     // Auto-set server URL from env if not provided
     if (!this.config.serverUrl && BACKEND_URL) {
       this.config.serverUrl = buildWsUrl(BACKEND_URL);
     }
+
+    // Initialize the reconnecting WebSocket
+    this.socket = new ReconnectingWebSocket(this.config.serverUrl, {
+      maxAttempts: this.config.reconnectAttempts,
+      baseDelayMs: this.config.reconnectDelayMs,
+    });
+
+    // Set up socket callbacks
+    this.socket.setCallbacks({
+      onStateChange: (state, previousState) => this.handleStateChange(state, previousState),
+      onMessage: (data) => this.processMessage(data as ServerMessage),
+      onError: () => {
+        this.emitEvent({
+          type: 'error',
+          data: { code: 'WS_ERROR', message: 'WebSocket error' },
+          timestamp: Date.now(),
+        });
+      },
+    });
   }
 
   // ============================================================================
@@ -78,6 +98,7 @@ export class GameSyncService {
   connect(serverUrl?: string): void {
     if (serverUrl) {
       this.config.serverUrl = serverUrl;
+      this.socket.setUrl(serverUrl);
     }
 
     if (!this.config.serverUrl) {
@@ -85,46 +106,22 @@ export class GameSyncService {
       return;
     }
 
-    if (this.ws && this.connectionState === 'connected') {
-      return;
-    }
-
-    this.setConnectionState('connecting');
-
-    try {
-      this.ws = new WebSocket(this.config.serverUrl);
-
-      this.ws.onopen = () => this.handleOpen();
-      this.ws.onclose = (event) => this.handleClose(event);
-      this.ws.onerror = (event) => this.handleError(event);
-      this.ws.onmessage = (event) => this.handleMessage(event);
-    } catch (err) {
-      console.error('GameSyncService: Failed to create WebSocket:', err);
-      this.setConnectionState('disconnected');
-    }
+    this.socket.connect();
   }
 
   disconnect(): void {
     this.stopPing();
-    this.clearReconnectTimeout();
-
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
-
-    this.setConnectionState('disconnected');
-    this.reconnectCount = 0;
+    this.socket.disconnect();
     this.currentGameId = null;
     this.messageQueue = [];
   }
 
   getConnectionState(): ConnectionState {
-    return this.connectionState;
+    return this.socket.getState();
   }
 
   isConnected(): boolean {
-    return this.connectionState === 'connected';
+    return this.socket.isConnected();
   }
 
   getCurrentGameId(): string | null {
@@ -185,42 +182,22 @@ export class GameSyncService {
   }
 
   // ============================================================================
-  // Private Methods - Connection Handlers
+  // Private Methods - State Change Handler
   // ============================================================================
 
-  private handleOpen(): void {
-    this.setConnectionState('connected');
-    this.reconnectCount = 0;
-    this.startPing();
-    this.flushMessageQueue();
-  }
-
-  private handleClose(event: CloseEvent): void {
-    this.stopPing();
-    this.ws = null;
-
-    if (event.wasClean) {
-      this.setConnectionState('disconnected');
-    } else {
-      this.attemptReconnect();
-    }
-  }
-
-  private handleError(event: Event): void {
-    console.error('GameSyncService: WebSocket error:', event);
+  private handleStateChange(state: ConnectionState, previousState: ConnectionState): void {
+    // Emit connection state change event
     this.emitEvent({
-      type: 'error',
-      data: { code: 'WS_ERROR', message: 'WebSocket error' },
+      type: 'connection:state_changed',
+      data: { previousState, currentState: state },
       timestamp: Date.now(),
     });
-  }
 
-  private handleMessage(event: MessageEvent): void {
-    try {
-      const message = JSON.parse(event.data) as ServerMessage;
-      this.processMessage(message);
-    } catch (err) {
-      console.error('GameSyncService: Failed to parse message:', err);
+    if (state === 'connected') {
+      this.startPing();
+      this.flushMessageQueue();
+    } else {
+      this.stopPing();
     }
   }
 
@@ -362,71 +339,39 @@ export class GameSyncService {
   }
 
   // ============================================================================
-  // Private Methods - Utilities
+  // Private Methods - Message Sending
   // ============================================================================
 
   private send(message: { type: string; data?: unknown }): void {
-    if (this.ws && this.connectionState === 'connected') {
-      this.ws.send(JSON.stringify(message));
-    } else if (this.connectionState === 'connecting') {
-      // Queue message to be sent when connection opens
-      this.messageQueue.push(message);
-    } else {
-      // Not connected and not connecting - message will be lost
+    const sent = this.socket.send(message);
+
+    if (!sent) {
+      const state = this.socket.getState();
+      if (state === 'connecting' || state === 'reconnecting') {
+        // Queue message to be sent when connection opens
+        this.messageQueue.push(message);
+      }
+      // If disconnected, message is dropped (caller should check connection state)
     }
   }
 
   private flushMessageQueue(): void {
-    if (this.messageQueue.length > 0 && this.ws && this.connectionState === 'connected') {
-      for (const message of this.messageQueue) {
-        this.ws.send(JSON.stringify(message));
-      }
-      this.messageQueue = [];
+    if (this.messageQueue.length === 0) return;
+
+    for (const message of this.messageQueue) {
+      this.socket.send(message);
     }
+    this.messageQueue = [];
   }
 
-  private setConnectionState(newState: ConnectionState): void {
-    const previousState = this.connectionState;
-    this.connectionState = newState;
-
-    if (previousState !== newState) {
-      this.emitEvent({
-        type: 'connection:state_changed',
-        data: { previousState, currentState: newState },
-        timestamp: Date.now(),
-      });
-    }
-  }
-
-  private attemptReconnect(): void {
-    if (this.reconnectCount >= this.config.reconnectAttempts) {
-      this.setConnectionState('disconnected');
-      return;
-    }
-
-    this.setConnectionState('reconnecting');
-    this.reconnectCount++;
-
-    const delay = this.config.reconnectDelayMs * Math.pow(2, this.reconnectCount - 1);
-
-    this.reconnectTimeout = setTimeout(() => {
-      if (this.connectionState === 'reconnecting') {
-        this.connect();
-      }
-    }, delay);
-  }
-
-  private clearReconnectTimeout(): void {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
-  }
+  // ============================================================================
+  // Private Methods - Ping/Pong Heartbeat
+  // ============================================================================
 
   private startPing(): void {
     this.stopPing();
     this.pingInterval = setInterval(() => {
-      this.send({ type: MT.PING });
+      this.socket.send({ type: MT.PING });
     }, this.config.pingIntervalMs);
   }
 
@@ -436,6 +381,10 @@ export class GameSyncService {
       this.pingInterval = null;
     }
   }
+
+  // ============================================================================
+  // Private Methods - Event Emission
+  // ============================================================================
 
   private emitEvent(event: SyncEvent): void {
     for (const handler of this.eventHandlers) {

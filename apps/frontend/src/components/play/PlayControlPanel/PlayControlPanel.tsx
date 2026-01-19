@@ -1,6 +1,6 @@
 import { useNavigate } from '@solidjs/router';
 import { Show, createSignal, type ParentComponent } from 'solid-js';
-import { useGame } from '../../../store/game/GameContext';
+import { usePlayGame } from '../../../store/game/PlayGameContext';
 import { type StartGameOptions, type GameMode } from '../../../types/game';
 import ChessClock from '../../chess/ChessClock/ChessClock';
 import ButtonPanel from '../../game/ButtonPanel/ButtonPanel';
@@ -11,7 +11,7 @@ import styles from './PlayControlPanel.module.css';
 
 const PlayControlPanel: ParentComponent = () => {
   const navigate = useNavigate();
-  const { chess, engine, actions, derived } = useGame();
+  const { chess, engine, actions, derived } = usePlayGame();
 
   const [showResignModal, setShowResignModal] = createSignal(false);
 

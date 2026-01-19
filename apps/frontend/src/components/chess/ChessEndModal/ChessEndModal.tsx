@@ -1,5 +1,5 @@
 import { splitProps, type Component, Show } from 'solid-js';
-import { useGame } from '../../../store/game/GameContext';
+import { useGameContext } from '../../../store/game/useGameContext';
 import styles from './ChessEndModal.module.css';
 import type { GameOverReason, GameWinner } from '../../../types/game';
 
@@ -62,7 +62,7 @@ const getGameOverInfoPlay = (reason: ExtendedGameOverReason, winner: GameWinner)
 
 const ChessEndModal: Component<ChessEndModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose', 'onPlayAgain', 'gameOverReason', 'gameWinner']);
-  const { chess } = useGame();
+  const { chess } = useGameContext();
 
   const isMultiplayer = () => chess.state.opponentType === 'human';
 

@@ -1,9 +1,9 @@
 import { For, createMemo, createEffect, on, type Component } from 'solid-js';
-import { useGame } from '../../../store/game/GameContext';
+import { usePlayGame } from '../../../store/game/PlayGameContext';
 import styles from './PlayNavigationPanel.module.css';
 
 const PlayNavigationPanel: Component = () => {
-  const { chess, actions } = useGame();
+  const { chess, actions } = usePlayGame();
 
   let movesContainerRef: HTMLDivElement | undefined;
   createEffect(
