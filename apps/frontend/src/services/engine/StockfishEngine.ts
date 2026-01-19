@@ -1,5 +1,3 @@
-// Note: We use stockfishWorker.ts which wraps stockfish and configures WASM location
-
 // ============================================================================
 // Types
 // ============================================================================
@@ -68,9 +66,9 @@ export class StockfishEngine {
     this._isInitialized = false;
 
     try {
-      this.worker = new Worker(new URL('./stockfishWorker.ts', import.meta.url), {
-        type: 'module',
-      });
+      // Load stockfish directly from public folder where both JS and WASM are co-located
+      // This ensures the WASM file is always found regardless of bundling
+      this.worker = new Worker('/stockfish/stockfish-16.1.js');
 
       this.worker.onerror = (e) => {
         console.error(`${this.config.name} worker error:`, e);
