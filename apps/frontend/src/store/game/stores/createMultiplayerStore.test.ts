@@ -336,7 +336,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 
@@ -369,7 +369,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 
@@ -402,7 +402,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 
@@ -441,7 +441,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 
@@ -472,7 +472,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 
@@ -502,7 +502,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 
@@ -545,7 +545,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 
@@ -575,7 +575,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 
@@ -607,7 +607,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 
@@ -637,7 +637,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 
@@ -664,7 +664,7 @@ describe('createMultiplayerStore', () => {
       createRoot((dispose) => {
         let eventCallback: ((event: unknown) => void) | null = null;
         vi.mocked(gameSyncService.onEvent).mockImplementation((cb) => {
-          eventCallback = cb;
+          eventCallback = cb as (event: unknown) => void;
           return vi.fn();
         });
 

@@ -82,6 +82,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
 
       return (
         <div
+          data-square={props.square}
           classList={{
             [styles.square]: true,
             [styles.light]: isLightSquare,

@@ -30,6 +30,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "prepare": "cd ../.. && husky apps/frontend/.husky"
   },
   "lint-staged": {
@@ -50,6 +52,7 @@
     "stockfish": "github:nmrugg/stockfish.js"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@solidjs/testing-library": "^0.8.10",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
