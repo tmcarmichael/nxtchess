@@ -1,14 +1,14 @@
 import { For, createMemo, createEffect, on, Component } from 'solid-js';
-import { useGameStore } from '../../../store';
+import { useGame } from '../../../store';
 import styles from './PlayNavigationPanel.module.css';
 
 const PlayNavigationPanel: Component = () => {
-  const [state, actions] = useGameStore();
+  const { chess } = useGame();
 
   let movesContainerRef: HTMLDivElement | undefined;
   createEffect(
     on(
-      () => state.moveHistory.length,
+      () => chess.state.moveHistory.length,
       () => {
         queueMicrotask(() => {
           if (movesContainerRef) {
@@ -19,8 +19,8 @@ const PlayNavigationPanel: Component = () => {
     )
   );
 
-  const whiteMoves = createMemo(() => state.moveHistory.filter((_, i) => i % 2 === 0));
-  const blackMoves = createMemo(() => state.moveHistory.filter((_, i) => i % 2 === 1));
+  const whiteMoves = createMemo(() => chess.state.moveHistory.filter((_, i) => i % 2 === 0));
+  const blackMoves = createMemo(() => chess.state.moveHistory.filter((_, i) => i % 2 === 1));
 
   const movesRows = createMemo(() => {
     const totalRows = Math.max(whiteMoves().length, blackMoves().length);
@@ -34,7 +34,7 @@ const PlayNavigationPanel: Component = () => {
   });
 
   const handleJumpToMoveIndex = (index: number) => {
-    actions.jumpToMoveIndex(index);
+    chess.jumpToMoveIndex(index);
   };
 
   const MoveRow: Component<{
@@ -44,8 +44,8 @@ const PlayNavigationPanel: Component = () => {
     whiteIndex: number;
     blackIndex: number;
   }> = (props) => {
-    const whiteActive = () => props.whiteIndex === state.viewMoveIndex;
-    const blackActive = () => props.blackIndex === state.viewMoveIndex;
+    const whiteActive = () => props.whiteIndex === chess.state.viewMoveIndex;
+    const blackActive = () => props.blackIndex === chess.state.viewMoveIndex;
 
     return (
       <div class={styles.moveRow}>
@@ -76,12 +76,12 @@ const PlayNavigationPanel: Component = () => {
   };
 
   const goToPreviousMove = () => {
-    const newIndex = Math.max(0, state.viewMoveIndex - 1);
+    const newIndex = Math.max(0, chess.state.viewMoveIndex - 1);
     handleJumpToMoveIndex(newIndex);
   };
 
   const goToNextMove = () => {
-    const newIndex = Math.min(state.moveHistory.length - 1, state.viewMoveIndex + 1);
+    const newIndex = Math.min(chess.state.moveHistory.length - 1, chess.state.viewMoveIndex + 1);
     handleJumpToMoveIndex(newIndex);
   };
 

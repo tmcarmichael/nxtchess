@@ -1,5 +1,5 @@
 import { Chess } from 'chess.js';
-import { Square, BoardSquare, PIECE_VALUES, PromotionPiece, Side } from '../../types';
+import { Square, BoardSquare, PromotionPiece, Side } from '../../types';
 import { getTurnFromFen } from './fenUtils';
 import { getPieceColor, makePiece } from './pieceUtils';
 
@@ -68,20 +68,6 @@ export const getLegalMoves = (fen: string, square: Square): Square[] => {
   const chess = new Chess(fen);
   const legalMoves = chess.moves({ square, verbose: true });
   return legalMoves.map((move) => move.to as Square);
-};
-
-export const computeMaterial = (boardSquares: BoardSquare[]) => {
-  let whiteTotal = 0;
-  let blackTotal = 0;
-  for (const sq of boardSquares) {
-    if (!sq.piece) continue;
-    const color = sq.piece[0];
-    const type = sq.piece[1];
-    const val = PIECE_VALUES[type] || 0;
-    if (color === 'w') whiteTotal += val;
-    else blackTotal += val;
-  }
-  return { whiteTotal, blackTotal, diff: whiteTotal - blackTotal };
 };
 
 // ============================================================================

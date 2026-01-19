@@ -5,12 +5,12 @@ import PlayControlPanel from '../PlayControlPanel/PlayControlPanel';
 import PlayModal from '../PlayModal/PlayModal';
 import PlayNavigationPanel from '../PlayNavigationPanel/PlayNavigationPanel';
 import { GameContainer } from '../../game';
-import { useGameStore } from '../../../store';
+import { useGame } from '../../../store';
 
 const PlayContainer: ParentComponent = () => {
   const params = useParams<{ gameId?: string }>();
   const navigate = useNavigate();
-  const [state, actions] = useGameStore();
+  const { chess, multiplayer, actions } = useGame();
   const [showPlayModal, setShowPlayModal] = createSignal(false);
 
   // Auto-join game if gameId is in URL and we're not already in a game
@@ -18,7 +18,7 @@ const PlayContainer: ParentComponent = () => {
     on(
       () => params.gameId,
       (gameId) => {
-        if (gameId && !state.multiplayerGameId && state.lifecycle !== 'playing') {
+        if (gameId && !multiplayer.state.gameId && chess.state.lifecycle !== 'playing') {
           actions.joinMultiplayerGame(gameId);
         }
       }
@@ -28,7 +28,7 @@ const PlayContainer: ParentComponent = () => {
   // Update URL when game is created (creator gets gameId from server)
   createEffect(
     on(
-      () => state.multiplayerGameId,
+      () => multiplayer.state.gameId,
       (gameId) => {
         // Update URL if we have a gameId and URL doesn't match
         if (gameId && params.gameId !== gameId) {

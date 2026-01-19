@@ -1,13 +1,13 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, onMount, onCleanup, Component, createMemo } from 'solid-js';
-import { useGameStore } from '../../../store';
+import { useGame } from '../../../store';
 import { getRandomQuickPlayConfig } from '../../../services/game';
 import styles from './HomeSiteHero.module.css';
 import { StartGameOptions } from '../../../types';
 
 const HomeSiteHero: Component = () => {
   const navigate = useNavigate();
-  const [_, actions] = useGameStore();
+  const { actions } = useGame();
   const [pos, setPos] = createSignal({ x: 0, y: 0, r: 0 });
   let intervalId: number | undefined;
 

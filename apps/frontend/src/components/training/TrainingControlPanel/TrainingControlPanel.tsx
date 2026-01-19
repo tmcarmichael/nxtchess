@@ -1,10 +1,10 @@
 import { ParentComponent } from 'solid-js';
-import { useGameStore } from '../../../store';
+import { useGame } from '../../../store';
 import { ButtonPanel, GamePanelButton, GameInfoPanel } from '../../game';
 import styles from './TrainingControlPanel.module.css';
 
 const TrainingControlPanel: ParentComponent = () => {
-  const [state, actions, derived] = useGameStore();
+  const { chess, engine, ui, derived } = useGame();
 
   const aiPlayStyleInfo = (
     <div class={styles.AIPlayStyle}>
@@ -16,16 +16,16 @@ const TrainingControlPanel: ParentComponent = () => {
   return (
     <div class={styles.panel}>
       <ButtonPanel>
-        <GamePanelButton onClick={actions.flipBoardView}>
+        <GamePanelButton onClick={ui.flipBoard}>
           <span>Flip Board</span>
         </GamePanelButton>
       </ButtonPanel>
       <GameInfoPanel
-        playerColor={state.playerColor}
-        difficulty={state.difficulty}
+        playerColor={chess.state.playerColor}
+        difficulty={engine.state.difficulty}
         material={derived.material}
-        capturedWhite={state.capturedWhite}
-        capturedBlack={state.capturedBlack}
+        capturedWhite={chess.state.capturedWhite}
+        capturedBlack={chess.state.capturedBlack}
         extraInfo={aiPlayStyleInfo}
       />
     </div>

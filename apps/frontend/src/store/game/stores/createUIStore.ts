@@ -1,5 +1,6 @@
 import { createStore } from 'solid-js/store';
 import type { Side } from '../../../types';
+import { getOpponentSide } from '../../../services/game';
 
 interface UIState {
   boardView: Side;
@@ -24,7 +25,7 @@ export const createUIStore = (): UIStore => {
     showResignModal: false,
   });
 
-  const flipBoard = () => setState('boardView', (v) => (v === 'w' ? 'b' : 'w'));
+  const flipBoard = () => setState('boardView', (v) => getOpponentSide(v));
   const setBoardView = (view: Side) => setState('boardView', view);
   const showEndModal = () => setState('showEndModal', true);
   const hideEndModal = () => setState('showEndModal', false);

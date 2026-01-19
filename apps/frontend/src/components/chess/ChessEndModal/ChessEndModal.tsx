@@ -1,5 +1,5 @@
 import { splitProps, Component, Show } from 'solid-js';
-import { useGameStore } from '../../../store';
+import { useGame } from '../../../store';
 import type { GameOverReason, GameWinner } from '../../../types';
 import styles from './ChessEndModal.module.css';
 
@@ -62,13 +62,13 @@ const getGameOverInfoPlay = (reason: ExtendedGameOverReason, winner: GameWinner)
 
 const ChessEndModal: Component<ChessEndModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose', 'onPlayAgain', 'gameOverReason', 'gameWinner']);
-  const [state] = useGameStore();
+  const { chess } = useGame();
 
-  const isMultiplayer = () => state.opponentType === 'human';
+  const isMultiplayer = () => chess.state.opponentType === 'human';
 
   const getGameOverInfo = (): GameOverInfo => {
-    if (state.mode === 'training') {
-      return getGameOverInfoTraining(state.trainingEvalScore);
+    if (chess.state.mode === 'training') {
+      return getGameOverInfoTraining(chess.state.trainingEvalScore);
     }
     return getGameOverInfoPlay(local.gameOverReason, local.gameWinner);
   };
@@ -77,7 +77,7 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
   const getPlayerResult = (): string | null => {
     if (!isMultiplayer()) return null;
     if (local.gameWinner === 'draw') return 'Draw';
-    if (local.gameWinner === state.playerColor) return 'You Won!';
+    if (local.gameWinner === chess.state.playerColor) return 'You Won!';
     return 'You Lost';
   };
 

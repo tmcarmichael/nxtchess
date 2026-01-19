@@ -1,5 +1,5 @@
 // Context and hooks
-export { GameProvider, useGameStore, useGame, type GameContextValue } from './GameContext';
+export { GameProvider, useGame, type GameContextValue } from './GameContext';
 
 // Individual stores (for advanced usage)
 export {

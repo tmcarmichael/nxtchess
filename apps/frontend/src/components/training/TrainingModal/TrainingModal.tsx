@@ -1,6 +1,6 @@
 import { createSignal, Show, For, ParentComponent, splitProps } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { useGameStore } from '../../../store';
+import { useGame } from '../../../store';
 import { RatedMode, AIPlayStyle, GamePhase, Side, StartGameOptions } from '../../../types';
 import { ChessGameModal } from '../../chess/ChessGameModal';
 import { ChessSideSelector } from '../../chess/ChessSideSelector';
@@ -38,7 +38,7 @@ const GAME_PHASES: GamePhaseOption[] = [
 const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose']);
   const navigate = useNavigate();
-  const [_, actions] = useGameStore();
+  const { actions } = useGame();
 
   const [localRatedMode, setLocalRatedMode] = createSignal<RatedMode>('casual');
   const [localDifficulty, setLocalDifficulty] = createSignal<number>(3);

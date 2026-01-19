@@ -1,7 +1,7 @@
 import { Show, createSignal, ParentComponent } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { StartGameOptions, GameMode } from '../../../types';
-import { useGameStore } from '../../../store';
+import { useGame } from '../../../store';
 import { ButtonPanel, GamePanelButton, GameInfoPanel } from '../../game';
 import ResignModal from '../PlayResignModal/PlayResignModal';
 import ChessClock from '../../chess/ChessClock/ChessClock';
@@ -9,7 +9,7 @@ import styles from './PlayControlPanel.module.css';
 
 const PlayControlPanel: ParentComponent = () => {
   const navigate = useNavigate();
-  const [state, actions, derived] = useGameStore();
+  const { chess, engine, ui, actions, derived } = useGame();
 
   const [showResignModal, setShowResignModal] = createSignal(false);
 
@@ -21,7 +21,7 @@ const PlayControlPanel: ParentComponent = () => {
 
   const handleReplay = () => {
     const playGameConfig: StartGameOptions = {
-      side: derived.opponentSide(),
+      side: chess.derived.opponentSide(),
       mode: 'play' as GameMode,
     };
     actions.startNewGame(playGameConfig);
@@ -38,30 +38,30 @@ const PlayControlPanel: ParentComponent = () => {
     <div>
       <div class={styles.clockLayout}>
         <div class={styles.clockWrapper}>
-          <ChessClock side={derived.opponentSide()} />
+          <ChessClock side={chess.derived.opponentSide()} />
         </div>
         <div class={styles.panel}>
           <ButtonPanel>
             <GamePanelButton onClick={handleResign} disabled={!derived.isPlaying()}>
               <span>Resign</span>
             </GamePanelButton>
-            <GamePanelButton onClick={actions.flipBoardView}>
+            <GamePanelButton onClick={ui.flipBoard}>
               <span>Flip Board</span>
             </GamePanelButton>
-            <GamePanelButton onClick={actions.takeBack} disabled={!derived.isPlaying()}>
+            <GamePanelButton onClick={chess.takeBack} disabled={!derived.isPlaying()}>
               <span>Take Back</span>
             </GamePanelButton>
           </ButtonPanel>
           <GameInfoPanel
-            playerColor={state.playerColor}
-            difficulty={state.difficulty}
+            playerColor={chess.state.playerColor}
+            difficulty={engine.state.difficulty}
             material={derived.material}
-            capturedWhite={state.capturedWhite}
-            capturedBlack={state.capturedBlack}
+            capturedWhite={chess.state.capturedWhite}
+            capturedBlack={chess.state.capturedBlack}
           />
         </div>
         <div class={styles.clockWrapper}>
-          <ChessClock side={state.playerColor} />
+          <ChessClock side={chess.state.playerColor} />
         </div>
       </div>
       <Show when={showResignModal()}>
