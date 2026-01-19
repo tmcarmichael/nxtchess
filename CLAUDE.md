@@ -10,14 +10,14 @@ NXT Chess is a real-time multiplayer chess platform with AI training modes. Feat
 
 ### Quick Start (Full Stack)
 ```bash
-make dev                    # Build + run frontend, backend, db, redis
+just dev                    # Build + run frontend, backend, db, redis
 ```
 Frontend: http://localhost:5173 | Backend: http://localhost:8080
 
 ### Selective Startup
 ```bash
-make up PROFILES=backend    # Backend + db + redis only
-make up PROFILES=frontend   # Frontend only
+just up PROFILES=backend    # Backend + db + redis only
+just up PROFILES=frontend   # Frontend only
 ```
 
 ### Frontend Commands (run from apps/frontend/)
@@ -29,12 +29,12 @@ yarn format        # Prettier formatting
 yarn format:check  # Verify formatting (runs in prebuild)
 ```
 
-### Useful Make Targets
+### Useful Just Commands
 ```bash
-make logs PROFILES=backend  # Follow logs
-make exec-db                # psql into PostgreSQL
-make exec-redis             # redis-cli
-make clean PROFILES=full    # Remove containers + volumes
+just logs PROFILES=backend  # Follow logs
+just exec-db                # psql into PostgreSQL
+just exec-redis             # redis-cli
+just clean PROFILES=full    # Remove containers + volumes
 ```
 
 ## Architecture

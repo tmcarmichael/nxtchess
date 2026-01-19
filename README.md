@@ -15,10 +15,10 @@ NxtChess is a multiplayer chess platform with AI training modes. Play anonymous 
 
 ## Quick Start
 
-Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) and [Just](https://github.com/casey/just#installation).
 
 ```bash
-make dev
+just dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173). Press `Ctrl+C` to stop.
@@ -37,16 +37,15 @@ For OAuth sign-in, add credentials to `apps/backend/.env` (see `.env.example`).
 ## Development
 
 ```bash
-make dev                    # Full stack (frontend + backend + db + redis)
-make up PROFILES=backend    # Backend only
-make up PROFILES=frontend   # Frontend only
-make logs PROFILES=backend  # Follow logs
-make exec-db                # PostgreSQL shell
-make exec-redis             # Redis CLI
-make clean PROFILES=full    # Remove containers and volumes
+just up PROFILES=backend    # Backend only
+just up PROFILES=frontend   # Frontend only
+just logs PROFILES=backend  # Follow logs
+just exec-db                # PostgreSQL shell
+just exec-redis             # Redis CLI
+just clean PROFILES=full    # Remove containers and volumes
 ```
 
-See `make help` for all commands.
+Run `just` to see all commands.
 
 ## Roadmap
 

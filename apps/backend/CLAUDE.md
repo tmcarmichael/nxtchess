@@ -8,10 +8,10 @@ See also: [Root CLAUDE.md](../../CLAUDE.md) for full-stack commands and frontend
 
 ```bash
 # From project root - recommended approach
-make up PROFILES=backend      # Start backend + PostgreSQL + Redis
-make logs PROFILES=backend    # Follow logs
-make exec-db                  # psql into PostgreSQL (chess_db)
-make exec-redis               # redis-cli
+just up PROFILES=backend      # Start backend + PostgreSQL + Redis
+just logs PROFILES=backend    # Follow logs
+just exec-db                  # psql into PostgreSQL (chess_db)
+just exec-redis               # redis-cli
 
 # From apps/backend/ - local Go development
 go mod tidy                   # Sync dependencies
