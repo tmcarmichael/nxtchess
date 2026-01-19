@@ -11,7 +11,7 @@ import {
 import { useNavigate } from '@solidjs/router';
 import { Square, PromotionPiece, Side } from '../../../types';
 import { getLegalMoves, prepareMove, canMovePieceAt } from '../../../services/game';
-import { useGameStore } from '../../../store';
+import { useGame } from '../../../store';
 import { useKeyboardNavigation } from '../../../shared';
 import ChessEvalBar from '../ChessEvalBar/ChessEvalBar';
 import { getEvaluation } from '../../../services/engine';
@@ -27,7 +27,7 @@ interface ChessBoardControllerProps {
 
 const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props) => {
   const [local] = splitProps(props, ['onRequestNewGame']);
-  const [state, actions, derived] = useGameStore();
+  const { chess, engine, multiplayer, ui, actions, derived } = useGame();
   const navigate = useNavigate();
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
@@ -45,25 +45,25 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
   useKeyboardNavigation({
     onPrevious: () => {
-      const newIndex = state.viewMoveIndex - 1;
+      const newIndex = chess.state.viewMoveIndex - 1;
       if (newIndex >= 0) {
-        actions.jumpToMoveIndex(newIndex);
+        chess.jumpToMoveIndex(newIndex);
       }
     },
     onNext: () => {
-      const newIndex = state.viewMoveIndex + 1;
-      if (newIndex <= state.moveHistory.length - 1) {
-        actions.jumpToMoveIndex(newIndex);
+      const newIndex = chess.state.viewMoveIndex + 1;
+      if (newIndex <= chess.state.moveHistory.length - 1) {
+        chess.jumpToMoveIndex(newIndex);
       }
     },
-    onFlip: actions.flipBoardView,
-    enabled: () => !state.isGameOver,
+    onFlip: ui.flipBoard,
+    enabled: () => !chess.state.isGameOver,
   });
 
   // Only re-evaluate when FEN or mode changes (not on every state update)
   createEffect(
     on(
-      () => [state.fen, state.mode] as const,
+      () => [chess.state.fen, chess.state.mode] as const,
       ([currentFen, mode]) => {
         if (mode === 'training') {
           getEvaluation(currentFen).then((score: number) => {
@@ -76,7 +76,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
   createEffect(
     on(
-      () => state.isGameOver,
+      () => chess.state.isGameOver,
       (isGameOver) => {
         if (isGameOver) {
           setShowEndModal(true);
@@ -86,18 +86,20 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   );
 
   const resetViewIfNeeded = () => {
-    if (derived.isViewingHistory()) {
+    if (chess.derived.isViewingHistory()) {
       // Jump to latest move to reset view
-      actions.jumpToMoveIndex(state.moveHistory.length - 1);
+      chess.jumpToMoveIndex(chess.state.moveHistory.length - 1);
     }
   };
 
+  const canMove = () => chess.derived.canMove() && !engine.state.isThinking;
+
   const handleSquareClick = (square: Square) => {
-    if (!derived.canMove()) return;
+    if (!canMove()) return;
     resetViewIfNeeded();
     const currentSelection = selectedSquare();
     if (!currentSelection) {
-      const piece = derived.currentBoard().find((sq) => sq.square === square)?.piece;
+      const piece = chess.derived.currentBoard().find((sq) => sq.square === square)?.piece;
       if (piece && canMovePiece(square)) {
         selectSquare(square);
       }
@@ -111,11 +113,11 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
-    if (!derived.canMove() || !canMovePiece(square)) return;
+    if (!canMove() || !canMovePiece(square)) return;
     resetViewIfNeeded();
     setDraggedPiece({ square, piece });
     setCursorPosition({ x: event.clientX, y: event.clientY });
-    setHighlightedMoves(getLegalMoves(state.fen, square));
+    setHighlightedMoves(getLegalMoves(chess.state.fen, square));
     setSelectedSquare(square);
     event.dataTransfer?.setDragImage(new Image(), 0, 0);
   };
@@ -136,7 +138,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   });
 
   const handleMouseUp = (targetSquare: Square) => {
-    if (state.isGameOver) return;
+    if (chess.state.isGameOver) return;
     resetViewIfNeeded();
     const dragState = draggedPiece();
     if (!dragState) return;
@@ -147,7 +149,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const executeMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
-    const board = derived.currentBoard();
+    const board = chess.derived.currentBoard();
     const movePrep = prepareMove(from, to, board);
 
     if (movePrep.needsPromotion && !promotion) {
@@ -171,14 +173,19 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const canMovePiece = (square: Square) => {
-    if (!derived.isPlayerTurn()) return false;
-    return canMovePieceAt(state.fen, square, state.playerColor, derived.currentBoard());
+    if (!chess.derived.isPlayerTurn()) return false;
+    return canMovePieceAt(
+      chess.state.fen,
+      square,
+      chess.state.playerColor,
+      chess.derived.currentBoard()
+    );
   };
 
   const selectSquare = (square: Square) => {
     batch(() => {
       setSelectedSquare(square);
-      setHighlightedMoves(getLegalMoves(state.fen, square));
+      setHighlightedMoves(getLegalMoves(chess.state.fen, square));
     });
   };
 
@@ -209,13 +216,13 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   return (
     <div onMouseMove={handleMouseMove} class={styles.chessGameContainer}>
       <div class={styles.rowWrapper}>
-        <Show when={state.mode === 'training'}>
+        <Show when={chess.state.mode === 'training'}>
           <ChessEvalBar evalScore={evalScore()} />
         </Show>
 
         <div class={styles.chessBoardContainer}>
           <ChessBoard
-            board={derived.currentBoard}
+            board={chess.derived.currentBoard}
             highlightedMoves={highlightedMoves}
             selectedSquare={selectedSquare}
             draggedPiece={draggedPiece}
@@ -223,36 +230,36 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
             onSquareClick={handleSquareClick}
             onSquareMouseUp={handleMouseUp}
             onDragStart={handleDragStart}
-            lastMove={() => state.lastMove}
-            checkedKingSquare={() => state.checkedKingSquare}
-            boardView={() => state.boardView}
-            activePieceColor={() => state.currentTurn}
+            lastMove={() => chess.state.lastMove}
+            checkedKingSquare={() => chess.state.checkedKingSquare}
+            boardView={() => ui.state.boardView}
+            activePieceColor={() => chess.state.currentTurn}
           />
           <ChessEngineOverlay
             isLoading={derived.isEngineLoading()}
             hasError={derived.hasEngineError()}
-            errorMessage={state.engineError}
+            errorMessage={engine.state.error}
             onRetry={actions.retryEngineInit}
           />
           {/* Waiting for opponent overlay for multiplayer */}
-          <Show when={state.isWaitingForOpponent}>
+          <Show when={multiplayer.state.isWaiting}>
             <div class={styles.waitingOverlay}>
               <div class={styles.waitingContent}>
                 <div class={styles.spinner} />
                 <h3>Waiting for Opponent</h3>
                 <Show
-                  when={state.multiplayerGameId}
+                  when={multiplayer.state.gameId}
                   fallback={<p class={styles.waitingHint}>Connecting to server...</p>}
                 >
                   <p class={styles.waitingHint}>Share this link with your opponent:</p>
                   <div class={styles.gameUrlContainer}>
                     <code class={styles.gameUrl}>
-                      {`${window.location.origin}/play/${state.multiplayerGameId}`}
+                      {`${window.location.origin}/play/${multiplayer.state.gameId}`}
                     </code>
                     <button
                       class={styles.copyButton}
                       onClick={() => {
-                        const url = `${window.location.origin}/play/${state.multiplayerGameId}`;
+                        const url = `${window.location.origin}/play/${multiplayer.state.gameId}`;
                         navigator.clipboard.writeText(url);
                       }}
                     >
@@ -270,8 +277,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
         <ChessEndModal
           onClose={handleCloseEndGame}
           onPlayAgain={handlePlayAgain}
-          gameOverReason={state.gameOverReason}
-          gameWinner={state.gameWinner}
+          gameOverReason={chess.state.gameOverReason}
+          gameWinner={chess.state.gameWinner}
         />
       </Show>
 

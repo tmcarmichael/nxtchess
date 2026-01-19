@@ -31,7 +31,6 @@ export interface EngineStore {
   getEval: (fen: string) => Promise<number>;
   release: (sessionId: string) => void;
   terminate: () => void;
-  setThinking: (isThinking: boolean) => void;
   retry: (onSuccess?: () => void) => Promise<void>;
 }
 
@@ -108,10 +107,6 @@ export const createEngineStore = (): EngineStore => {
     setState({ status: 'idle', isThinking: false, error: null });
   };
 
-  const setThinking = (isThinking: boolean) => {
-    setState('isThinking', isThinking);
-  };
-
   const retry = async (onSuccess?: () => void) => {
     if (!pendingRetryConfig) {
       console.warn('No pending engine config to retry');
@@ -140,7 +135,6 @@ export const createEngineStore = (): EngineStore => {
     getEval,
     release,
     terminate,
-    setThinking,
     retry,
   };
 };

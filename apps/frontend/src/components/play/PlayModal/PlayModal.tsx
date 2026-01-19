@@ -1,6 +1,6 @@
 import { createSignal, splitProps, Component, Show, For } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { useGameStore } from '../../../store';
+import { useGame } from '../../../store';
 import { Side, StartGameOptions } from '../../../types';
 import { TIME_VALUES_MINUTES } from '../../../shared';
 import { preferences } from '../../../services';
@@ -21,7 +21,7 @@ interface PlayModalProps {
 
 const PlayModal: Component<PlayModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose']);
-  const [, actions] = useGameStore();
+  const { actions } = useGame();
   const navigate = useNavigate();
 
   // Load saved preferences with bounds validation

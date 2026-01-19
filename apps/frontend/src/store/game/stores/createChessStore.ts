@@ -13,7 +13,13 @@ import type {
   GameLifecycle,
   OpponentType,
 } from '../../../types';
-import { sessionManager, GameSession, fenToBoard, canMakeMove } from '../../../services/game';
+import {
+  sessionManager,
+  GameSession,
+  fenToBoard,
+  canMakeMove,
+  getOpponentSide,
+} from '../../../services/game';
 import { generateSessionId } from '../../../shared';
 
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -79,9 +85,9 @@ export interface ChessStore {
     blackTimeMs?: number;
     isCheck?: boolean;
   }) => void;
+  // Multiplayer coordination setters - used by GameContext callbacks when server assigns values
   setLifecycle: (lifecycle: GameLifecycle) => void;
   setPlayerColor: (color: Side) => void;
-  setOpponentType: (type: OpponentType) => void;
   resetForMultiplayer: (gameMode: GameMode) => void;
   derived: {
     currentBoard: () => BoardSquare[];
@@ -337,7 +343,7 @@ export const createChessStore = (): ChessStore => {
       setState('lastMove', { from: data.from as Square, to: data.to as Square });
       setState('moveHistory', [...state.moveHistory, data.san]);
       setState('viewMoveIndex', state.moveHistory.length);
-      setState('currentTurn', state.currentTurn === 'w' ? 'b' : 'w');
+      setState('currentTurn', getOpponentSide(state.currentTurn));
       if (data.isCheck) {
         const board = fenToBoard(data.fen);
         const currentTurn = data.fen.split(' ')[1] as Side;
@@ -362,10 +368,6 @@ export const createChessStore = (): ChessStore => {
 
   const setPlayerColor = (color: Side) => {
     setState('playerColor', color);
-  };
-
-  const setOpponentType = (type: OpponentType) => {
-    setState('opponentType', type);
   };
 
   const resetForMultiplayer = (gameMode: GameMode) => {
@@ -397,7 +399,7 @@ export const createChessStore = (): ChessStore => {
     isPlayerTurn: () => state.currentTurn === state.playerColor,
     canMove: () => canMakeMove(state.lifecycle) && state.currentTurn === state.playerColor,
     isViewingHistory: () => state.viewFen !== state.fen,
-    opponentSide: () => (state.playerColor === 'w' ? 'b' : 'w') as Side,
+    opponentSide: () => getOpponentSide(state.playerColor),
   };
 
   const getSession = () => currentSession;
@@ -417,7 +419,6 @@ export const createChessStore = (): ChessStore => {
     syncFromMultiplayer,
     setLifecycle,
     setPlayerColor,
-    setOpponentType,
     resetForMultiplayer,
     derived,
     getSession,
