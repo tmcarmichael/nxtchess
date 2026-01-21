@@ -21,8 +21,11 @@ const PlayContainerInner: ParentComponent = () => {
   const [showPlayModal, setShowPlayModal] = createSignal(false);
 
   // Handle game start from navigation state (e.g., from header modal)
+  // Or show play modal if no game is active
   onMount(() => {
     const state = location.state;
+    const gameIdInUrl = params.gameId;
+
     if (chess.state.lifecycle !== 'idle') return;
 
     if (state?.quickPlay) {
@@ -33,6 +36,9 @@ const PlayContainerInner: ParentComponent = () => {
       actions.startMultiplayerGame(state.multiplayerCreate);
       // Clear the state to prevent re-triggering
       navigate('/play', { replace: true, state: {} });
+    } else if (!gameIdInUrl) {
+      // No game active and no game to join - show the play modal
+      setShowPlayModal(true);
     }
   });
 

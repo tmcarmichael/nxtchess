@@ -65,6 +65,10 @@ export default [
         MessageEvent: 'readonly',
         ErrorEvent: 'readonly',
         CloseEvent: 'readonly',
+        // Audio
+        AudioContext: 'readonly',
+        AudioBuffer: 'readonly',
+        OscillatorType: 'readonly',
       },
     },
     plugins: {
