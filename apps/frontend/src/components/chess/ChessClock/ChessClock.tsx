@@ -10,10 +10,18 @@ const ChessClock: Component<GameClockProps> = (props) => {
   const [local] = splitProps(props, ['side']);
   const { timer } = usePlayGame();
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  const formatTime = (timeMs: number) => {
+    const totalSeconds = Math.floor(timeMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const base = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    // Show tenths only when under 20 seconds
+    if (totalSeconds < 20) {
+      const tenths = Math.floor((timeMs % 1000) / 100);
+      return `${base}.${tenths}`;
+    }
+    return base;
   };
 
   const label = () => (props.side === 'w' ? 'White' : 'Black');

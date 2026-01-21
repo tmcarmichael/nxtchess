@@ -140,6 +140,7 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       side,
       mode = 'play',
       newTimeControl = 5,
+      newIncrement = 0,
       newDifficultyLevel = 3,
       trainingIsRated = false,
       trainingAIPlayStyle = 'balanced',
@@ -159,7 +160,7 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       trainingAvailableHints,
     });
 
-    timer.reset(newTimeControl);
+    timer.reset(newTimeControl, newIncrement);
     ui.setBoardView(side);
     chess.setLifecycle(transition('idle', 'START_GAME'));
 
@@ -195,8 +196,14 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
   };
 
   const applyPlayerMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
+    const playerSide = chess.state.playerColor;
     const success = chess.applyMove(from, to, promotion);
     if (!success) return;
+
+    // Add increment after successful move (single-player only)
+    if (chess.state.opponentType === 'ai' && chess.state.mode === 'play' && playerSide) {
+      timer.addIncrement(playerSide);
+    }
 
     if (!chess.state.isGameOver) {
       afterMoveChecks();

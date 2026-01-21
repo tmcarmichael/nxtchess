@@ -21,6 +21,7 @@ export interface StartGameOptions {
   side: Side;
   mode: GameMode;
   newTimeControl?: number;
+  newIncrement?: number;
   newDifficultyLevel?: number;
   trainingIsRated?: boolean;
   trainingAIPlayStyle?: AIPlayStyle;
