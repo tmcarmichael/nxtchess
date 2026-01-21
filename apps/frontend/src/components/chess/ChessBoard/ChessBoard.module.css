@@ -98,11 +98,23 @@
 /* Dragged piece styling */
 .draggedPiece {
   position: fixed;
+  width: 90px;
+  height: 90px;
   pointer-events: none;
   z-index: 10000;
   transform: translate(-50%, -50%);
   will-change: transform;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
+}
+
+/* Animating piece for smooth move transitions */
+.animatingPiece {
+  position: absolute;
+  width: 12.5%;
+  height: 12.5%;
+  pointer-events: none;
+  z-index: 100;
+  will-change: transform;
 }
 
 /* Last move highlight */

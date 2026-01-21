@@ -33,7 +33,7 @@ interface ChessBoardControllerProps {
 
 const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props) => {
   const [local] = splitProps(props, ['onRequestNewGame']);
-  const { chess, engine, multiplayer, ui, actions, derived } = useGameContext();
+  const { chess, engine, multiplayer, timer, ui, actions, derived } = useGameContext();
   const navigate = useNavigate();
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
@@ -58,6 +58,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     from: Square;
     to: Square;
     color: Side;
+  } | null>(null);
+  // Track animating piece for smooth move transitions
+  const [animatingMove, setAnimatingMove] = createSignal<{
+    from: Square;
+    to: Square;
+    piece: string;
   } | null>(null);
   // Track if a drag operation just ended to prevent click from interfering
   let justDragged = false;
@@ -122,6 +128,35 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
           const isCapture = lastMove?.includes('x') ?? false;
           audioService.playMoveSound(isCapture);
         }
+      }
+    )
+  );
+
+  // Animate piece movement when a move is made
+  const ANIMATION_DURATION = 500;
+  createEffect(
+    on(
+      () => chess.state.moveHistory.length,
+      (length, prevLength) => {
+        // Only animate when a NEW move is added (not initial load or navigation)
+        if (prevLength === undefined || length <= prevLength) return;
+        // Don't animate during history navigation
+        if (chess.derived.isViewingHistory()) return;
+        // Skip animation in bullet mode (1 min) - every ms counts
+        if (timer.timeControl === 1) return;
+
+        const lastMove = chess.state.lastMove;
+        if (!lastMove) return;
+
+        // Get the piece at the destination (it's already moved there)
+        const board = chess.derived.currentBoard();
+        const piece = board.find((sq) => sq.square === lastMove.to)?.piece;
+        if (!piece) return;
+
+        setAnimatingMove({ from: lastMove.from, to: lastMove.to, piece });
+
+        // Clear animation after duration
+        setTimeout(() => setAnimatingMove(null), ANIMATION_DURATION);
       }
     )
   );
@@ -447,6 +482,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
               const pm = premove();
               return pm ? { from: pm.from, to: pm.to } : null;
             }}
+            animatingMove={animatingMove}
           />
           <ChessEngineOverlay
             isLoading={derived.isEngineLoading()}

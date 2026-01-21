@@ -1,4 +1,13 @@
-import { type JSX, splitProps, For, type Component, createMemo } from 'solid-js';
+import {
+  type JSX,
+  splitProps,
+  For,
+  type Component,
+  createMemo,
+  createSignal,
+  createEffect,
+  on,
+} from 'solid-js';
 import { isPieceSide } from '../../../services/game/pieceUtils';
 import { type PieceType, type BoardSquare, type Square } from '../../../types/chess';
 import { type Side } from '../../../types/game';
@@ -19,7 +28,10 @@ interface ChessBoardProps {
   boardView: () => Side;
   activePieceColor: () => Side;
   premoveSquares: () => { from: Square; to: Square } | null;
+  animatingMove: () => { from: Square; to: Square; piece: string } | null;
 }
+
+const ANIMATION_DURATION = 500; // ms
 
 const ChessBoard: Component<ChessBoardProps> = (props) => {
   const [local] = splitProps(props, [
@@ -36,6 +48,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     'boardView',
     'activePieceColor',
     'premoveSquares',
+    'animatingMove',
   ]);
 
   const highlightSet = createMemo(() => new Set(local.highlightedMoves()));
@@ -45,6 +58,55 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const rawBoard = local.board();
     return view === 'b' ? [...rawBoard].reverse() : rawBoard;
   });
+
+  // Convert square name to board coordinates (0-7)
+  const squareToCoords = (square: Square, view: Side): { x: number; y: number } => {
+    const file = square.charCodeAt(0) - 97; // a=0, h=7
+    const rank = parseInt(square[1], 10) - 1; // 1=0, 8=7
+    if (view === 'w') {
+      return { x: file, y: 7 - rank };
+    } else {
+      return { x: 7 - file, y: rank };
+    }
+  };
+
+  // Animation state: starts at 'from' position, transitions to 'to'
+  const [animationOffset, setAnimationOffset] = createSignal<{ x: number; y: number } | null>(null);
+  const [animatingPiece, setAnimatingPiece] = createSignal<{ to: Square; piece: string } | null>(
+    null
+  );
+
+  createEffect(
+    on(
+      () => local.animatingMove(),
+      (anim) => {
+        if (!anim) {
+          setAnimatingPiece(null);
+          setAnimationOffset(null);
+          return;
+        }
+
+        const view = local.boardView();
+        const fromCoords = squareToCoords(anim.from, view);
+        const toCoords = squareToCoords(anim.to, view);
+
+        // Calculate offset in grid units (each square = 1 unit = 12.5%)
+        const offsetX = fromCoords.x - toCoords.x;
+        const offsetY = fromCoords.y - toCoords.y;
+
+        // Set initial offset (piece appears at source)
+        setAnimationOffset({ x: offsetX, y: offsetY });
+        setAnimatingPiece({ to: anim.to, piece: anim.piece });
+
+        // Trigger transition to destination (offset = 0)
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setAnimationOffset({ x: 0, y: 0 });
+          });
+        });
+      }
+    )
+  );
 
   const renderDraggedPiece = () => {
     const dragState = local.draggedPiece();
@@ -64,6 +126,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const checkedSquare = local.checkedKingSquare();
     const squares = memoizedBoardSquares();
     const premove = local.premoveSquares();
+    const animPiece = animatingPiece();
 
     const renderSquare = (props: BoardSquare): JSX.Element => {
       const file = props.square[0];
@@ -71,6 +134,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
       const isHighlighted = highlightSet().has(props.square);
       const isSelected = selected === props.square;
       const isDragging = dragState?.square === props.square;
+      const isAnimating = animPiece?.to === props.square;
       const isLastMove = last !== null && (last.from === props.square || last.to === props.square);
       const isEnemyPiece =
         isHighlighted &&
@@ -84,6 +148,9 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
       const view = local.boardView();
       const showFile = (view === 'w' && rank === '1') || (view === 'b' && rank === '8');
       const showRank = (view === 'w' && file === 'h') || (view === 'b' && file === 'a');
+
+      // Determine piece opacity: hidden if dragging or animating to this square
+      const pieceOpacity = isDragging ? 0.5 : isAnimating ? 0 : 1;
 
       return (
         <div
@@ -110,7 +177,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
               type={props.piece as PieceType}
               draggable
               onDragStart={(e: DragEvent) => local.onDragStart(props.square, props.piece!, e)}
-              style={{ opacity: isDragging ? 0.5 : 1, transition: 'opacity 0.2s ease' }}
+              style={{ opacity: pieceOpacity, transition: 'opacity 0.05s ease' }}
             />
           )}
         </div>
@@ -120,10 +187,45 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     return <For each={squares}>{(square) => renderSquare(square)}</For>;
   };
 
+  const renderAnimatingPiece = () => {
+    const animPiece = animatingPiece();
+    const offset = animationOffset();
+    if (!animPiece || !offset) return null;
+
+    const view = local.boardView();
+    const toCoords = squareToCoords(animPiece.to, view);
+
+    // Position using percentage of board (each square = 12.5%)
+    const squarePercent = 12.5;
+    const leftPercent = toCoords.x * squarePercent;
+    const topPercent = toCoords.y * squarePercent;
+    // Offset in percentage of element size (element is 1 square, so 100% = 1 square)
+    const offsetXPercent = offset.x * 100;
+    const offsetYPercent = offset.y * 100;
+
+    return (
+      <div
+        class={styles.animatingPiece}
+        style={{
+          left: `${leftPercent}%`,
+          top: `${topPercent}%`,
+          transform: `translate(${offsetXPercent}%, ${offsetYPercent}%)`,
+          transition:
+            offset.x === 0 && offset.y === 0
+              ? `transform ${ANIMATION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`
+              : 'none',
+        }}
+      >
+        <Piece type={animPiece.piece as PieceType} />
+      </div>
+    );
+  };
+
   return (
     <div class={styles.boardContainer} onContextMenu={(e) => e.preventDefault()}>
       <div class={styles.board}>
         {renderedSquares()}
+        {renderAnimatingPiece()}
         {renderDraggedPiece()}
       </div>
     </div>

@@ -173,6 +173,9 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
         error: engine.state.error,
       },
     },
+    timer: {
+      timeControl: timer.state.timeControl,
+    },
     multiplayer,
     actions: {
       jumpToPreviousMove: actions.jumpToPreviousMove,
