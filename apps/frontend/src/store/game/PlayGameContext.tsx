@@ -17,12 +17,6 @@ import type { PlayGameContextValue } from './types';
 const PlayGameContext = createContext<PlayGameContextValue>();
 
 // ============================================================================
-// Helper: Convert ms to seconds
-// ============================================================================
-
-const msToSeconds = (ms: number) => Math.floor(ms / 1000);
-
-// ============================================================================
 // Piece Values for Material Calculation
 // ============================================================================
 
@@ -56,7 +50,7 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
 
   multiplayer.on('game:started', ({ whiteTimeMs, blackTimeMs }) => {
     chess.setLifecycle('playing');
-    timer.sync(msToSeconds(whiteTimeMs), msToSeconds(blackTimeMs));
+    timer.sync(whiteTimeMs, blackTimeMs);
     timer.start(
       () => chess.state.currentTurn,
       () => {}
@@ -66,11 +60,11 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
   multiplayer.on('move:accepted', ({ fen, whiteTimeMs, blackTimeMs }) => {
     chess.confirmMove(
       fen,
-      whiteTimeMs ?? timer.state.whiteTime * 1000,
-      blackTimeMs ?? timer.state.blackTime * 1000
+      whiteTimeMs ?? timer.state.whiteTime,
+      blackTimeMs ?? timer.state.blackTime
     );
     if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
-      timer.sync(msToSeconds(whiteTimeMs), msToSeconds(blackTimeMs));
+      timer.sync(whiteTimeMs, blackTimeMs);
     }
   });
 
@@ -81,12 +75,12 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
   multiplayer.on('move:opponent', ({ fen, san, from, to, whiteTimeMs, blackTimeMs, isCheck }) => {
     chess.syncFromMultiplayer({ fen, san, from, to, whiteTimeMs, blackTimeMs, isCheck });
     if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
-      timer.sync(msToSeconds(whiteTimeMs), msToSeconds(blackTimeMs));
+      timer.sync(whiteTimeMs, blackTimeMs);
     }
   });
 
   multiplayer.on('time:update', ({ whiteTimeMs, blackTimeMs }) => {
-    timer.sync(msToSeconds(whiteTimeMs), msToSeconds(blackTimeMs));
+    timer.sync(whiteTimeMs, blackTimeMs);
   });
 
   multiplayer.on('game:ended', ({ reason, winner }) => {

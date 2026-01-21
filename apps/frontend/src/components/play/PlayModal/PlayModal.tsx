@@ -13,8 +13,18 @@ type MultiplayerMode = 'create' | 'join';
 // Time control options (in minutes)
 const TIME_OPTIONS = [1, 3, 5, 10, 15, 30];
 
-// Simplified time controls for human games (in minutes)
-const HUMAN_TIME_OPTIONS = [3, 5, 10, 15];
+// Time controls for human games with increments (minutes + seconds)
+const HUMAN_TIME_OPTIONS = [
+  { minutes: 1, increment: 0, label: '1+0' },
+  { minutes: 3, increment: 0, label: '3+0' },
+  { minutes: 3, increment: 2, label: '3+2' },
+  { minutes: 5, increment: 0, label: '5+0' },
+  { minutes: 5, increment: 3, label: '5+3' },
+  { minutes: 10, increment: 0, label: '10+0' },
+  { minutes: 10, increment: 5, label: '10+5' },
+  { minutes: 15, increment: 0, label: '15+0' },
+  { minutes: 15, increment: 10, label: '15+10' },
+];
 
 // Difficulty levels with labels and ELO values
 const DIFFICULTY_OPTIONS = [
@@ -49,7 +59,7 @@ const PlayModal: Component<PlayModalProps> = (props) => {
   const [opponentType, setOpponentType] = createSignal<OpponentType>('ai');
   const [multiplayerMode, setMultiplayerMode] = createSignal<MultiplayerMode>('create');
   const [timeMinutes, setTimeMinutes] = createSignal(safeTimeMinutes);
-  const [humanTimeMinutes, setHumanTimeMinutes] = createSignal(5);
+  const [humanTimeIndex, setHumanTimeIndex] = createSignal(3); // Default to 5+0
   const [difficultyLevel, setDifficultyLevel] = createSignal(safeDifficultyLevel);
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>(savedPrefs.lastPlayerColor);
   const [joinGameId, setJoinGameId] = createSignal('');
@@ -71,10 +81,12 @@ const PlayModal: Component<PlayModalProps> = (props) => {
         navigate(`/play/${gameId}`, { replace: true });
       } else {
         // Create new multiplayer game
+        const selectedTimeControl = HUMAN_TIME_OPTIONS[humanTimeIndex()];
         const multiplayerConfig: MultiplayerGameOptions = {
           side: localPlayerColor(),
           mode: 'play',
-          newTimeControl: humanTimeMinutes(),
+          newTimeControl: selectedTimeControl.minutes,
+          increment: selectedTimeControl.increment,
         };
 
         if (gameContext) {
@@ -220,19 +232,19 @@ const PlayModal: Component<PlayModalProps> = (props) => {
         </div>
       </Show>
 
-      {/* Human Create: Simplified time control buttons */}
+      {/* Human Create: Time control buttons with increments */}
       <Show when={opponentType() === 'human' && multiplayerMode() === 'create'}>
         <div class={styles.settingRow}>
           <label class={styles.label}>Time Control:</label>
-          <div class={styles.timeButtonGroup}>
+          <div class={styles.optionGrid}>
             <For each={HUMAN_TIME_OPTIONS}>
-              {(minutes) => (
+              {(option, index) => (
                 <button
-                  class={styles.timeButton}
-                  classList={{ [styles.timeButtonActive]: humanTimeMinutes() === minutes }}
-                  onClick={() => setHumanTimeMinutes(minutes)}
+                  class={styles.optionButton}
+                  classList={{ [styles.optionButtonActive]: humanTimeIndex() === index() }}
+                  onClick={() => setHumanTimeIndex(index())}
                 >
-                  {minutes} min
+                  {option.label}
                 </button>
               )}
             </For>
