@@ -71,6 +71,24 @@ export const getLegalMoves = (fen: string, square: Square): Square[] => {
   return legalMoves.map((move) => move.to as Square);
 };
 
+/**
+ * Get legal moves for a piece as if it were that piece's turn.
+ * Used for premove calculation when it's the opponent's turn.
+ * Flips the turn in the FEN to calculate what moves would be legal.
+ */
+export const getPremoveLegalMoves = (fen: string, square: Square): Square[] => {
+  // Flip the turn in the FEN
+  const parts = fen.split(' ');
+  parts[1] = parts[1] === 'w' ? 'b' : 'w';
+  // Clear en passant since it won't be valid after opponent moves
+  parts[3] = '-';
+  const flippedFen = parts.join(' ');
+
+  const chess = new Chess(flippedFen);
+  const legalMoves = chess.moves({ square, verbose: true });
+  return legalMoves.map((move) => move.to as Square);
+};
+
 // ============================================================================
 // Move Validation Functions
 // ============================================================================
