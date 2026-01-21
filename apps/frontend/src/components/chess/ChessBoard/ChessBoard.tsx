@@ -18,6 +18,7 @@ interface ChessBoardProps {
   checkedKingSquare: () => Square | null;
   boardView: () => Side;
   activePieceColor: () => Side;
+  premoveSquares: () => { from: Square; to: Square } | null;
 }
 
 const ChessBoard: Component<ChessBoardProps> = (props) => {
@@ -34,6 +35,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     'checkedKingSquare',
     'boardView',
     'activePieceColor',
+    'premoveSquares',
   ]);
 
   const highlightSet = createMemo(() => new Set(local.highlightedMoves()));
@@ -61,6 +63,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const last = local.lastMove();
     const checkedSquare = local.checkedKingSquare();
     const squares = memoizedBoardSquares();
+    const premove = local.premoveSquares();
 
     const renderSquare = (props: BoardSquare): JSX.Element => {
       const file = props.square[0];
@@ -75,6 +78,8 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
         !!local.activePieceColor() &&
         !isPieceSide(props.piece, local.activePieceColor());
       const isCheckedKing = checkedSquare === props.square;
+      const isPremove =
+        premove !== null && (premove.from === props.square || premove.to === props.square);
       const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
       const view = local.boardView();
       const showFile = (view === 'w' && rank === '1') || (view === 'b' && rank === '8');
@@ -90,6 +95,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
             [styles.selected]: isSelected,
             [styles.lastMove]: isLastMove,
             [styles.checkedKing]: isCheckedKing,
+            [styles.premove]: isPremove,
           }}
           onClick={() => local.onSquareClick(props.square)}
           onMouseUp={() => local.onSquareMouseUp(props.square)}

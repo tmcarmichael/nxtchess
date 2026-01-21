@@ -119,6 +119,30 @@
   transition: background-color var(--transition-base);
 }
 
+/* Premove highlight */
+.premove {
+  position: relative;
+}
+
+.premove::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--board-premove);
+  pointer-events: none;
+  animation: premovePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes premovePulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* Check indicator on king's square */
 .checkedKing {
   position: relative;

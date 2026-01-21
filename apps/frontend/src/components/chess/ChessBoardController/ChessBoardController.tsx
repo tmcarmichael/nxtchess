@@ -11,7 +11,11 @@ import {
 } from 'solid-js';
 import { audioService } from '../../../services/audio/AudioService';
 import { getEvaluation } from '../../../services/engine/evalEngineWorker';
-import { getLegalMoves, prepareMove } from '../../../services/game/chessGameService';
+import {
+  getLegalMoves,
+  getPremoveLegalMoves,
+  prepareMove,
+} from '../../../services/game/chessGameService';
 import { useKeyboardNavigation } from '../../../shared/hooks/useKeyboardNavigation';
 import { useGameContext } from '../../../store/game/useGameContext';
 import { type Square, type PromotionPiece } from '../../../types/chess';
@@ -44,6 +48,17 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   } | null>(null);
   const [evalScore, setEvalScore] = createSignal<number | null>(null);
   const [showEndModal, setShowEndModal] = createSignal(false);
+  // Premove state
+  const [premove, setPremove] = createSignal<{
+    from: Square;
+    to: Square;
+    promotion?: PromotionPiece;
+  } | null>(null);
+  const [pendingPremovePromotion, setPendingPremovePromotion] = createSignal<{
+    from: Square;
+    to: Square;
+    color: Side;
+  } | null>(null);
   // Track if a drag operation just ended to prevent click from interfering
   let justDragged = false;
 
@@ -124,6 +139,32 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     )
   );
 
+  // Execute premove when it becomes player's turn
+  createEffect(
+    on(
+      () => [chess.derived.isPlayerTurn(), chess.state.fen] as const,
+      ([isPlayerTurn], prev) => {
+        // Only execute when turn changes to player's turn AND a premove exists
+        if (isPlayerTurn && prev && !prev[0] && premove()) {
+          queueMicrotask(() => tryExecutePremove());
+        }
+      }
+    )
+  );
+
+  // Clear premove when game ends, viewing history, or game lifecycle changes
+  createEffect(
+    on(
+      () =>
+        [chess.state.isGameOver, chess.derived.isViewingHistory(), chess.state.lifecycle] as const,
+      ([isGameOver, isViewingHistory, lifecycle]) => {
+        if (isGameOver || isViewingHistory || lifecycle !== 'playing') {
+          clearPremove();
+        }
+      }
+    )
+  );
+
   const resetViewIfNeeded = () => {
     if (chess.derived.isViewingHistory()) {
       // Jump to latest move to reset view
@@ -148,12 +189,17 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     const currentSelection = selectedSquare();
 
     if (!currentSelection) {
+      // Clear any existing premove when selecting a new piece
+      clearPremove();
       // Allow selecting player's pieces even during opponent's turn
       const piece = chess.derived.currentBoard().find((sq) => sq.square === square)?.piece;
       if (piece && isPlayerPiece(square) && !chess.state.isGameOver && !engine.state.isThinking) {
         selectSquare(square);
-        // Show legal moves (will be empty if not player's turn)
-        setHighlightedMoves(getLegalMoves(chess.state.fen, square));
+        // Use premove-aware moves when it's not player's turn
+        const moves = chess.derived.isPlayerTurn()
+          ? getLegalMoves(chess.state.fen, square)
+          : getPremoveLegalMoves(chess.state.fen, square);
+        setHighlightedMoves(moves);
       }
       return;
     }
@@ -161,6 +207,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     // Clicked on the same square - deselect (only for pure clicks, not drag-drop)
     if (square === currentSelection) {
       clearDraggingState();
+      clearPremove();
       return;
     }
 
@@ -168,10 +215,17 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     if (canMove() && highlightedMoves().includes(square)) {
       executeMove(currentSelection, square);
       clearDraggingState();
+    } else if (canSetPremove(currentSelection) && highlightedMoves().includes(square)) {
+      // Set premove during opponent's turn
+      setPremoveWithPromotion(currentSelection, square);
     } else if (isPlayerPiece(square) && !chess.state.isGameOver) {
       // Clicked on another player piece - select it instead
+      clearPremove();
       selectSquare(square);
-      setHighlightedMoves(getLegalMoves(chess.state.fen, square));
+      const moves = chess.derived.isPlayerTurn()
+        ? getLegalMoves(chess.state.fen, square)
+        : getPremoveLegalMoves(chess.state.fen, square);
+      setHighlightedMoves(moves);
     }
     // Keep selection if clicked elsewhere during opponent's turn
   };
@@ -182,6 +236,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     // Don't allow picking up during game over or when engine is thinking
     if (chess.state.isGameOver || engine.state.isThinking) return;
 
+    // Clear any existing premove when starting a new drag
+    clearPremove();
+
     // Initialize audio on first interaction
     audioService.init();
 
@@ -191,8 +248,11 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     resetViewIfNeeded();
     setDraggedPiece({ square, piece });
     setCursorPosition({ x: event.clientX, y: event.clientY });
-    // Show legal moves (will be empty if not player's turn, but that's fine)
-    setHighlightedMoves(getLegalMoves(chess.state.fen, square));
+    // Use premove-aware moves when it's not player's turn
+    const moves = chess.derived.isPlayerTurn()
+      ? getLegalMoves(chess.state.fen, square)
+      : getPremoveLegalMoves(chess.state.fen, square);
+    setHighlightedMoves(moves);
     setSelectedSquare(square);
     event.dataTransfer?.setDragImage(new Image(), 0, 0);
   };
@@ -227,18 +287,17 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       return;
     }
 
-    // Check if we should keep holding (multiplayer, opponent's turn, dropped elsewhere)
-    const isMultiplayerWaitingForOpponent =
-      chess.state.lifecycle === 'playing' &&
-      chess.state.opponentType === 'human' &&
-      !chess.derived.isPlayerTurn();
-
-    if (isMultiplayerWaitingForOpponent && targetSquare !== dragState.square) {
-      // Keep holding - waiting for opponent's move in multiplayer
+    // Set premove during opponent's turn
+    if (
+      canSetPremove(dragState.square) &&
+      highlightedMoves().includes(targetSquare) &&
+      targetSquare !== dragState.square
+    ) {
+      setPremoveWithPromotion(dragState.square, targetSquare);
       return;
     }
 
-    // All other cases - clear drag state
+    // Dropped on original square or invalid target - clear
     clearDraggingState();
   };
 
@@ -272,6 +331,58 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     return !!piece && piece[0] === chess.state.playerColor;
   };
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Premove Functions
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const clearPremove = () => {
+    batch(() => {
+      setPremove(null);
+      setPendingPremovePromotion(null);
+    });
+  };
+
+  const canSetPremove = (from: Square): boolean => {
+    if (chess.derived.isViewingHistory()) return false;
+    if (chess.derived.isPlayerTurn()) return false; // Use normal move instead
+    if (chess.state.isGameOver || chess.state.lifecycle !== 'playing') return false;
+    if (!isPlayerPiece(from)) return false;
+    return true;
+  };
+
+  const setPremoveWithPromotion = (from: Square, to: Square) => {
+    const board = chess.derived.currentBoard();
+    const piece = board.find((sq) => sq.square === from)?.piece;
+
+    // Check if this is a pawn promotion move
+    if (piece && piece.endsWith('P')) {
+      const rank = parseInt(to[1], 10);
+      const isPromotion =
+        (piece.startsWith('w') && rank === 8) || (piece.startsWith('b') && rank === 1);
+      if (isPromotion) {
+        // Show promotion modal for premove
+        setPendingPremovePromotion({ from, to, color: piece[0] as Side });
+        clearDraggingState();
+        return;
+      }
+    }
+
+    // Regular premove (no promotion)
+    setPremove({ from, to });
+    clearDraggingState();
+  };
+
+  const tryExecutePremove = () => {
+    const pm = premove();
+    if (!pm) return;
+
+    const legalMoves = getLegalMoves(chess.state.fen, pm.from);
+    if (legalMoves.includes(pm.to)) {
+      executeMove(pm.from, pm.to, pm.promotion);
+    }
+    clearPremove(); // Always clear after attempt
+  };
+
   const selectSquare = (square: Square) => {
     batch(() => {
       setSelectedSquare(square);
@@ -296,6 +407,14 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     const promo = pendingPromotion();
     if (!promo) return;
     finalizePromotion(promo.from, promo.to, pieceType);
+  };
+
+  const handlePremovePromotionChoice = (pieceType: PromotionPiece) => {
+    const promo = pendingPremovePromotion();
+    if (!promo) return;
+    setPremove({ from: promo.from, to: promo.to, promotion: pieceType });
+    setPendingPremovePromotion(null);
+    clearDraggingState();
   };
 
   const handleCloseEndGame = () => {
@@ -324,6 +443,10 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
             checkedKingSquare={() => chess.state.checkedKingSquare}
             boardView={() => ui.state.boardView}
             activePieceColor={() => chess.state.currentTurn}
+            premoveSquares={() => {
+              const pm = premove();
+              return pm ? { from: pm.from, to: pm.to } : null;
+            }}
           />
           <ChessEngineOverlay
             isLoading={derived.isEngineLoading()}
@@ -380,6 +503,14 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
           color={pendingPromotion()!.color}
           onPromote={handlePromotionChoice}
           onClose={() => setPendingPromotion(null)}
+        />
+      </Show>
+
+      <Show when={pendingPremovePromotion()}>
+        <ChessPromotionModal
+          color={pendingPremovePromotion()!.color}
+          onPromote={handlePremovePromotionChoice}
+          onClose={() => setPendingPremovePromotion(null)}
         />
       </Show>
     </div>
