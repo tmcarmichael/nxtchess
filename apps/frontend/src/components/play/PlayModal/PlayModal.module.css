@@ -308,37 +308,33 @@
 .opponentSelector {
   display: flex;
   justify-content: center;
-  gap: var(--space-xs);
-  background: var(--surface-1);
-  padding: var(--space-xs);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
+  gap: var(--space-sm);
 }
 
 .opponentButton {
-  flex: 1;
-  max-width: 140px;
+  min-width: 100px;
   padding: var(--space-sm) var(--space-md);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 500;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   color: var(--text-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .opponentButton:hover:not(.opponentButtonActive) {
-  background: var(--surface-3);
+  background: var(--surface-4);
   color: var(--text-secondary);
+  border-color: var(--border-default);
 }
 
 .opponentButtonActive {
   background: var(--accent-subtle);
+  border-color: var(--accent-muted);
   color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -379,7 +375,7 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Time Control Button Group
+   Time Control Button Group (Human games)
    ───────────────────────────────────────────────────────────────────────────── */
 
 .timeButtonGroup {
@@ -410,6 +406,43 @@
 }
 
 .timeButtonActive {
+  background: var(--accent-subtle);
+  border-color: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Option Grid (Time Control & Difficulty for AI games)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.optionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.optionButton {
+  padding: var(--space-sm) var(--space-xs);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.optionButton:hover:not(.optionButtonActive) {
+  background: var(--surface-4);
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+}
+
+.optionButtonActive {
   background: var(--accent-subtle);
   border-color: var(--accent-muted);
   color: var(--text-primary);

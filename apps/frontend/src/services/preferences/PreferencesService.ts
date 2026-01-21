@@ -3,15 +3,15 @@ import type { Side } from '../../types/game';
 const STORAGE_KEY = 'nxtchess:prefs';
 
 export interface GamePreferences {
-  lastTimeIndex: number;
-  lastDifficultyIndex: number;
+  lastTimeMinutes: number;
+  lastDifficultyLevel: number;
   lastPlayerColor: Side;
   boardFlipped: boolean;
 }
 
 const DEFAULT_PREFERENCES: GamePreferences = {
-  lastTimeIndex: 3, // 5 minutes (index of 5 in TIME_VALUES_MINUTES)
-  lastDifficultyIndex: 3, // Level 4
+  lastTimeMinutes: 5,
+  lastDifficultyLevel: 4, // Medium
   lastPlayerColor: 'w',
   boardFlipped: false,
 };
