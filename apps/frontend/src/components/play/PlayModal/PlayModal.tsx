@@ -18,7 +18,7 @@ const HUMAN_TIME_OPTIONS = [3, 5, 10, 15];
 
 // Difficulty levels with labels and ELO values
 const DIFFICULTY_OPTIONS = [
-  { level: 1, label: 'Beginner', elo: 400 },
+  { level: 1, label: 'Beginner', elo: 250 },
   { level: 2, label: 'Easy', elo: 500 },
   { level: 4, label: 'Medium', elo: 900 },
   { level: 6, label: 'Hard', elo: 1100 },

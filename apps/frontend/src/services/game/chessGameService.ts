@@ -75,18 +75,181 @@ export const getLegalMoves = (fen: string, square: Square): Square[] => {
  * Get legal moves for a piece as if it were that piece's turn.
  * Used for premove calculation when it's the opponent's turn.
  * Flips the turn in the FEN to calculate what moves would be legal.
+ * Also includes:
+ * - Squares occupied by own pieces (for potential recaptures)
+ * - X-ray squares for sliding pieces (squares behind one blocking piece)
  */
 export const getPremoveLegalMoves = (fen: string, square: Square): Square[] => {
   // Flip the turn in the FEN
   const parts = fen.split(' ');
-  parts[1] = parts[1] === 'w' ? 'b' : 'w';
+  const pieceColor = parts[1] === 'w' ? 'b' : 'w'; // The color that will premove
+  parts[1] = pieceColor;
   // Clear en passant since it won't be valid after opponent moves
   parts[3] = '-';
   const flippedFen = parts.join(' ');
 
   const chess = new Chess(flippedFen);
   const legalMoves = chess.moves({ square, verbose: true });
-  return legalMoves.map((move) => move.to as Square);
+  const legalSquares = legalMoves.map((move) => move.to as Square);
+
+  // Also add squares occupied by own pieces that this piece could theoretically reach
+  // This allows premoves to target squares where your own piece might be captured
+  const ownPieceSquares = getOwnPieceSquaresInRange(flippedFen, square, pieceColor);
+
+  // Add X-ray squares for sliding pieces (queen, rook, bishop)
+  // This allows premoves through one blocking piece
+  const xraySquares = getXraySquares(flippedFen, square);
+
+  // Combine and dedupe
+  const allSquares = new Set([...legalSquares, ...ownPieceSquares, ...xraySquares]);
+  return Array.from(allSquares);
+};
+
+/**
+ * Get X-ray squares for sliding pieces (queen, rook, bishop).
+ * These are squares that the piece could reach if one blocking piece moved.
+ * Allows premoves through a single blocker.
+ */
+const getXraySquares = (fen: string, square: Square): Square[] => {
+  const chess = new Chess(fen);
+  const piece = chess.get(square);
+  if (!piece) return [];
+
+  // Only sliding pieces have X-ray
+  if (!['q', 'r', 'b'].includes(piece.type)) return [];
+
+  const board = chess.board();
+  const xraySquares: Square[] = [];
+
+  const file = square.charCodeAt(0) - 'a'.charCodeAt(0);
+  const rank = 8 - parseInt(square[1], 10);
+
+  // Define ray directions based on piece type
+  const directions: [number, number][] = [];
+  if (piece.type === 'r' || piece.type === 'q') {
+    directions.push([0, 1], [0, -1], [1, 0], [-1, 0]); // Straight lines
+  }
+  if (piece.type === 'b' || piece.type === 'q') {
+    directions.push([1, 1], [1, -1], [-1, 1], [-1, -1]); // Diagonals
+  }
+
+  for (const [dRow, dCol] of directions) {
+    let blockerFound = false;
+    let currentRow = rank + dRow;
+    let currentCol = file + dCol;
+
+    while (currentRow >= 0 && currentRow < 8 && currentCol >= 0 && currentCol < 8) {
+      const cell = board[currentRow][currentCol];
+      const targetFile = String.fromCharCode('a'.charCodeAt(0) + currentCol);
+      const targetRank = 8 - currentRow;
+      const targetSquare = `${targetFile}${targetRank}` as Square;
+
+      if (cell) {
+        if (!blockerFound) {
+          // First piece encountered - this is the blocker
+          blockerFound = true;
+        } else {
+          // Second piece encountered - this is an X-ray target
+          xraySquares.push(targetSquare);
+          break; // Stop after finding first X-ray target in this direction
+        }
+      } else if (blockerFound) {
+        // Empty square after blocker - valid X-ray target
+        xraySquares.push(targetSquare);
+      }
+
+      currentRow += dRow;
+      currentCol += dCol;
+    }
+  }
+
+  return xraySquares;
+};
+
+/**
+ * Get squares occupied by own pieces that the piece at `square` could theoretically move to.
+ * Used for premove targeting - allows recapturing on squares where your piece might be taken.
+ */
+const getOwnPieceSquaresInRange = (fen: string, square: Square, pieceColor: Side): Square[] => {
+  const chess = new Chess(fen);
+  const piece = chess.get(square);
+  if (!piece) return [];
+
+  const board = chess.board();
+  const ownPieceSquares: Square[] = [];
+
+  // Find all squares with own pieces
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const cell = board[row][col];
+      if (cell && cell.color === pieceColor) {
+        const file = String.fromCharCode('a'.charCodeAt(0) + col);
+        const rank = 8 - row;
+        const targetSquare = `${file}${rank}` as Square;
+
+        // Skip the source square itself
+        if (targetSquare === square) continue;
+
+        // Check if the piece could theoretically reach this square
+        if (canPieceReach(piece.type, square, targetSquare, pieceColor, board)) {
+          ownPieceSquares.push(targetSquare);
+        }
+      }
+    }
+  }
+
+  return ownPieceSquares;
+};
+
+/**
+ * Check if a piece type can theoretically reach from source to target.
+ * This is a simplified check for premove purposes - doesn't validate blocking pieces
+ * since those might be captured/moved by the time the premove executes.
+ */
+const canPieceReach = (
+  pieceType: string,
+  from: Square,
+  to: Square,
+  color: Side,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _board: any[][]
+): boolean => {
+  const fromFile = from.charCodeAt(0) - 'a'.charCodeAt(0);
+  const fromRank = parseInt(from[1], 10) - 1;
+  const toFile = to.charCodeAt(0) - 'a'.charCodeAt(0);
+  const toRank = parseInt(to[1], 10) - 1;
+
+  const fileDiff = Math.abs(toFile - fromFile);
+  const rankDiff = Math.abs(toRank - fromRank);
+
+  switch (pieceType) {
+    case 'p': {
+      // Pawns can only capture diagonally
+      const direction = color === 'w' ? 1 : -1;
+      const rankMove = toRank - fromRank;
+      return fileDiff === 1 && rankMove === direction;
+    }
+    case 'n':
+      // Knight: L-shape
+      return (fileDiff === 2 && rankDiff === 1) || (fileDiff === 1 && rankDiff === 2);
+    case 'b':
+      // Bishop: diagonal
+      return fileDiff === rankDiff && fileDiff > 0;
+    case 'r':
+      // Rook: straight lines
+      return (fileDiff === 0 || rankDiff === 0) && (fileDiff > 0 || rankDiff > 0);
+    case 'q':
+      // Queen: diagonal or straight
+      return (
+        (fileDiff === rankDiff && fileDiff > 0) ||
+        ((fileDiff === 0 || rankDiff === 0) && (fileDiff > 0 || rankDiff > 0))
+      );
+    case 'k':
+      // King: one square in any direction
+      return fileDiff <= 1 && rankDiff <= 1 && (fileDiff > 0 || rankDiff > 0);
+    default:
+      return false;
+  }
 };
 
 // ============================================================================
