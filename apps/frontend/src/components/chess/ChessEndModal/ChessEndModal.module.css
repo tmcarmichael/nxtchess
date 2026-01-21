@@ -146,7 +146,8 @@
     color 0.2s ease,
     transform 0.2s ease;
 }
-.closeButton:hover {
+.closeButton:hover,
+.closeButton.escapeActive {
   background: rgba(255, 255, 255, 0.15);
   color: #d4d4d4;
 }

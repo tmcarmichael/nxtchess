@@ -1,4 +1,4 @@
-import { splitProps, type Component } from 'solid-js';
+import { splitProps, type Component, onMount, onCleanup } from 'solid-js';
 import styles from './PlayResignModal.module.css';
 
 interface ResignModalProps {
@@ -9,6 +9,21 @@ interface ResignModalProps {
 
 const PlayResignModal: Component<ResignModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose', 'onReplay', 'onHome']);
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      local.onClose();
+    }
+  };
+
+  onMount(() => {
+    document.addEventListener('keydown', handleKeyDown);
+  });
+
+  onCleanup(() => {
+    document.removeEventListener('keydown', handleKeyDown);
+  });
+
   return (
     <div class={styles.modalOverlay} onClick={local.onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>

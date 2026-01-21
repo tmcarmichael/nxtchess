@@ -78,7 +78,8 @@
     transform var(--transition-fast);
 }
 
-.closeButton:hover {
+.closeButton:hover,
+.closeButton.escapeActive {
   background: var(--surface-4);
   border-color: var(--border-strong);
   color: var(--text-primary);
