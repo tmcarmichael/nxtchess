@@ -10,6 +10,37 @@ import type { UIStore } from '../stores/createUIStore';
 import type { SinglePlayerActions, CoreActions } from '../types';
 
 // ============================================================================
+// AI Move Delay Configuration
+// ============================================================================
+
+// Returns random delay in ms based on time control (in minutes)
+// Shorter games = faster responses, longer games = more natural "thinking" time
+const getAIMoveDelay = (timeControl: number): { min: number; max: number } => {
+  switch (timeControl) {
+    case 1:
+      return { min: 0, max: 0 }; // No delay for bullet
+    case 3:
+      return { min: 0, max: 500 };
+    case 5:
+      return { min: 500, max: 1000 };
+    case 10:
+      return { min: 500, max: 1500 };
+    case 15:
+      return { min: 1000, max: 2000 };
+    case 30:
+      return { min: 1000, max: 2000 };
+    default:
+      return { min: 500, max: 1000 }; // Default for unknown time controls
+  }
+};
+
+const randomDelay = (min: number, max: number): Promise<void> => {
+  if (max <= 0) return Promise.resolve();
+  const delay = min + Math.random() * (max - min);
+  return new Promise((resolve) => setTimeout(resolve, delay));
+};
+
+// ============================================================================
 // Single Player Stores Interface
 // ============================================================================
 
@@ -56,6 +87,17 @@ export const createSinglePlayerActions = (
 
       // Guard against stale response
       if (chess.state.fen !== fenAtStart) return;
+
+      // Add natural delay based on time control (only in play mode)
+      if (chess.state.mode === 'play') {
+        const { min, max } = getAIMoveDelay(timer.state.timeControl);
+        await randomDelay(min, max);
+
+        // Re-check game state after delay
+        if (chess.state.fen !== fenAtStart || !canMakeMove(chess.state.lifecycle)) {
+          return;
+        }
+      }
 
       chess.applyMove(
         move.from as Square,

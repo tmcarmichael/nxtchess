@@ -1,10 +1,8 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, splitProps, type Component, Show, For } from 'solid-js';
 import { preferences } from '../../../services/preferences/PreferencesService';
-import { TIME_VALUES_MINUTES } from '../../../shared/config/constants';
 import { usePlayGameOptional } from '../../../store/game/PlayGameContext';
 import { type Side, type StartGameOptions, type MultiplayerGameOptions } from '../../../types/game';
-import ChessDifficultySlider from '../../chess/ChessDifficultySlider/ChessDifficultySlider';
 import ChessGameModal from '../../chess/ChessGameModal/ChessGameModal';
 import ChessSideSelector from '../../chess/ChessSideSelector/ChessSideSelector';
 import styles from './PlayModal.module.css';
@@ -12,8 +10,21 @@ import styles from './PlayModal.module.css';
 type OpponentType = 'ai' | 'human';
 type MultiplayerMode = 'create' | 'join';
 
+// Time control options (in minutes)
+const TIME_OPTIONS = [1, 3, 5, 10, 15, 30];
+
 // Simplified time controls for human games (in minutes)
 const HUMAN_TIME_OPTIONS = [3, 5, 10, 15];
+
+// Difficulty levels with labels and ELO values
+const DIFFICULTY_OPTIONS = [
+  { level: 1, label: 'Beginner', elo: 400 },
+  { level: 2, label: 'Easy', elo: 500 },
+  { level: 4, label: 'Medium', elo: 900 },
+  { level: 6, label: 'Hard', elo: 1100 },
+  { level: 8, label: 'Expert', elo: 1700 },
+  { level: 10, label: 'Grandmaster', elo: 2400 },
+];
 
 interface PlayModalProps {
   onClose: () => void;
@@ -24,19 +35,22 @@ const PlayModal: Component<PlayModalProps> = (props) => {
   const gameContext = usePlayGameOptional();
   const navigate = useNavigate();
 
-  // Load saved preferences with bounds validation
+  // Load saved preferences with validation
   const savedPrefs = preferences.get();
-  const safeTimeIndex = Math.min(
-    Math.max(0, savedPrefs.lastTimeIndex),
-    TIME_VALUES_MINUTES.length - 1
-  );
-  const safeDifficultyIndex = Math.min(Math.max(0, savedPrefs.lastDifficultyIndex), 7);
+  const safeTimeMinutes = TIME_OPTIONS.includes(savedPrefs.lastTimeMinutes)
+    ? savedPrefs.lastTimeMinutes
+    : 5;
+  const safeDifficultyLevel = DIFFICULTY_OPTIONS.find(
+    (d) => d.level === savedPrefs.lastDifficultyLevel
+  )
+    ? savedPrefs.lastDifficultyLevel
+    : 4;
 
   const [opponentType, setOpponentType] = createSignal<OpponentType>('ai');
   const [multiplayerMode, setMultiplayerMode] = createSignal<MultiplayerMode>('create');
-  const [localTimeIndex, setLocalTimeIndex] = createSignal(safeTimeIndex);
+  const [timeMinutes, setTimeMinutes] = createSignal(safeTimeMinutes);
   const [humanTimeMinutes, setHumanTimeMinutes] = createSignal(5);
-  const [localDifficultyIndex, setLocalDifficultyIndex] = createSignal(safeDifficultyIndex);
+  const [difficultyLevel, setDifficultyLevel] = createSignal(safeDifficultyLevel);
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>(savedPrefs.lastPlayerColor);
   const [joinGameId, setJoinGameId] = createSignal('');
   const [joinError, setJoinError] = createSignal<string | null>(null);
@@ -74,14 +88,14 @@ const PlayModal: Component<PlayModalProps> = (props) => {
       }
     } else {
       // AI game
-      const selectedTime = TIME_VALUES_MINUTES[localTimeIndex()];
-      const selectedLevel = localDifficultyIndex() + 1;
+      const selectedTime = timeMinutes();
+      const selectedLevel = difficultyLevel();
       const chosenSide = localPlayerColor();
 
       // Save preferences for next session
       preferences.set({
-        lastTimeIndex: localTimeIndex(),
-        lastDifficultyIndex: localDifficultyIndex(),
+        lastTimeMinutes: selectedTime,
+        lastDifficultyLevel: selectedLevel,
         lastPlayerColor: chosenSide,
       });
 
@@ -186,22 +200,22 @@ const PlayModal: Component<PlayModalProps> = (props) => {
         </div>
       </Show>
 
-      {/* AI: Time Control slider */}
+      {/* AI: Time Control buttons */}
       <Show when={opponentType() === 'ai'}>
         <div class={styles.settingRow}>
-          <label class={styles.rangeSliderLabel}>
-            Time Control:&nbsp;&nbsp;&nbsp;{TIME_VALUES_MINUTES[localTimeIndex()]} min
-          </label>
-          <div class={styles.rangeSliderContainer}>
-            <input
-              class={styles.rangeSlider}
-              type="range"
-              min="0"
-              max={TIME_VALUES_MINUTES.length - 1}
-              step="1"
-              value={localTimeIndex()}
-              onInput={(e) => setLocalTimeIndex(+e.currentTarget.value)}
-            />
+          <label class={styles.label}>Time Control:</label>
+          <div class={styles.optionGrid}>
+            <For each={TIME_OPTIONS}>
+              {(minutes) => (
+                <button
+                  class={styles.optionButton}
+                  classList={{ [styles.optionButtonActive]: timeMinutes() === minutes }}
+                  onClick={() => setTimeMinutes(minutes)}
+                >
+                  {minutes} min
+                </button>
+              )}
+            </For>
           </div>
         </div>
       </Show>
@@ -226,12 +240,24 @@ const PlayModal: Component<PlayModalProps> = (props) => {
         </div>
       </Show>
 
-      {/* AI: Difficulty slider */}
+      {/* AI: Difficulty buttons */}
       <Show when={opponentType() === 'ai'}>
-        <ChessDifficultySlider
-          difficultyIndex={localDifficultyIndex}
-          onDifficultyChange={setLocalDifficultyIndex}
-        />
+        <div class={styles.settingRow}>
+          <label class={styles.label}>Difficulty:</label>
+          <div class={styles.optionGrid}>
+            <For each={DIFFICULTY_OPTIONS}>
+              {(option) => (
+                <button
+                  class={styles.optionButton}
+                  classList={{ [styles.optionButtonActive]: difficultyLevel() === option.level }}
+                  onClick={() => setDifficultyLevel(option.level)}
+                >
+                  {option.label}
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
       </Show>
 
       {/* Create game: Side Selector */}
