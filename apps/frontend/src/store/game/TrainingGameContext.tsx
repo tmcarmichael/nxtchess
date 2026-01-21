@@ -99,6 +99,9 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
         error: engine.state.error,
       },
     },
+    timer: {
+      timeControl: timer.state.timeControl,
+    },
     multiplayer: null, // Training mode has no multiplayer
     actions: {
       jumpToPreviousMove: actions.jumpToPreviousMove,

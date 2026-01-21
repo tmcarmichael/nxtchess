@@ -21,23 +21,32 @@ const PlayContainerInner: ParentComponent = () => {
   const [showPlayModal, setShowPlayModal] = createSignal(false);
 
   // Handle game start from navigation state (e.g., from header modal)
-  // Or show play modal if no game is active
+  // Use effect to react to navigation state changes (not just onMount)
+  createEffect(
+    on(
+      () => location.state,
+      (state) => {
+        // If navigation state requests a new game, start it (even if a game is in progress)
+        if (state?.quickPlay) {
+          actions.startNewGame(state.quickPlay);
+          // Clear the state to prevent re-triggering
+          navigate('/play', { replace: true, state: {} });
+          return;
+        }
+
+        if (state?.multiplayerCreate) {
+          actions.startMultiplayerGame(state.multiplayerCreate);
+          // Clear the state to prevent re-triggering
+          navigate('/play', { replace: true, state: {} });
+        }
+      }
+    )
+  );
+
+  // Show play modal if no game is active on initial mount
   onMount(() => {
-    const state = location.state;
     const gameIdInUrl = params.gameId;
-
-    if (chess.state.lifecycle !== 'idle') return;
-
-    if (state?.quickPlay) {
-      actions.startNewGame(state.quickPlay);
-      // Clear the state to prevent re-triggering
-      navigate('/play', { replace: true, state: {} });
-    } else if (state?.multiplayerCreate) {
-      actions.startMultiplayerGame(state.multiplayerCreate);
-      // Clear the state to prevent re-triggering
-      navigate('/play', { replace: true, state: {} });
-    } else if (!gameIdInUrl) {
-      // No game active and no game to join - show the play modal
+    if (chess.state.lifecycle === 'idle' && !gameIdInUrl) {
       setShowPlayModal(true);
     }
   });
