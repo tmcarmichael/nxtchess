@@ -79,7 +79,8 @@
     transform var(--transition-fast);
 }
 
-.closeButton:hover {
+.closeButton:hover,
+.closeButton.escapeActive {
   background: var(--surface-4);
   color: var(--text-primary);
   transform: rotate(90deg);

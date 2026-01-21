@@ -109,7 +109,8 @@
 }
 
 .closeButton:hover,
-.closeButton:focus {
+.closeButton:focus,
+.closeButton.escapeActive {
   color: var(--text-primary);
   background: var(--surface-4);
   transform: rotate(90deg);

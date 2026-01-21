@@ -1,4 +1,4 @@
-import { splitProps, type Component, Show } from 'solid-js';
+import { splitProps, type Component, Show, onMount, onCleanup } from 'solid-js';
 import { useGameContext } from '../../../store/game/useGameContext';
 import styles from './ChessEndModal.module.css';
 import type { GameOverReason, GameWinner } from '../../../types/game';
@@ -63,6 +63,29 @@ const getGameOverInfoPlay = (reason: ExtendedGameOverReason, winner: GameWinner)
 const ChessEndModal: Component<ChessEndModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose', 'onPlayAgain', 'gameOverReason', 'gameWinner']);
   const { chess } = useGameContext();
+  // eslint-disable-next-line no-undef
+  let closeButtonRef: HTMLButtonElement | undefined;
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      if (closeButtonRef) {
+        closeButtonRef.classList.add(styles.escapeActive);
+        setTimeout(() => {
+          local.onClose();
+        }, 150);
+      } else {
+        local.onClose();
+      }
+    }
+  };
+
+  onMount(() => {
+    document.addEventListener('keydown', handleKeyDown);
+  });
+
+  onCleanup(() => {
+    document.removeEventListener('keydown', handleKeyDown);
+  });
 
   const isMultiplayer = () => chess.state.opponentType === 'human';
 
@@ -87,7 +110,12 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
   return (
     <div class={styles.modalOverlay} onClick={local.onClose}>
       <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <button class={styles.closeButton} onClick={local.onClose} aria-label="Close">
+        <button
+          ref={closeButtonRef}
+          class={styles.closeButton}
+          onClick={local.onClose}
+          aria-label="Close"
+        >
           <span class={styles.closeIcon}>&times;</span>
         </button>
         <Show when={playerResult}>
