@@ -70,3 +70,19 @@
   font-size: 0.9rem;
   text-align: center;
 }
+
+.usernameSetupLoading {
+  font-size: 1rem;
+  color: #ccc;
+  text-align: center;
+}
+
+.usernameSetupButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.usernameSetupInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

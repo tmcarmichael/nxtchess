@@ -10,10 +10,24 @@
   color: #c0c0c0c3;
 }
 
+.userProfileHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.userProfileIcon {
+  width: 4rem;
+  height: 4rem;
+  object-fit: contain;
+}
+
 .userProfileTitle {
   user-select: text;
   font-size: 1.8rem;
-  margin-bottom: 1.5rem;
+  margin: 0;
   font-weight: 600;
 }
 

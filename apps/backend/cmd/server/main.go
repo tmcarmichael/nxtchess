@@ -95,6 +95,7 @@ func main() {
 		pr.Get("/profile/{username}", controllers.UserProfileHandler)
 		pr.Get("/check-username", controllers.CheckUsernameHandler)
 		pr.Post("/set-username", controllers.SetUsernameHandler)
+		pr.Post("/set-profile-icon", controllers.SetProfileIconHandler)
 	})
 
 	// Apply CORS middleware (outermost layer)

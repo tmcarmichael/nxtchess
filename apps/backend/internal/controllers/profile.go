@@ -32,8 +32,9 @@ func UserProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := models.PublicProfile{
-		Username: user.Username,
-		Rating:   user.Rating,
+		Username:    user.Username,
+		Rating:      user.Rating,
+		ProfileIcon: user.ProfileIcon,
 	}
 
 	httpx.WriteJSON(w, http.StatusOK, resp)
@@ -58,10 +59,18 @@ func CheckUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type checkResp struct {
-		Username string `json:"username"`
+	profileIcon, err := database.GetProfileIcon(userID)
+	if err != nil {
+		logger.Error("Failed to get profile icon", logger.F("userId", userID, "error", err.Error()))
+		httpx.WriteJSONError(w, http.StatusInternalServerError, "Database error")
+		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, checkResp{Username: username})
+
+	type checkResp struct {
+		Username    string `json:"username"`
+		ProfileIcon string `json:"profile_icon"`
+	}
+	httpx.WriteJSON(w, http.StatusOK, checkResp{Username: username, ProfileIcon: profileIcon})
 }
 
 func SetUsernameHandler(w http.ResponseWriter, r *http.Request) {
@@ -111,5 +120,40 @@ func SetUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{
 		"message":  "Username set successfully",
 		"username": username,
+	})
+}
+
+func SetProfileIconHandler(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok || userID == "" {
+		httpx.WriteJSONError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req struct {
+		Icon string `json:"icon"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteJSONError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate icon
+	if err := validation.ValidateProfileIcon(req.Icon); err != nil {
+		httpx.WriteJSONError(w, http.StatusBadRequest, err.Message)
+		return
+	}
+
+	// Set the profile icon
+	if err := database.SetProfileIcon(userID, req.Icon); err != nil {
+		logger.Error("Failed to set profile icon", logger.F("userId", userID, "icon", req.Icon, "error", err.Error()))
+		httpx.WriteJSONError(w, http.StatusInternalServerError, "Failed to set profile icon")
+		return
+	}
+
+	logger.Info("Profile icon set", logger.F("userId", userID, "icon", req.Icon))
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{
+		"message": "Profile icon set successfully",
+		"icon":    req.Icon,
 	})
 }
