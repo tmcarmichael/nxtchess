@@ -86,6 +86,38 @@
   --radius-lg: 10px;
   --radius-xl: 16px;
   --radius-full: 9999px;
+
+  /* ═══ Layout Dimensions ═══ */
+  --header-height: 4rem;
+  --header-height-mobile: 3.5rem;
+  --panel-width: 360px;
+  --touch-target-min: 44px;
+  --board-max-size: 720px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Spacing Adjustments
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 639px) {
+  :root {
+    --space-lg: 1rem;
+    --space-xl: 1.5rem;
+    --space-2xl: 2rem;
+    --panel-width: 100%;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Touch Device Optimizations
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (pointer: coarse) {
+  button,
+  [role='button'],
+  a {
+    min-height: var(--touch-target-min);
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

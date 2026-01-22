@@ -378,19 +378,91 @@
   transform: translateY(0);
 }
 
-@media (max-width: 480px) {
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Mobile: Bottom sheet style */
+@media (max-width: 639px) {
+  .modalOverlay {
+    align-items: flex-end;
+  }
+
   .modalContent {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     padding: var(--space-md);
-    margin: var(--space-md);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modalContent h2 {
+    font-size: 1.1rem;
+    margin: var(--space-xs) 0 var(--space-md);
+    padding-bottom: var(--space-sm);
+  }
+
+  .settingRow {
+    margin-bottom: var(--space-md);
+  }
+
+  .styleSelector {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    justify-content: center;
   }
 
   .styleIconContainer {
-    width: 80px;
-    height: 70px;
+    width: 90px;
+    height: 75px;
   }
 
   .opponentIcon {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .iconLabel {
+    font-size: 0.6rem;
+  }
+
+  .knightSelector {
+    gap: var(--space-lg);
+  }
+
+  .knightButton {
+    width: 56px;
+    height: 56px;
+  }
+
+  .selectedKnight::before {
+    width: 70px;
+    height: 70px;
+  }
+
+  .buttonGroup {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .toggleButton {
+    padding: var(--space-xs) var(--space-md);
+    font-size: 0.85rem;
+  }
+
+  .rangeSlider {
+    width: 90%;
+  }
+
+  .startButton {
+    width: 100%;
+    padding: var(--space-md);
+  }
+
+  .closeButton {
+    top: var(--space-sm);
+    right: var(--space-sm);
   }
 }

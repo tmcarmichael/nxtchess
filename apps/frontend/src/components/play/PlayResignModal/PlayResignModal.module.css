@@ -108,3 +108,42 @@
 .playAgainButton:active {
   background-color: rgba(21, 130, 75, 0.6) !important;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Mobile: Bottom sheet style */
+@media (max-width: 639px) {
+  .modalOverlay {
+    align-items: flex-end;
+  }
+
+  .modalContent {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .modalContent h1 {
+    font-size: 1.2rem;
+  }
+
+  .modalContent p {
+    font-size: 1rem;
+    margin-bottom: var(--space-md);
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
+  }
+
+  .actions button {
+    width: 100%;
+    padding: var(--space-md);
+  }
+}

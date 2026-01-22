@@ -1,24 +1,29 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PlayNavigationPanel - Obsidian Arena Theme
+   Move history navigation panel
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .navigationPanel {
   display: flex;
   flex-direction: column;
-  width: 350px;
-  margin-top: 1rem;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 1rem;
-  background-color: rgba(80, 80, 80, 0.25);
+  width: 100%;
+  margin-top: var(--space-md);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  background-color: var(--surface-1);
   box-sizing: border-box;
-  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .movesContainer {
   flex-grow: 1;
   overflow-y: auto;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-  height: 40rem;
+  padding: var(--space-sm);
+  margin-bottom: var(--space-md);
+  height: 24rem;
   scrollbar-width: thin;
-  scrollbar-color: #575757 transparent;
+  scrollbar-color: var(--surface-4) transparent;
 }
 
 .movesContainer::-webkit-scrollbar {
@@ -30,54 +35,109 @@
 }
 
 .movesContainer::-webkit-scrollbar-thumb {
-  background-color: #575757;
-  border-radius: 4px;
-  border: 1px solid #444;
+  background-color: var(--surface-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
 }
 
 .movesGrid {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-sm);
 }
 
 .moveRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+  gap: var(--space-sm);
 }
 
 .move {
   display: block;
-  padding: 0.25rem;
-  font-size: 1rem;
-  color: #cbcbcb;
-  border-radius: 4px;
+  padding: var(--space-xs);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
   text-align: center;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.move:hover {
+  background-color: var(--surface-3);
+  cursor: pointer;
 }
 
 .active {
-  background-color: #444;
+  background-color: var(--accent-subtle);
+  color: var(--text-primary);
 }
 
 .arrowButtons {
   display: flex;
   justify-content: space-between;
+  gap: var(--space-sm);
 }
 
 .arrowButton {
   flex: 1;
   font-size: 1.25rem;
-  padding: 0.5rem;
-  margin: 0 0.5rem;
-  background: rgba(81, 81, 81, 0.35);
-  border: 1px solid #575757;
-  border-radius: 6px;
-  color: #acacac;
+  padding: var(--space-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+  min-height: var(--touch-target-min);
 }
 
 .arrowButton:hover {
-  background-color: #444;
+  background-color: var(--surface-3);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.arrowButton:active {
+  background-color: var(--surface-4);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Tablet: Reduced height */
+@media (max-width: 1023px) {
+  .movesContainer {
+    height: 12rem;
+  }
+}
+
+/* Mobile: Compact panel */
+@media (max-width: 639px) {
+  .navigationPanel {
+    padding: var(--space-sm);
+    margin-top: var(--space-sm);
+  }
+
+  .movesContainer {
+    height: 8rem;
+    padding: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  .move {
+    font-size: 0.85rem;
+    padding: var(--space-xs);
+  }
+
+  .arrowButton {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 1.1rem;
+  }
 }
