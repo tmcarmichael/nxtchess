@@ -32,7 +32,7 @@ export interface EngineConfig {
 // ============================================================================
 
 const DEFAULT_CONFIG: Required<EngineConfig> = {
-  initTimeoutMs: 10000,
+  initTimeoutMs: 15000,
   operationTimeoutMs: 15000,
   name: 'StockfishEngine',
 };
