@@ -51,6 +51,11 @@ func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
 
 // NewSecureCookie creates a cookie with secure settings based on environment
 func NewSecureCookie(cfg *config.Config, name, value string, maxAge int) *http.Cookie {
+	sameSite := http.SameSiteLaxMode
+	if cfg.IsProd() {
+		// Cross-origin cookies require SameSite=None with Secure=true
+		sameSite = http.SameSiteNoneMode
+	}
 	return &http.Cookie{
 		Name:     name,
 		Value:    value,
@@ -58,7 +63,7 @@ func NewSecureCookie(cfg *config.Config, name, value string, maxAge int) *http.C
 		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   cfg.IsProd(),
-		SameSite: http.SameSiteLaxMode,
+		SameSite: sameSite,
 	}
 }
 
