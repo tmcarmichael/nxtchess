@@ -1,12 +1,13 @@
 import {
   type JSX,
   splitProps,
-  For,
+  Index,
   type Component,
   createMemo,
   createSignal,
   createEffect,
   on,
+  type Accessor,
 } from 'solid-js';
 import { isPieceSide } from '../../../services/game/pieceUtils';
 import { type PieceType, type BoardSquare, type Square } from '../../../types/chess';
@@ -131,7 +132,9 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const animPiece = animatingPiece();
     const flashSquare = local.flashKingSquare();
 
-    const renderSquare = (props: BoardSquare): JSX.Element => {
+    // Apple accessor pattern for rendering squares
+    const renderSquare = (squareAccessor: Accessor<BoardSquare>): JSX.Element => {
+      const props = squareAccessor();
       const file = props.square[0];
       const rank = props.square[1];
       const isHighlighted = highlightSet().has(props.square);
@@ -189,7 +192,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
       );
     };
 
-    return <For each={squares}>{(square) => renderSquare(square)}</For>;
+    return <Index each={squares}>{(square) => renderSquare(square)}</Index>;
   };
 
   const renderAnimatingPiece = () => {

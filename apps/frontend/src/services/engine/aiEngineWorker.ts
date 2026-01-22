@@ -22,10 +22,12 @@ const aiEngine = new StockfishEngine({
  * For multi-game support, use engineService.initAiEngine(gameId, elo, style).
  */
 export const initAiEngine = async (elo: number, style: AIPlayStyle = 'balanced'): Promise<void> => {
-  // Initialize base engine (handles worker creation and UCI setup)
-  await aiEngine.init();
+  if (!aiEngine.isInitialized) {
+    await aiEngine.init();
+  } else {
+    aiEngine.postMessage('ucinewgame');
+  }
 
-  // Configure AI-specific options
   const styleKey = style ?? 'balanced';
   const { contempt, aggressiveness } = PLAYSTYLE_PRESETS[styleKey];
 
@@ -34,7 +36,6 @@ export const initAiEngine = async (elo: number, style: AIPlayStyle = 'balanced')
   aiEngine.postMessage(`setoption name Contempt value ${contempt}`);
   aiEngine.postMessage(`setoption name Aggressiveness value ${aggressiveness}`);
 
-  // Wait for options to be applied
   await aiEngine.waitForReady();
 };
 

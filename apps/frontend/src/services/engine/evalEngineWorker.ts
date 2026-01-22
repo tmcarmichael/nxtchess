@@ -22,7 +22,12 @@ const evalEngine = new StockfishEngine({
  * For multi-game support, use engineService.initEvalEngine(gameId).
  */
 export const initEvalEngine = async (): Promise<void> => {
-  await evalEngine.init();
+  if (!evalEngine.isInitialized) {
+    await evalEngine.init();
+  } else {
+    evalEngine.postMessage('ucinewgame');
+    await evalEngine.waitForReady();
+  }
 };
 
 /**
