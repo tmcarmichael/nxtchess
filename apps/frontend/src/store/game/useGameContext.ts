@@ -22,9 +22,11 @@ export interface UnifiedGameContext {
       error: string | null;
     };
   };
-  // Timer info for animation decisions
+  // Timer info for animation decisions and low-time warnings
   timer: {
     timeControl: number; // in minutes (1 = bullet, 3 = blitz, etc.)
+    whiteTime?: number; // milliseconds remaining (optional, only in timed games)
+    blackTime?: number; // milliseconds remaining (optional, only in timed games)
   };
   // Multiplayer is optional - only available in Play mode
   multiplayer: MultiplayerStore | null;

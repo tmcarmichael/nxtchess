@@ -29,6 +29,7 @@ interface ChessBoardProps {
   activePieceColor: () => Side;
   premoveSquares: () => { from: Square; to: Square } | null;
   animatingMove: () => { from: Square; to: Square; piece: string } | null;
+  flashKingSquare: () => Square | null;
 }
 
 const ANIMATION_DURATION = 500; // ms
@@ -49,6 +50,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     'activePieceColor',
     'premoveSquares',
     'animatingMove',
+    'flashKingSquare',
   ]);
 
   const highlightSet = createMemo(() => new Set(local.highlightedMoves()));
@@ -127,6 +129,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const squares = memoizedBoardSquares();
     const premove = local.premoveSquares();
     const animPiece = animatingPiece();
+    const flashSquare = local.flashKingSquare();
 
     const renderSquare = (props: BoardSquare): JSX.Element => {
       const file = props.square[0];
@@ -142,6 +145,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
         !!local.activePieceColor() &&
         !isPieceSide(props.piece, local.activePieceColor());
       const isCheckedKing = checkedSquare === props.square;
+      const isFlashingKing = flashSquare === props.square;
       const isPremove =
         premove !== null && (premove.from === props.square || premove.to === props.square);
       const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
@@ -162,6 +166,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
             [styles.selected]: isSelected,
             [styles.lastMove]: isLastMove,
             [styles.checkedKing]: isCheckedKing,
+            [styles.flashKing]: isFlashingKing,
             [styles.premove]: isPremove,
           }}
           onClick={() => local.onSquareClick(props.square)}

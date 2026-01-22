@@ -169,6 +169,12 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     },
     timer: {
       timeControl: timer.state.timeControl,
+      get whiteTime() {
+        return timer.state.whiteTime;
+      },
+      get blackTime() {
+        return timer.state.blackTime;
+      },
     },
     multiplayer,
     actions: {
