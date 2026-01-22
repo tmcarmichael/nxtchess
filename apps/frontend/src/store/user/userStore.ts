@@ -27,14 +27,6 @@ export const createUserStore = () => {
   });
 
   const checkUserStatus = async (navigateFn: (path: string) => void) => {
-    // Skip API call if no session cookie exists (anonymous user)
-    const hasSessionCookie = document.cookie.includes('session_token=');
-    if (!hasSessionCookie) {
-      setState('isLoggedIn', false);
-      setState('username', '');
-      return;
-    }
-
     try {
       const res = await fetch(`${BACKEND_URL}/check-username`, {
         credentials: 'include',
