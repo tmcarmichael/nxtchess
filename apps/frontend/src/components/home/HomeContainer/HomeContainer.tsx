@@ -5,11 +5,8 @@ import {
   type ParentComponent,
   createSignal,
   createEffect,
-  onMount,
-  onCleanup,
   Show,
 } from 'solid-js';
-import { enginePool } from '../../../services/engine/EnginePool';
 import SignInModal from '../../user/UserSignInModal/UserSignInModal';
 import HomeSiteHero from '../HomeSiteHero/HomeSiteHero';
 import styles from './HomeContainer.module.css';
@@ -23,38 +20,6 @@ const HomeContainer: ParentComponent<HomeContainerProps> = (props) => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showSignInModal, setShowSignInModal] = createSignal(false);
-
-  // Pre-warm engine during idle time on home page for faster game start
-  onMount(() => {
-    let isMounted = true;
-
-    if ('requestIdleCallback' in window) {
-      const idleHandle = requestIdleCallback(
-        async () => {
-          if (!isMounted) return;
-          try {
-            const engine = await enginePool.acquire('ai', '__warmup__');
-            if (!isMounted) {
-              await enginePool.release('ai', '__warmup__');
-              return;
-            }
-            await engine.init();
-            await enginePool.release('ai', '__warmup__');
-          } catch {
-            // Warmup is best-effort, silently ignore failures
-          }
-        },
-        { timeout: 3000 }
-      );
-
-      onCleanup(() => {
-        isMounted = false;
-        if ('cancelIdleCallback' in window) {
-          cancelIdleCallback(idleHandle);
-        }
-      });
-    }
-  });
 
   createEffect(() => {
     if (searchParams.error) {
