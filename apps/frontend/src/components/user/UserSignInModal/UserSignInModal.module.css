@@ -180,9 +180,40 @@
   transform: scale(0.98);
 }
 
-@media (max-width: 480px) {
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Mobile: Bottom sheet style */
+@media (max-width: 639px) {
+  .modalOverlay {
+    align-items: flex-end;
+  }
+
   .modalContent {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     padding: var(--space-lg);
-    margin: var(--space-md);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .modalContent h2 {
+    font-size: 1.1rem;
+  }
+
+  .signInOptions {
+    gap: var(--space-sm);
+  }
+
+  .signInButton {
+    width: 100%;
+    padding: var(--space-md);
+    justify-content: center;
+  }
+
+  .closeButton {
+    top: var(--space-sm);
+    right: var(--space-sm);
   }
 }

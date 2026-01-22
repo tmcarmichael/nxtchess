@@ -5,7 +5,7 @@
 
 .panel {
   display: flex;
-  width: 360px;
+  width: 100%;
   min-height: 380px;
   flex-direction: column;
   align-items: center;
@@ -55,4 +55,35 @@
 
 .statusText.playing {
   color: var(--accent);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Tablet: Horizontal clock layout */
+@media (max-width: 1023px) {
+  .panel {
+    min-height: auto;
+    padding: var(--space-md);
+  }
+
+  .clockLayout {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    gap: var(--space-lg);
+  }
+}
+
+/* Mobile: Compact panel */
+@media (max-width: 639px) {
+  .panel {
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .clockLayout {
+    gap: var(--space-md);
+  }
 }

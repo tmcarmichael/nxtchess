@@ -162,8 +162,51 @@
     transform 0.2s ease;
 }
 
-@media (max-width: 480px) {
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Mobile: Bottom sheet style */
+@media (max-width: 639px) {
+  .modalOverlay {
+    align-items: flex-end;
+  }
+
   .modalContent {
-    padding: 1.5rem;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .modalContent h1,
+  .modalContent h2 {
+    font-size: 1.2rem;
+  }
+
+  .playerResult {
+    font-size: 1.5rem;
+  }
+
+  .modalContent p {
+    font-size: 1rem;
+    margin-bottom: var(--space-md);
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .actions button,
+  .playAgainButton {
+    width: 100%;
+    padding: var(--space-md);
+  }
+
+  .closeButton {
+    top: var(--space-sm);
+    right: var(--space-sm);
   }
 }

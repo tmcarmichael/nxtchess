@@ -15,7 +15,7 @@
   position: relative;
   margin-top: var(--space-md);
   width: 12px;
-  height: 740px;
+  height: 600px;
   background: linear-gradient(180deg, var(--text-primary) 0%, #e0e0e0 100%);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
@@ -62,4 +62,57 @@
 /* Mate score */
 .evalScore.mate {
   color: var(--accent);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Tablet: Shorter bar */
+@media (max-width: 1023px) {
+  .barBackground {
+    height: 400px;
+  }
+}
+
+/* Mobile: Horizontal bar layout */
+@media (max-width: 639px) {
+  .evalBarContainer {
+    flex-direction: row;
+    min-width: auto;
+    width: 100%;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+  }
+
+  .barBackground {
+    margin-top: 0;
+    width: 100%;
+    max-width: 300px;
+    height: 12px;
+    background: linear-gradient(90deg, var(--surface-0) 0%, var(--text-primary) 100%);
+  }
+
+  .barFill {
+    bottom: auto;
+    left: 0;
+    width: auto;
+    height: 100%;
+    background: linear-gradient(90deg, var(--surface-0) 0%, var(--surface-4) 100%);
+    transition: width 0.3s ease-out;
+  }
+
+  .barFill.winning {
+    background: linear-gradient(90deg, var(--surface-0) 0%, var(--accent-muted) 100%);
+  }
+
+  .barFill.losing {
+    background: linear-gradient(90deg, var(--surface-0) 0%, var(--error-muted) 100%);
+  }
+
+  .evalScore {
+    margin-top: 0;
+    min-width: 50px;
+    text-align: center;
+  }
 }

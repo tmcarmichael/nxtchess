@@ -5,8 +5,8 @@
 
 .panel {
   display: flex;
-  margin-top: 186px;
-  width: 360px;
+  margin-top: var(--space-2xl);
+  width: 100%;
   min-height: 380px;
   flex-direction: column;
   align-items: center;
@@ -63,4 +63,42 @@
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-primary);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Tablet: Compact layout */
+@media (max-width: 1023px) {
+  .panel {
+    margin-top: var(--space-md);
+    min-height: auto;
+    padding: var(--space-md);
+  }
+
+  .panelSection {
+    padding: var(--space-sm) 0;
+  }
+}
+
+/* Mobile: Stack vertically */
+@media (max-width: 639px) {
+  .panel {
+    margin-top: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .AIPlayStyle {
+    font-size: 0.8rem;
+  }
+
+  .sectionLabel {
+    font-size: 0.6rem;
+  }
+
+  .sectionValue {
+    font-size: 0.9rem;
+  }
 }

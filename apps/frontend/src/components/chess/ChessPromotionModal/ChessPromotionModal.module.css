@@ -121,3 +121,37 @@
   font-size: 1.1rem;
   line-height: 1;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Mobile: Bottom sheet style */
+@media (max-width: 639px) {
+  .modalOverlay {
+    align-items: flex-end;
+  }
+
+  .modalContent {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .promotionOptions {
+    gap: var(--space-sm);
+  }
+
+  .promotionImage {
+    width: 64px;
+    height: 64px;
+    padding: var(--space-xs);
+  }
+
+  .closeButton {
+    top: var(--space-sm);
+    right: var(--space-sm);
+  }
+}

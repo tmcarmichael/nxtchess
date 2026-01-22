@@ -5,6 +5,7 @@ import PlayModal from '../../play/PlayModal/PlayModal';
 import TrainingModal from '../../training/TrainingModal/TrainingModal';
 import { getProfileIconAsset } from '../../user/ProfileIconPicker/ProfileIconPicker';
 import SignInModal from '../../user/UserSignInModal/UserSignInModal';
+import CommonMobileMenu from '../CommonMobileMenu/CommonMobileMenu';
 import styles from './CommonSiteHeader.module.css';
 
 export type NavItem = {
@@ -28,6 +29,7 @@ const CommonSiteHeader: ParentComponent = () => {
   const [showPlayModal, setShowPlayModal] = createSignal(false);
   const [showSignInModal, setShowSignInModal] = createSignal(false);
   const [showTrainingModal, setShowTrainingModal] = createSignal(false);
+  const [showMobileMenu, setShowMobileMenu] = createSignal(false);
 
   createEffect(() => {
     userActions.checkUserStatus(navigate);
@@ -96,6 +98,17 @@ const CommonSiteHeader: ParentComponent = () => {
               Sign Out
             </span>
           </Show>
+          <button
+            class={styles.mobileMenuButton}
+            onClick={() => setShowMobileMenu(true)}
+            aria-label="Open menu"
+          >
+            <div class={styles.hamburgerIcon}>
+              <span />
+              <span />
+              <span />
+            </div>
+          </button>
         </div>
       </header>
       <Show when={showPlayModal()}>
@@ -106,6 +119,27 @@ const CommonSiteHeader: ParentComponent = () => {
       </Show>
       <Show when={showTrainingModal()}>
         <TrainingModal onClose={() => setShowTrainingModal(false)} />
+      </Show>
+      <Show when={showMobileMenu()}>
+        <CommonMobileMenu
+          onClose={() => setShowMobileMenu(false)}
+          onShowPlayModal={() => {
+            setShowMobileMenu(false);
+            setShowPlayModal(true);
+          }}
+          onShowTrainingModal={() => {
+            setShowMobileMenu(false);
+            setShowTrainingModal(true);
+          }}
+          onShowSignInModal={() => {
+            setShowMobileMenu(false);
+            setShowSignInModal(true);
+          }}
+          onSignOut={async () => {
+            setShowMobileMenu(false);
+            await handleSignOut();
+          }}
+        />
       </Show>
     </>
   );

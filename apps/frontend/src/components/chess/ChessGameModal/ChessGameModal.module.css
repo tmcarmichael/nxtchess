@@ -91,9 +91,26 @@
   line-height: 1;
 }
 
-@media (max-width: 480px) {
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Mobile: Bottom sheet style */
+@media (max-width: 639px) {
+  .modalOverlay {
+    align-items: flex-end;
+  }
+
   .modalContent {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     padding: var(--space-md);
-    margin: var(--space-md);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .closeButton {
+    top: var(--space-sm);
+    right: var(--space-sm);
   }
 }

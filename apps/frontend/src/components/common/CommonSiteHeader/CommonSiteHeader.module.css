@@ -8,12 +8,16 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 4rem;
+  height: var(--header-height);
   z-index: 999;
   background: rgba(10, 10, 10, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-xl);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -21,10 +25,6 @@
    ───────────────────────────────────────────────────────────────────────────── */
 
 .headerLeft {
-  position: absolute;
-  left: 3rem;
-  top: 50%;
-  transform: translateY(-50%);
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
@@ -33,6 +33,7 @@
   cursor: pointer;
   transition: color var(--transition-fast);
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .headerLeft:hover {
@@ -44,10 +45,6 @@
    ───────────────────────────────────────────────────────────────────────────── */
 
 .headerCenter {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
   background: var(--surface-1);
   padding: var(--space-sm) var(--space-xl);
   display: flex;
@@ -106,13 +103,10 @@
    ───────────────────────────────────────────────────────────────────────────── */
 
 .headerRight {
-  position: absolute;
-  right: 3rem;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: var(--space-md);
+  flex-shrink: 0;
 }
 
 .userSection {
@@ -158,6 +152,46 @@
 .signOutText:hover {
   opacity: 1;
   color: var(--error);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Mobile Menu Button
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.mobileMenuButton {
+  display: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.mobileMenuButton:hover {
+  background: var(--surface-3);
+  border-color: var(--border-default);
+}
+
+.hamburgerIcon {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 18px;
+}
+
+.hamburgerIcon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--text-secondary);
+  border-radius: var(--radius-full);
+  transition: transform var(--transition-fast);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -212,4 +246,44 @@
 .signInButton:hover {
   background: var(--accent);
   color: var(--surface-0);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Tablet: Hide center nav, show mobile menu */
+@media (max-width: 1023px) {
+  .headerCenter {
+    display: none;
+  }
+
+  .mobileMenuButton {
+    display: flex;
+  }
+}
+
+/* Mobile: Compact header */
+@media (max-width: 639px) {
+  .headerRoot {
+    height: var(--header-height-mobile);
+    padding: 0 var(--space-md);
+  }
+
+  .headerLeft {
+    font-size: 1.25rem;
+  }
+
+  .usernameText {
+    display: none;
+  }
+
+  .signOutText {
+    display: none;
+  }
+
+  .mobileMenuButton {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
 }
