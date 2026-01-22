@@ -73,13 +73,13 @@ func GetUserProfileByUsername(username string) (*models.Profile, error) {
 	defer cancel()
 
 	row := DB.QueryRowContext(ctx, `
-        SELECT user_id, username, rating
+        SELECT user_id, username, rating, COALESCE(profile_icon, 'white-pawn')
         FROM profiles
         WHERE username = $1
     `, username)
 
 	u := &models.Profile{}
-	err := row.Scan(&u.UserID, &u.Username, &u.Rating)
+	err := row.Scan(&u.UserID, &u.Username, &u.Rating, &u.ProfileIcon)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	} else if err != nil {
@@ -126,6 +126,42 @@ func CreateProfileWithContext(ctx context.Context, userID string) error {
 	_, err := DB.ExecContext(ctx, `INSERT INTO profiles (user_id) VALUES ($1) ON CONFLICT DO NOTHING`, userID)
 	if err != nil {
 		logger.Error("Error creating profile", logger.F("userID", userID, "error", err.Error()))
+	}
+	return err
+}
+
+// GetProfileIcon retrieves a user's profile icon by user ID
+func GetProfileIcon(userID string) (string, error) {
+	ctx, cancel := QueryContext()
+	defer cancel()
+
+	var icon sql.NullString
+	err := DB.QueryRowContext(ctx, `SELECT profile_icon FROM profiles WHERE user_id = $1`, userID).Scan(&icon)
+	if err == sql.ErrNoRows {
+		return "white-pawn", nil
+	} else if err != nil {
+		logger.Error("Error getting profile icon", logger.F("userID", userID, "error", err.Error()))
+		return "", err
+	}
+
+	if !icon.Valid || icon.String == "" {
+		return "white-pawn", nil
+	}
+	return icon.String, nil
+}
+
+// SetProfileIcon updates a user's profile icon
+func SetProfileIcon(userID, icon string) error {
+	ctx, cancel := QueryContext()
+	defer cancel()
+
+	_, err := DB.ExecContext(ctx, `
+        UPDATE profiles
+        SET profile_icon = $2
+        WHERE user_id = $1
+    `, userID, icon)
+	if err != nil {
+		logger.Error("Error setting profile icon", logger.F("userID", userID, "icon", icon, "error", err.Error()))
 	}
 	return err
 }

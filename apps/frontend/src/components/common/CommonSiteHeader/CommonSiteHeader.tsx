@@ -3,6 +3,7 @@ import { createSignal, Show, For, createEffect, type ParentComponent } from 'sol
 import { useUserStore } from '../../../store/user/UserContext';
 import PlayModal from '../../play/PlayModal/PlayModal';
 import TrainingModal from '../../training/TrainingModal/TrainingModal';
+import { getProfileIconAsset } from '../../user/ProfileIconPicker/ProfileIconPicker';
 import SignInModal from '../../user/UserSignInModal/UserSignInModal';
 import styles from './CommonSiteHeader.module.css';
 
@@ -32,10 +33,8 @@ const CommonSiteHeader: ParentComponent = () => {
     userActions.checkUserStatus(navigate);
   });
 
-  const handleSignOut = () => {
-    document.cookie = 'session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; // TODO: Imp sign out
-    userActions.setIsLoggedIn(false);
-    userActions.setUsername('');
+  const handleSignOut = async () => {
+    await userActions.logout();
     navigate('/');
   };
 
@@ -74,14 +73,25 @@ const CommonSiteHeader: ParentComponent = () => {
         <div class={styles.headerRight}>
           <Show
             when={userState.isLoggedIn}
-            fallback={<span onClick={() => setShowSignInModal(true)}>Sign In</span>}
+            fallback={
+              <span class={styles.signInButton} onClick={() => setShowSignInModal(true)}>
+                Sign In
+              </span>
+            }
           >
-            <span
-              class={styles.usernameText}
-              onClick={() => navigate(`/profile/${userState.username}`)}
-            >
-              {userState.username}
-            </span>
+            <Show when={userState.username}>
+              <div
+                class={styles.userSection}
+                onClick={() => navigate(`/profile/${userState.username}`)}
+              >
+                <img
+                  src={getProfileIconAsset(userState.profileIcon)}
+                  alt="Profile icon"
+                  class={styles.headerProfileIcon}
+                />
+                <span class={styles.usernameText}>{userState.username}</span>
+              </div>
+            </Show>
             <span class={styles.signOutText} onClick={handleSignOut}>
               Sign Out
             </span>

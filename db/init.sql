@@ -4,10 +4,11 @@ GRANT USAGE ON SCHEMA public TO anon;
 
 -- Profiles table (must be created first for foreign key references)
 CREATE TABLE IF NOT EXISTS profiles (
-    user_id    TEXT PRIMARY KEY,
-    username   TEXT UNIQUE,
-    rating     INT NOT NULL DEFAULT 1500 CHECK (rating >= 0 AND rating <= 4000),
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+    user_id      TEXT PRIMARY KEY,
+    username     TEXT UNIQUE,
+    rating       INT NOT NULL DEFAULT 1500 CHECK (rating >= 0 AND rating <= 4000),
+    profile_icon TEXT DEFAULT 'white-pawn',
+    created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 GRANT SELECT, INSERT, UPDATE ON profiles TO anon;
 

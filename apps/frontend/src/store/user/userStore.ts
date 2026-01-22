@@ -5,6 +5,7 @@ interface UserState {
   isLoggedIn: boolean;
   username: string;
   rating: number | null;
+  profileIcon: string;
 }
 
 interface UserActions {
@@ -13,6 +14,8 @@ interface UserActions {
   setIsLoggedIn: (val: boolean) => void;
   setUsername: (val: string) => void;
   fetchUserProfile: () => Promise<void>;
+  setProfileIcon: (icon: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 export const createUserStore = () => {
@@ -20,6 +23,7 @@ export const createUserStore = () => {
     isLoggedIn: false,
     username: '',
     rating: null,
+    profileIcon: 'white-pawn',
   });
 
   const checkUserStatus = async (navigateFn: (path: string) => void) => {
@@ -38,6 +42,8 @@ export const createUserStore = () => {
       if (res.status === 401) {
         setState('isLoggedIn', false);
         setState('username', '');
+        setState('rating', null);
+        setState('profileIcon', 'white-pawn');
       } else if (res.status === 404) {
         setState('isLoggedIn', true);
         navigateFn('/username-setup');
@@ -46,6 +52,9 @@ export const createUserStore = () => {
         const data = await res.json();
         if (data.username) {
           setState('username', data.username);
+        }
+        if (data.profile_icon) {
+          setState('profileIcon', data.profile_icon);
         }
       }
     } catch (err) {
@@ -86,6 +95,9 @@ export const createUserStore = () => {
       }
       const data = await res.json();
       setState('rating', data.rating);
+      if (data.profile_icon) {
+        setState('profileIcon', data.profile_icon);
+      }
     } catch (err) {
       console.error('Error fetching user profile:', err);
       throw err;
@@ -100,12 +112,49 @@ export const createUserStore = () => {
     setState('username', val);
   };
 
+  const setProfileIcon = async (icon: string) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/set-profile-icon`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ icon }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to set profile icon');
+      }
+      setState('profileIcon', icon);
+    } catch (err) {
+      console.error('Error setting profile icon:', err);
+      throw err;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await fetch(`${BACKEND_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (err) {
+      console.error('Error during logout:', err);
+    }
+    // Reset all state regardless of API success
+    setState('isLoggedIn', false);
+    setState('username', '');
+    setState('rating', null);
+    setState('profileIcon', 'white-pawn');
+  };
+
   const actions: UserActions = {
     checkUserStatus,
     saveUsername,
     setIsLoggedIn,
     setUsername,
     fetchUserProfile,
+    setProfileIcon,
+    logout,
   };
 
   return [state, actions] as const;

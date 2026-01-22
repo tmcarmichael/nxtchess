@@ -115,19 +115,31 @@
   gap: var(--space-md);
 }
 
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.userSection:hover {
+  opacity: 0.8;
+}
+
+.headerProfileIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
 .usernameText {
   font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--accent);
-  cursor: pointer;
-  transition: opacity var(--transition-fast);
   text-decoration: none;
-}
-
-.usernameText:hover {
-  opacity: 0.8;
 }
 
 .signOutText {

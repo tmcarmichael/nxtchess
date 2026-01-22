@@ -186,3 +186,39 @@ func IsPrintableASCII(s string) bool {
 	}
 	return true
 }
+
+// ValidProfileIcons is the list of allowed profile icon IDs
+var ValidProfileIcons = []string{
+	"white-king", "white-queen", "white-rook", "white-bishop", "white-knight", "white-pawn",
+	"black-king", "black-queen", "black-rook", "black-bishop", "black-knight", "black-pawn",
+}
+
+// validProfileIconsMap for O(1) lookup
+var validProfileIconsMap = func() map[string]bool {
+	m := make(map[string]bool, len(ValidProfileIcons))
+	for _, icon := range ValidProfileIcons {
+		m[icon] = true
+	}
+	return m
+}()
+
+// ValidateProfileIcon validates that the given icon is in the allowed list
+func ValidateProfileIcon(icon string) *ValidationError {
+	icon = strings.TrimSpace(icon)
+
+	if icon == "" {
+		return &ValidationError{
+			Field:   "icon",
+			Message: "Profile icon is required",
+		}
+	}
+
+	if !validProfileIconsMap[icon] {
+		return &ValidationError{
+			Field:   "icon",
+			Message: "Invalid profile icon",
+		}
+	}
+
+	return nil
+}
