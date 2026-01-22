@@ -1,16 +1,7 @@
 import { createStore } from 'solid-js/store';
-import {
-  initAiEngine,
-  computeAiMove,
-  terminateAiEngine,
-  EngineError,
-} from '../../../services/engine/aiEngineWorker';
+import { initAiEngine, computeAiMove, EngineError } from '../../../services/engine/aiEngineWorker';
 import { enginePool } from '../../../services/engine/EnginePool';
-import {
-  initEvalEngine,
-  getEvaluation,
-  terminateEvalEngine,
-} from '../../../services/engine/evalEngineWorker';
+import { initEvalEngine, getEvaluation } from '../../../services/engine/evalEngineWorker';
 import { DIFFICULTY_VALUES_ELO } from '../../../shared/config/constants';
 import type { Side, AIPlayStyle } from '../../../types/game';
 
@@ -103,8 +94,6 @@ export const createEngineStore = (): EngineStore => {
   };
 
   const terminate = () => {
-    terminateAiEngine();
-    terminateEvalEngine();
     enginePool.terminateAll();
     setState({ status: 'idle', isThinking: false, error: null });
   };
