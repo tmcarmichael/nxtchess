@@ -14,6 +14,34 @@
   gap: var(--space-xl);
 }
 
+/* Accent border lines */
+.hero::before,
+.hero::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(600px, 80vw);
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--accent-muted) 20%,
+    var(--accent) 50%,
+    var(--accent-muted) 80%,
+    transparent 100%
+  );
+  opacity: 0.5;
+}
+
+.hero::before {
+  top: 15%;
+}
+
+.hero::after {
+  bottom: 15%;
+}
+
 /* Background knight decoration */
 .knight {
   position: absolute;
@@ -100,19 +128,4 @@
 
 .playNowButton:active {
   transform: translateY(-1px);
-}
-
-/* Ambient glow effect */
-.hero::before {
-  content: '';
-  position: absolute;
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, var(--accent-ghost) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 0;
-  animation: pulseGlow 4s ease-in-out infinite;
 }
