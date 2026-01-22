@@ -179,6 +179,39 @@
   }
 }
 
+/* Flash animation for illegal move attempt (pinned piece, etc.) */
+.flashKing {
+  position: relative;
+  animation: illegalMoveFlash 0.4s ease-out;
+}
+
+.flashKing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, var(--error) 0%, transparent 70%);
+  pointer-events: none;
+  animation: illegalMoveFlashOverlay 0.4s ease-out;
+}
+
+@keyframes illegalMoveFlash {
+  0% {
+    box-shadow: inset 0 0 0 4px var(--error);
+  }
+  100% {
+    box-shadow: inset 0 0 0 0px transparent;
+  }
+}
+
+@keyframes illegalMoveFlashOverlay {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* File labels (a-h) */
 .fileLabel {
   position: absolute;

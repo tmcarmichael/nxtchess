@@ -65,6 +65,10 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     to: Square;
     piece: string;
   } | null>(null);
+  // Flash king square when illegal move attempted
+  const [flashKingSquare, setFlashKingSquare] = createSignal<Square | null>(null);
+  // Track if low-time warning has been played (resets each game)
+  let lowTimeWarningPlayed = false;
   // Track if a drag operation just ended to prevent click from interfering
   let justDragged = false;
 
@@ -123,10 +127,21 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       (length, prevLength) => {
         // Play sound when a new move is added
         if (length > 0 && prevLength !== undefined && length > prevLength) {
-          // Check if it was a capture (SAN contains 'x')
           const lastMove = chess.state.moveHistory[length - 1];
           const isCapture = lastMove?.includes('x') ?? false;
-          audioService.playMoveSound(isCapture);
+          const isCheck = chess.state.checkedKingSquare !== null;
+
+          if (isCapture && isCheck) {
+            // Capture + check: play capture sound, then check sound
+            audioService.playMoveSound(true);
+            setTimeout(() => audioService.playCheck(), 80);
+          } else if (isCheck) {
+            // Check only: play check sound
+            audioService.playCheck();
+          } else {
+            // Normal move or capture
+            audioService.playMoveSound(isCapture);
+          }
         }
       }
     )
@@ -170,6 +185,52 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
         if (lifecycle === 'playing' && prevLifecycle !== 'playing') {
           audioService.playGameStart();
         }
+        // Play game end sound when game ends
+        if (lifecycle === 'ended' && prevLifecycle === 'playing') {
+          audioService.playGameEnd();
+        }
+      }
+    )
+  );
+
+  // Low time warning (10 seconds remaining)
+  const LOW_TIME_THRESHOLD = 10000; // 10 seconds in ms
+  createEffect(
+    on(
+      () => chess.state.lifecycle,
+      (lifecycle) => {
+        // Reset warning flag when new game starts
+        if (lifecycle === 'playing') {
+          lowTimeWarningPlayed = false;
+        }
+      }
+    )
+  );
+
+  createEffect(
+    on(
+      () => {
+        const playerColor = chess.state.playerColor;
+        const playerTime = playerColor === 'w' ? timer.whiteTime : timer.blackTime;
+        return playerTime;
+      },
+      (playerTime, prevTime) => {
+        // Only trigger if:
+        // - Timer values are available (timed game)
+        // - Game is playing
+        // - Warning hasn't been played yet
+        // - Time crossed below threshold (was above, now at or below)
+        if (
+          playerTime !== undefined &&
+          prevTime !== undefined &&
+          chess.state.lifecycle === 'playing' &&
+          !lowTimeWarningPlayed &&
+          prevTime > LOW_TIME_THRESHOLD &&
+          playerTime <= LOW_TIME_THRESHOLD
+        ) {
+          audioService.playLowTime();
+          lowTimeWarningPlayed = true;
+        }
       }
     )
   );
@@ -204,6 +265,26 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     if (chess.derived.isViewingHistory()) {
       // Jump to latest move to reset view
       chess.jumpToMoveIndex(chess.state.moveHistory.length - 1);
+    }
+  };
+
+  // Find the player's king square for illegal move feedback
+  const findPlayerKingSquare = (): Square | null => {
+    const playerColor = chess.state.playerColor;
+    const kingPiece = playerColor === 'w' ? 'wK' : 'bK';
+    const board = chess.derived.currentBoard();
+    const kingSquare = board.find((sq) => sq.piece === kingPiece);
+    return kingSquare?.square ?? null;
+  };
+
+  // Trigger illegal move feedback (sound + king flash)
+  const triggerIllegalMoveFeedback = () => {
+    audioService.playIllegalMove();
+    const kingSquare = findPlayerKingSquare();
+    if (kingSquare) {
+      setFlashKingSquare(kingSquare);
+      // Clear flash after animation duration (400ms)
+      setTimeout(() => setFlashKingSquare(null), 400);
     }
   };
 
@@ -261,6 +342,10 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
         ? getLegalMoves(chess.state.fen, square)
         : getPremoveLegalMoves(chess.state.fen, square);
       setHighlightedMoves(moves);
+    } else if (canMove() && highlightedMoves().length > 0 && !highlightedMoves().includes(square)) {
+      // Attempted illegal move - play error sound and flash king
+      triggerIllegalMoveFeedback();
+      clearDraggingState();
     }
     // Keep selection if clicked elsewhere during opponent's turn
   };
@@ -332,6 +417,15 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       return;
     }
 
+    // Dropped on invalid target (not original square) - illegal move attempt
+    if (
+      targetSquare !== dragState.square &&
+      highlightedMoves().length > 0 &&
+      !highlightedMoves().includes(targetSquare)
+    ) {
+      triggerIllegalMoveFeedback();
+    }
+
     // Dropped on original square or invalid target - clear
     clearDraggingState();
   };
@@ -398,6 +492,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
         // Show promotion modal for premove
         setPendingPremovePromotion({ from, to, color: piece[0] as Side });
         clearDraggingState();
+        justDragged = false;
         return;
       }
     }
@@ -405,6 +500,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     // Regular premove (no promotion)
     setPremove({ from, to });
     clearDraggingState();
+    // Reset justDragged so next click can cancel premove
+    justDragged = false;
   };
 
   const tryExecutePremove = () => {
@@ -483,6 +580,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
               return pm ? { from: pm.from, to: pm.to } : null;
             }}
             animatingMove={animatingMove}
+            flashKingSquare={flashKingSquare}
           />
           <ChessEngineOverlay
             isLoading={derived.isEngineLoading()}
