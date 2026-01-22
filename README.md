@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/blob/main/LICENSE)
 [![Issues](https://img.shields.io/github/issues/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/issues)
 
-[NxtChess](https://nxtchess-frontend-production.up.railway.app/) is a multiplayer chess platform with AI training modes. Play anonymous games via shareable links or sign in to track ratings and game history.
+[NxtChess](https://nxtchess.up.railway.app/) is a multiplayer chess platform with AI training modes. Play anonymous games via shareable links or sign in to track ratings and game history.
 
 ## Features
 
@@ -17,7 +17,7 @@
 
 ### Railway Early Alpha Build:
 
-https://nxtchess-frontend-production.up.railway.app/
+https://nxtchess.up.railway.app/
 
 ### Dev localhost Build:
 
