@@ -117,15 +117,18 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     isMultiplayer: () => chess.state.opponentType === 'human',
     isWaitingForOpponent: () => multiplayer.state.isWaiting,
     material: () => {
-      const whiteCaptured = chess.state.capturedWhite.reduce(
-        (sum, p) => sum + (PIECE_VALUES[p.toLowerCase()] ?? 0),
+      // capturedWhite = white pieces captured by black (material black gained)
+      // capturedBlack = black pieces captured by white (material white gained)
+      const blackGained = chess.state.capturedWhite.reduce(
+        (sum, p) => sum + (PIECE_VALUES[p[1]?.toLowerCase()] ?? 0),
         0
       );
-      const blackCaptured = chess.state.capturedBlack.reduce(
-        (sum, p) => sum + (PIECE_VALUES[p.toLowerCase()] ?? 0),
+      const whiteGained = chess.state.capturedBlack.reduce(
+        (sum, p) => sum + (PIECE_VALUES[p[1]?.toLowerCase()] ?? 0),
         0
       );
-      return { diff: whiteCaptured - blackCaptured };
+      // Positive diff = white is ahead, negative = black is ahead
+      return { diff: whiteGained - blackGained };
     },
     formattedAIPlayStyle: () => {
       const style = chess.state.trainingAIPlayStyle;
