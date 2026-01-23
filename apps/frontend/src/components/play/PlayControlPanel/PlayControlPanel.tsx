@@ -51,7 +51,7 @@ const PlayControlPanel: ParentComponent = () => {
         </ButtonPanel>
         <GameInfoPanel
           playerColor={chess.state.playerColor}
-          difficulty={engine.state.difficulty}
+          difficulty={derived.isMultiplayer() ? undefined : engine.state.difficulty}
           material={derived.material}
           capturedWhite={chess.state.capturedWhite}
           capturedBlack={chess.state.capturedBlack}
