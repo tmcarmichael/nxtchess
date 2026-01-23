@@ -100,6 +100,8 @@
   --panel-width: 360px;
   --touch-target-min: 44px;
   --board-max-size: 720px;
+  /* Clock row height: padding (2*0.5rem) + font (~1.5rem) + border (2px) + margin (0.25rem) */
+  --clock-row-height: calc(2.75rem + 2px);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

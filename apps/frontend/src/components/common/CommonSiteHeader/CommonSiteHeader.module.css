@@ -157,11 +157,11 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Mobile Menu Button
+   Menu Button (Hamburger)
    ───────────────────────────────────────────────────────────────────────────── */
 
 .mobileMenuButton {
-  display: none;
+  display: flex;
   width: 2.5rem;
   height: 2.5rem;
   align-items: center;
@@ -254,14 +254,10 @@
    Responsive Breakpoints
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* Tablet: Hide center nav, show mobile menu */
+/* Tablet: Hide center nav */
 @media (max-width: 1023px) {
   .headerCenter {
     display: none;
-  }
-
-  .mobileMenuButton {
-    display: flex;
   }
 }
 

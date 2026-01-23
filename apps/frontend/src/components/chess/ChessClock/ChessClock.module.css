@@ -8,17 +8,41 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
   background: var(--surface-1);
   color: var(--text-primary);
-  padding: var(--space-sm) var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-sm);
-  min-width: 100px;
+  /* Fixed width to prevent resizing when tenths appear (e.g., "00:19.5") */
+  min-width: 120px;
+  width: 120px;
+}
+
+/* Turn indicator dot - only visible when active */
+.turnIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.gameClock.active .turnIndicator {
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
+
+/* Time display with tabular nums to prevent width changes */
+.time {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  /* Tabular nums ensures all digits have equal width */
+  font-variant-numeric: tabular-nums;
+  /* Fixed width for time string with tenths (e.g., "00:19.5" = 7 chars) */
+  min-width: 7ch;
   text-align: center;
 }
 
@@ -26,7 +50,7 @@
 .gameClock.active {
   background: var(--surface-2);
   border-color: var(--accent-muted);
-  box-shadow: 0 0 16px var(--accent-ghost);
+  box-shadow: 0 0 12px var(--accent-ghost);
 }
 
 /* Low time warning (under 30 seconds) */
@@ -41,11 +65,12 @@
   border-color: var(--error-muted);
 }
 
-.label {
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
+@keyframes clockUrgent {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }

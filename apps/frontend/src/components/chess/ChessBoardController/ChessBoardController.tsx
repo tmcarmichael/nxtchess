@@ -21,6 +21,7 @@ import { useGameContext } from '../../../store/game/useGameContext';
 import { type Square, type PromotionPiece } from '../../../types/chess';
 import { type Side } from '../../../types/game';
 import ChessBoard from '../../chess/ChessBoard/ChessBoard';
+import ChessClock from '../../chess/ChessClock/ChessClock';
 import ChessPromotionModal from '../../chess/ChessPromotionModal/ChessPromotionModal';
 import ChessEndModal from '../ChessEndModal/ChessEndModal';
 import ChessEngineOverlay from '../ChessEngineOverlay/ChessEngineOverlay';
@@ -698,63 +699,82 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
           <ChessEvalBar evalScore={evalScore()} />
         </Show>
 
-        <div class={styles.chessBoardContainer}>
-          <ChessBoard
-            board={chess.derived.currentBoard}
-            highlightedMoves={highlightedMoves}
-            selectedSquare={selectedSquare}
-            draggedPiece={draggedPiece}
-            cursorPosition={cursorPosition}
-            onSquareClick={handleSquareClick}
-            onSquareMouseUp={handleMouseUp}
-            onDragStart={handleDragStart}
-            onTouchStart={handleTouchStart}
-            lastMove={() => chess.state.lastMove}
-            checkedKingSquare={() => chess.state.checkedKingSquare}
-            boardView={() => ui.state.boardView}
-            activePieceColor={() => chess.state.currentTurn}
-            premoveSquares={() => {
-              const pm = premove();
-              return pm ? { from: pm.from, to: pm.to } : null;
-            }}
-            animatingMove={animatingMove}
-            flashKingSquare={flashKingSquare}
-          />
-          <ChessEngineOverlay
-            isLoading={derived.isEngineLoading()}
-            hasError={derived.hasEngineError()}
-            errorMessage={engine.state.error}
-            onRetry={actions.retryEngineInit}
-          />
-          {/* Waiting for opponent overlay for multiplayer */}
-          <Show when={multiplayer?.state.isWaiting}>
-            <div class={styles.waitingOverlay}>
-              <div class={styles.waitingContent}>
-                <div class={styles.spinner} />
-                <h3>Waiting for Opponent</h3>
-                <Show
-                  when={multiplayer?.state.gameId}
-                  fallback={<p class={styles.waitingHint}>Connecting to server...</p>}
-                >
-                  <p class={styles.waitingHint}>Share this link with your opponent:</p>
-                  <div class={styles.gameUrlContainer}>
-                    <code class={styles.gameUrl}>
-                      {`${window.location.origin}/play/${multiplayer?.state.gameId}`}
-                    </code>
-                    <button
-                      class={styles.copyButton}
-                      onClick={() => {
-                        const url = `${window.location.origin}/play/${multiplayer?.state.gameId}`;
-                        navigator.clipboard.writeText(url);
-                      }}
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </Show>
-                <button class={styles.cancelButton} onClick={actions.exitGame}>
-                  Cancel
-                </button>
+        <div class={styles.boardWithClocks}>
+          <div class={styles.chessBoardContainer}>
+            <ChessBoard
+              board={chess.derived.currentBoard}
+              highlightedMoves={highlightedMoves}
+              selectedSquare={selectedSquare}
+              draggedPiece={draggedPiece}
+              cursorPosition={cursorPosition}
+              onSquareClick={handleSquareClick}
+              onSquareMouseUp={handleMouseUp}
+              onDragStart={handleDragStart}
+              onTouchStart={handleTouchStart}
+              lastMove={() => chess.state.lastMove}
+              checkedKingSquare={() => chess.state.checkedKingSquare}
+              boardView={() => ui.state.boardView}
+              activePieceColor={() => chess.state.currentTurn}
+              premoveSquares={() => {
+                const pm = premove();
+                return pm ? { from: pm.from, to: pm.to } : null;
+              }}
+              animatingMove={animatingMove}
+              flashKingSquare={flashKingSquare}
+            />
+            <ChessEngineOverlay
+              isLoading={derived.isEngineLoading()}
+              hasError={derived.hasEngineError()}
+              errorMessage={engine.state.error}
+              onRetry={actions.retryEngineInit}
+            />
+            {/* Waiting for opponent overlay for multiplayer */}
+            <Show when={multiplayer?.state.isWaiting}>
+              <div class={styles.waitingOverlay}>
+                <div class={styles.waitingContent}>
+                  <div class={styles.spinner} />
+                  <h3>Waiting for Opponent</h3>
+                  <Show
+                    when={multiplayer?.state.gameId}
+                    fallback={<p class={styles.waitingHint}>Connecting to server...</p>}
+                  >
+                    <p class={styles.waitingHint}>Share this link with your opponent:</p>
+                    <div class={styles.gameUrlContainer}>
+                      <code class={styles.gameUrl}>
+                        {`${window.location.origin}/play/${multiplayer?.state.gameId}`}
+                      </code>
+                      <button
+                        class={styles.copyButton}
+                        onClick={() => {
+                          const url = `${window.location.origin}/play/${multiplayer?.state.gameId}`;
+                          navigator.clipboard.writeText(url);
+                        }}
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </Show>
+                  <button class={styles.cancelButton} onClick={actions.exitGame}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </Show>
+          </div>
+          {/* Clock column - anchored to right side of board */}
+          <Show when={timer.whiteTime !== undefined && timer.blackTime !== undefined}>
+            <div class={styles.clockColumn}>
+              <div class={styles.clockTop}>
+                <ChessClock
+                  timeMs={() => (ui.state.boardView === 'w' ? timer.blackTime! : timer.whiteTime!)}
+                  isActive={() => chess.state.currentTurn !== ui.state.boardView}
+                />
+              </div>
+              <div class={styles.clockBottom}>
+                <ChessClock
+                  timeMs={() => (ui.state.boardView === 'w' ? timer.whiteTime! : timer.blackTime!)}
+                  isActive={() => chess.state.currentTurn === ui.state.boardView}
+                />
               </div>
             </div>
           </Show>

@@ -2,7 +2,6 @@ import { useNavigate } from '@solidjs/router';
 import { Show, createSignal, type ParentComponent } from 'solid-js';
 import { usePlayGame } from '../../../store/game/PlayGameContext';
 import { type StartGameOptions, type GameMode } from '../../../types/game';
-import ChessClock from '../../chess/ChessClock/ChessClock';
 import ButtonPanel from '../../game/ButtonPanel/ButtonPanel';
 import GameInfoPanel from '../../game/GameInfoPanel/GameInfoPanel';
 import GamePanelButton from '../../game/GamePanelButton/GamePanelButton';
@@ -38,33 +37,25 @@ const PlayControlPanel: ParentComponent = () => {
 
   return (
     <div>
-      <div class={styles.clockLayout}>
-        <div class={styles.clockWrapper}>
-          <ChessClock side={chess.derived.opponentSide()} />
-        </div>
-        <div class={styles.panel}>
-          <ButtonPanel>
-            <GamePanelButton onClick={handleResign} disabled={!derived.isPlaying()}>
-              <span>Resign</span>
-            </GamePanelButton>
-            <GamePanelButton onClick={actions.flipBoard}>
-              <span>Flip Board</span>
-            </GamePanelButton>
-            <GamePanelButton onClick={actions.takeBack} disabled={!derived.isPlaying()}>
-              <span>Take Back</span>
-            </GamePanelButton>
-          </ButtonPanel>
-          <GameInfoPanel
-            playerColor={chess.state.playerColor}
-            difficulty={engine.state.difficulty}
-            material={derived.material}
-            capturedWhite={chess.state.capturedWhite}
-            capturedBlack={chess.state.capturedBlack}
-          />
-        </div>
-        <div class={styles.clockWrapper}>
-          <ChessClock side={chess.state.playerColor} />
-        </div>
+      <div class={styles.panel}>
+        <ButtonPanel>
+          <GamePanelButton onClick={handleResign} disabled={!derived.isPlaying()}>
+            <span>Resign</span>
+          </GamePanelButton>
+          <GamePanelButton onClick={actions.flipBoard}>
+            <span>Flip Board</span>
+          </GamePanelButton>
+          <GamePanelButton onClick={actions.takeBack} disabled={!derived.isPlaying()}>
+            <span>Take Back</span>
+          </GamePanelButton>
+        </ButtonPanel>
+        <GameInfoPanel
+          playerColor={chess.state.playerColor}
+          difficulty={engine.state.difficulty}
+          material={derived.material}
+          capturedWhite={chess.state.capturedWhite}
+          capturedBlack={chess.state.capturedBlack}
+        />
       </div>
       <Show when={showResignModal()}>
         <ResignModal
