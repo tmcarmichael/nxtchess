@@ -84,7 +84,8 @@
     transform var(--transition-fast);
 }
 
-.closeButton:hover {
+.closeButton:hover,
+.closeButton.closing {
   background: var(--surface-3);
   border-color: var(--border-default);
   transform: rotate(90deg);
@@ -159,6 +160,33 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Links Section (Footer Links)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.linksSection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.footerLink {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.footerLink:hover {
+  color: var(--accent);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

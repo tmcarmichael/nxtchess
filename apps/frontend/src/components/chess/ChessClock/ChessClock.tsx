@@ -1,15 +1,12 @@
-import { createMemo, splitProps, type Component } from 'solid-js';
-import { usePlayGame } from '../../../store/game/PlayGameContext';
+import { type Accessor, type Component } from 'solid-js';
 import styles from './ChessClock.module.css';
 
 interface GameClockProps {
-  side: 'w' | 'b';
+  timeMs: Accessor<number>;
+  isActive?: Accessor<boolean>;
 }
 
 const ChessClock: Component<GameClockProps> = (props) => {
-  const [local] = splitProps(props, ['side']);
-  const { timer } = usePlayGame();
-
   const formatTime = (timeMs: number) => {
     const totalSeconds = Math.floor(timeMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -24,16 +21,20 @@ const ChessClock: Component<GameClockProps> = (props) => {
     return base;
   };
 
-  const label = () => (props.side === 'w' ? 'White' : 'Black');
-
-  const timeValue = createMemo(() =>
-    local.side === 'w' ? timer.state.whiteTime : timer.state.blackTime
-  );
+  const isLowTime = () => props.timeMs() < 30000;
+  const isCritical = () => props.timeMs() < 10000;
 
   return (
-    <div class={styles.gameClock}>
-      <span class={styles.label}>{label()}:</span>
-      <span>{formatTime(timeValue())}</span>
+    <div
+      class={styles.gameClock}
+      classList={{
+        [styles.active]: props.isActive?.() ?? false,
+        [styles.lowTime]: isLowTime(),
+        [styles.critical]: isCritical(),
+      }}
+    >
+      <span class={styles.turnIndicator} />
+      <span class={styles.time}>{formatTime(props.timeMs())}</span>
     </div>
   );
 };

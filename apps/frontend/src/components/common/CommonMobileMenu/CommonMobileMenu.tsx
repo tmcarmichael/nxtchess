@@ -1,9 +1,36 @@
 import { useNavigate } from '@solidjs/router';
-import { Show, For, type Component } from 'solid-js';
+import { Show, For, createSignal, onMount, onCleanup, type Component } from 'solid-js';
 import { useUserStore } from '../../../store/user/UserContext';
 import { getProfileIconAsset } from '../../user/ProfileIconPicker/ProfileIconPicker';
 import { NAV_ITEMS } from '../CommonSiteHeader/CommonSiteHeader';
 import styles from './CommonMobileMenu.module.css';
+
+const FOOTER_LINKS = [
+  {
+    label: 'About',
+    url: 'https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#nxt-chess',
+  },
+  {
+    label: 'Roadmap',
+    url: 'https://github.com/tmcarmichael/nxtchess/blob/main/README.md#-roadmap',
+  },
+  {
+    label: 'Support',
+    url: 'https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#-contact',
+  },
+  {
+    label: 'Privacy',
+    url: 'https://github.com/tmcarmichael/nxtchess/blob/main/PRIVACY.md',
+  },
+  {
+    label: 'Contribute',
+    url: 'https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#%EF%B8%8F-getting-started',
+  },
+  {
+    label: 'Contact',
+    url: 'https://github.com/tmcarmichael/nxtchess?tab=readme-ov-file#-contact',
+  },
+];
 
 type CommonMobileMenuProps = {
   onClose: () => void;
@@ -16,6 +43,24 @@ type CommonMobileMenuProps = {
 const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
   const navigate = useNavigate();
   const [userState] = useUserStore();
+  const [isClosing, setIsClosing] = createSignal(false);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      props.onClose();
+    }, 150);
+  };
+
+  onMount(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    onCleanup(() => document.removeEventListener('keydown', handleKeyDown));
+  });
 
   const handleNavClick = (item: (typeof NAV_ITEMS)[number]) => {
     if (item.route) {
@@ -38,11 +83,18 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
   };
 
   return (
-    <div class={styles.overlay} onClick={props.onClose}>
+    <div class={styles.overlay} onClick={handleClose}>
       <nav class={styles.menu} onClick={(e) => e.stopPropagation()}>
         <div class={styles.menuHeader}>
           <span class={styles.menuTitle}>Menu</span>
-          <button class={styles.closeButton} onClick={props.onClose} aria-label="Close menu">
+          <button
+            classList={{
+              [styles.closeButton]: true,
+              [styles.closing]: isClosing(),
+            }}
+            onClick={handleClose}
+            aria-label="Close menu"
+          >
             <span class={styles.closeIcon}>&times;</span>
           </button>
         </div>
@@ -60,6 +112,21 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
                   <span class={styles.navBadge}>Soon</span>
                 </Show>
               </button>
+            )}
+          </For>
+        </div>
+
+        <div class={styles.linksSection}>
+          <For each={FOOTER_LINKS}>
+            {(link) => (
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class={styles.footerLink}
+              >
+                {link.label}
+              </a>
             )}
           </For>
         </div>
