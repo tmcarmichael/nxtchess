@@ -9,7 +9,10 @@
   align-items: center;
   justify-content: flex-start;
   text-align: center;
-  padding: calc(var(--header-height) + var(--space-lg)) var(--space-md) var(--space-xl);
+  padding: calc(var(--header-height) + var(--safe-area-top) + var(--space-lg)) var(--space-md)
+    calc(var(--space-xl) + var(--safe-area-bottom));
+  padding-left: max(var(--space-md), var(--safe-area-left));
+  padding-right: max(var(--space-md), var(--safe-area-right));
   box-sizing: border-box;
   min-height: 100vh;
   position: relative;
@@ -62,6 +65,17 @@
    Responsive Breakpoints
    ───────────────────────────────────────────────────────────────────────────── */
 
+/* Large desktop: Expanded panel width */
+@media (min-width: 1400px) {
+  .gameLayout {
+    max-width: 1600px;
+  }
+
+  .panelWrapper {
+    width: 420px;
+  }
+}
+
 /* Desktop narrow: Reduce panel width */
 @media (max-width: 1199px) {
   .gameLayout {
@@ -76,7 +90,8 @@
 /* Tablet: Stack layout vertically */
 @media (max-width: 1023px) {
   .gameContainer {
-    padding: calc(var(--header-height) + var(--space-md)) var(--space-md) var(--space-lg);
+    padding: calc(var(--header-height) + var(--safe-area-top) + var(--space-md)) var(--space-md)
+      calc(var(--space-lg) + var(--safe-area-bottom));
   }
 
   .gameLayout {
@@ -105,7 +120,8 @@
 /* Mobile: Full width panels */
 @media (max-width: 639px) {
   .gameContainer {
-    padding: calc(var(--header-height-mobile) + var(--space-sm)) var(--space-sm) var(--space-md);
+    padding: calc(var(--header-height-mobile) + var(--safe-area-top) + var(--space-sm))
+      var(--space-sm) calc(var(--space-md) + var(--safe-area-bottom));
   }
 
   .gameLayout {
@@ -116,5 +132,24 @@
   .panelWrapper {
     width: 100%;
     max-width: none;
+  }
+}
+
+/* Tablet landscape: Side-by-side layout with larger panels */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .gameLayout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-xl);
+  }
+
+  .boardWrapper {
+    order: 0;
+  }
+
+  .panelWrapper {
+    order: 0;
+    width: min(360px, 35vw);
+    max-width: 400px;
   }
 }

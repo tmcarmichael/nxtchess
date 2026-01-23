@@ -1,0 +1,99 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NetworkStatusBanner - Obsidian Arena Theme
+   Connection status indicator for offline/online states
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.banner {
+  position: fixed;
+  top: calc(var(--header-height) + var(--safe-area-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-lg);
+  animation: slideDown var(--transition-base) ease-out;
+  max-width: calc(100vw - 2rem);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Offline state - warning style */
+.offline {
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: var(--warning);
+}
+
+.offline .icon {
+  color: var(--warning);
+}
+
+/* Online state - success style */
+.online {
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  color: var(--success);
+}
+
+.online .icon {
+  color: var(--success);
+}
+
+.icon {
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.message {
+  white-space: nowrap;
+}
+
+.hint {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  padding-left: var(--space-sm);
+  border-left: 1px solid currentColor;
+}
+
+/* Mobile: Stack hint below message */
+@media (max-width: 639px) {
+  .banner {
+    top: calc(var(--header-height-mobile) + var(--safe-area-top));
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .message {
+    white-space: normal;
+  }
+
+  .hint {
+    width: 100%;
+    border-left: none;
+    padding-left: 0;
+    padding-top: var(--space-xs);
+    border-top: 1px solid currentColor;
+    margin-top: var(--space-xs);
+  }
+}

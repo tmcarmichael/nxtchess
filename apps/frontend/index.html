@@ -9,17 +9,61 @@
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#0a0a0a" />
     <meta name="description" content="Real-time multiplayer chess with AI training" />
+    <meta name="application-name" content="NXT Chess" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- iOS/Safari PWA Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="NXT Chess" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
+
+    <!-- Safari Pinned Tab -->
+    <link rel="mask-icon" href="/icons/icon-maskable.svg" color="#00ffd1" />
 
     <!-- Preconnect to Google Fonts for faster font loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Preload Stockfish WASM for faster engine initialization -->
-    <link rel="preload" href="/stockfish/stockfish-16.1.wasm" as="fetch" crossorigin />
+
+    <!-- Adaptive Engine Loading: Only preload lite WASM by default for faster initial load -->
+    <script>
+      (function () {
+        // Check if we can use multi-threaded engine (requires SharedArrayBuffer)
+        var canUseMultiThreaded =
+          typeof SharedArrayBuffer !== 'undefined' &&
+          typeof crossOriginIsolated !== 'undefined' &&
+          crossOriginIsolated;
+
+        // Check network conditions for adaptive loading
+        var connection =
+          navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        var shouldPreloadFull =
+          canUseMultiThreaded &&
+          connection &&
+          connection.effectiveType === '4g' &&
+          !connection.saveData;
+
+        // Create preload link for appropriate engine
+        var preloadLink = document.createElement('link');
+        preloadLink.rel = 'preload';
+        preloadLink.as = 'fetch';
+        preloadLink.crossOrigin = 'anonymous';
+
+        if (shouldPreloadFull) {
+          preloadLink.href = '/stockfish/stockfish-16.1.wasm';
+        } else {
+          // Default to lite 7MB version for mobile/slow connections
+          preloadLink.href = '/stockfish/stockfish-16.1-lite.wasm';
+        }
+
+        document.head.appendChild(preloadLink);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
