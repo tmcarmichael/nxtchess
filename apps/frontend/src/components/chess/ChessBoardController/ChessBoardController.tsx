@@ -98,9 +98,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     on(
       () => chess.state.isGameOver,
       (isGameOver) => {
-        if (isGameOver) {
-          setShowEndModal(true);
-        }
+        setShowEndModal(isGameOver);
       }
     )
   );

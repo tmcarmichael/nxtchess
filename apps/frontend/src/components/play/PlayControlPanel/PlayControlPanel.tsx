@@ -1,38 +1,16 @@
-import { useNavigate } from '@solidjs/router';
-import { Show, createSignal, type ParentComponent } from 'solid-js';
 import { usePlayGame } from '../../../store/game/PlayGameContext';
-import { type StartGameOptions, type GameMode } from '../../../types/game';
 import ButtonPanel from '../../game/ButtonPanel/ButtonPanel';
 import GameInfoPanel from '../../game/GameInfoPanel/GameInfoPanel';
 import GamePanelButton from '../../game/GamePanelButton/GamePanelButton';
-import ResignModal from '../PlayResignModal/PlayResignModal';
 import styles from './PlayControlPanel.module.css';
+import type { ParentComponent } from 'solid-js';
 
 const PlayControlPanel: ParentComponent = () => {
-  const navigate = useNavigate();
   const { chess, engine, actions, derived } = usePlayGame();
-
-  const [showResignModal, setShowResignModal] = createSignal(false);
 
   const handleResign = () => {
     if (!derived.isPlaying()) return;
     actions.resign();
-    setShowResignModal(true);
-  };
-
-  const handleReplay = () => {
-    const playGameConfig: StartGameOptions = {
-      side: chess.derived.opponentSide(),
-      mode: 'play' as GameMode,
-    };
-    actions.startNewGame(playGameConfig);
-    setShowResignModal(false);
-  };
-
-  const handleHome = () => {
-    actions.exitGame();
-    navigate('/');
-    setShowResignModal(false);
   };
 
   return (
@@ -57,14 +35,6 @@ const PlayControlPanel: ParentComponent = () => {
           capturedBlack={chess.state.capturedBlack}
         />
       </div>
-      <Show when={showResignModal()}>
-        <ResignModal
-          onClose={() => setShowResignModal(false)}
-          onReplay={handleReplay}
-          onHome={handleHome}
-          resignedSide={chess.state.playerColor}
-        />
-      </Show>
     </div>
   );
 };
