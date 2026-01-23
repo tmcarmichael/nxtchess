@@ -7,10 +7,45 @@ class AudioService {
   private audioContext: AudioContext | null = null;
   private volume = 0.12;
   private enabled = true;
+  private hasUserInteracted = false;
+  private userInteractionListenerAdded = false;
+
+  constructor() {
+    this.setupUserInteractionListener();
+  }
+
+  /**
+   * Listen for user interaction to enable audio.
+   * AudioContext requires a user gesture to start.
+   */
+  private setupUserInteractionListener(): void {
+    if (this.userInteractionListenerAdded || typeof window === 'undefined') return;
+
+    const enableAudio = () => {
+      this.hasUserInteracted = true;
+      // Try to resume any suspended context
+      if (this.audioContext?.state === 'suspended') {
+        this.audioContext.resume().catch(() => {
+          // Ignore resume errors
+        });
+      }
+    };
+
+    // Listen for common user interaction events
+    const events = ['click', 'touchstart', 'keydown'];
+    events.forEach((event) => {
+      window.addEventListener(event, enableAudio, { once: false, passive: true });
+    });
+
+    this.userInteractionListenerAdded = true;
+  }
 
   // Initialize audio context (must be called after user interaction)
   init(): void {
     if (this.audioContext) return;
+
+    // Don't create AudioContext until user has interacted
+    if (!this.hasUserInteracted) return;
 
     try {
       this.audioContext = new AudioContext();
@@ -20,12 +55,19 @@ class AudioService {
   }
 
   private ensureContext(): AudioContext | null {
+    // Don't attempt to create/resume AudioContext before user interaction
+    if (!this.hasUserInteracted) {
+      return null;
+    }
+
     if (!this.audioContext) {
       this.init();
     }
 
     if (this.audioContext?.state === 'suspended') {
-      this.audioContext.resume();
+      this.audioContext.resume().catch(() => {
+        // Ignore resume errors - will retry on next sound
+      });
     }
 
     return this.audioContext;

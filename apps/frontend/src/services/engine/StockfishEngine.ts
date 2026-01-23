@@ -140,8 +140,8 @@ export function detectEngineVariant(): EngineVariant {
       _engineVariant = 'lite-st';
     }
 
-    console.warn(
-      `Stockfish engine: ${_engineVariant} (${_isMobile ? 'mobile' : 'desktop'}, threads: ${hasThreads})`
+    console.info(
+      `[Engine] Stockfish variant selected: ${_engineVariant} (device: ${_isMobile ? 'mobile' : 'desktop'}, SharedArrayBuffer: ${hasThreads})`
     );
   }
 
