@@ -51,18 +51,19 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
   multiplayer.on('game:started', ({ whiteTimeMs, blackTimeMs }) => {
     chess.setLifecycle('playing');
     timer.sync(whiteTimeMs, blackTimeMs);
-    timer.start(
-      () => chess.state.currentTurn,
-      () => {}
-    );
+    // Don't start local timer for multiplayer - server TIME_UPDATE is authoritative
   });
 
-  multiplayer.on('move:accepted', ({ fen, whiteTimeMs, blackTimeMs }) => {
-    chess.confirmMove(
-      fen,
-      whiteTimeMs ?? timer.state.whiteTime,
-      blackTimeMs ?? timer.state.blackTime
-    );
+  multiplayer.on('move:accepted', ({ fen, san, from, to, isCheck, whiteTimeMs, blackTimeMs }) => {
+    chess.confirmMove({
+      serverFen: fen,
+      san,
+      from,
+      to,
+      isCheck,
+      whiteTimeMs: whiteTimeMs ?? timer.state.whiteTime,
+      blackTimeMs: blackTimeMs ?? timer.state.blackTime,
+    });
     if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
       timer.sync(whiteTimeMs, blackTimeMs);
     }

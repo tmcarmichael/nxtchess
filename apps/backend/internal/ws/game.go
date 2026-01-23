@@ -287,7 +287,19 @@ func (gm *GameManager) JoinGame(client *Client, gameID string) {
 	}
 
 	// Check if it's the same player trying to join their own game
-	if game.WhitePlayer != nil && game.WhitePlayer.ID == client.ID {
+	// For authenticated users, check UserID (persists across reconnects)
+	// For anonymous users, check connection ID
+	isSamePlayer := false
+	if game.WhitePlayer != nil {
+		if client.UserID != "" && game.WhitePlayer.UserID != "" {
+			// Both authenticated - compare UserID
+			isSamePlayer = game.WhitePlayer.UserID == client.UserID
+		} else {
+			// At least one anonymous - compare connection ID
+			isSamePlayer = game.WhitePlayer.ID == client.ID
+		}
+	}
+	if isSamePlayer {
 		client.SendMessage(NewErrorMessage("SAME_PLAYER", "Cannot join your own game"))
 		return
 	}

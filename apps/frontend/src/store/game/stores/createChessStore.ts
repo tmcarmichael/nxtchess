@@ -63,7 +63,15 @@ export interface ChessStore {
   }) => string;
   applyMove: (from: Square, to: Square, promotion?: PromotionPiece) => boolean;
   applyOptimisticMove: (from: Square, to: Square, promotion?: PromotionPiece) => boolean;
-  confirmMove: (serverFen: string, whiteTimeMs: number, blackTimeMs: number) => void;
+  confirmMove: (data: {
+    serverFen: string;
+    san: string;
+    from: string;
+    to: string;
+    isCheck?: boolean;
+    whiteTimeMs: number;
+    blackTimeMs: number;
+  }) => void;
   rejectMove: (serverFen: string, reason: string) => void;
   endGame: (reason: GameOverReason, winner: GameWinner, evalScore?: number) => void;
   exitGame: () => void;
@@ -234,22 +242,61 @@ export const createChessStore = (): ChessStore => {
     return result.success;
   };
 
-  const confirmMove = (serverFen: string, whiteTimeMs: number, blackTimeMs: number) => {
-    if (!currentSession) return;
-    sessionManager.applyCommand(currentSession.sessionId, {
-      type: 'CONFIRM_MOVE',
-      payload: { serverFen, whiteTimeMs, blackTimeMs },
-    });
-    syncFromSession();
+  const confirmMove = (data: {
+    serverFen: string;
+    san: string;
+    from: string;
+    to: string;
+    isCheck?: boolean;
+    whiteTimeMs: number;
+    blackTimeMs: number;
+  }) => {
+    if (currentSession) {
+      // Single-player mode with session
+      sessionManager.applyCommand(currentSession.sessionId, {
+        type: 'CONFIRM_MOVE',
+        payload: {
+          serverFen: data.serverFen,
+          whiteTimeMs: data.whiteTimeMs,
+          blackTimeMs: data.blackTimeMs,
+        },
+      });
+      syncFromSession();
+    } else {
+      // Multiplayer mode (no session) - update state directly like syncFromMultiplayer
+      batch(() => {
+        setState('fen', data.serverFen);
+        setState('viewFen', data.serverFen);
+        setState('lastMove', { from: data.from as Square, to: data.to as Square });
+        setState('moveHistory', [...state.moveHistory, data.san]);
+        setState('viewMoveIndex', state.moveHistory.length);
+        setState('currentTurn', getOpponentSide(state.currentTurn));
+        if (data.isCheck) {
+          const board = fenToBoard(data.serverFen);
+          const currentTurn = data.serverFen.split(' ')[1] as Side;
+          const kingPiece = currentTurn === 'w' ? 'wK' : 'bK';
+          const kingSquare = board.find((sq) => sq.piece === kingPiece)?.square;
+          setState('checkedKingSquare', kingSquare ?? null);
+        } else {
+          setState('checkedKingSquare', null);
+        }
+        setState('moveError', null);
+      });
+    }
   };
 
   const rejectMove = (serverFen: string, reason: string) => {
-    if (!currentSession) return;
-    sessionManager.applyCommand(currentSession.sessionId, {
-      type: 'REJECT_MOVE',
-      payload: { serverFen, reason },
-    });
-    syncFromSession();
+    if (currentSession) {
+      sessionManager.applyCommand(currentSession.sessionId, {
+        type: 'REJECT_MOVE',
+        payload: { serverFen, reason },
+      });
+      syncFromSession();
+    } else {
+      // Multiplayer mode (no session) - set error directly
+      // No board state to revert since we don't do optimistic updates in multiplayer
+      setState('moveError', reason);
+    }
   };
 
   const endGame = (reason: GameOverReason, winner: GameWinner, evalScore?: number) => {
