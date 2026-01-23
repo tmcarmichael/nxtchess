@@ -377,7 +377,51 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     event.dataTransfer?.setDragImage(new Image(), 0, 0);
   };
 
-  // RAF-throttled mouse move to prevent 60+ style recalcs/second
+  // Touch event handling for mobile
+  // Track touch start position to distinguish tap vs drag
+  let touchStartPos: { x: number; y: number; square: Square; piece: string } | null = null;
+  let isTouchDragging = false;
+  const DRAG_THRESHOLD = 10; // pixels - movement beyond this activates drag
+
+  const handleTouchStart = (square: Square, piece: string, event: TouchEvent) => {
+    // Allow picking up player's pieces even during opponent's turn (premove preparation)
+    if (!isPlayerPiece(square)) return;
+    // Don't allow picking up during game over or when engine is thinking
+    if (chess.state.isGameOver || engine.state.isThinking) return;
+
+    // Initialize audio on first interaction
+    audioService.init();
+
+    // Record touch start - don't activate drag yet (let tap-to-select work)
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchStartPos = { x: touch.clientX, y: touch.clientY, square, piece };
+    isTouchDragging = false;
+  };
+
+  // Activates drag mode after movement threshold exceeded
+  const activateTouchDrag = () => {
+    if (!touchStartPos || isTouchDragging) return;
+    isTouchDragging = true;
+
+    // Clear any existing premove when starting a new drag
+    clearPremove();
+
+    // Mark that a drag started so handleSquareClick doesn't interfere
+    justDragged = true;
+
+    resetViewIfNeeded();
+    setDraggedPiece({ square: touchStartPos.square, piece: touchStartPos.piece });
+    setCursorPosition({ x: touchStartPos.x, y: touchStartPos.y });
+    // Use premove-aware moves when it's not player's turn
+    const moves = chess.derived.isPlayerTurn()
+      ? getLegalMoves(chess.state.fen, touchStartPos.square)
+      : getPremoveLegalMoves(chess.state.fen, touchStartPos.square);
+    setHighlightedMoves(moves);
+    setSelectedSquare(touchStartPos.square);
+  };
+
+  // RAF-throttled mouse/touch move to prevent 60+ style recalcs/second
   let rafId: number | null = null;
   const handleMouseMove = (e: MouseEvent) => {
     if (draggedPiece()) {
@@ -388,6 +432,70 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       });
     }
   };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    // Check if we should activate drag mode (movement exceeded threshold)
+    if (touchStartPos && !isTouchDragging) {
+      const dx = touch.clientX - touchStartPos.x;
+      const dy = touch.clientY - touchStartPos.y;
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
+        activateTouchDrag();
+      }
+    }
+
+    // Only track position if actively dragging
+    if (isTouchDragging && draggedPiece()) {
+      if (rafId !== null) return; // Skip if RAF pending
+      rafId = requestAnimationFrame(() => {
+        setCursorPosition({ x: touch.clientX, y: touch.clientY });
+        rafId = null;
+      });
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent) => {
+    // If we were dragging, handle the drop
+    if (isTouchDragging && draggedPiece()) {
+      const touch = e.changedTouches[0];
+      if (touch) {
+        const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        // Find the square element (either the target or a parent with data-square)
+        let squareElement = targetElement as HTMLElement | null;
+        while (squareElement && !squareElement.dataset?.square) {
+          squareElement = squareElement.parentElement;
+        }
+
+        if (squareElement?.dataset?.square) {
+          const targetSquare = squareElement.dataset.square as Square;
+          handleMouseUp(targetSquare);
+        } else {
+          // Dropped outside the board - clear dragging state
+          clearDraggingState();
+        }
+      } else {
+        clearDraggingState();
+      }
+    }
+    // If not dragging (was a tap), let the click event handle selection naturally
+
+    // Reset touch tracking state
+    touchStartPos = null;
+    isTouchDragging = false;
+  };
+
+  // Handle touch cancel (e.g., incoming call, palm rejection)
+  const handleTouchCancel = () => {
+    if (isTouchDragging) {
+      clearDraggingState();
+    }
+    touchStartPos = null;
+    isTouchDragging = false;
+  };
+
   onCleanup(() => {
     if (rafId !== null) cancelAnimationFrame(rafId);
   });
@@ -554,8 +662,37 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     navigate('/');
   };
 
+  // Ref for container to add non-passive touch listeners
+  let containerRef: HTMLDivElement | undefined;
+
+  // Add non-passive touchmove listener to allow preventDefault (stop scrolling while dragging)
+  createEffect(() => {
+    if (!containerRef) return;
+
+    const onTouchMove = (e: TouchEvent) => {
+      // Only prevent default (stop scrolling) when actively dragging
+      if (isTouchDragging && draggedPiece()) {
+        e.preventDefault();
+      }
+      handleTouchMove(e);
+    };
+
+    // Must use { passive: false } to allow preventDefault
+    containerRef.addEventListener('touchmove', onTouchMove, { passive: false });
+
+    onCleanup(() => {
+      containerRef?.removeEventListener('touchmove', onTouchMove);
+    });
+  });
+
   return (
-    <div onMouseMove={handleMouseMove} class={styles.chessGameContainer}>
+    <div
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
+      class={styles.chessGameContainer}
+    >
       <div class={styles.rowWrapper}>
         <Show when={chess.state.mode === 'training'}>
           <ChessEvalBar evalScore={evalScore()} />
@@ -571,6 +708,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
             onSquareClick={handleSquareClick}
             onSquareMouseUp={handleMouseUp}
             onDragStart={handleDragStart}
+            onTouchStart={handleTouchStart}
             lastMove={() => chess.state.lastMove}
             checkedKingSquare={() => chess.state.checkedKingSquare}
             boardView={() => ui.state.boardView}
