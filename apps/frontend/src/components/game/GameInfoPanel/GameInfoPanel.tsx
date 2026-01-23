@@ -1,4 +1,4 @@
-import { type Component, type JSX, type Accessor } from 'solid-js';
+import { Show, type Component, type JSX, type Accessor } from 'solid-js';
 import ChessMaterialDisplay from '../../chess/ChessMaterialDisplay/ChessMaterialDisplay';
 import DifficultyDisplay from '../DifficultyDisplay/DifficultyDisplay';
 import PlayerColorDisplay from '../PlayerColorDisplay/PlayerColorDisplay';
@@ -11,7 +11,7 @@ interface MaterialData {
 
 interface GameInfoPanelProps {
   playerColor: Side;
-  difficulty: number;
+  difficulty?: number;
   material: Accessor<MaterialData>;
   capturedWhite: string[];
   capturedBlack: string[];
@@ -23,7 +23,9 @@ const GameInfoPanel: Component<GameInfoPanelProps> = (props) => {
     <div class={styles.infoPanel}>
       <PlayerColorDisplay playerColor={props.playerColor} />
       {props.extraInfo}
-      <DifficultyDisplay difficulty={props.difficulty} />
+      <Show when={props.difficulty !== undefined}>
+        <DifficultyDisplay difficulty={props.difficulty!} />
+      </Show>
       <ChessMaterialDisplay
         material={props.material}
         capturedWhite={props.capturedWhite}
