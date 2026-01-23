@@ -14,6 +14,7 @@ dist-ssr
 
 # Build output
 .vite
+dev-dist/
 coverage/
 .nyc_output/
 
