@@ -22,29 +22,79 @@ go build -o server cmd/server/main.go  # Build binary
 ## Architecture
 
 ### Entry Point and Routing
-`cmd/server/main.go` initializes all services and registers Chi routes:
-- WebSocket: `GET /ws` (multiplayer game connections)
-- OAuth routes: `/auth/{google,github,discord}/{login,callback}` (rate limited: 10/min)
-- Logout: `POST /auth/logout` (rate limited: 10/min)
-- Health routes: `/health`, `/health/live`, `/health/ready` (no rate limit)
-- Protected routes (require session, rate limited: 60/min): `/profile/{username}`, `/check-username`, `/set-username`
+
+`cmd/server/main.go` initializes services in order:
+1. Load .env file (optional)
+2. Load config from environment
+3. Initialize logger
+4. Connect to PostgreSQL (with pool)
+5. Connect to Redis
+6. Register OAuth providers
+7. Create WebSocket hub + handler
+8. Create rate limiters
+9. Register routes
+10. Start HTTP server with graceful shutdown (15s timeout)
+
+**Routes:**
+
+| Group | Middleware | Endpoints |
+|-------|-----------|-----------|
+| Health | None | `GET /health`, `/health/live`, `/health/ready` |
+| WebSocket | None | `GET /ws` |
+| OAuth | AuthRateLimiter (10/min) | `GET /auth/{google,github,discord}/{login,callback}` |
+| Logout | AuthRateLimiter, SmallBodyLimit | `POST /auth/logout` |
+| Protected | APIRateLimiter (60/min), SmallBodyLimit, Session | `GET /profile/{username}`, `GET /check-username`, `POST /set-username`, `POST /set-profile-icon` |
 
 ### Package Structure
+
 ```
+cmd/server/main.go               # Entry point, route registration, graceful shutdown
+
 internal/
-├── auth/           # OAuth provider system (generic handlers + provider configs)
-├── chess/          # Chess move validation wrapper (uses notnil/chess)
-├── config/         # Environment config loader (config.Load())
-├── controllers/    # HTTP handlers (profile, auth operations)
-├── database/       # Direct SQL queries with connection pooling
-├── httpx/          # JSON response helpers, secure cookie factory
-├── logger/         # Structured logging with levels (DEBUG/INFO/WARN/ERROR)
-├── middleware/     # CORS, Recovery, Security, Session, RateLimit
-├── models/         # Data structures (Profile, Game, PublicProfile)
-├── sessions/       # Redis session store operations
-├── validation/     # Input validation (username rules, etc.)
-├── ws/             # WebSocket hub, client, game management for multiplayer
-└── utils/          # Random string generation, auth redirects
+├── auth/                        # OAuth 2.0 system
+│   ├── oauth.go                 # Generic login/callback handlers
+│   └── providers.go             # Google, GitHub, Discord configs
+├── chess/                       # Server-side validation
+│   ├── chess.go                 # notnil/chess wrapper
+│   └── chess_test.go            # Validation tests
+├── config/                      # Environment config
+│   └── config.go                # Load(), IsProd()
+├── controllers/                 # HTTP handlers
+│   ├── auth.go                  # Logout handler
+│   └── profile.go               # Profile endpoints
+├── database/                    # PostgreSQL operations
+│   ├── db.go                    # Connection pool setup
+│   ├── profile.go               # User queries
+│   └── game.go                  # Game queries (debug)
+├── httpx/                       # HTTP utilities
+│   └── httpx.go                 # JSON responses, cookies, IP extraction
+├── logger/                      # Structured logging
+│   └── logger.go                # Levels, JSON mode, thread-safe
+├── middleware/                  # HTTP middleware
+│   ├── cors.go                  # CORS headers
+│   ├── security.go              # Security headers
+│   ├── recovery.go              # Panic recovery
+│   ├── bodylimit.go             # Request size limits
+│   ├── session.go               # Redis session auth
+│   ├── ratelimit.go             # Token bucket per-IP
+│   └── requestid.go             # Request ID tracing
+├── models/                      # Data structures
+│   ├── profile.go               # Profile, PublicProfile
+│   └── game.go                  # Game model
+├── sessions/                    # Redis session store
+│   └── session_store.go         # CRUD operations
+├── validation/                  # Input validation
+│   └── validation.go            # Username, email, icon rules
+├── utils/                       # Helpers
+│   └── helpers.go               # Random strings, redirects
+└── ws/                          # WebSocket multiplayer
+    ├── handler.go               # Upgrade, connection limits
+    ├── hub.go                   # Client registry, routing
+    ├── client.go                # Read/write pumps, rate limit
+    ├── game.go                  # Game state, clock, lifecycle
+    └── message.go               # Message types
+
+test_ws.html                     # Browser-based WS testing tool
 ```
 
 ### Key Patterns
@@ -54,7 +104,7 @@ internal/
 logger.Info("User logged in", logger.F("userId", id, "provider", "google"))
 ```
 
-**Input Validation**: Use `validation.ValidateUsername()` and similar functions:
+**Input Validation**: Use `validation.ValidateUsername()` and similar:
 ```go
 if err := validation.ValidateUsername(username); err != nil {
     httpx.WriteJSONError(w, http.StatusBadRequest, err.Message)
@@ -62,157 +112,281 @@ if err := validation.ValidateUsername(username); err != nil {
 }
 ```
 
-**Rate Limiting**: Three preset limiters available:
+**Rate Limiting**: Three preset limiters:
 - `NewAuthRateLimiter()` - 10/min, burst 5 (auth endpoints)
 - `NewAPIRateLimiter()` - 60/min, burst 20 (general API)
 - `NewStrictRateLimiter()` - 5/min, burst 3 (sensitive operations)
 
-**OAuth Provider System**: Generic handlers in `auth/oauth.go` with provider-specific configs in `auth/providers.go`.
+**OAuth Provider System**: Generic handlers in `auth/oauth.go` with provider-specific configs in `auth/providers.go`. Providers missing credentials are skipped.
 
-**Session Authentication**: Cookie-based sessions stored in Redis (24h TTL). Session middleware extracts `session_token` cookie, looks up userID in Redis, and attaches to request context via `middleware.UserIDFromContext()`.
+**Session Authentication**: Cookie-based sessions in Redis (24h TTL). Session middleware extracts `session_token` cookie, validates against Redis, attaches userID to context via `middleware.UserIDFromContext()`.
 
-**Security Middleware**: Adds headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, CSP, HSTS in production).
+**Secure Cookies**: Use `httpx.NewSecureCookie(cfg, name, value, maxAge)` - HttpOnly always, Secure in prod, SameSite=Lax (dev) or None (prod).
 
-**Secure Cookies**: Use `httpx.NewSecureCookie(cfg, name, value, maxAge)` which sets `Secure` and `SameSite` based on environment.
+**Trusted Proxy Support**: Configure `TRUSTED_PROXIES` with CIDR blocks (e.g., `10.0.0.0/8,172.16.0.0/12`) for accurate client IP extraction behind reverse proxies.
 
 ### Middleware Stack
-Order matters - applied from outermost to innermost:
-1. CORS (allows cross-origin requests from frontend)
-2. Recovery (panic handling, hides details in production)
-3. Security (security headers)
-4. Rate Limiting (per route group)
-5. Session (authentication for protected routes)
+
+Applied outermost to innermost:
+1. **CORS** - Cross-origin from `FRONTEND_URL` only, credentials enabled
+2. **RequestID** - 16-char hex ID per request, X-Request-ID header
+3. **Recovery** - Panic handling, hides details in production
+4. **Security** - Headers (CSP, HSTS, X-Frame-Options, etc.)
+5. **BodyLimit** - 1MB default, 64KB for JSON APIs
+6. **RateLimiter** - Per route group, token bucket algorithm
+7. **Session** - Authentication for protected routes
 
 ### Health Checks
 - `GET /health` - Full health with DB/Redis status (JSON)
-- `GET /health/live` - Liveness probe (always 200 if running)
+- `GET /health/live` - Liveness probe (always 200)
 - `GET /health/ready` - Readiness probe (checks DB + Redis)
+
+## Models
+
+```go
+type Profile struct {
+    UserID      string    `json:"user_id"`
+    Username    string    `json:"username"`
+    Rating      int       `json:"rating"`
+    ProfileIcon string    `json:"profile_icon"`
+    CreatedAt   time.Time `json:"created_at"`
+}
+
+type PublicProfile struct {
+    Username    string `json:"username"`
+    Rating      int    `json:"rating"`
+    ProfileIcon string `json:"profile_icon"`
+}
+
+type Game struct {
+    GameID              string
+    PGN                 string
+    PlayerWID           string
+    PlayerBID           string
+    StockfishDifficulty *int      // nullable, for AI games
+    PlayerWStartRating  int
+    PlayerBStartRating  int
+    Result              string    // "1-0", "0-1", "1/2-1/2", "*"
+    CreatedAt           time.Time
+}
+```
 
 ## Database Schema
 
-See `db/init.sql` for full schema. Key tables:
-- `profiles` - user_id (PK), username, rating, created_at
-- `games` - game_id (UUID), pgn, playerW_id, playerB_id, result, created_at (FK to profiles)
-- `rating_history` - user_id (FK), rating, created_at
+See `db/init.sql` for full schema:
 
-Migrations in `db/migrations/` for existing databases.
+```sql
+profiles (
+    user_id VARCHAR PRIMARY KEY,
+    username VARCHAR UNIQUE,
+    rating INTEGER DEFAULT 1200,
+    profile_icon VARCHAR DEFAULT 'white-pawn',
+    created_at TIMESTAMP
+)
+
+games (
+    game_id UUID PRIMARY KEY,
+    pgn TEXT,
+    playerW_id VARCHAR REFERENCES profiles(user_id),
+    playerB_id VARCHAR REFERENCES profiles(user_id),
+    stockfish_difficulty INTEGER,  -- nullable
+    playerW_start_rating INTEGER,
+    playerB_start_rating INTEGER,
+    result VARCHAR,  -- '1-0', '0-1', '1/2-1/2', '*'
+    created_at TIMESTAMP
+)
+
+rating_history (
+    id INTEGER PRIMARY KEY,
+    user_id VARCHAR REFERENCES profiles(user_id),
+    rating INTEGER,
+    created_at TIMESTAMP
+)
+```
 
 ## Environment Variables
 
-See `.env.example` for all options. Key variables:
-
 ```bash
 # Server
-ENV=development|production
-LOG_LEVEL=DEBUG|INFO|WARN|ERROR
-LOG_JSON=true|false
+PORT=8080                           # HTTP port
+ENV=development|production          # Environment mode
+LOG_LEVEL=DEBUG|INFO|WARN|ERROR     # Log verbosity (auto: DEBUG dev, INFO prod)
+LOG_JSON=true|false                 # JSON logging (auto: true in prod)
 
-# Database (with connection pooling)
-DATABASE_URL=postgres://...
-DB_MAX_OPEN_CONNS=25
-DB_MAX_IDLE_CONNS=5
-DB_CONN_MAX_LIFETIME_MINS=5
+# Database
+DATABASE_URL=postgres://...         # Required
+DB_MAX_OPEN_CONNS=25               # Connection pool max
+DB_MAX_IDLE_CONNS=5                # Idle connections
+DB_CONN_MAX_LIFETIME_MINS=5        # Connection lifetime
+
+# Redis
+REDIS_ADDR=redis:6379              # Redis address
+REDIS_PASSWORD=                     # Redis password (optional)
 
 # URLs
-FRONTEND_URL=http://localhost:5173
-BACKEND_URL=http://localhost:8080
+FRONTEND_URL=http://localhost:5173  # For CORS and redirects
+BACKEND_URL=http://localhost:8080   # For OAuth callbacks
 
-# OAuth (optional - missing providers are skipped)
-GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
-GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET
-DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET
+# Trusted Proxies (for accurate IP extraction behind load balancers)
+TRUSTED_PROXIES=10.0.0.0/8,172.16.0.0/12  # Comma-separated CIDRs or IPs
+
+# OAuth (optional - providers without credentials are skipped)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+```
+
+## WebSocket Multiplayer Protocol
+
+Connect to `ws://localhost:8080/ws` for multiplayer games. Session cookie is optional (anonymous play allowed).
+
+### Connection Limits
+- **5 connections per IP** maximum
+- **200ms minimum** between connection attempts
+- Stale entries cleaned after 5 minutes
+
+### Per-Client Rate Limiting
+- Token bucket: 30 messages per 10 seconds, burst 10
+- 3 violations → 30-second block (connection closed)
+
+### Message Format
+```json
+{ "type": "MESSAGE_TYPE", "data": { ... } }
+```
+
+### Client → Server Messages
+
+| Type | Data | Description |
+|------|------|-------------|
+| `PING` | none | Heartbeat |
+| `GAME_CREATE` | `{timeControl?}` | Create game (play as white) |
+| `GAME_JOIN` | `{gameId}` | Join game (play as black) |
+| `MOVE` | `{gameId, from, to, promotion?}` | Make a move (e.g., "e2" → "e4") |
+| `RESIGN` | `{gameId}` | Resign from game |
+| `GAME_LEAVE` | `{gameId}` | Leave/cancel waiting game |
+
+### Server → Client Messages
+
+| Type | Data | Description |
+|------|------|-------------|
+| `PONG` | none | Heartbeat response |
+| `ERROR` | `{code, message}` | Error notification |
+| `GAME_CREATED` | `{gameId, color}` | Waiting for opponent |
+| `GAME_JOINED` | `{gameId, color}` | Joined, waiting for start |
+| `GAME_STARTED` | `{gameId, fen, whitePlayer, blackPlayer, timeControl?, times}` | Game active |
+| `MOVE_ACCEPTED` | `{gameId, from, to, san, fen, moveNum, isCheck?, times}` | Move valid |
+| `MOVE_REJECTED` | `{gameId, reason, fen, moveNum}` | Move invalid |
+| `OPPONENT_MOVE` | `{gameId, from, to, san, fen, moveNum, isCheck?, times}` | Opponent moved |
+| `GAME_ENDED` | `{gameId, result, reason}` | Game over |
+| `OPPONENT_LEFT` | `{gameId}` | Opponent disconnected |
+| `TIME_UPDATE` | `{gameId, whiteTime, blackTime}` | Clock state (every 1s) |
+
+### Game States
+- **waiting**: First player joined, waiting for second
+- **active**: Both players present, clock running
+- **ended**: Game concluded
+
+### Game End Reasons
+`checkmate`, `stalemate`, `resignation`, `timeout`, `disconnection`, `abandonment`, `insufficient_material`, `threefold_repetition`, `fifty_move_rule`, `agreement`
+
+### Time Controls
+- Set via `timeControl: { initialTime: 600, increment: 5 }` in `GAME_CREATE` (seconds)
+- Clock precision: 100ms ticks
+- Clock starts when second player joins
+- Increment added after each move
+- Times in milliseconds via `TIME_UPDATE` and move responses
+
+### Garbage Collection
+- Runs every 1 minute
+- Ended games removed after 5 minutes
+- Waiting games removed after 30 minutes
+
+### Server-Side Move Validation
+
+Uses `internal/chess` package (wraps `github.com/notnil/chess`):
+- Move legality validation
+- Turn order enforcement
+- Check/checkmate/stalemate detection
+- Draw conditions (insufficient material, threefold repetition, 50-move rule)
+- SAN notation generation (e.g., "e4", "Nxf3+", "O-O")
+- Promotion handling ("q", "r", "b", "n")
+
+### Game Flow
+1. Player A: `GAME_CREATE` → receives `GAME_CREATED` with gameId
+2. Player A shares gameId URL with Player B
+3. Player B: `GAME_JOIN` → both receive `GAME_STARTED` (clock starts)
+4. Players alternate: `MOVE` → sender gets `MOVE_ACCEPTED`, opponent gets `OPPONENT_MOVE`
+5. Both receive `TIME_UPDATE` every second
+6. Game ends: both receive `GAME_ENDED` with result and reason
+
+## Dependencies
+
+```
+go-chi/chi/v5           v5.2.1      # Router
+gorilla/websocket       v1.5.3      # WebSocket
+joho/godotenv           v1.5.1      # .env loading
+lib/pq                  v1.10.9     # PostgreSQL driver
+notnil/chess            v1.10.0     # Chess logic
+redis/go-redis/v9       v9.7.0      # Redis client
+golang.org/x/oauth2     v0.26.0     # OAuth2
 ```
 
 ## Adding New Endpoints
 
 1. Add handler in `internal/controllers/`
-2. Use `middleware.UserIDFromContext()` for authenticated user
-3. Use `httpx.WriteJSON/WriteJSONError` for responses
-4. Use `logger.Info/Error` for logging
+2. Use `middleware.UserIDFromContext(r.Context())` for authenticated user
+3. Use `httpx.WriteJSON()` / `httpx.WriteJSONError()` for responses
+4. Use `logger.Info()` / `logger.Error()` with `logger.F()` for logging
 5. Use `validation.*` for input validation
 6. Register route in `cmd/server/main.go` (choose appropriate rate limit group)
-7. Add any new DB queries in `internal/database/`
+7. Add DB queries in `internal/database/` if needed
 
 ## Adding New OAuth Provider
 
-1. Add client ID/secret to `config.Config`
+1. Add client ID/secret fields to `config.Config`
 2. Create `initProviderName()` in `auth/providers.go`
 3. Call it from `InitOAuthProviders()`
-4. Add routes in `main.go` under the auth rate limiter group
+4. Add routes in `main.go` under auth rate limiter group
 
-## Username Validation Rules
+**OAuth Flow:**
+Login → State cookie → Provider auth → Callback → Token exchange (30s timeout) → Fetch user info → Create session → Upsert profile → Redirect to username setup or home
 
-Validated in `validation.ValidateUsername()`:
+**Provider User ID Formats:**
+- Google: `id` field as-is
+- GitHub: `github_{id}` (prefixed to avoid collisions)
+- Discord: `discord_{id}` (prefixed to avoid collisions)
+
+## Validation Rules
+
+### Username
 - Length: 3-20 characters
 - Format: starts with letter, alphanumeric + underscore only
 - No consecutive underscores
-- Reserved names blocked (admin, system, etc.)
-- Basic offensive content filter
+- Reserved names blocked (admin, system, nxtchess, etc.)
+- Offensive content filter
 
-## WebSocket Multiplayer Protocol
+### Profile Icons
+Whitelist: `white-king`, `white-queen`, `white-rook`, `white-bishop`, `white-knight`, `white-pawn`, `black-king`, `black-queen`, `black-rook`, `black-bishop`, `black-knight`, `black-pawn`
 
-Connect to `ws://localhost:8080/ws` for multiplayer games. Session cookie is optional (allows anonymous play).
+## Security Notes
 
-### Message Format
-```json
-// Client → Server
-{ "type": "MESSAGE_TYPE", "data": { ... } }
+- All chess moves validated server-side (prevents cheating)
+- Session tokens: crypto/rand, 256-bit, base64-encoded
+- OAuth state parameter prevents CSRF
+- CORS locked to frontend origin
+- Rate limiting prevents brute force / DDoS
+- CSP header restricts resource loading
+- No secrets in response bodies
+- Secure cookies (HttpOnly, Secure in prod)
 
-// Server → Client
-{ "type": "MESSAGE_TYPE", "data": { ... } }
-```
+## Performance Notes
 
-### Client → Server Messages
-| Type | Data | Description |
-|------|------|-------------|
-| `PING` | none | Heartbeat |
-| `GAME_CREATE` | `{timeControl?}` | Create new game (you play white) |
-| `GAME_JOIN` | `{gameId}` | Join existing game (you play black) |
-| `MOVE` | `{gameId, from, to, promotion?}` | Make a move |
-| `RESIGN` | `{gameId}` | Resign from game |
-| `GAME_LEAVE` | `{gameId}` | Leave/cancel game |
-
-### Server → Client Messages
-| Type | Data | Description |
-|------|------|-------------|
-| `PONG` | none | Heartbeat response |
-| `ERROR` | `{code, message}` | Error occurred |
-| `GAME_CREATED` | `{gameId, color}` | Game created, waiting for opponent |
-| `GAME_JOINED` | `{gameId, color}` | Successfully joined game |
-| `GAME_STARTED` | `{gameId, fen, whitePlayer, blackPlayer}` | Game started |
-| `MOVE_ACCEPTED` | `{gameId, from, to, san, fen, moveNum, isCheck?}` | Your move was accepted |
-| `MOVE_REJECTED` | `{gameId, reason, fen, moveNum}` | Your move was rejected (illegal move) |
-| `OPPONENT_MOVE` | `{gameId, from, to, san, fen, moveNum, isCheck?}` | Opponent made a move |
-| `GAME_ENDED` | `{gameId, result, reason}` | Game ended (checkmate, stalemate, resignation, etc.) |
-| `OPPONENT_LEFT` | `{gameId}` | Opponent disconnected |
-| `TIME_UPDATE` | `{gameId, whiteTime, blackTime}` | Periodic clock update (ms) |
-
-### Server-Side Move Validation
-
-Moves are validated server-side using the `internal/chess` package (wraps `github.com/notnil/chess`):
-- Validates move legality (piece can make that move)
-- Validates turn order (correct player's turn)
-- Detects check, checkmate, stalemate
-- Detects draw conditions (insufficient material, threefold repetition, fifty-move rule)
-- Returns SAN notation (e.g., "e4", "Nxf3+", "O-O")
-
-### Time Controls
-
-Games support chess clocks with increment:
-- Set via `timeControl: { initialTime: 600, increment: 5 }` in `GAME_CREATE` (seconds)
-- Clock starts when second player joins (game becomes active)
-- Active player's clock decrements; opponent's clock is paused
-- Increment added after each move
-- Timeout results in loss for the player whose time expires
-- Times reported in milliseconds via `TIME_UPDATE` (every second) and in move responses
-
-### Testing
-Open `test_ws.html` in browser to test WebSocket connections interactively.
-
-### Game Flow
-1. Player A: `GAME_CREATE` with optional timeControl → receives `GAME_CREATED` with gameId
-2. Player A: Share gameId with Player B
-3. Player B: `GAME_JOIN` with gameId → both receive `GAME_STARTED` (clock starts for white)
-4. Players alternate: `MOVE` → sender gets `MOVE_ACCEPTED`, opponent gets `OPPONENT_MOVE` (both include current times)
-5. Both players receive `TIME_UPDATE` every second with current clock times
-6. Game ends: both receive `GAME_ENDED` with result and reason (timeout, checkmate, resignation, etc.)
+- Connection pooling (25 max open, 5 idle, 5min lifetime)
+- Query timeout: 5 seconds default
+- RWMutex allows concurrent reads in WebSocket
+- Token bucket rate limiting (efficient, no per-request allocations)
+- Message buffering (256 per client) with warning on full buffer
+- Two-phase garbage collection to minimize lock contention
