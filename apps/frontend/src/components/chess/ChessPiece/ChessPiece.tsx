@@ -6,11 +6,12 @@ interface GamePieceProps {
   type: PieceType;
   draggable?: boolean;
   onDragStart?: (event: DragEvent) => void;
+  onTouchStart?: (event: TouchEvent) => void;
   style?: JSX.CSSProperties;
 }
 
 const ChessPiece: Component<GamePieceProps> = (props: GamePieceProps) => {
-  const [local] = splitProps(props, ['type', 'draggable', 'onDragStart', 'style']);
+  const [local] = splitProps(props, ['type', 'draggable', 'onDragStart', 'onTouchStart', 'style']);
   const pieceSrc = `/assets/${local.type}.svg`;
 
   return (
@@ -20,6 +21,7 @@ const ChessPiece: Component<GamePieceProps> = (props: GamePieceProps) => {
       class={styles.piece}
       draggable={local.draggable}
       onDragStart={local.onDragStart}
+      onTouchStart={local.onTouchStart}
       style={local.style}
     />
   );

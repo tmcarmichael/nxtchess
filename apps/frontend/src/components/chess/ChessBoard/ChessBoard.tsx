@@ -40,6 +40,7 @@ interface ChessBoardProps {
   onSquareClick: (square: Square) => void;
   onSquareMouseUp: (square: Square) => void;
   onDragStart: (square: Square, piece: string, event: DragEvent) => void;
+  onTouchStart: (square: Square, piece: string, event: TouchEvent) => void;
   lastMove: () => { from: Square; to: Square } | null;
   checkedKingSquare: () => Square | null;
   boardView: () => Side;
@@ -61,6 +62,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     'onSquareClick',
     'onSquareMouseUp',
     'onDragStart',
+    'onTouchStart',
     'lastMove',
     'checkedKingSquare',
     'boardView',
@@ -209,6 +211,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
               type={props.piece as PieceType}
               draggable
               onDragStart={(e: DragEvent) => local.onDragStart(props.square, props.piece!, e)}
+              onTouchStart={(e: TouchEvent) => local.onTouchStart(props.square, props.piece!, e)}
               style={{ opacity: pieceOpacity, transition: 'opacity 0.05s ease' }}
             />
           )}

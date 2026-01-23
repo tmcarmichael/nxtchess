@@ -56,10 +56,12 @@ export default [
         Image: 'readonly',
         // DOM Elements
         HTMLDivElement: 'readonly',
+        HTMLElement: 'readonly',
         // Events
         Event: 'readonly',
         MouseEvent: 'readonly',
         DragEvent: 'readonly',
+        TouchEvent: 'readonly',
         KeyboardEvent: 'readonly',
         ClipboardEvent: 'readonly',
         MessageEvent: 'readonly',

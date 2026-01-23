@@ -18,6 +18,10 @@
     filter var(--transition-fast);
   will-change: transform;
   backface-visibility: hidden;
+  /* Prevent browser from hijacking touch for scrolling/zooming */
+  touch-action: none;
+  /* Prevent iOS callout menu on long press */
+  -webkit-touch-callout: none;
 }
 
 .piece:hover {
