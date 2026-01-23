@@ -70,14 +70,20 @@ describe('createUserStore', () => {
   });
 
   describe('checkUserStatus', () => {
-    it('skips API call when no session cookie', async () => {
+    it('calls API and handles 401 when no session', async () => {
       await createRoot(async (dispose) => {
         const [state, actions] = createUserStore();
         const navigateFn = vi.fn();
 
+        // Mock 401 response (no valid session)
+        mockFetch.mockResolvedValueOnce({
+          status: 401,
+          ok: false,
+        });
+
         await actions.checkUserStatus(navigateFn);
 
-        expect(mockFetch).not.toHaveBeenCalled();
+        expect(mockFetch).toHaveBeenCalled();
         expect(state.isLoggedIn).toBe(false);
         expect(state.username).toBe('');
 
