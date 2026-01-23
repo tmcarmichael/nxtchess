@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" shape-rendering="crispEdges">
+  <defs>
+    <pattern id="square" width="200" height="200" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="#e8d5b5"/>
+      <rect x="100" width="100" height="100" fill="#b08968"/>
+      <rect y="100" width="100" height="100" fill="#b08968"/>
+      <rect x="100" y="100" width="100" height="100" fill="#e8d5b5"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="800" fill="url(#square)"/>
+</svg>
