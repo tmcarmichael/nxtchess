@@ -124,9 +124,7 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
         <h2>{heading}</h2>
         <p>{message}</p>
         <div class={styles.actions}>
-          <button class={styles.playAgainButton} onClick={local.onPlayAgain}>
-            {isMultiplayer() ? 'New Game' : 'Play Again'}
-          </button>
+          <button onClick={local.onPlayAgain}>{isMultiplayer() ? 'New Game' : 'Play Again'}</button>
           <button onClick={local.onClose}>Exit</button>
         </div>
       </div>
