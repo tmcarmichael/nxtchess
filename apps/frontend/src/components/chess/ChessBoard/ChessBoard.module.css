@@ -26,6 +26,10 @@
   outline: 1px solid var(--border-subtle);
   outline-offset: -1px;
   touch-action: manipulation;
+  /* SVG board background eliminates subpixel rendering gaps between squares */
+  background-image: url('/assets/board.svg');
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 /* Active turn indicator - board glows when it's your move */
@@ -46,11 +50,13 @@
 }
 
 .square.light {
-  background-color: var(--board-light);
+  /* Transparent - SVG background shows through */
+  background-color: transparent;
 }
 
 .square.dark {
-  background-color: var(--board-dark);
+  /* Transparent - SVG background shows through */
+  background-color: transparent;
 }
 
 .square.selected {
