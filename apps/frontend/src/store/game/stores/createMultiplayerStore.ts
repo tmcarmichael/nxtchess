@@ -30,6 +30,10 @@ export interface MultiplayerEvents {
   };
   'move:accepted': {
     fen: string;
+    san: string;
+    from: string;
+    to: string;
+    isCheck: boolean | undefined;
     whiteTimeMs: number | undefined;
     blackTimeMs: number | undefined;
   };
@@ -156,6 +160,10 @@ export const createMultiplayerStore = (): MultiplayerStore => {
         const data = event.data as MoveAcceptedData;
         events.emit('move:accepted', {
           fen: data.fen,
+          san: data.san,
+          from: data.from,
+          to: data.to,
+          isCheck: data.isCheck,
           whiteTimeMs: data.whiteTimeMs,
           blackTimeMs: data.blackTimeMs,
         });

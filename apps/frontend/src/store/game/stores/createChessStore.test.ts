@@ -253,7 +253,14 @@ describe('createChessStore', () => {
         });
         store.applyMove('e2', 'e4');
 
-        store.confirmMove(store.state.fen, 295000, 300000);
+        store.confirmMove({
+          serverFen: store.state.fen,
+          san: 'e4',
+          from: 'e2',
+          to: 'e4',
+          whiteTimeMs: 295000,
+          blackTimeMs: 300000,
+        });
 
         // Times are synced in the session, check session state
         const session = store.getSession();

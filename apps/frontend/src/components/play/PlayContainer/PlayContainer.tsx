@@ -52,11 +52,17 @@ const PlayContainerInner: ParentComponent = () => {
   });
 
   // Auto-join game if gameId is in URL and we're not already in a game
+  // Skip if we're waiting for opponent (we're the creator, not a joiner)
   createEffect(
     on(
       () => params.gameId,
       (gameId) => {
-        if (gameId && !multiplayer.state.gameId && chess.state.lifecycle !== 'playing') {
+        if (
+          gameId &&
+          !multiplayer.state.gameId &&
+          !multiplayer.state.isWaiting &&
+          chess.state.lifecycle !== 'playing'
+        ) {
           actions.joinMultiplayerGame(gameId);
         }
       }
