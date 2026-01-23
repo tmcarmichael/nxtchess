@@ -37,6 +37,130 @@ const DEFAULT_CONFIG: Required<EngineConfig> = {
   name: 'StockfishEngine',
 };
 
+// ============================================================================
+// Browser & Device Detection
+// ============================================================================
+
+/**
+ * Available Stockfish engine variants, ordered by capability.
+ *
+ * - full-mt: Full NNUE, multi-threaded (69MB) - fastest, requires SharedArrayBuffer
+ * - full-st: Full NNUE, single-threaded (69MB) - desktop fallback
+ * - lite-st: Lite NNUE, single-threaded (7MB) - mobile optimized
+ */
+export type EngineVariant = 'full-mt' | 'full-st' | 'lite-st';
+
+const ENGINE_PATHS: Record<EngineVariant, string> = {
+  'full-mt': '/stockfish/stockfish-16.1.js',
+  'full-st': '/stockfish/stockfish-16.1-single.js',
+  'lite-st': '/stockfish/stockfish-16.1-lite-single.js',
+};
+
+/**
+ * Detect if the device is a mobile device (phone or tablet).
+ * Uses multiple signals for reliable detection.
+ */
+function isMobileDevice(): boolean {
+  // Guard for SSR/non-browser environments (e.g., Node.js, tests)
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return false;
+  }
+
+  // Check for touch capability + small screen (phones)
+  // or touch + medium screen (tablets)
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  // Check user agent for mobile indicators
+  const mobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+
+  // iPad on iOS 13+ reports as Mac, so check for touch + Mac
+  const isIPad = navigator.userAgent.includes('Mac') && hasTouch && navigator.maxTouchPoints > 1;
+
+  // Consider it mobile if UA indicates mobile OR it's an iPad
+  return mobileUA || isIPad;
+}
+
+/**
+ * Detect if the browser supports SharedArrayBuffer and Atomics,
+ * which are required for multi-threaded Stockfish WASM.
+ */
+function hasMultiThreadSupport(): boolean {
+  try {
+    // Check if SharedArrayBuffer and Atomics are available
+    if (typeof SharedArrayBuffer === 'undefined' || typeof Atomics === 'undefined') {
+      return false;
+    }
+
+    // Check if the page is cross-origin isolated (COOP/COEP headers present)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const global = globalThis as any;
+    if ('crossOriginIsolated' in global && !global.crossOriginIsolated) {
+      return false;
+    }
+
+    // Try to actually create a SharedArrayBuffer to verify it works
+    new SharedArrayBuffer(1);
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Cached detection results */
+let _engineVariant: EngineVariant | null = null;
+let _isMobile: boolean | null = null;
+
+/**
+ * Detect the best engine variant for this device/browser.
+ *
+ * Selection logic:
+ * - Mobile devices → lite-st (7MB, optimized for memory/bandwidth)
+ * - Desktop with SharedArrayBuffer → full-mt (multi-threaded, fastest)
+ * - Desktop without SharedArrayBuffer → full-st (single-threaded fallback)
+ */
+export function detectEngineVariant(): EngineVariant {
+  if (_engineVariant === null) {
+    _isMobile = isMobileDevice();
+
+    if (_isMobile) {
+      // Mobile: always use lite single-threaded for better performance
+      // The 69MB full WASM can cause memory issues and slow downloads
+      _engineVariant = 'lite-st';
+    } else if (hasMultiThreadSupport()) {
+      // Desktop with thread support: use full multi-threaded
+      _engineVariant = 'full-mt';
+    } else {
+      // Desktop without thread support: use full single-threaded
+      _engineVariant = 'full-st';
+    }
+
+    console.warn(`Stockfish engine: ${_engineVariant} (${_isMobile ? 'mobile' : 'desktop'})`);
+  }
+
+  return _engineVariant;
+}
+
+/**
+ * Check if running on a mobile device.
+ */
+export function isMobile(): boolean {
+  if (_isMobile === null) {
+    detectEngineVariant(); // This will set _isMobile
+  }
+  return _isMobile!;
+}
+
+/**
+ * Get whether the browser supports multi-threaded Stockfish.
+ * @deprecated Use detectEngineVariant() instead for full detection.
+ */
+export function supportsMultiThreaded(): boolean {
+  return detectEngineVariant() === 'full-mt';
+}
+
 /**
  * A reusable wrapper around the Stockfish web worker that handles:
  * - Worker lifecycle (creation, termination)
@@ -60,15 +184,24 @@ export class StockfishEngine {
   /**
    * Initialize the Stockfish engine.
    * Terminates any existing worker before creating a new one.
+   *
+   * Automatically selects the appropriate engine variant:
+   * - Mobile → lite-st (7MB, single-threaded, memory optimized)
+   * - Desktop with SharedArrayBuffer → full-mt (69MB, multi-threaded, fastest)
+   * - Desktop without SharedArrayBuffer → full-st (69MB, single-threaded)
    */
   async init(): Promise<void> {
     this.terminate();
     this._isInitialized = false;
 
     try {
+      // Select engine variant based on device type and browser capabilities
+      const variant = detectEngineVariant();
+      const enginePath = ENGINE_PATHS[variant];
+
       // Load stockfish directly from public folder where both JS and WASM are co-located
       // This ensures the WASM file is always found regardless of bundling
-      this.worker = new Worker('/stockfish/stockfish-16.1.js');
+      this.worker = new Worker(enginePath);
 
       this.worker.onerror = (e) => {
         console.error(`${this.config.name} worker error:`, e);

@@ -16,8 +16,8 @@ describe('createTimerStore', () => {
       createRoot((dispose) => {
         const store = createTimerStore();
 
-        expect(store.state.whiteTime).toBe(300);
-        expect(store.state.blackTime).toBe(300);
+        expect(store.state.whiteTime).toBe(300000); // 5 minutes in ms
+        expect(store.state.blackTime).toBe(300000);
         expect(store.state.timeControl).toBe(5);
         expect(store.state.isRunning).toBe(false);
 
@@ -33,8 +33,8 @@ describe('createTimerStore', () => {
 
         store.reset(10);
 
-        expect(store.state.whiteTime).toBe(600);
-        expect(store.state.blackTime).toBe(600);
+        expect(store.state.whiteTime).toBe(600000); // 10 minutes in ms
+        expect(store.state.blackTime).toBe(600000);
         expect(store.state.timeControl).toBe(10);
 
         dispose();
@@ -102,13 +102,13 @@ describe('createTimerStore', () => {
     it('decrements white time when white turn', () => {
       createRoot((dispose) => {
         const store = createTimerStore();
-        store.reset(5); // 300 seconds
+        store.reset(5); // 300000ms (5 minutes)
 
         store.start(() => 'w', vi.fn());
         vi.advanceTimersByTime(3000); // 3 seconds
 
-        expect(store.state.whiteTime).toBe(297);
-        expect(store.state.blackTime).toBe(300);
+        expect(store.state.whiteTime).toBe(297000); // 297 seconds in ms
+        expect(store.state.blackTime).toBe(300000);
 
         store.stop();
         dispose();
@@ -123,8 +123,8 @@ describe('createTimerStore', () => {
         store.start(() => 'b', vi.fn());
         vi.advanceTimersByTime(5000); // 5 seconds
 
-        expect(store.state.whiteTime).toBe(300);
-        expect(store.state.blackTime).toBe(295);
+        expect(store.state.whiteTime).toBe(300000);
+        expect(store.state.blackTime).toBe(295000); // 295 seconds in ms
 
         store.stop();
         dispose();
@@ -176,10 +176,10 @@ describe('createTimerStore', () => {
         store.start(() => 'b', vi.fn());
         vi.advanceTimersByTime(2000);
 
-        // White should only have decremented 2 seconds
-        expect(store.state.whiteTime).toBe(298);
-        // Black should have decremented 2 seconds
-        expect(store.state.blackTime).toBe(298);
+        // White should only have decremented 2 seconds (2000ms)
+        expect(store.state.whiteTime).toBe(298000);
+        // Black should have decremented 2 seconds (2000ms)
+        expect(store.state.blackTime).toBe(298000);
 
         store.stop();
         dispose();
@@ -244,15 +244,15 @@ describe('createTimerStore', () => {
 
         // White's turn for 3 seconds
         vi.advanceTimersByTime(3000);
-        expect(store.state.whiteTime).toBe(297);
-        expect(store.state.blackTime).toBe(300);
+        expect(store.state.whiteTime).toBe(297000); // 297 seconds in ms
+        expect(store.state.blackTime).toBe(300000);
 
         // Switch to black's turn
         currentTurn = 'b';
         vi.advanceTimersByTime(2000);
 
-        expect(store.state.whiteTime).toBe(297);
-        expect(store.state.blackTime).toBe(298);
+        expect(store.state.whiteTime).toBe(297000);
+        expect(store.state.blackTime).toBe(298000); // 298 seconds in ms
 
         store.stop();
         dispose();
