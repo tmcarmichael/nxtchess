@@ -559,6 +559,7 @@ export class ResilientEngine {
     if (oldState === newState) return;
 
     this._state = newState;
+    console.info(`[Engine] ${this.id} state: ${oldState} -> ${newState}`);
     this.emit('state:changed', { oldState, newState });
   }
 
