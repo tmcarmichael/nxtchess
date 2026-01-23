@@ -71,6 +71,7 @@ const PlayControlPanel: ParentComponent = () => {
           onClose={() => setShowResignModal(false)}
           onReplay={handleReplay}
           onHome={handleHome}
+          resignedSide={chess.state.playerColor}
         />
       </Show>
     </div>
