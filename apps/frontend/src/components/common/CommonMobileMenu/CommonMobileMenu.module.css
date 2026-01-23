@@ -54,6 +54,8 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-lg);
+  padding-top: calc(var(--space-lg) + var(--safe-area-top));
+  padding-right: max(var(--space-lg), var(--safe-area-right));
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -168,6 +170,8 @@
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-lg);
+  padding-bottom: calc(var(--space-lg) + var(--safe-area-bottom));
+  padding-right: max(var(--space-lg), var(--safe-area-right));
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-0);
 }

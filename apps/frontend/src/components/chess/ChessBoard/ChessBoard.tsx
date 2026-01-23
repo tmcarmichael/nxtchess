@@ -15,6 +15,22 @@ import { type Side } from '../../../types/game';
 import Piece from '../ChessPiece/ChessPiece';
 import styles from './ChessBoard.module.css';
 
+// Piece names for screen reader announcements
+const PIECE_NAMES: Record<string, string> = {
+  wP: 'white pawn',
+  wN: 'white knight',
+  wB: 'white bishop',
+  wR: 'white rook',
+  wQ: 'white queen',
+  wK: 'white king',
+  bP: 'black pawn',
+  bN: 'black knight',
+  bB: 'black bishop',
+  bR: 'black rook',
+  bQ: 'black queen',
+  bK: 'black king',
+};
+
 interface ChessBoardProps {
   board: () => BoardSquare[];
   highlightedMoves: () => Square[];
@@ -159,9 +175,17 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
       // Determine piece opacity: hidden if dragging or animating to this square
       const pieceOpacity = isDragging ? 0.5 : isAnimating ? 0 : 1;
 
+      // Build accessible label for this square
+      const pieceName = props.piece ? PIECE_NAMES[props.piece] || props.piece : null;
+      const squareLabel = pieceName ? `${props.square}, ${pieceName}` : `${props.square}, empty`;
+
       return (
         <div
           data-square={props.square}
+          role="gridcell"
+          aria-label={squareLabel}
+          aria-selected={isSelected}
+          tabIndex={isSelected ? 0 : -1}
           classList={{
             [styles.square]: true,
             [styles.light]: isLightSquare,
@@ -229,9 +253,25 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     );
   };
 
+  // Generate announcement for last move
+  const lastMoveAnnouncement = createMemo(() => {
+    const last = local.lastMove();
+    if (!last) return '';
+
+    const board = local.board();
+    const toSquareData = board.find((sq) => sq.square === last.to);
+    const pieceName = toSquareData?.piece ? PIECE_NAMES[toSquareData.piece] : 'piece';
+
+    return `${pieceName} moved from ${last.from} to ${last.to}`;
+  });
+
   return (
     <div class={styles.boardContainer} onContextMenu={(e) => e.preventDefault()}>
-      <div class={styles.board}>
+      {/* Screen reader announcement for moves */}
+      <div role="status" aria-live="polite" class="sr-only">
+        {lastMoveAnnouncement()}
+      </div>
+      <div class={styles.board} role="grid" aria-label="Chess board">
         {renderedSquares()}
         {renderAnimatingPiece()}
         {renderDraggedPiece()}

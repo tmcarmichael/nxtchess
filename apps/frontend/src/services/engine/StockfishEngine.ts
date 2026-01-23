@@ -117,27 +117,32 @@ let _isMobile: boolean | null = null;
  * Detect the best engine variant for this device/browser.
  *
  * Selection logic:
- * - Mobile devices → lite-st (7MB, optimized for memory/bandwidth)
  * - Desktop with SharedArrayBuffer → full-mt (multi-threaded, fastest)
- * - Desktop without SharedArrayBuffer → full-st (single-threaded fallback)
+ * - Everything else → lite-st (7MB, fast loading, broad compatibility)
+ *
+ * We use the lite engine for all fallback cases because:
+ * - 7MB vs 69MB makes a huge difference in load time
+ * - The lite NNUE is still strong enough for most use cases
+ * - Better UX to load fast than to have marginally better analysis
  */
 export function detectEngineVariant(): EngineVariant {
   if (_engineVariant === null) {
     _isMobile = isMobileDevice();
+    const hasThreads = hasMultiThreadSupport();
 
-    if (_isMobile) {
-      // Mobile: always use lite single-threaded for better performance
-      // The 69MB full WASM can cause memory issues and slow downloads
-      _engineVariant = 'lite-st';
-    } else if (hasMultiThreadSupport()) {
-      // Desktop with thread support: use full multi-threaded
+    if (hasThreads) {
+      // Desktop with thread support: use full multi-threaded (fastest, best analysis)
       _engineVariant = 'full-mt';
     } else {
-      // Desktop without thread support: use full single-threaded
-      _engineVariant = 'full-st';
+      // Everything else: use lite single-threaded
+      // This covers: mobile, Safari, Firefox without COOP/COEP, older browsers, etc.
+      // The 7MB file loads ~10x faster than the 69MB alternatives
+      _engineVariant = 'lite-st';
     }
 
-    console.warn(`Stockfish engine: ${_engineVariant} (${_isMobile ? 'mobile' : 'desktop'})`);
+    console.warn(
+      `Stockfish engine: ${_engineVariant} (${_isMobile ? 'mobile' : 'desktop'}, threads: ${hasThreads})`
+    );
   }
 
   return _engineVariant;
