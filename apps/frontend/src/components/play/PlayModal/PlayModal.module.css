@@ -454,6 +454,7 @@
 .gameIdInput {
   width: 100%;
   max-width: 280px;
+  align-self: center;
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-display);
   font-size: 0.95rem;

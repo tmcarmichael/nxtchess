@@ -292,7 +292,8 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
   const exitGame = () => {
     timer.stop();
 
-    if (multiplayer.state.gameId) {
+    // Clean up multiplayer state if in a game OR waiting for opponent
+    if (multiplayer.state.gameId || multiplayer.state.isWaiting) {
       multiplayer.leave();
     }
 
