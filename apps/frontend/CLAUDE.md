@@ -8,17 +8,28 @@ See also: [Root CLAUDE.md](../../CLAUDE.md) for full-stack commands and backend 
 
 ```bash
 yarn dev           # Vite dev server (http://localhost:5173)
-yarn build         # TypeScript + Vite production build
+yarn build         # TypeScript + Vite production build (runs format:check + lint)
 yarn type:check    # Type checking only
 yarn format        # Prettier formatting
-yarn format:check  # Verify formatting (runs in prebuild)
+yarn format:check  # Verify formatting
+yarn lint          # ESLint check
+yarn lint:fix      # ESLint auto-fix
+yarn test          # Run Vitest unit tests
+yarn test:watch    # Vitest watch mode
+yarn test:coverage # Coverage report
+yarn test:e2e      # Playwright E2E tests
+yarn test:e2e:ui   # Playwright with UI
 ```
 
 ## Architecture
 
-### Routing & Providers
+### Entry Point & Providers
 
-Entry point `src/index.tsx` wraps the app in `UserProvider` → `GameProvider` → `Router`. All routes use lazy loading. Routes:
+Entry point `src/index.tsx` wraps the app in `UserProvider` → `Router`. **GameProvider is NOT global** — each game mode (Play, Training) wraps itself with its own provider internally. This ensures multiplayer code is not loaded on training pages and vice versa.
+
+Pre-warms Stockfish AI engine on app load. Terminates both AI and eval engines on `beforeunload`.
+
+Routes (all lazy-loaded via `routes.tsx`):
 
 - `/` → HomeContainer
 - `/play` → PlayContainer (multiplayer or vs AI)
@@ -26,88 +37,211 @@ Entry point `src/index.tsx` wraps the app in `UserProvider` → `GameProvider` �
 - `/training` → TrainingContainer (untimed practice with eval)
 - `/username-setup` → UsernameSetup
 - `/profile/:username` → UserProfile
+- `*` → CommonNotFoundPage
+
+### Component Organization
+
+**`chess/` (12 components)** — Core chess UI:
+
+- `ChessBoardController` — Main game controller (move validation, drag/drop, AI triggers, animations)
+- `ChessBoard` — Presentational board (receives callbacks, renders squares)
+- `ChessPiece` — Individual piece renderer with drag support
+- `ChessClock` — Timer display
+- `ChessEvalBar` — Evaluation visualization bar
+- `ChessEngineOverlay` — Engine status indicator overlay
+- `ChessMaterialDisplay` — Captured pieces display
+- `ChessPromotionModal` — Pawn promotion dialog
+- `ChessGameModal` — Game setup modal base
+- `ChessEndModal` — Game result display
+- `ChessSideSelector` — Color selection UI
+- `ChessDifficultySlider` — AI difficulty picker
+
+**`game/` (6 components)** — Game layout:
+
+- `GameContainer` — Layout wrapper (two-column/single-column responsive)
+- `GameInfoPanel` — Player info and stats
+- `ButtonPanel` — Action buttons container
+- `GamePanelButton` — Styled button component
+- `DifficultyDisplay` — Shows AI difficulty level
+- `PlayerColorDisplay` — Player color indicator
+
+**`play/` (5 components)** — Multiplayer mode:
+
+- `PlayContainer` — Wraps with PlayGameProvider
+- `PlayControlPanel` — Multiplayer-specific controls
+- `PlayModal` — Game creation/join interface
+- `PlayNavigationPanel` — Move history navigation
+- `PlayResignModal` — Resignation confirmation
+
+**`training/` (3 components)** — Training mode:
+
+- `TrainingContainer` — Wraps with TrainingGameProvider
+- `TrainingControlPanel` — Training controls (hints, eval)
+- `TrainingModal` — Training setup dialog
+
+**`home/` (2 components)** — Landing page:
+
+- `HomeContainer` — Home page layout
+- `HomeSiteHero` — Hero section with CTA
+
+**`user/` (4 components)** — Auth & profile:
+
+- `UserSignInModal` — OAuth login interface
+- `UsernameSetup` — Initial username entry
+- `UserProfile` — Player profile page
+- `ProfileIconPicker` — Avatar selector
+
+**`common/` (6 components)** — Shared layout:
+
+- `CommonSiteHeader` — Top navigation bar
+- `CommonSiteFooter` — Footer
+- `CommonErrorBoundary` — Error handling wrapper
+- `CommonNotFoundPage` — 404 page
+- `CommonMobileMenu` — Mobile navigation drawer
+- `NetworkStatusBanner` — Online/offline indicator
 
 ### Component Patterns
 
 **Controller/Presenter separation**: `ChessBoardController` handles all game logic (move validation, drag/drop, promotion, AI triggers). `ChessBoard` is purely presentational—receives callbacks and renders squares.
 
-**Container components** (`PlayContainer`, `TrainingContainer`) compose the controller with mode-specific panels and modals.
-
-**Component organization**:
-
-- `chess/` — Reusable chess UI (ChessBoard, ChessBoardController, ChessPiece, ChessClock, ChessEvalBar, etc.)
-- `game/` — Game layout components (GameContainer, GameInfoPanel, ButtonPanel, PlayerColorDisplay)
-- `play/` — Multiplayer mode (PlayContainer, PlayModal, PlayControlPanel, PlayResignModal)
-- `training/` — Training mode (TrainingContainer, TrainingModal, TrainingControlPanel)
-- `user/` — Auth & profile (UserSignInModal, UserProfile, UsernameSetup)
-- `common/` — Shared layout (CommonSiteHeader, CommonSiteFooter, CommonErrorBoundary)
+**Container components** (`PlayContainer`, `TrainingContainer`) wrap themselves with their own provider and compose the controller with mode-specific panels and modals.
 
 ### State Management
 
-`gameStore.ts` creates a SolidJS store factory (`createGameStore`) that:
+#### Global User Store (`store/user/`)
 
-- Wraps `chess.js` instance for move validation
-- Manages timers, captured pieces, move history
-- Coordinates with engine workers for AI moves and evaluation
-- Uses `batch()` for atomic state updates
+- `UserContext.tsx` — Wraps entire app with user authentication state
+- `userStore.ts` — User login, profile, ratings management
+- States: `isLoggedIn`, `username`, `rating`, `profileIcon`
+- Actions: `checkUserStatus()`, `saveUsername()`, `fetchUserProfile()`, `setProfileIcon()`, `logout()`
 
-Access via `useGameStore()` hook which returns `[state, actions]`.
+#### Mode-Specific Game Stores (`store/game/`)
+
+Five independent SolidJS stores compose via context (NOT a monolithic store):
+
+1. **ChessStore** (`createChessStore.ts`) — FEN, move history, game state, player color, current turn, captured pieces, game lifecycle
+2. **TimerStore** (`createTimerStore.ts`) — White/black time in ms, time control, increment, 100ms tick precision
+3. **EngineStore** (`createEngineStore.ts`) — Engine status (idle/loading/ready/error), difficulty, AI side, play style
+4. **UIStore** (`createUIStore.ts`) — Board view perspective, modal visibility flags
+5. **MultiplayerStore** (`createMultiplayerStore.ts`) — Game ID, opponent info, connection state, typed event emission
+
+#### Context Providers
+
+- **`PlayGameContext.tsx`** — Creates all 5 stores, provides `PlayGameContextValue` with `PlayActions`
+- **`TrainingGameContext.tsx`** — Creates 4 stores (no multiplayer), provides `TrainingGameContextValue` with `TrainingActions`
+- **`useGameContext.ts`** — Unified interface that both modes implement, allows components like `ChessBoardController` to work across modes
+
+#### Action Factories (`store/game/actions/`)
+
+- `createCoreActions.ts` — Shared actions (navigation, exit, flip board)
+- `createSinglePlayerActions.ts` — Base single-player logic
+- `createMultiplayerActions.ts` — Base multiplayer logic
+- `createPlayActions.ts` — Play-mode specific (AI coordination + multiplayer sync)
+- `createTrainingActions.ts` — Training-mode specific (eval computation, hint logic)
+
+#### Type Definitions (`store/game/types.ts`)
+
+```typescript
+CoreActions       // jumpToMove, flipBoard, exitGame
+SinglePlayerActions extends CoreActions  // startNewGame, applyPlayerMove, resign
+MultiplayerActions extends CoreActions   // startMultiplayerGame, joinMultiplayerGame
+PlayActions = SinglePlayerActions & MultiplayerActions
+TrainingActions = SinglePlayerActions
+```
 
 ### Services Layer
 
-**Engine services** (`services/engine/`):
+#### Engine Services (`services/engine/`)
 
-- `aiEngineWorker.ts` — AI move computation via Stockfish with ELO limiting and playstyle options
-- `evalEngineWorker.ts` — Position evaluation (used in training mode for eval bar)
-- `EnginePool.ts` — Multi-engine management for concurrent games
-- `ResilientEngine.ts` — Auto-recovery wrapper for engine failures
-- Two separate Web Workers prevent UCI command race conditions
-- Both workers support single-game (`computeAiMove`) and multi-game (`computeAiMoveForGame`) APIs
+- `StockfishEngine.ts` — Low-level UCI protocol wrapper (`postMessage`, `sendCommand` with timeout)
+- `aiEngineWorker.ts` — AI move computation (Web Worker) with ELO limiting and playstyle options
+- `evalEngineWorker.ts` — Position evaluation (separate Web Worker) for training mode eval bar
+- `EnginePool.ts` — Multi-engine allocation per (purpose, gameId), max 4 engines, 1min idle timeout
+- `ResilientEngine.ts` — Circuit breaker wrapper (3-strike rule, auto-recovery, command queuing)
+- `engineService.ts` — High-level engine service interface
 
-**Game services** (`services/game/`):
+Two separate Web Workers prevent UCI command race conditions. Both support single-game (`computeAiMove`) and multi-game (`computeAiMoveForGame`) APIs.
 
-- `chessGameService.ts` — Game rule enforcement
-- `gameLifecycle.ts` — State transitions
-- `session/` — Session management layer:
-  - `GameSession.ts` — Single game session with commands (ApplyMove, Resign, Timeout)
-  - `SessionManager.ts` — Singleton managing multiple concurrent sessions
+#### Game Services (`services/game/`)
 
-**Sync services** (`services/sync/`):
+- `chessGameService.ts` — Game rule enforcement (`fenToBoard`, `getLegalMoves`, `prepareMove`, `processCapturedPiece`)
+- `gameLifecycle.ts` — State machine (idle → initializing → playing → ended)
+- `BoardCache.ts` — O(1) board lookups, caches legal moves per position
+- `fenUtils.ts` — FEN parsing (`getTurnFromFen`, `getRulesFromFen`)
+- `pieceUtils.ts` — Piece manipulation (`getPieceColor`, `makePiece`)
 
-- `GameSyncService.ts` — WebSocket client for multiplayer
+**Session Layer** (`services/game/session/`) — Command pattern:
+
+- `GameSession.ts` — Single game with commands (APPLY_MOVE, RESIGN, TIMEOUT), BoardCache integration
+- `SessionManager.ts` — Singleton managing multiple concurrent sessions
+- `types.ts` — Session type definitions
+
+#### Network Services (`services/network/`)
+
+- `ReconnectingWebSocket.ts` — WebSocket with exponential backoff (max 5 attempts, message queuing)
+
+#### Sync Services (`services/sync/`)
+
+- `GameSyncService.ts` — WebSocket client using ReconnectingWebSocket
 - `useGameSync.ts` — SolidJS integration hook
-- Message types: GAME_CREATE, GAME_JOIN, MOVE, RESIGN, etc.
+- `types.ts` — Message types (GAME_CREATE, GAME_JOIN, MOVE, RESIGN, TIME_UPDATE, GAME_ENDED)
 
-**Persistence** (`services/persistence/`):
+#### Persistence Services (`services/persistence/`)
 
-- `GamePersistence.ts` — LocalStorage session storage
-- `useAutoPersist.ts` — Auto-save hook with `createAutoPersist()` and `recoverActiveSession()`
+- `GamePersistence.ts` — **IndexedDB** storage (DB: 'nxtchess', store: 'game_sessions'), 7-day cleanup
+- `useAutoPersist.ts` — Auto-save hook (5-second periodic + 1-second debounced on change)
 
-**Preferences** (`services/preferences/`):
+#### Audio Services (`services/audio/`)
 
-- `PreferencesService.ts` — User settings storage (singleton `preferences`)
+- `AudioService.ts` — Move sounds and low-time warnings
+
+#### Preferences Services (`services/preferences/`)
+
+- `PreferencesService.ts` — User settings storage (singleton, LocalStorage)
 
 ### Key Types (`src/types/`)
 
+**chess.ts:**
+
 ```typescript
-Side = 'w' | 'b'
-GameMode = 'play' | 'training' | 'analysis'
-OpponentType = 'ai' | 'human'
-RatedMode = 'rated' | 'casual'
-AIPlayStyle = 'aggressive' | 'defensive' | 'balanced' | 'random' | 'positional'
-GamePhase = 'opening' | 'middlegame' | 'endgame'
-Square = 'a1' | 'a2' | ... (64 chess squares)
-PieceType = 'wP' | 'bP' | 'wN' | ... (all pieces)
+PieceType = 'wP' | 'bP' | 'wN' | ... (12 piece combinations)
+Square = 'a1' | 'a2' | ... (64 squares)
+Board = PieceType[][] (8x8 array)
 PromotionPiece = 'q' | 'r' | 'b' | 'n'
+PIECE_VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9 }
+```
+
+**game.ts:**
+
+```typescript
+Side = 'w' | 'b';
+GameMode = 'play' | 'training' | 'analysis';
+GameLifecycle = 'idle' | 'initializing' | 'playing' | 'error' | 'ended';
+OpponentType = 'ai' | 'human';
+RatedMode = 'rated' | 'casual';
+AIPlayStyle = 'aggressive' | 'defensive' | 'balanced' | 'random' | 'positional';
+GamePhase = 'opening' | 'middlegame' | 'endgame';
+GameWinner = Side | 'draw' | null;
+GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | null;
 ```
 
 ### Shared Utilities (`src/shared/`)
 
-```
-config/      constants.ts (TIME_VALUES, DIFFICULTY_PRESETS), env.ts
-hooks/       useKeyboardNavigation.ts (Arrow keys, 'f' to flip)
-utils/       debug.ts, generateId.ts, stringUtils.ts
-```
+**Config:**
+
+- `constants.ts` — `TIME_VALUES_MINUTES`, `DIFFICULTY_VALUES_ELO`, `PLAYSTYLE_PRESETS`, `TRAINING_OPENING_MOVE_THRESHOLD`
+- `env.ts` — Environment variables (`VITE_BACKEND_URL`, `VITE_DEBUG`)
+
+**Hooks:**
+
+- `useKeyboardNavigation.ts` — Arrow keys for move history, 'f' to flip board
+
+**Utils:**
+
+- `EventEmitter.ts` — TypedEventEmitter for decoupled communication
+- `debug.ts` — Debug utilities
+- `generateId.ts` — Session ID generation
+- `stringUtils.ts` — String helpers
 
 ### CSS Modules
 
@@ -120,6 +254,75 @@ Defined in `useKeyboardNavigation` hook, used by `ChessBoardController`:
 - `ArrowLeft/Right`: Navigate move history
 - `f`: Flip board view
 
+### Testing
+
+**Unit tests** (Vitest + @solidjs/testing-library):
+
+- `store/game/stores/` — createChessStore, createTimerStore, createUIStore, createMultiplayerStore
+- `store/user/` — userStore
+- `services/game/` — chessGameService, fenUtils, pieceUtils, gameLifecycle
+- `services/game/session/` — GameSession, SessionManager
+- `services/network/` — ReconnectingWebSocket
+
+**E2E tests** (Playwright):
+
+- `yarn test:e2e` for headless, `yarn test:e2e:ui` with UI
+
+## PWA Configuration
+
+This is a **Progressive Web App** with full offline support and installability.
+
+**Manifest** (`public/manifest.json`):
+
+- Standalone display mode (no browser chrome)
+- Portrait orientation
+- App shortcuts: "Play" and "Train" quick actions
+- Icons: 72x72 to 512x512 (including maskable icons for Android)
+
+**Service Worker** (via `vite-plugin-pwa`):
+
+- Auto-update registration
+- Workbox for runtime caching strategies
+
+**Workbox Caching Strategies:**
+
+- `CacheFirst` for fonts (googleapis, gstatic) — 1-year expiration
+- `CacheFirst` for WASM files (.wasm) — 30-day expiration
+- `NetworkFirst` for API calls — 10s network timeout fallback
+
+**Offline Capabilities:**
+
+- IndexedDB persistence (`services/persistence/`) for game sessions
+- Auto-save: 5-second periodic + 1-second debounced on state change
+- Session recovery on app restart
+- `NetworkStatusBanner` component shows online/offline status
+
+**COOP/COEP Headers** (required for SharedArrayBuffer / multi-threaded Stockfish):
+
+```
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: credentialless
+```
+
 ## Vite Configuration
 
-COOP/COEP headers enabled in `vite.config.ts` for SharedArrayBuffer support (required by Stockfish WASM).
+- `vite-plugin-pwa` for service worker and manifest generation
+- COOP/COEP headers configured in dev server
+- `vite-plugin-static-copy` for asset copying
+
+## Dependencies
+
+**Runtime:**
+
+- solid-js 1.9.3, @solidjs/router 0.15.3
+- chess.js 1.0.0 (move validation)
+- stockfish (nmrugg/stockfish.js WASM)
+- apexcharts + solid-apexcharts (charts)
+
+**Dev:**
+
+- TypeScript 5.6.2, Vite 6.0.5
+- Vitest 4.0.17 + @vitest/coverage-v8
+- Playwright 1.57.0
+- ESLint 9.39.2, Prettier 3.4.2
+- Husky 9.1.7 + lint-staged
