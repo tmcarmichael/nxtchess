@@ -47,6 +47,7 @@ export interface UnifiedGameContext {
     isEngineLoading: () => boolean;
     hasEngineError: () => boolean;
     isMultiplayer: () => boolean;
+    showEvalBar: () => boolean;
   };
 }
 

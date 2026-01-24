@@ -8,6 +8,11 @@ import styles from './TrainingControlPanel.module.css';
 const TrainingControlPanel: ParentComponent = () => {
   const { chess, engine, actions, derived } = useTrainingGame();
 
+  const handleResign = () => {
+    if (!derived.isPlaying()) return;
+    actions.resign();
+  };
+
   const aiPlayStyleInfo = (
     <div class={styles.AIPlayStyle}>
       <span class={styles.AIPlayStyleLabel}>AI Playstyle:</span>
@@ -18,8 +23,14 @@ const TrainingControlPanel: ParentComponent = () => {
   return (
     <div class={styles.panel}>
       <ButtonPanel>
+        <GamePanelButton onClick={handleResign} disabled={!derived.isPlaying()}>
+          <span>Resign</span>
+        </GamePanelButton>
         <GamePanelButton onClick={actions.flipBoard}>
           <span>Flip Board</span>
+        </GamePanelButton>
+        <GamePanelButton onClick={actions.takeBack} disabled={!derived.isPlaying()}>
+          <span>Take Back</span>
         </GamePanelButton>
       </ButtonPanel>
       <GameInfoPanel

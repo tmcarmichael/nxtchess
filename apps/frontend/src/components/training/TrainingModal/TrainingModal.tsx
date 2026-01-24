@@ -65,10 +65,10 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
     if (gameContext) {
       // Inside provider - call action directly
       gameContext.actions.startNewGame(trainingGameConfig);
-      navigate('/training');
+      navigate('/training', { replace: true });
     } else {
       // Outside provider (header modal) - navigate with state
-      navigate('/training', { state: { quickStart: trainingGameConfig } });
+      navigate('/training', { replace: true, state: { quickStart: trainingGameConfig } });
     }
 
     local.onClose();
