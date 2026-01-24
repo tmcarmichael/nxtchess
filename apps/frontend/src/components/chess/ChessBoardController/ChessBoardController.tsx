@@ -383,6 +383,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   let touchStartPos: { x: number; y: number; square: Square; piece: string } | null = null;
   let isTouchDragging = false;
   const DRAG_THRESHOLD = 10; // pixels - movement beyond this activates drag
+  // Track latest touch position for RAF to use (avoids stale closure capture)
+  let latestTouchPos = { x: 0, y: 0 };
 
   const handleTouchStart = (square: Square, piece: string, event: TouchEvent) => {
     // Allow picking up player's pieces even during opponent's turn (premove preparation)
@@ -401,7 +403,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   // Activates drag mode after movement threshold exceeded
-  const activateTouchDrag = () => {
+  // Takes current touch position to avoid using stale start position
+  const activateTouchDrag = (currentX: number, currentY: number) => {
     if (!touchStartPos || isTouchDragging) return;
     isTouchDragging = true;
 
@@ -413,7 +416,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
     resetViewIfNeeded();
     setDraggedPiece({ square: touchStartPos.square, piece: touchStartPos.piece });
-    setCursorPosition({ x: touchStartPos.x, y: touchStartPos.y });
+    // Use current position, not original - the finger has already moved past threshold
+    setCursorPosition({ x: currentX, y: currentY });
     // Use premove-aware moves when it's not player's turn
     const moves = chess.derived.isPlayerTurn()
       ? getLegalMoves(chess.state.fen, touchStartPos.square)
@@ -438,20 +442,25 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     const touch = e.touches[0];
     if (!touch) return;
 
+    // Always track latest position - RAF will read from this to avoid stale closures
+    latestTouchPos = { x: touch.clientX, y: touch.clientY };
+
     // Check if we should activate drag mode (movement exceeded threshold)
     if (touchStartPos && !isTouchDragging) {
       const dx = touch.clientX - touchStartPos.x;
       const dy = touch.clientY - touchStartPos.y;
       if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
-        activateTouchDrag();
+        activateTouchDrag(touch.clientX, touch.clientY);
       }
     }
 
-    // Only track position if actively dragging
+    // Schedule position update if actively dragging
     if (isTouchDragging && draggedPiece()) {
       if (rafId !== null) return; // Skip if RAF pending
       rafId = requestAnimationFrame(() => {
-        setCursorPosition({ x: touch.clientX, y: touch.clientY });
+        // Use latestTouchPos instead of captured touch coordinates
+        // This ensures we get the most recent position even if events were skipped
+        setCursorPosition(latestTouchPos);
         rafId = null;
       });
     }
