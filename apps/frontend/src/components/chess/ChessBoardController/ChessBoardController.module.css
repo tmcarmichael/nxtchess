@@ -12,9 +12,40 @@
 .rowWrapper {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  gap: 1rem;
+}
+
+/* Wrapper for eval bar + board to ensure proper vertical alignment */
+.evalBoardRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  /* No gap - eval bar sits flush against board */
+}
+
+/* Tablet portrait & Mobile: Stack eval bar below board */
+@media (max-width: 1023px) {
+  .evalBoardRow {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* Tablet landscape: Keep eval bar beside board */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .evalBoardRow {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+/* Mobile: Stack layout */
+@media (max-width: 639px) {
+  .rowWrapper {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .boardWithClocks {

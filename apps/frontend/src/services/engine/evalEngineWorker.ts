@@ -18,11 +18,22 @@ const evalEngine = new StockfishEngine({
   operationTimeoutMs: ENGINE_EVAL_TIMEOUT_MS,
 });
 
+// Serialization state to prevent concurrent eval requests crashing WASM
+let evalInProgress = false;
+let pendingEval: { fen: string; depth?: number; resolve: (score: number) => void } | null = null;
+
 /**
  * Initialize the eval engine for single-game mode (backward compatibility).
  * For multi-game support, use engineService.initEvalEngine(gameId).
  */
 export const initEvalEngine = async (): Promise<void> => {
+  // Reset serialization state on init
+  if (pendingEval) {
+    pendingEval.resolve(0);
+    pendingEval = null;
+  }
+  evalInProgress = false;
+
   if (!evalEngine.isInitialized) {
     await evalEngine.init();
   } else {
@@ -32,21 +43,30 @@ export const initEvalEngine = async (): Promise<void> => {
 };
 
 /**
- * Get position evaluation for single-game mode (backward compatibility).
- * For multi-game support, use engineService.getEvaluation(gameId, fen, depth).
+ * Extract whose turn it is from a FEN string.
+ * Returns 'w' for white's turn, 'b' for black's turn.
  */
-export const getEvaluation = async (fen: string, depth?: number): Promise<number> => {
-  if (!evalEngine.isInitialized) {
-    // Return 0 instead of throwing - evaluation is non-critical
-    if (DEBUG) {
-      console.warn('Eval engine not initialized, returning neutral evaluation');
-    }
-    return 0;
-  }
+const getSideToMove = (fen: string): 'w' | 'b' => {
+  const parts = fen.split(' ');
+  return (parts[1] as 'w' | 'b') || 'w';
+};
 
+/**
+ * Internal function to perform the actual evaluation.
+ * Should only be called when no other eval is in progress.
+ *
+ * Stockfish reports scores from the perspective of the side to move.
+ * We normalize to always return scores from white's perspective:
+ * - Positive = white is winning
+ * - Negative = black is winning
+ */
+const performEvaluation = async (fen: string, depth?: number): Promise<number> => {
   try {
     // Track the last score seen across messages
     let lastScore: number | null = null;
+
+    // Determine whose turn it is for score normalization
+    const sideToMove = getSideToMove(fen);
 
     const goCommand = depth ? `go depth ${depth}` : `go movetime ${ENGINE_EVAL_TIME_MS}`;
 
@@ -75,7 +95,10 @@ export const getEvaluation = async (fen: string, depth?: number): Promise<number
           }
           // Return the accumulated score when we see bestmove
           if (line.startsWith('bestmove')) {
-            return lastScore ?? 0;
+            // Normalize to white's perspective
+            // If it's black's turn, negate the score
+            const rawScore = lastScore ?? 0;
+            return sideToMove === 'b' ? -rawScore : rawScore;
           }
         }
         return null; // Keep waiting
@@ -94,10 +117,79 @@ export const getEvaluation = async (fen: string, depth?: number): Promise<number
 };
 
 /**
+ * Process any pending evaluation request.
+ * Called after an evaluation completes.
+ */
+const processPendingEval = async () => {
+  if (pendingEval) {
+    const { fen, depth, resolve } = pendingEval;
+    pendingEval = null;
+
+    evalInProgress = true;
+    try {
+      const score = await performEvaluation(fen, depth);
+      resolve(score);
+    } finally {
+      evalInProgress = false;
+      // Check if another request came in while we were evaluating
+      processPendingEval();
+    }
+  }
+};
+
+/**
+ * Get position evaluation for single-game mode (backward compatibility).
+ * For multi-game support, use engineService.getEvaluation(gameId, fen, depth).
+ *
+ * This function serializes eval requests to prevent concurrent WASM access.
+ * If an eval is in progress, the new request replaces any pending request
+ * (latest-wins policy to always show current position's eval).
+ */
+export const getEvaluation = async (fen: string, depth?: number): Promise<number> => {
+  if (!evalEngine.isInitialized) {
+    // Return 0 instead of throwing - evaluation is non-critical
+    if (DEBUG) {
+      console.warn('Eval engine not initialized, returning neutral evaluation');
+    }
+    return 0;
+  }
+
+  // If an eval is already in progress, queue this one (replacing any previous pending)
+  if (evalInProgress) {
+    // Cancel any previous pending request by resolving it with 0
+    if (pendingEval) {
+      pendingEval.resolve(0);
+    }
+
+    // Create a new pending request
+    return new Promise<number>((resolve) => {
+      pendingEval = { fen, depth, resolve };
+    });
+  }
+
+  // No eval in progress, start one
+  evalInProgress = true;
+  try {
+    return await performEvaluation(fen, depth);
+  } finally {
+    evalInProgress = false;
+    // Process any pending request that came in while we were evaluating
+    processPendingEval();
+  }
+};
+
+/**
  * Terminate the eval engine for single-game mode (backward compatibility).
  * For multi-game support, use engineService.releaseEvalEngine(gameId).
  */
 export const terminateEvalEngine = () => {
+  // Reset serialization state on terminate
+  if (pendingEval) {
+    pendingEval.resolve(0);
+    pendingEval = null;
+  }
+  evalInProgress = false;
+
   evalEngine.terminate();
 };
 

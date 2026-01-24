@@ -301,8 +301,8 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       engine.release(chess.state.sessionId);
     }
 
+    // coreActions.exitGame() calls chess.exitGame() which already sets lifecycle to 'idle'
     coreActions.exitGame();
-    chess.setLifecycle(transition(chess.state.lifecycle, 'EXIT_GAME'));
   };
 
   return {

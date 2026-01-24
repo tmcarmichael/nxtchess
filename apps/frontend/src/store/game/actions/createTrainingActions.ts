@@ -10,6 +10,19 @@ import type { UIStore } from '../stores/createUIStore';
 import type { TrainingActions, CoreActions } from '../types';
 
 // ============================================================================
+// AI Move Delay Configuration for Training Mode
+// ============================================================================
+
+// Training mode uses a fixed delay range for natural pacing
+// This also helps space out eval engine calls to prevent overload
+const TRAINING_AI_DELAY = { min: 500, max: 1500 };
+
+const randomDelay = (min: number, max: number): Promise<void> => {
+  const delay = min + Math.random() * (max - min);
+  return new Promise((resolve) => setTimeout(resolve, delay));
+};
+
+// ============================================================================
 // Training Mode Stores Interface
 // ============================================================================
 
@@ -55,6 +68,15 @@ export const createTrainingActions = (
       if (!move) return;
 
       if (chess.state.fen !== fenAtStart) return;
+
+      // Add natural delay for training mode - gives time for eval to complete
+      // and provides a more natural "thinking" pace for learning
+      await randomDelay(TRAINING_AI_DELAY.min, TRAINING_AI_DELAY.max);
+
+      // Re-check game state after delay
+      if (chess.state.fen !== fenAtStart || !canMakeMove(chess.state.lifecycle)) {
+        return;
+      }
 
       chess.applyMove(
         move.from as Square,
@@ -157,10 +179,17 @@ export const createTrainingActions = (
     }
   };
 
-  const resign = () => {
+  const resign = async () => {
     if (!canMakeMove(chess.state.lifecycle)) return;
     timer.stop();
-    chess.resign();
+
+    // Get current eval before ending game so it displays in the end modal
+    const currentFen = chess.state.fen;
+    const evalScore = await engine.getEval(currentFen).catch(() => 0);
+
+    // Player resigns, opponent wins
+    const winner = getOpponentSide(chess.state.playerColor);
+    chess.endGame('resignation', winner, evalScore);
     ui.showEndModal();
   };
 
@@ -187,8 +216,8 @@ export const createTrainingActions = (
       engine.release(chess.state.sessionId);
     }
 
+    // coreActions.exitGame() calls chess.exitGame() which already sets lifecycle to 'idle'
     coreActions.exitGame();
-    chess.setLifecycle(transition(chess.state.lifecycle, 'EXIT_GAME'));
   };
 
   return {

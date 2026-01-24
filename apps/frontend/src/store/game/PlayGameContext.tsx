@@ -194,6 +194,7 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
       isEngineLoading: derived.isEngineLoading,
       hasEngineError: derived.hasEngineError,
       isMultiplayer: derived.isMultiplayer,
+      showEvalBar: () => false,
     },
   };
 

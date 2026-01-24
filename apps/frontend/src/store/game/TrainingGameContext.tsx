@@ -119,6 +119,7 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
       isEngineLoading: derived.isEngineLoading,
       hasEngineError: derived.hasEngineError,
       isMultiplayer: () => false,
+      showEvalBar: () => true,
     },
   };
 

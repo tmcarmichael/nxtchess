@@ -1,52 +1,56 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    ChessEvalBar - Obsidian Arena Theme
    Position evaluation display with refined visuals
+   Anchored to chessboard - height matches board dynamically
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .evalBarContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-width: 48px;
+  justify-content: flex-start;
+  /* Match board height using same calculation */
+  height: min(var(--board-max-size), calc(100vw - 2rem), calc(100vh - 200px));
+  position: relative;
+  /* Align with board top (account for boardContainer padding) */
+  margin-top: var(--space-md);
+  /* Sit flush against the board */
+  margin-right: calc(var(--space-md) * -1);
 }
 
 .barBackground {
   position: relative;
-  margin-top: var(--space-md);
-  width: 12px;
-  height: 600px;
+  width: 16px;
+  height: 100%;
   background: linear-gradient(180deg, var(--text-primary) 0%, #e0e0e0 100%);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   box-shadow: var(--shadow-md);
   overflow: hidden;
   border: 1px solid var(--border-subtle);
+  border-right: none;
+  flex-shrink: 0;
 }
 
 .barFill {
   position: absolute;
-  bottom: 0;
+  top: 0;
   width: 100%;
-  background: linear-gradient(180deg, var(--surface-4) 0%, var(--surface-0) 100%);
+  height: var(--fill-percent, 50%);
+  background: linear-gradient(180deg, var(--surface-0) 0%, var(--surface-3) 100%);
   transition: height 0.3s ease-out;
 }
 
-/* Winning indicator glow */
-.barFill.winning {
-  background: linear-gradient(180deg, var(--accent-muted) 0%, var(--surface-0) 100%);
-}
-
-.barFill.losing {
-  background: linear-gradient(180deg, var(--error-muted) 0%, var(--surface-0) 100%);
-}
-
 .evalScore {
-  margin-top: var(--space-sm);
+  position: absolute;
+  bottom: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
   font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-secondary);
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 /* Positive evaluation */
@@ -68,50 +72,113 @@
    Responsive Breakpoints
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* Tablet: Shorter bar */
+/* Tablet portrait: Horizontal bar below board */
 @media (max-width: 1023px) {
-  .barBackground {
-    height: 400px;
-  }
-}
-
-/* Mobile: Horizontal bar layout */
-@media (max-width: 639px) {
   .evalBarContainer {
     flex-direction: row;
-    min-width: auto;
-    width: 100%;
+    width: min(600px, calc(100vw - 2rem));
+    height: auto;
     gap: var(--space-sm);
-    padding: var(--space-sm);
+    padding: var(--space-sm) 0;
+    margin-top: 0;
+    margin-right: 0;
   }
 
   .barBackground {
-    margin-top: 0;
     width: 100%;
-    max-width: 300px;
-    height: 12px;
+    height: 16px;
     background: linear-gradient(90deg, var(--surface-0) 0%, var(--text-primary) 100%);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
   }
 
   .barFill {
-    bottom: auto;
+    top: auto;
     left: 0;
-    width: auto;
+    width: var(--fill-percent, 50%);
     height: 100%;
-    background: linear-gradient(90deg, var(--surface-0) 0%, var(--surface-4) 100%);
+    background: linear-gradient(90deg, var(--surface-0) 0%, var(--surface-3) 100%);
     transition: width 0.3s ease-out;
   }
 
-  .barFill.winning {
-    background: linear-gradient(90deg, var(--surface-0) 0%, var(--accent-muted) 100%);
+  .evalScore {
+    position: static;
+    transform: none;
+    min-width: 50px;
+    text-align: center;
+  }
+}
+
+/* Tablet landscape: Vertical bar beside board */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .evalBarContainer {
+    flex-direction: column;
+    width: auto;
+    height: min(600px, calc(100vw - 2rem), calc(100vh - 280px));
+    gap: 0;
+    padding: 0;
+    margin-top: var(--space-md);
+    margin-right: calc(var(--space-md) * -1);
   }
 
-  .barFill.losing {
-    background: linear-gradient(90deg, var(--surface-0) 0%, var(--error-muted) 100%);
+  .barBackground {
+    width: 16px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--text-primary) 0%, #e0e0e0 100%);
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    border-right: none;
+  }
+
+  .barFill {
+    top: 0;
+    left: auto;
+    width: 100%;
+    height: var(--fill-percent, 50%);
+    background: linear-gradient(180deg, var(--surface-0) 0%, var(--surface-3) 100%);
+    transition: height 0.3s ease-out;
   }
 
   .evalScore {
+    position: absolute;
+    bottom: -1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Mobile: Horizontal bar layout - placed below board */
+@media (max-width: 639px) {
+  .evalBarContainer {
+    flex-direction: row;
+    width: min(480px, calc(100vw - 1rem));
+    height: auto;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
     margin-top: 0;
+    margin-right: 0;
+  }
+
+  .barBackground {
+    width: 100%;
+    height: 16px;
+    background: linear-gradient(90deg, var(--surface-0) 0%, var(--text-primary) 100%);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .barFill {
+    top: auto;
+    left: 0;
+    width: var(--fill-percent, 50%);
+    height: 100%;
+    background: linear-gradient(90deg, var(--surface-0) 0%, var(--surface-3) 100%);
+    transition: width 0.3s ease-out;
+  }
+
+  .evalScore {
+    position: static;
+    transform: none;
     min-width: 50px;
     text-align: center;
   }
