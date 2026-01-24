@@ -28,7 +28,7 @@ export const createCoreActions = (stores: CoreStores): CoreActions => {
 
   const jumpToPreviousMove = () => {
     const newIndex = chess.state.viewMoveIndex - 1;
-    if (newIndex >= 0) {
+    if (newIndex >= -1) {
       chess.jumpToMoveIndex(newIndex);
     }
   };

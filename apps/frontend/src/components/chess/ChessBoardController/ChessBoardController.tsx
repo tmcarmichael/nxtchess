@@ -679,8 +679,10 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     if (!containerRef) return;
 
     const onTouchMove = (e: TouchEvent) => {
-      // Only prevent default (stop scrolling) when actively dragging
-      if (isTouchDragging && draggedPiece()) {
+      // Prevent scrolling as soon as user touches a piece and starts moving
+      // Must prevent early - if we wait until drag activates, browser may have
+      // already started a scroll gesture and taken over the touch events
+      if (touchStartPos) {
         e.preventDefault();
       }
       handleTouchMove(e);

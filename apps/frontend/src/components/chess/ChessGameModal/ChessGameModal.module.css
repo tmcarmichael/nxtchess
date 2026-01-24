@@ -107,6 +107,8 @@
     margin: 0;
     padding: var(--space-md);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
   .closeButton {
