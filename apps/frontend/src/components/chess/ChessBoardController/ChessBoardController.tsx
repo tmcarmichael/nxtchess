@@ -661,6 +661,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const handleCloseEndGame = () => {
+    // In training mode, just close the modal so user can review moves
+    if (chess.state.mode === 'training') {
+      setShowEndModal(false);
+      return;
+    }
+    // For other modes, exit and go home
     actions.exitGame();
     navigate('/');
   };

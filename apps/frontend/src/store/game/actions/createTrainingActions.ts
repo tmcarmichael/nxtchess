@@ -1,3 +1,4 @@
+import { moveEvalService } from '../../../services/engine/moveEvalService';
 import { getOpponentSide } from '../../../services/game/chessGameService';
 import { transition, canMakeMove } from '../../../services/game/gameLifecycle';
 import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../../shared/config/constants';
@@ -64,6 +65,10 @@ export const createTrainingActions = (
 
     try {
       const fenAtStart = chess.state.fen;
+      const fenBefore = chess.state.fen;
+      const moveIndex = chess.state.moveHistory.length;
+      const aiSide = getOpponentSide(chess.state.playerColor);
+
       const move = await engine.getMove(chess.state.fen);
       if (!move) return;
 
@@ -84,6 +89,23 @@ export const createTrainingActions = (
         move.promotion as PromotionPiece | undefined
       );
 
+      // Queue evaluation for AI move (not player move, so isPlayerMove = false)
+      const fenAfter = chess.state.fen;
+      const san = chess.state.moveHistory[moveIndex] || '';
+      moveEvalService.queueMoveEvaluation(
+        {
+          moveIndex,
+          san,
+          fenBefore,
+          fenAfter,
+          side: aiSide,
+          isPlayerMove: false,
+        },
+        (evaluation) => {
+          chess.updateMoveEvaluation(evaluation);
+        }
+      );
+
       if (!chess.state.isGameOver) {
         afterMoveChecks();
       }
@@ -92,7 +114,7 @@ export const createTrainingActions = (
     }
   };
 
-  const afterMoveChecks = () => {
+  const afterMoveChecks = async () => {
     if (chess.state.isGameOver) return;
 
     // Check for training opening end
@@ -100,12 +122,25 @@ export const createTrainingActions = (
       const moveCount = chess.state.moveHistory.length;
       if (moveCount >= TRAINING_OPENING_MOVE_THRESHOLD) {
         const fenAtStart = chess.state.fen;
-        engine.getEval(chess.state.fen).then((score: number) => {
-          if (chess.state.fen !== fenAtStart) return;
-          chess.endGame(null, null, score);
-          timer.stop();
-          ui.showEndModal();
-        });
+
+        // Wait for any pending move evaluations to complete first
+        // This ensures the cache is populated and avoids conflicts with eval engine
+        await moveEvalService.waitForPendingEvaluations();
+
+        // Check if we already have the evaluation cached
+        let score = moveEvalService.getCachedEval(fenAtStart);
+
+        // If not cached, get it from the engine
+        if (score === null) {
+          score = await engine.getEval(fenAtStart);
+        }
+
+        // Verify state hasn't changed while we were waiting
+        if (chess.state.fen !== fenAtStart) return;
+
+        chess.endGame(null, null, score);
+        timer.stop();
+        ui.showEndModal();
       }
     }
   };
@@ -117,6 +152,8 @@ export const createTrainingActions = (
   const startNewGame = async (options: StartGameOptions) => {
     timer.stop();
     ui.hideEndModal();
+    chess.clearMoveEvaluations();
+    moveEvalService.clearCache();
 
     const {
       side,
@@ -167,8 +204,29 @@ export const createTrainingActions = (
   };
 
   const applyPlayerMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
+    const fenBefore = chess.state.fen;
+    const moveIndex = chess.state.moveHistory.length;
+    const playerSide = chess.state.playerColor;
+
     const success = chess.applyMove(from, to, promotion);
     if (!success) return;
+
+    // Queue evaluation for player move
+    const fenAfter = chess.state.fen;
+    const san = chess.state.moveHistory[moveIndex] || '';
+    moveEvalService.queueMoveEvaluation(
+      {
+        moveIndex,
+        san,
+        fenBefore,
+        fenAfter,
+        side: playerSide,
+        isPlayerMove: true,
+      },
+      (evaluation) => {
+        chess.updateMoveEvaluation(evaluation);
+      }
+    );
 
     if (!chess.state.isGameOver) {
       afterMoveChecks();
@@ -207,6 +265,10 @@ export const createTrainingActions = (
 
   const takeBack = () => {
     chess.takeBack();
+    // Remove evaluations for the taken-back moves
+    const newMoveCount = chess.state.moveHistory.length;
+    chess.removeMoveEvaluationsFromIndex(newMoveCount);
+    moveEvalService.cancelPendingFromIndex(newMoveCount);
   };
 
   const exitGame = () => {

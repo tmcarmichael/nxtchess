@@ -15,6 +15,7 @@ import type {
   GameLifecycle,
   OpponentType,
 } from '../../../types/game';
+import type { MoveEvaluation } from '../../../types/moveQuality';
 
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
@@ -43,6 +44,7 @@ interface ChessState {
   trainingAvailableHints: number;
   trainingUsedHints: number;
   trainingEvalScore: number | null;
+  trainingMoveEvaluations: MoveEvaluation[];
   // Multiplayer optimistic state
   moveError: string | null;
 }
@@ -91,6 +93,10 @@ export interface ChessStore {
   setLifecycle: (lifecycle: GameLifecycle) => void;
   setPlayerColor: (color: Side) => void;
   resetForMultiplayer: (gameMode: GameMode) => void;
+  // Training move evaluations
+  updateMoveEvaluation: (evaluation: MoveEvaluation) => void;
+  clearMoveEvaluations: () => void;
+  removeMoveEvaluationsFromIndex: (fromIndex: number) => void;
   derived: {
     currentBoard: () => BoardSquare[];
     isPlayerTurn: () => boolean;
@@ -126,6 +132,7 @@ export const createChessStore = (): ChessStore => {
     trainingAvailableHints: 0,
     trainingUsedHints: 0,
     trainingEvalScore: null,
+    trainingMoveEvaluations: [],
     moveError: null,
   });
 
@@ -206,6 +213,7 @@ export const createChessStore = (): ChessStore => {
       setState('trainingAvailableHints', config.trainingAvailableHints ?? 0);
       setState('trainingUsedHints', 0);
       setState('trainingEvalScore', null);
+      setState('trainingMoveEvaluations', []);
       setState('moveError', null);
       setState('capturedWhite', []);
       setState('capturedBlack', []);
@@ -434,6 +442,30 @@ export const createChessStore = (): ChessStore => {
     currentSession = null;
   };
 
+  // Training move evaluation methods
+  const updateMoveEvaluation = (evaluation: MoveEvaluation) => {
+    // Find and update existing evaluation, or add new one
+    const existingIndex = state.trainingMoveEvaluations.findIndex(
+      (e) => e.moveIndex === evaluation.moveIndex
+    );
+    if (existingIndex >= 0) {
+      setState('trainingMoveEvaluations', existingIndex, evaluation);
+    } else {
+      setState('trainingMoveEvaluations', [...state.trainingMoveEvaluations, evaluation]);
+    }
+  };
+
+  const clearMoveEvaluations = () => {
+    setState('trainingMoveEvaluations', []);
+  };
+
+  const removeMoveEvaluationsFromIndex = (fromIndex: number) => {
+    setState(
+      'trainingMoveEvaluations',
+      state.trainingMoveEvaluations.filter((e) => e.moveIndex < fromIndex)
+    );
+  };
+
   // Derived state
   const derived = {
     currentBoard: () => fenToBoard(state.viewFen),
@@ -461,6 +493,9 @@ export const createChessStore = (): ChessStore => {
     setLifecycle,
     setPlayerColor,
     resetForMultiplayer,
+    updateMoveEvaluation,
+    clearMoveEvaluations,
+    removeMoveEvaluationsFromIndex,
     derived,
     getSession,
   };

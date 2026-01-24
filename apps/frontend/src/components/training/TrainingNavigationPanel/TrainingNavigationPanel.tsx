@@ -1,9 +1,10 @@
 import { For, createMemo, createEffect, on, type Component } from 'solid-js';
-import { usePlayGame } from '../../../store/game/PlayGameContext';
-import styles from './PlayNavigationPanel.module.css';
+import { useTrainingGame } from '../../../store/game/TrainingGameContext';
+import styles from './TrainingNavigationPanel.module.css';
+import type { MoveQuality } from '../../../types/moveQuality';
 
-const PlayNavigationPanel: Component = () => {
-  const { chess, actions } = usePlayGame();
+const TrainingNavigationPanel: Component = () => {
+  const { chess, actions } = useTrainingGame();
 
   let movesContainerRef: HTMLDivElement | undefined;
   createEffect(
@@ -22,6 +23,15 @@ const PlayNavigationPanel: Component = () => {
   const whiteMoves = createMemo(() => chess.state.moveHistory.filter((_, i) => i % 2 === 0));
   const blackMoves = createMemo(() => chess.state.moveHistory.filter((_, i) => i % 2 === 1));
 
+  // Create a map for quick evaluation lookup
+  const evaluationMap = createMemo(() => {
+    const map = new Map<number, MoveQuality | null>();
+    for (const evaluation of chess.state.trainingMoveEvaluations) {
+      map.set(evaluation.moveIndex, evaluation.quality);
+    }
+    return map;
+  });
+
   const movesRows = createMemo(() => {
     const totalRows = Math.max(whiteMoves().length, blackMoves().length);
     return Array.from({ length: totalRows }, (_, i) => ({
@@ -35,6 +45,14 @@ const PlayNavigationPanel: Component = () => {
 
   const handleJumpToMoveIndex = (index: number) => {
     actions.jumpToMove(index);
+  };
+
+  const getQualityClass = (moveIndex: number): string => {
+    const quality = evaluationMap().get(moveIndex);
+    if (!quality) {
+      return '';
+    }
+    return styles[quality] || '';
   };
 
   const MoveRow: Component<{
@@ -54,6 +72,7 @@ const PlayNavigationPanel: Component = () => {
             classList={{
               [styles.move]: true,
               [styles.active]: whiteActive(),
+              [getQualityClass(props.whiteIndex)]: !!getQualityClass(props.whiteIndex),
             }}
             onClick={() => handleJumpToMoveIndex(props.whiteIndex)}
           >
@@ -65,6 +84,7 @@ const PlayNavigationPanel: Component = () => {
             classList={{
               [styles.move]: true,
               [styles.active]: blackActive(),
+              [getQualityClass(props.blackIndex)]: !!getQualityClass(props.blackIndex),
             }}
             onClick={() => handleJumpToMoveIndex(props.blackIndex)}
           >
@@ -113,4 +133,4 @@ const PlayNavigationPanel: Component = () => {
   );
 };
 
-export default PlayNavigationPanel;
+export default TrainingNavigationPanel;
