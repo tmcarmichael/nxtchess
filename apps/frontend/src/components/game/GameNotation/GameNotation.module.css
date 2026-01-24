@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   GameNotation - Minimalistic PGN/FEN display
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.notationContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.notationRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.label {
+  flex-shrink: 0;
+  width: 2.5rem;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.valueContainer {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.value {
+  display: block;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.copyButton {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.copyButton:hover:not(:disabled) {
+  background-color: var(--surface-3);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+
+.copyButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.copied {
+  background-color: var(--accent-subtle);
+  border-color: var(--accent-muted);
+  color: var(--accent);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 639px) {
+  .notationContainer {
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+  }
+
+  .label {
+    font-size: 0.6rem;
+    width: 2rem;
+  }
+
+  .value {
+    font-size: 0.65rem;
+  }
+
+  .copyButton {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.65rem;
+  }
+}

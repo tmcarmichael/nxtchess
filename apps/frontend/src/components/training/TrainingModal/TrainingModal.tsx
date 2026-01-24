@@ -27,6 +27,16 @@ interface GamePhaseOption {
   label: string;
 }
 
+// Difficulty levels with labels and ELO values (same as PlayModal)
+const DIFFICULTY_OPTIONS = [
+  { level: 1, label: 'Beginner', elo: 250 },
+  { level: 2, label: 'Easy', elo: 500 },
+  { level: 4, label: 'Medium', elo: 900 },
+  { level: 6, label: 'Hard', elo: 1100 },
+  { level: 8, label: 'Expert', elo: 1700 },
+  { level: 10, label: 'Grandmaster', elo: 2400 },
+];
+
 const OPPONENT_STYLES: AIPlayStyleOption[] = [
   { value: 'aggressive', label: 'Aggressive', icon: '/assets/trainingModeAggressive.svg' },
   { value: 'defensive', label: 'Defensive', icon: '/assets/trainingModeDefensive.svg' },
@@ -47,7 +57,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
   const gameContext = useTrainingGameOptional();
 
   const [localRatedMode, setLocalRatedMode] = createSignal<RatedMode>('casual');
-  const [localDifficulty, setLocalDifficulty] = createSignal<number>(3);
+  const [localDifficulty, setLocalDifficulty] = createSignal<number>(4);
   const [localAIPlayStyle, localSetAIPlayStyle] = createSignal<AIPlayStyle>('balanced');
   const [localGamePhase, setLocalGamePhase] = createSignal<GamePhase>('opening');
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
@@ -100,16 +110,19 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
 
       <Show when={localRatedMode() === 'casual'}>
         <div class={styles.settingRow}>
-          <label class={styles.rangeSliderLabel}>Difficulty: {localDifficulty()}</label>
-          <div class={styles.rangeSliderContainer}>
-            <input
-              class={styles.rangeSlider}
-              type="range"
-              min="1"
-              max="10"
-              value={localDifficulty()}
-              onInput={(e) => setLocalDifficulty(+e.currentTarget.value)}
-            />
+          <label class={styles.label}>Difficulty:</label>
+          <div class={styles.optionGrid}>
+            <For each={DIFFICULTY_OPTIONS}>
+              {(option) => (
+                <button
+                  class={styles.optionButton}
+                  classList={{ [styles.optionButtonActive]: localDifficulty() === option.level }}
+                  onClick={() => setLocalDifficulty(option.level)}
+                >
+                  {option.label}
+                </button>
+              )}
+            </For>
           </div>
         </div>
       </Show>
