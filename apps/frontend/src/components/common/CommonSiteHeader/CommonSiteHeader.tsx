@@ -14,13 +14,14 @@ export type NavItem = {
   showPlayModal?: boolean;
   showTrainingModal?: boolean;
   tooltip?: string;
+  variant?: 'primary' | 'upcoming';
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Play', showPlayModal: true },
-  { label: 'Training', showTrainingModal: true },
-  { label: 'Tools', tooltip: 'Tools and game analysis coming soon.' },
-  { label: 'Database', tooltip: 'Database with recent tournament games coming soon.' },
+  { label: 'Play', showPlayModal: true, variant: 'primary' },
+  { label: 'Train', showTrainingModal: true, variant: 'primary' },
+  { label: 'Tools', tooltip: 'Coming soon', variant: 'upcoming' },
+  { label: 'Database', tooltip: 'Coming soon', variant: 'upcoming' },
 ];
 
 const CommonSiteHeader: ParentComponent = () => {
@@ -52,6 +53,8 @@ const CommonSiteHeader: ParentComponent = () => {
               <span
                 classList={{
                   [styles.navItem]: true,
+                  [styles.navItemPrimary]: item.variant === 'primary',
+                  [styles.navItemUpcoming]: item.variant === 'upcoming',
                   [styles.tooltip]: !!item.tooltip,
                 }}
                 data-tooltip={item.tooltip ?? undefined}

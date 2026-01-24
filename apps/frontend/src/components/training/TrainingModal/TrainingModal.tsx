@@ -85,7 +85,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
   };
 
   return (
-    <ChessGameModal title="Training Options" onClose={local.onClose}>
+    <ChessGameModal title="Train" onClose={local.onClose}>
       <div class={styles.buttonGroup}>
         <button
           classList={{
@@ -173,7 +173,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
       </div>
 
       <button class={styles.startButton} onClick={handleStartTraining}>
-        Start Training
+        Start Game
       </button>
     </ChessGameModal>
   );

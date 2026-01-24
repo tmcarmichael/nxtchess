@@ -131,15 +131,9 @@ const PlayModal: Component<PlayModalProps> = (props) => {
     local.onClose();
   };
 
-  const getModalTitle = () => {
-    if (opponentType() === 'ai') return 'Play Against Computer';
-    return multiplayerMode() === 'create' ? 'Create Online Game' : 'Join Online Game';
-  };
+  const getModalTitle = () => 'Play';
 
-  const getButtonText = () => {
-    if (opponentType() === 'ai') return 'Start Game';
-    return multiplayerMode() === 'create' ? 'Create Game' : 'Join Game';
-  };
+  const getButtonText = () => 'Start Game';
 
   return (
     <ChessGameModal title={getModalTitle()} onClose={local.onClose}>

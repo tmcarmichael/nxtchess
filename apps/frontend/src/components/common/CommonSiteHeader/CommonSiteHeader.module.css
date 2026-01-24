@@ -47,17 +47,13 @@
    ───────────────────────────────────────────────────────────────────────────── */
 
 .headerCenter {
-  background: var(--surface-1);
-  padding: var(--space-sm) var(--space-xl);
   display: flex;
-  gap: var(--space-xl);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  align-items: center;
 }
 
 .navItem {
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
@@ -65,30 +61,111 @@
   text-transform: uppercase;
   position: relative;
   padding: var(--space-xs) 0;
-  transition:
-    color var(--transition-fast),
-    transform var(--transition-fast);
   text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
-/* Underline animation */
+/* Vertical divider between nav items */
+.navItem + .navItem {
+  margin-left: clamp(1rem, 3vw, 2rem);
+  padding-left: clamp(1rem, 3vw, 2rem);
+}
+
+.navItem + .navItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 1.4em;
+  width: 2px;
+  background: var(--border-default);
+}
+
+.navItem + .navItem::after {
+  left: clamp(1rem, 3vw, 2rem);
+}
+
+.navItem:hover {
+  color: var(--text-primary);
+}
+
+/* Underline indicator */
 .navItem::after {
   content: '';
   position: absolute;
   left: 0;
+  right: 0;
   bottom: 0;
-  height: 2px;
-  width: 0;
-  background: var(--accent);
-  transition: width var(--transition-base);
-}
-
-.navItem:hover {
-  color: var(--accent);
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.25s ease;
 }
 
 .navItem:hover::after {
-  width: 100%;
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Primary nav items (Play, Training) */
+.navItemPrimary {
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+
+.navItemPrimary:hover {
+  color: var(--accent);
+  text-shadow: 0 0 6px rgba(var(--accent-rgb, 94, 234, 212), 0.4);
+}
+
+/* Upcoming nav items (Tools, Database) */
+.navItemUpcoming {
+  opacity: 0.45;
+  cursor: default;
+  font-size: 0.9rem;
+}
+
+.navItemUpcoming:hover {
+  opacity: 0.6;
+  color: var(--text-secondary);
+}
+
+.navItemUpcoming::after {
+  display: none;
+}
+
+/* "Soon" label for upcoming items - uses box-shadow for divider since ::before is taken */
+.navItemUpcoming::before {
+  content: 'soon';
+  position: absolute;
+  top: -0.6rem;
+  right: -0.8rem;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+/* Divider for upcoming items (can't use ::before, so use box-shadow) */
+.navItem + .navItemUpcoming {
+  box-shadow: -2px 0 0 0 var(--border-default);
+}
+
+/* Override the ::before divider for upcoming items */
+.navItem + .navItemUpcoming::before {
+  content: 'soon';
+  position: absolute;
+  top: -0.6rem;
+  right: -0.8rem;
+  left: auto;
+  height: auto;
+  width: auto;
+  transform: none;
+  background: none;
 }
 
 /* Active nav state */
@@ -97,7 +174,7 @@
 }
 
 .navItem.active::after {
-  width: 100%;
+  transform: scaleX(1);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

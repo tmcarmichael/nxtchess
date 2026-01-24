@@ -95,7 +95,7 @@ export default defineConfig({
             icons: [{ src: '/icons/shortcut-play.png', sizes: '96x96', type: 'image/png' }],
           },
           {
-            name: 'Training Mode',
+            name: 'Train',
             short_name: 'Train',
             url: '/training',
             description: 'Practice with AI evaluation',
