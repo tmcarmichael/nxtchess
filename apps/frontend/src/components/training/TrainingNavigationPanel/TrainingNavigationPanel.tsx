@@ -1,5 +1,6 @@
 import { For, createMemo, createEffect, on, type Component } from 'solid-js';
 import { useTrainingGame } from '../../../store/game/TrainingGameContext';
+import GameNotation from '../../game/GameNotation/GameNotation';
 import styles from './TrainingNavigationPanel.module.css';
 import type { MoveQuality } from '../../../types/moveQuality';
 
@@ -129,6 +130,7 @@ const TrainingNavigationPanel: Component = () => {
           →
         </button>
       </div>
+      <GameNotation fen={chess.state.fen} moveHistory={chess.state.moveHistory} />
     </div>
   );
 };

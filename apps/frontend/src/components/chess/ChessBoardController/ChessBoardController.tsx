@@ -77,7 +77,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     onPrevious: actions.jumpToPreviousMove,
     onNext: actions.jumpToNextMove,
     onFlip: actions.flipBoard,
-    enabled: () => !chess.state.isGameOver,
+    enabled: () => !chess.state.isGameOver || chess.state.mode === 'training',
   });
 
   // Only re-evaluate when FEN changes and eval bar is shown (not on every state update)

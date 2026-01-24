@@ -1,5 +1,6 @@
 import { For, createMemo, createEffect, on, type Component } from 'solid-js';
 import { usePlayGame } from '../../../store/game/PlayGameContext';
+import GameNotation from '../../game/GameNotation/GameNotation';
 import styles from './PlayNavigationPanel.module.css';
 
 const PlayNavigationPanel: Component = () => {
@@ -109,6 +110,7 @@ const PlayNavigationPanel: Component = () => {
           →
         </button>
       </div>
+      <GameNotation fen={chess.state.fen} moveHistory={chess.state.moveHistory} />
     </div>
   );
 };
