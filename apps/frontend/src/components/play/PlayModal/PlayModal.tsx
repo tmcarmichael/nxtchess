@@ -1,5 +1,5 @@
 import { useNavigate } from '@solidjs/router';
-import { createSignal, splitProps, type Component, Show, For } from 'solid-js';
+import { createSignal, splitProps, onMount, onCleanup, type Component, Show, For } from 'solid-js';
 import { preferences } from '../../../services/preferences/PreferencesService';
 import { usePlayGameOptional } from '../../../store/game/PlayGameContext';
 import { type Side, type StartGameOptions, type MultiplayerGameOptions } from '../../../types/game';
@@ -64,6 +64,24 @@ const PlayModal: Component<PlayModalProps> = (props) => {
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>(savedPrefs.lastPlayerColor);
   const [joinGameId, setJoinGameId] = createSignal('');
   const [joinError, setJoinError] = createSignal<string | null>(null);
+  const [isOnline, setIsOnline] = createSignal(navigator.onLine);
+
+  // Track online status for disabling multiplayer when offline
+  onMount(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    onCleanup(() => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    });
+  });
+
+  // Check if start button should be disabled (offline + human opponent)
+  const isStartDisabled = () => !isOnline() && opponentType() === 'human';
 
   const handleStartGame = () => {
     const opponent = opponentType();
@@ -275,9 +293,17 @@ const PlayModal: Component<PlayModalProps> = (props) => {
       </Show>
 
       <div class={styles.modalActions}>
-        <button class={styles.startButton} onClick={handleStartGame}>
+        <button
+          class={styles.startButton}
+          classList={{ [styles.startButtonDisabled]: isStartDisabled() }}
+          onClick={handleStartGame}
+          disabled={isStartDisabled()}
+        >
           {getButtonText()}
         </button>
+        <Show when={isStartDisabled()}>
+          <p class={styles.offlineHint}>Multiplayer requires an internet connection</p>
+        </Show>
       </div>
     </ChessGameModal>
   );

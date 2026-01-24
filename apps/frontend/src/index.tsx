@@ -4,8 +4,12 @@ import App from './App';
 import { routes } from './routes';
 import { initAiEngine, terminateAiEngine } from './services/engine/aiEngineWorker';
 import { terminateEvalEngine } from './services/engine/evalEngineWorker';
+import { initOfflineSupport } from './services/offline/AssetPreloader';
 import { UserProvider } from './store/user/UserContext';
 import './index.css';
+
+// Initialize offline support - preloads critical assets, fonts, and WASM
+initOfflineSupport();
 
 // Pre-warm the Stockfish engine immediately on app load.
 initAiEngine(600, 'balanced').catch(() => {});

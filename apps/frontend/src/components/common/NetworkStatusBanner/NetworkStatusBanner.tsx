@@ -5,10 +5,18 @@ const NetworkStatusBanner: Component = () => {
   const [isOnline, setIsOnline] = createSignal(navigator.onLine);
   const [showBanner, setShowBanner] = createSignal(false);
   const [wasOffline, setWasOffline] = createSignal(false);
+  const [isDismissed, setIsDismissed] = createSignal(false);
+
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    setShowBanner(false);
+  };
 
   onMount(() => {
     const handleOnline = () => {
       setIsOnline(true);
+      // Reset dismissed state when going online so banner reappears on next offline
+      setIsDismissed(false);
       // Show "back online" message briefly if we were offline
       if (wasOffline()) {
         setShowBanner(true);
@@ -22,7 +30,10 @@ const NetworkStatusBanner: Component = () => {
     const handleOffline = () => {
       setIsOnline(false);
       setWasOffline(true);
-      setShowBanner(true);
+      // Only show banner if not dismissed
+      if (!isDismissed()) {
+        setShowBanner(true);
+      }
     };
 
     window.addEventListener('online', handleOnline);
@@ -57,7 +68,9 @@ const NetworkStatusBanner: Component = () => {
           {isOnline() ? 'Back online' : 'You are offline - some features may be unavailable'}
         </span>
         <Show when={!isOnline()}>
-          <span class={styles.hint}>Training mode works offline</span>
+          <button class={styles.dismissButton} onClick={handleDismiss} aria-label="Dismiss">
+            ×
+          </button>
         </Show>
       </div>
     </Show>

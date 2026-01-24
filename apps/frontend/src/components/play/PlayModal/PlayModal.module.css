@@ -258,9 +258,22 @@
     box-shadow var(--transition-fast);
 }
 
-.startButton:hover {
+.startButton:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 255, 209, 0.25);
+}
+
+.startButtonDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--surface-3);
+  border-color: var(--border-subtle);
+}
+
+.offlineHint {
+  margin-top: var(--space-sm);
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
