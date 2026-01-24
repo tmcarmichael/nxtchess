@@ -7,7 +7,7 @@ export default defineConfig({
     solid(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'assets/**/*', 'stockfish/**/*'],
+      includeAssets: ['favicon.svg', 'stockfish/**/*'],
       devOptions: {
         enabled: true,
         suppressWarnings: true,
