@@ -10,7 +10,7 @@ import {
   onCleanup,
 } from 'solid-js';
 import { audioService } from '../../../services/audio/AudioService';
-import { getEvaluation } from '../../../services/engine/evalEngineWorker';
+import { getEvaluation, isEvalEngineInitialized } from '../../../services/engine/evalEngineWorker';
 import {
   getLegalMoves,
   getPremoveLegalMoves,
@@ -85,7 +85,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     on(
       () => [chess.state.fen, chess.state.mode] as const,
       ([currentFen, mode]) => {
-        if (mode === 'training') {
+        if (mode === 'training' && isEvalEngineInitialized()) {
           getEvaluation(currentFen).then((score: number) => {
             setEvalScore(score ?? null);
           });

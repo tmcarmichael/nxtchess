@@ -115,7 +115,7 @@ describe('createUserStore', () => {
       });
     });
 
-    it('navigates to username setup on 404', async () => {
+    it('navigates to username setup when authenticated but no username', async () => {
       await createRoot(async (dispose) => {
         Object.defineProperty(document, 'cookie', {
           writable: true,
@@ -123,8 +123,9 @@ describe('createUserStore', () => {
         });
 
         mockFetch.mockResolvedValueOnce({
-          status: 404,
-          ok: false,
+          status: 200,
+          ok: true,
+          json: () => Promise.resolve({ authenticated: true, username_set: false }),
         });
 
         const [state, actions] = createUserStore();
@@ -149,7 +150,8 @@ describe('createUserStore', () => {
         mockFetch.mockResolvedValueOnce({
           status: 200,
           ok: true,
-          json: () => Promise.resolve({ username: 'testuser' }),
+          json: () =>
+            Promise.resolve({ authenticated: true, username_set: true, username: 'testuser' }),
         });
 
         const [state, actions] = createUserStore();

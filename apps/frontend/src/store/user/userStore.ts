@@ -31,20 +31,29 @@ export const createUserStore = () => {
       const res = await fetch(`${BACKEND_URL}/check-username`, {
         credentials: 'include',
       });
-      if (res.status === 401) {
+      if (!res.ok) {
+        // Unexpected error
         setState('isLoggedIn', false);
         setState('username', '');
         setState('rating', null);
         setState('profileIcon', 'white-pawn');
-      } else if (res.status === 404) {
+        return;
+      }
+      const data = await res.json();
+      if (!data.authenticated) {
+        // Not logged in
+        setState('isLoggedIn', false);
+        setState('username', '');
+        setState('rating', null);
+        setState('profileIcon', 'white-pawn');
+      } else if (!data.username_set) {
+        // Logged in but no username
         setState('isLoggedIn', true);
         navigateFn('/username-setup');
-      } else if (res.ok) {
+      } else {
+        // Fully logged in
         setState('isLoggedIn', true);
-        const data = await res.json();
-        if (data.username) {
-          setState('username', data.username);
-        }
+        setState('username', data.username);
         if (data.profile_icon) {
           setState('profileIcon', data.profile_icon);
         }

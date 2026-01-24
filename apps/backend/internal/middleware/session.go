@@ -16,7 +16,7 @@ func Session(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_token")
 		if err != nil {
-			httpx.WriteJSONError(w,  http.StatusUnauthorized, "Missing session cookie",)
+			httpx.WriteJSONError(w, http.StatusUnauthorized, "Missing session cookie")
 			return
 		}
 
@@ -28,6 +28,21 @@ func Session(next http.Handler) http.Handler {
 
 		ctx := context.WithValue(r.Context(), userIDKey, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// OptionalSession attaches user ID to context if a valid session exists,
+// but does not reject the request if no session is present.
+func OptionalSession(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session_token")
+		if err == nil {
+			if userID, found := sessions.GetSessionUserID(cookie.Value); found {
+				ctx := context.WithValue(r.Context(), userIDKey, userID)
+				r = r.WithContext(ctx)
+			}
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 

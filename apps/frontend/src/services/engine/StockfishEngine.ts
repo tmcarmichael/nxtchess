@@ -85,7 +85,10 @@ function isMobileDevice(): boolean {
 /**
  * Detect if the browser supports SharedArrayBuffer and Atomics,
  * which are required for multi-threaded Stockfish WASM.
+ * Reserved for future "Power Mode" feature.
  */
+// @ts-expect-error Reserved for future "Power Mode" feature
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function hasMultiThreadSupport(): boolean {
   try {
     // Check if SharedArrayBuffer and Atomics are available
@@ -116,33 +119,24 @@ let _isMobile: boolean | null = null;
 /**
  * Detect the best engine variant for this device/browser.
  *
- * Selection logic:
- * - Desktop with SharedArrayBuffer → full-mt (multi-threaded, fastest)
- * - Everything else → lite-st (7MB, fast loading, broad compatibility)
+ * Current policy: Default to lite-st (7MB) for ALL users.
+ * The lite NNUE is strong enough for most use cases and provides
+ * significantly faster load times (7MB vs 69MB = ~10x difference).
  *
- * We use the lite engine for all fallback cases because:
- * - 7MB vs 69MB makes a huge difference in load time
- * - The lite NNUE is still strong enough for most use cases
- * - Better UX to load fast than to have marginally better analysis
+ * Future enhancement: Add a "Power Mode" setting that allows users
+ * to opt-in to the full engine (full-mt) if their device supports
+ * SharedArrayBuffer. The detection functions (hasMultiThreadSupport,
+ * isMobileDevice) are preserved for this purpose.
  */
 export function detectEngineVariant(): EngineVariant {
   if (_engineVariant === null) {
+    // Still detect device type for logging and future Power Mode feature
     _isMobile = isMobileDevice();
-    const hasThreads = hasMultiThreadSupport();
 
-    if (hasThreads) {
-      // Desktop with thread support: use full multi-threaded (fastest, best analysis)
-      _engineVariant = 'full-mt';
-    } else {
-      // Everything else: use lite single-threaded
-      // This covers: mobile, Safari, Firefox without COOP/COEP, older browsers, etc.
-      // The 7MB file loads ~10x faster than the 69MB alternatives
-      _engineVariant = 'lite-st';
-    }
-
-    console.info(
-      `[Engine] Stockfish variant selected: ${_engineVariant} (device: ${_isMobile ? 'mobile' : 'desktop'}, SharedArrayBuffer: ${hasThreads})`
-    );
+    // Default to lite engine for all users - fast loading, strong enough for most
+    // The full engine (full-mt) can be enabled via future "Power Mode" feature
+    // when hasMultiThreadSupport() returns true
+    _engineVariant = 'lite-st';
   }
 
   return _engineVariant;

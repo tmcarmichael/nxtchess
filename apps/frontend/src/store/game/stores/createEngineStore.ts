@@ -1,8 +1,17 @@
 import { createStore } from 'solid-js/store';
-import { initAiEngine, computeAiMove, EngineError } from '../../../services/engine/aiEngineWorker';
-import { enginePool } from '../../../services/engine/EnginePool';
-import { initEvalEngine, getEvaluation } from '../../../services/engine/evalEngineWorker';
+import {
+  initAiEngine,
+  computeAiMove,
+  terminateAiEngine,
+  EngineError,
+} from '../../../services/engine/aiEngineWorker';
+import {
+  initEvalEngine,
+  getEvaluation,
+  terminateEvalEngine,
+} from '../../../services/engine/evalEngineWorker';
 import { DIFFICULTY_VALUES_ELO } from '../../../shared/config/constants';
+import { DEBUG } from '../../../shared/utils/debug';
 import type { Side, AIPlayStyle } from '../../../types/game';
 
 export type EngineStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -63,7 +72,10 @@ export const createEngineStore = (): EngineStore => {
     try {
       await initEvalEngine();
     } catch (e) {
-      console.warn('Eval engine init failed (non-critical):', e);
+      // Eval engine is non-critical - game continues without evaluation bar
+      if (DEBUG) {
+        console.warn('Eval engine init failed (non-critical):', e);
+      }
     }
   };
 
@@ -89,12 +101,15 @@ export const createEngineStore = (): EngineStore => {
     return getEvaluation(fen);
   };
 
-  const release = (sessionId: string) => {
-    enginePool.releaseGame(sessionId);
+  // Note: The legacy singleton API doesn't support per-session release.
+  // This is a no-op but kept for API compatibility.
+  const release = (_sessionId: string) => {
+    // Legacy singleton doesn't track sessions - actual cleanup happens in terminate()
   };
 
   const terminate = () => {
-    enginePool.terminateAll();
+    terminateAiEngine();
+    terminateEvalEngine();
     setState({ status: 'idle', isThinking: false, error: null });
   };
 

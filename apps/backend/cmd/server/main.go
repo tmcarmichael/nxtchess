@@ -87,13 +87,26 @@ func main() {
 		lr.Post("/auth/logout", controllers.LogoutHandler(cfg))
 	})
 
+	// Public API routes (no session required)
+	r.Group(func(pub chi.Router) {
+		pub.Use(apiRateLimiter.Middleware)
+		pub.Use(middleware.SmallBodyLimit) // 64KB limit for JSON API
+		pub.Get("/profile/{username}", controllers.UserProfileHandler)
+	})
+
+	// Optional session routes (returns different response for anon vs logged in)
+	r.Group(func(opt chi.Router) {
+		opt.Use(apiRateLimiter.Middleware)
+		opt.Use(middleware.SmallBodyLimit)
+		opt.Use(middleware.OptionalSession)
+		opt.Get("/check-username", controllers.CheckUsernameHandler)
+	})
+
 	// Protected session routes with API rate limiting
 	r.Group(func(pr chi.Router) {
 		pr.Use(apiRateLimiter.Middleware)
 		pr.Use(middleware.SmallBodyLimit) // 64KB limit for JSON API
 		pr.Use(middleware.Session)
-		pr.Get("/profile/{username}", controllers.UserProfileHandler)
-		pr.Get("/check-username", controllers.CheckUsernameHandler)
 		pr.Post("/set-username", controllers.SetUsernameHandler)
 		pr.Post("/set-profile-icon", controllers.SetProfileIconHandler)
 	})

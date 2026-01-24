@@ -1,3 +1,4 @@
+import { DEBUG } from '../../shared/utils/debug';
 import {
   ResilientEngine,
   type ResilientEngineConfig,
@@ -151,7 +152,9 @@ export class EnginePool {
         try {
           handler(event);
         } catch (err) {
-          console.error('EnginePool: Event handler error:', err);
+          if (DEBUG) {
+            console.error('EnginePool: Event handler error:', err);
+          }
         }
       }
     });
@@ -346,7 +349,9 @@ export class EnginePool {
       try {
         await engine.resetForNewGame();
       } catch (err) {
-        console.warn('EnginePool: Failed to reset engine, terminating:', err);
+        if (DEBUG) {
+          console.warn('EnginePool: Failed to reset engine, terminating:', err);
+        }
         engine.terminate();
         return;
       }
