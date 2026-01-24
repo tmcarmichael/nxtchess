@@ -8,6 +8,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'assets/**/*', 'stockfish/**/*'],
+      devOptions: {
+        enabled: true,
+        suppressWarnings: true,
+        type: 'module',
+      },
       manifest: {
         name: 'NXT Chess',
         short_name: 'NXT Chess',

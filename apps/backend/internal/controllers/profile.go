@@ -43,7 +43,10 @@ func UserProfileHandler(w http.ResponseWriter, r *http.Request) {
 func CheckUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok || userID == "" {
-		httpx.WriteJSONError(w, http.StatusUnauthorized, "Unauthorized")
+		// Not authenticated - return 200 with authenticated: false
+		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"authenticated": false,
+		})
 		return
 	}
 
@@ -55,7 +58,11 @@ func CheckUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if username == "" {
-		httpx.WriteJSONError(w, http.StatusNotFound, "No username found")
+		// Authenticated but no username set yet
+		httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"authenticated":  true,
+			"username_set":   false,
+		})
 		return
 	}
 
@@ -66,11 +73,12 @@ func CheckUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type checkResp struct {
-		Username    string `json:"username"`
-		ProfileIcon string `json:"profile_icon"`
-	}
-	httpx.WriteJSON(w, http.StatusOK, checkResp{Username: username, ProfileIcon: profileIcon})
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"authenticated": true,
+		"username_set":  true,
+		"username":      username,
+		"profile_icon":  profileIcon,
+	})
 }
 
 func SetUsernameHandler(w http.ResponseWriter, r *http.Request) {

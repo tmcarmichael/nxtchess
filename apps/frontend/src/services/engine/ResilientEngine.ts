@@ -1,3 +1,4 @@
+import { DEBUG } from '../../shared/utils/debug';
 import { StockfishEngine, EngineError, type EngineConfig } from './StockfishEngine';
 
 // ============================================================================
@@ -354,7 +355,9 @@ export class ResilientEngine {
       try {
         handler(event);
       } catch (err) {
-        console.error('ResilientEngine: Event handler error:', err);
+        if (DEBUG) {
+          console.error('ResilientEngine: Event handler error:', err);
+        }
       }
     }
   }
@@ -559,7 +562,9 @@ export class ResilientEngine {
     if (oldState === newState) return;
 
     this._state = newState;
-    console.info(`[Engine] ${this.id} state: ${oldState} -> ${newState}`);
+    if (DEBUG) {
+      console.info(`[Engine] ${this.id} state: ${oldState} -> ${newState}`);
+    }
     this.emit('state:changed', { oldState, newState });
   }
 

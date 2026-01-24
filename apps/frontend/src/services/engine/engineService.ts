@@ -1,4 +1,5 @@
 import { PLAYSTYLE_PRESETS } from '../../shared/config/constants';
+import { DEBUG } from '../../shared/utils/debug';
 import { enginePool } from './EnginePool';
 import { type ResilientEngine } from './ResilientEngine';
 import { EngineError } from './StockfishEngine';
@@ -93,7 +94,9 @@ class EngineService {
     const engine = await this.getOrInitEvalEngine(gameId);
 
     if (!engine.isInitialized) {
-      console.warn('Eval engine not initialized, returning neutral evaluation');
+      if (DEBUG) {
+        console.warn('Eval engine not initialized, returning neutral evaluation');
+      }
       return 0;
     }
 
@@ -132,7 +135,9 @@ class EngineService {
 
       return result;
     } catch (err) {
-      console.warn('Evaluation failed:', err instanceof Error ? err.message : err);
+      if (DEBUG) {
+        console.warn('Evaluation failed:', err instanceof Error ? err.message : err);
+      }
       return 0;
     }
   }

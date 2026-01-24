@@ -1,29 +1,26 @@
-// Adaptive Stockfish Engine Preloader
-// Detects device capabilities and preloads the appropriate engine variant
+// Stockfish Engine Loader
+// Eagerly caches the WASM for instant engine initialization on any route.
+//
+// Uses fetch instead of <link rel="preload"> to avoid "unused preload" warnings
+// while ensuring the file is cached and ready. The service worker's CacheFirst
+// strategy for .wasm files serves it instantly when the engine initializes.
+//
+// Future "Power Mode" feature can load full engine (69MB) for users with:
+// - SharedArrayBuffer support (crossOriginIsolated === true)
+// - Good network (navigator.connection?.effectiveType === '4g')
 (function () {
-  // Check if we can use multi-threaded engine (requires SharedArrayBuffer)
-  var canUseMultiThreaded =
-    typeof SharedArrayBuffer !== 'undefined' &&
-    typeof crossOriginIsolated !== 'undefined' &&
-    crossOriginIsolated;
+  var wasmUrl = '/stockfish/stockfish-16.1-lite-single.wasm';
 
-  // Check network conditions for adaptive loading
-  var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  var shouldPreloadFull =
-    canUseMultiThreaded && connection && connection.effectiveType === '4g' && !connection.saveData;
+  // Wait for idle time to avoid competing with critical resources
+  var schedule =
+    window.requestIdleCallback ||
+    function (cb) {
+      setTimeout(cb, 1);
+    };
 
-  // Create preload link for appropriate engine
-  var preloadLink = document.createElement('link');
-  preloadLink.rel = 'preload';
-  preloadLink.as = 'fetch';
-  preloadLink.crossOrigin = 'anonymous';
-
-  if (shouldPreloadFull) {
-    preloadLink.href = '/stockfish/stockfish-16.1.wasm';
-  } else {
-    // Default to lite 7MB version for mobile/slow connections
-    preloadLink.href = '/stockfish/stockfish-16.1-lite.wasm';
-  }
-
-  document.head.appendChild(preloadLink);
+  schedule(function () {
+    fetch(wasmUrl).catch(function () {
+      // Silent fail - engine will fetch when needed
+    });
+  });
 })();

@@ -123,17 +123,12 @@ export const createTrainingActions = (
     ui.setBoardView(side);
     chess.setLifecycle(transition('idle', 'START_GAME'));
 
-    // Initialize eval engine for training mode
-    engine.initEval().catch((err) => {
-      console.warn('Eval engine init failed (non-critical):', err);
-    });
-
     try {
-      await engine.init(
-        newDifficultyLevel,
-        getOpponentSide(side),
-        trainingAIPlayStyle ?? 'balanced'
-      );
+      // Initialize both engines in parallel - eval engine is non-critical so we catch its errors
+      await Promise.all([
+        engine.initEval().catch(() => {}), // Eval failure is non-critical
+        engine.init(newDifficultyLevel, getOpponentSide(side), trainingAIPlayStyle ?? 'balanced'),
+      ]);
 
       chess.setLifecycle(transition('initializing', 'ENGINE_READY'));
 
