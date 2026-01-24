@@ -4,8 +4,34 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Typography: Space Mono for display, Outfit for body
-   Note: display=swap is included to prevent FOIT (Flash of Invisible Text) */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+   Self-hosted fonts for offline support and reliability */
+
+/* Outfit - Variable font (weights 100-900) */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/outfit-variable.woff2') format('woff2');
+}
+
+/* Space Mono - Regular */
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/space-mono-400.woff2') format('woff2');
+}
+
+/* Space Mono - Bold */
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/space-mono-700.woff2') format('woff2');
+}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    CSS Custom Properties - Design Tokens
@@ -127,6 +153,24 @@
   a {
     min-height: var(--touch-target-min);
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Prevent Text Selection on Interactive Elements
+   ───────────────────────────────────────────────────────────────────────────── */
+
+button,
+[role='button'],
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+nav,
+header,
+label {
+  user-select: none;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
