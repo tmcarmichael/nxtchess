@@ -5,6 +5,7 @@ import ChessBoardController from '../../chess/ChessBoardController/ChessBoardCon
 import GameContainer from '../../game/GameContainer/GameContainer';
 import TrainingControlPanel from '../TrainingControlPanel/TrainingControlPanel';
 import TrainingModal from '../TrainingModal/TrainingModal';
+import TrainingNavigationPanel from '../TrainingNavigationPanel/TrainingNavigationPanel';
 import type { StartGameOptions } from '../../../types/game';
 
 interface LocationState {
@@ -46,9 +47,10 @@ const TrainingContainerInner: ParentComponent = () => {
 
   return (
     <GameContainer
-      layout="two-column"
+      layout="three-column"
       showModal={showTrainingModal()}
       modalContent={<TrainingModal onClose={() => setShowTrainingModal(false)} />}
+      leftPanel={<TrainingNavigationPanel />}
       boardContent={<ChessBoardController onRequestNewGame={handleRequestNewGame} />}
       rightPanel={<TrainingControlPanel />}
     />

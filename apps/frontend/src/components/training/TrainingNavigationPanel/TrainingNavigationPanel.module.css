@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   PlayNavigationPanel - Obsidian Arena Theme
-   Move history navigation panel
+   TrainingNavigationPanel - Obsidian Arena Theme
+   Move history navigation panel with quality indicators
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .navigationPanel {
@@ -75,6 +75,7 @@
   transition:
     background-color var(--transition-fast),
     color var(--transition-fast);
+  border-left: 3px solid transparent;
 }
 
 .move:hover {
@@ -86,6 +87,68 @@
   background-color: var(--accent-subtle);
   color: var(--text-primary);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Quality Indicators
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.best {
+  border-left-color: #22c55e;
+  background-color: rgba(34, 197, 94, 0.08);
+}
+
+.best:hover {
+  background-color: rgba(34, 197, 94, 0.15);
+}
+
+.excellent {
+  border-left-color: #4ade80;
+  background-color: rgba(74, 222, 128, 0.08);
+}
+
+.excellent:hover {
+  background-color: rgba(74, 222, 128, 0.15);
+}
+
+.good {
+  border-left-color: #a3e635;
+  background-color: rgba(163, 230, 53, 0.08);
+}
+
+.good:hover {
+  background-color: rgba(163, 230, 53, 0.15);
+}
+
+.inaccuracy {
+  border-left-color: #facc15;
+  background-color: rgba(250, 204, 21, 0.08);
+}
+
+.inaccuracy:hover {
+  background-color: rgba(250, 204, 21, 0.15);
+}
+
+.mistake {
+  border-left-color: #f97316;
+  background-color: rgba(249, 115, 22, 0.08);
+}
+
+.mistake:hover {
+  background-color: rgba(249, 115, 22, 0.15);
+}
+
+.blunder {
+  border-left-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
+.blunder:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Arrow Buttons
+   ───────────────────────────────────────────────────────────────────────────── */
 
 .arrowButtons {
   display: flex;
