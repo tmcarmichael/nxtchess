@@ -6,7 +6,7 @@ import GamePanelButton from '../../game/GamePanelButton/GamePanelButton';
 import styles from './TrainingControlPanel.module.css';
 
 const TrainingControlPanel: ParentComponent = () => {
-  const { chess, engine, actions, derived } = useTrainingGame();
+  const { chess, engine, ui, actions, derived } = useTrainingGame();
 
   const handleResign = () => {
     if (!derived.isPlaying()) return;
@@ -22,6 +22,26 @@ const TrainingControlPanel: ParentComponent = () => {
 
   return (
     <div class={styles.panel}>
+      <div class={styles.modeToggle}>
+        <button
+          classList={{
+            [styles.modeButton]: true,
+            [styles.modeButtonActive]: !ui.state.trainingFocusMode,
+          }}
+          onClick={() => ui.setFocusMode(false)}
+        >
+          Eval Mode
+        </button>
+        <button
+          classList={{
+            [styles.modeButton]: true,
+            [styles.modeButtonActive]: ui.state.trainingFocusMode,
+          }}
+          onClick={() => ui.setFocusMode(true)}
+        >
+          Focus Mode
+        </button>
+      </div>
       <ButtonPanel>
         <GamePanelButton onClick={handleResign} disabled={!derived.isPlaying()}>
           <span>Resign</span>

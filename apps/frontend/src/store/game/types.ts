@@ -62,7 +62,9 @@ export type PlayActions = SinglePlayerActions & MultiplayerActions;
 // Training Mode Actions
 // ============================================================================
 
-export type TrainingActions = SinglePlayerActions;
+export interface TrainingActions extends SinglePlayerActions {
+  restartGame: () => Promise<void>;
+}
 
 // ============================================================================
 // Core Derived State

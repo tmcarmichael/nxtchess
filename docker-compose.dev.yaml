@@ -11,7 +11,11 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./db/init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
+      # Note: Migrations are now run by the Go backend via golang-migrate
+      # These are kept for fresh database initialization only
+      - ./db/seeds/001_endgame_positions.sql:/docker-entrypoint-initdb.d/90_seed_endgames.sql:ro
+      - ./db/seeds/endgame_positions_curated.sql:/docker-entrypoint-initdb.d/91_seed_endgames_curated.sql:ro
 
   redis:
     image: redis:7
@@ -27,11 +31,14 @@ services:
     container_name: nxtchess_backend
     profiles: ["backend", "full"]
     env_file: ./apps/backend/.env
+    environment:
+      MIGRATIONS_PATH: /migrations
     depends_on:
       - db
       - redis
     volumes:
       - ./apps/backend:/app
+      - ./db/migrations:/migrations:ro
     ports:
       - "8080:8080"
     command: ["go", "run", "cmd/server/main.go"]

@@ -144,6 +144,7 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
   onCleanup(() => {
     timer.stop();
     engine.terminate();
+    ui.cleanup();
     sessionManager.destroyAllSessions();
   });
 

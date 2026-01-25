@@ -30,10 +30,13 @@ import styles from './ChessBoardController.module.css';
 
 interface ChessBoardControllerProps {
   onRequestNewGame?: () => void;
+  onRestartGame?: () => void;
+  /** Getter function to check if auto-restart should happen (re-evaluated at trigger time) */
+  autoRestartOnEnd?: () => boolean;
 }
 
 const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props) => {
-  const [local] = splitProps(props, ['onRequestNewGame']);
+  const [local] = splitProps(props, ['onRequestNewGame', 'onRestartGame', 'autoRestartOnEnd']);
   const { chess, engine, multiplayer, timer, ui, actions, derived } = useGameContext();
   const navigate = useNavigate();
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
@@ -68,10 +71,15 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   } | null>(null);
   // Flash king square when illegal move attempted
   const [flashKingSquare, setFlashKingSquare] = createSignal<Square | null>(null);
+  // Focus mode game result toast
+  const [gameResultToast, setGameResultToast] = createSignal<string | null>(null);
+  const [toastFadingOut, setToastFadingOut] = createSignal(false);
   // Track if low-time warning has been played (resets each game)
   let lowTimeWarningPlayed = false;
   // Track if a drag operation just ended to prevent click from interfering
   let justDragged = false;
+  // Toast dismiss timer ref
+  let toastDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   useKeyboardNavigation({
     onPrevious: actions.jumpToPreviousMove,
@@ -95,11 +103,80 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     )
   );
 
+  // Helper to generate game result message for toast
+  const getGameResultMessage = (): string => {
+    const reason = chess.state.gameOverReason;
+    const winner = chess.state.gameWinner;
+
+    if (reason === 'checkmate' && winner) {
+      const winnerName = winner === 'w' ? 'White' : 'Black';
+      return `${winnerName} wins by checkmate`;
+    }
+    if (reason === 'stalemate') {
+      return 'Stalemate';
+    }
+    if (winner === 'draw') {
+      return 'Draw';
+    }
+    if (reason === 'resignation') {
+      const winnerName = winner === 'w' ? 'White' : winner === 'b' ? 'Black' : '';
+      return winnerName ? `${winnerName} wins by resignation` : 'Resignation';
+    }
+    return 'Game Over';
+  };
+
+  // Dismiss toast with fade-out animation
+  const dismissToast = () => {
+    if (toastDismissTimer) {
+      clearTimeout(toastDismissTimer);
+      toastDismissTimer = null;
+    }
+    if (gameResultToast()) {
+      setToastFadingOut(true);
+      setTimeout(() => {
+        setGameResultToast(null);
+        setToastFadingOut(false);
+      }, 300); // Match CSS animation duration
+    }
+  };
+
   createEffect(
     on(
       () => chess.state.isGameOver,
-      (isGameOver) => {
-        setShowEndModal(isGameOver);
+      (isGameOver, wasGameOver) => {
+        if (isGameOver && !wasGameOver) {
+          // Game just ended - check auto-restart condition immediately
+          if (local.autoRestartOnEnd?.() && local.onRestartGame) {
+            // Show toast with game result in focus mode
+            const message = getGameResultMessage();
+            setGameResultToast(message);
+            setToastFadingOut(false);
+
+            // Auto-dismiss toast after 2.5 seconds
+            toastDismissTimer = setTimeout(() => {
+              dismissToast();
+            }, 2500);
+
+            // Auto-restart after brief delay to see final position
+            // Re-check condition at trigger time to handle toggle during delay
+            setTimeout(() => {
+              if (local.autoRestartOnEnd?.()) {
+                local.onRestartGame?.();
+              } else {
+                dismissToast();
+                setShowEndModal(true);
+              }
+            }, 800);
+          } else {
+            setShowEndModal(true);
+          }
+        } else if (!isGameOver) {
+          setShowEndModal(false);
+          // Clear toast when new game starts
+          if (gameResultToast()) {
+            dismissToast();
+          }
+        }
       }
     )
   );
@@ -508,6 +585,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
   onCleanup(() => {
     if (rafId !== null) cancelAnimationFrame(rafId);
+    if (toastDismissTimer) clearTimeout(toastDismissTimer);
   });
 
   const handleMouseUp = (targetSquare: Square) => {
@@ -590,8 +668,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const canSetPremove = (from: Square): boolean => {
-    // Disable premoves in training mode - eval engine can't handle rapid position changes
-    if (chess.state.mode === 'training') return false;
+    // In training mode, only allow premoves in Focus Mode (when eval bar is hidden)
+    // This prevents eval engine overload from rapid position changes
+    if (chess.state.mode === 'training' && derived.showEvalBar()) return false;
     if (chess.derived.isViewingHistory()) return false;
     if (chess.derived.isPlayerTurn()) return false; // Use normal move instead
     if (chess.state.isGameOver || chess.state.lifecycle !== 'playing') return false;
@@ -652,7 +731,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
   const handlePlayAgain = () => {
     setShowEndModal(false);
-    local.onRequestNewGame?.();
+    // Use restart callback if available (training mode), otherwise open new game modal
+    if (local.onRestartGame) {
+      local.onRestartGame();
+    } else {
+      local.onRequestNewGame?.();
+    }
   };
 
   const handlePromotionChoice = (pieceType: PromotionPiece) => {
@@ -747,6 +831,17 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                 errorMessage={engine.state.error}
                 onRetry={actions.retryEngineInit}
               />
+              {/* Focus mode game result toast */}
+              <Show when={gameResultToast()}>
+                <div
+                  class={styles.gameResultToast}
+                  classList={{ [styles.fadeOut]: toastFadingOut() }}
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span class={styles.gameResultText}>{gameResultToast()}</span>
+                </div>
+              </Show>
               {/* Waiting for opponent overlay for multiplayer */}
               <Show when={multiplayer?.state.isWaiting}>
                 <div class={styles.waitingOverlay}>

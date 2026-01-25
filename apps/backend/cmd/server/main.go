@@ -17,6 +17,7 @@ import (
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/middleware"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/migrate"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/sessions"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/ws"
 )
@@ -37,6 +38,26 @@ func main() {
 	))
 
 	database.InitPostgres()
+
+	// Run database migrations (skip if SKIP_MIGRATIONS=true or path not found)
+	if os.Getenv("SKIP_MIGRATIONS") != "true" {
+		migrationsPath := os.Getenv("MIGRATIONS_PATH")
+		if migrationsPath == "" {
+			migrationsPath = "db/migrations" // Default for local development
+		}
+		// Check if migrations directory exists
+		if _, err := os.Stat(migrationsPath); err == nil {
+			if err := migrate.Run(database.DB, migrationsPath); err != nil {
+				logger.Error("Migration failed", logger.F("error", err.Error()))
+				os.Exit(1)
+			}
+		} else {
+			logger.Info("Migrations directory not found, skipping", logger.F("path", migrationsPath))
+		}
+	} else {
+		logger.Info("Skipping migrations (SKIP_MIGRATIONS=true)")
+	}
+
 	sessions.InitRedis()
 	auth.InitOAuthProviders(cfg)
 
@@ -92,6 +113,11 @@ func main() {
 		pub.Use(apiRateLimiter.Middleware)
 		pub.Use(middleware.SmallBodyLimit) // 64KB limit for JSON API
 		pub.Get("/profile/{username}", controllers.UserProfileHandler)
+
+		// Training API routes
+		pub.Get("/api/training/endgame/random", controllers.GetRandomEndgamePosition)
+		pub.Get("/api/training/endgame/themes", controllers.GetEndgameThemes)
+		pub.Get("/api/training/endgame/stats", controllers.GetEndgameStats)
 	})
 
 	// Optional session routes (returns different response for anon vs logged in)

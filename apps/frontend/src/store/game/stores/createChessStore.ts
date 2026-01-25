@@ -44,9 +44,14 @@ interface ChessState {
   trainingAvailableHints: number;
   trainingUsedHints: number;
   trainingEvalScore: number | null;
+  trainingStartEval: number | null;
+  trainingPositionId: string | null;
+  trainingTheme: string | null;
   trainingMoveEvaluations: MoveEvaluation[];
   // Multiplayer optimistic state
   moveError: string | null;
+  // Initialization error (position fetch, etc.)
+  initError: string | null;
 }
 
 export interface ChessStore {
@@ -61,6 +66,9 @@ export interface ChessStore {
     trainingAIPlayStyle?: AIPlayStyle;
     trainingGamePhase?: GamePhase;
     trainingAvailableHints?: number;
+    trainingStartEval?: number;
+    trainingPositionId?: string;
+    trainingTheme?: string;
     fen?: string;
   }) => string;
   applyMove: (from: Square, to: Square, promotion?: PromotionPiece) => boolean;
@@ -93,6 +101,7 @@ export interface ChessStore {
   setLifecycle: (lifecycle: GameLifecycle) => void;
   setPlayerColor: (color: Side) => void;
   resetForMultiplayer: (gameMode: GameMode) => void;
+  setInitError: (error: string | null) => void;
   // Training move evaluations
   updateMoveEvaluation: (evaluation: MoveEvaluation) => void;
   clearMoveEvaluations: () => void;
@@ -132,8 +141,12 @@ export const createChessStore = (): ChessStore => {
     trainingAvailableHints: 0,
     trainingUsedHints: 0,
     trainingEvalScore: null,
+    trainingStartEval: null,
+    trainingPositionId: null,
+    trainingTheme: null,
     trainingMoveEvaluations: [],
     moveError: null,
+    initError: null,
   });
 
   let currentSession: GameSession | null = null;
@@ -156,6 +169,7 @@ export const createChessStore = (): ChessStore => {
       setState('capturedBlack', [...s.capturedPieces.black]);
       setState('lifecycle', s.lifecycle);
       setState('trainingEvalScore', s.trainingEvalScore);
+      setState('trainingStartEval', s.trainingStartEval);
       setState('trainingUsedHints', s.usedHints);
       setState('moveError', s.moveError);
     });
@@ -180,6 +194,9 @@ export const createChessStore = (): ChessStore => {
     trainingAIPlayStyle?: AIPlayStyle;
     trainingGamePhase?: GamePhase;
     trainingAvailableHints?: number;
+    trainingStartEval?: number;
+    trainingPositionId?: string;
+    trainingTheme?: string;
     fen?: string;
   }): string => {
     const sessionId = generateSessionId();
@@ -194,6 +211,7 @@ export const createChessStore = (): ChessStore => {
       gamePhase: config.trainingGamePhase ?? undefined,
       isRated: config.trainingIsRated,
       availableHints: config.trainingAvailableHints,
+      startingFen: config.fen,
     });
 
     currentSession = session;
@@ -213,8 +231,12 @@ export const createChessStore = (): ChessStore => {
       setState('trainingAvailableHints', config.trainingAvailableHints ?? 0);
       setState('trainingUsedHints', 0);
       setState('trainingEvalScore', null);
+      setState('trainingStartEval', config.trainingStartEval ?? null);
+      setState('trainingPositionId', config.trainingPositionId ?? null);
+      setState('trainingTheme', config.trainingTheme ?? null);
       setState('trainingMoveEvaluations', []);
       setState('moveError', null);
+      setState('initError', null);
       setState('capturedWhite', []);
       setState('capturedBlack', []);
       setState('moveHistory', []);
@@ -419,6 +441,10 @@ export const createChessStore = (): ChessStore => {
     setState('playerColor', color);
   };
 
+  const setInitError = (error: string | null) => {
+    setState('initError', error);
+  };
+
   const resetForMultiplayer = (gameMode: GameMode) => {
     batch(() => {
       setState('sessionId', null);
@@ -492,6 +518,7 @@ export const createChessStore = (): ChessStore => {
     syncFromMultiplayer,
     setLifecycle,
     setPlayerColor,
+    setInitError,
     resetForMultiplayer,
     updateMoveEvaluation,
     clearMoveEvaluations,

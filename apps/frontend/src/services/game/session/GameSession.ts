@@ -49,8 +49,13 @@ export class GameSession {
         this.historyChess.move(move);
       }
     } else {
-      // Initialize fresh game
+      // Initialize fresh game (may use custom starting FEN from config)
       this._state = this.createInitialState(config);
+      // Load the starting position into chess instances
+      const startFen = this._state.fen;
+      this.chess.load(startFen);
+      this.boardCache.load(startFen);
+      this.historyChess.load(startFen);
     }
 
     this.pushStateHistory();
@@ -302,8 +307,9 @@ export class GameSession {
       };
     }
 
-    // Reset chess instance and replay moves
-    this.chess.reset();
+    // Reset chess instance to starting position (may be custom FEN) and replay moves
+    const startingFen = this._config.startingFen ?? INITIAL_FEN;
+    this.chess.load(startingFen);
     for (let i = 0; i <= toMoveIndex; i++) {
       this.chess.move(this._state.moveHistory[i]);
     }
@@ -456,8 +462,9 @@ export class GameSession {
     const history = this._state.moveHistory;
     const clamped = Math.min(Math.max(-1, targetIndex), history.length - 1);
 
-    // Reset history chess and replay moves
-    this.historyChess.reset();
+    // Reset history chess to starting position (may be custom FEN) and replay moves
+    const startingFen = this._config.startingFen ?? INITIAL_FEN;
+    this.historyChess.load(startingFen);
     for (let i = 0; i <= clamped; i++) {
       if (i >= 0 && i < history.length) {
         this.historyChess.move(history[i]);
@@ -521,8 +528,9 @@ export class GameSession {
     // Rollback to last confirmed state
     const rollbackIndex = this._state.lastConfirmedMoveIndex;
 
-    // Reset chess instance and replay moves up to confirmed point
-    this.chess.reset();
+    // Reset chess instance to starting position (may be custom FEN) and replay moves up to confirmed point
+    const startingFen = this._config.startingFen ?? INITIAL_FEN;
+    this.chess.load(startingFen);
     for (let i = 0; i <= rollbackIndex; i++) {
       if (i >= 0 && i < this._state.moveHistory.length) {
         this.chess.move(this._state.moveHistory[i]);
@@ -556,22 +564,26 @@ export class GameSession {
 
   private createInitialState(config: GameSessionConfig): GameSessionState {
     const initialTime = config.timeControl?.initialTime ?? 300;
+    const startingFen = config.startingFen ?? INITIAL_FEN;
+    // Determine starting turn from FEN (second field is 'w' or 'b')
+    const startingTurn = getTurnFromFen(startingFen);
 
     return {
-      fen: INITIAL_FEN,
+      fen: startingFen,
       moveHistory: [],
       times: { white: initialTime, black: initialTime },
       capturedPieces: { white: [], black: [] },
       lifecycle: 'idle',
-      currentTurn: 'w',
+      currentTurn: startingTurn,
       isGameOver: false,
       gameOverReason: null,
       gameWinner: null,
       lastMove: null,
       checkedKingSquare: null,
       viewMoveIndex: -1,
-      viewFen: INITIAL_FEN,
+      viewFen: startingFen,
       trainingEvalScore: null,
+      trainingStartEval: null,
       usedHints: 0,
       lastConfirmedMoveIndex: -1,
       moveError: null,

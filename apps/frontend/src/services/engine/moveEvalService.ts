@@ -171,10 +171,21 @@ class MoveEvalService {
 
   /**
    * Wait for all pending evaluations to complete
+   * Times out after maxWaitMs to prevent indefinite hangs
    */
-  async waitForPendingEvaluations(): Promise<void> {
+  async waitForPendingEvaluations(maxWaitMs: number = 5000): Promise<void> {
+    const startTime = Date.now();
+
     // Wait for the current processing cycle to complete
     while (this.isProcessing || this.pendingRequests.length > 0) {
+      // Check for timeout to prevent indefinite hang if engine gets stuck
+      if (Date.now() - startTime > maxWaitMs) {
+        console.warn('waitForPendingEvaluations timed out, forcing clear');
+        // Force clear pending state to prevent hang
+        this.pendingRequests = [];
+        this.isProcessing = false;
+        return;
+      }
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
   }

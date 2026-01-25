@@ -27,6 +27,11 @@ interface GamePhaseOption {
   label: string;
 }
 
+interface EndgameThemeOption {
+  value: string;
+  label: string;
+}
+
 // Difficulty levels with labels and ELO values (same as PlayModal)
 const DIFFICULTY_OPTIONS = [
   { level: 1, label: 'Beginner', elo: 250 },
@@ -46,9 +51,19 @@ const OPPONENT_STYLES: AIPlayStyleOption[] = [
 ];
 
 const GAME_PHASES: GamePhaseOption[] = [
-  { value: 'opening', label: 'Opening (1-10)' },
-  { value: 'middlegame', label: 'Middlegame (10-20)' },
-  { value: 'endgame', label: 'Endgame (>20)' },
+  { value: 'opening', label: 'Opening' },
+  { value: 'middlegame', label: 'Middlegame' },
+  { value: 'endgame', label: 'Endgame' },
+];
+
+const ENDGAME_THEMES: EndgameThemeOption[] = [
+  { value: '', label: 'Any' },
+  { value: 'basicMate', label: 'Basic Mates' },
+  { value: 'pawnEndgame', label: 'Pawn' },
+  { value: 'rookEndgame', label: 'Rook' },
+  { value: 'bishopEndgame', label: 'Bishop' },
+  { value: 'knightEndgame', label: 'Knight' },
+  { value: 'queenEndgame', label: 'Queen' },
 ];
 
 const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
@@ -61,6 +76,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
   const [localAIPlayStyle, localSetAIPlayStyle] = createSignal<AIPlayStyle>('balanced');
   const [localGamePhase, setLocalGamePhase] = createSignal<GamePhase>('opening');
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
+  const [localEndgameTheme, setLocalEndgameTheme] = createSignal<string>('');
 
   const handleStartTraining = () => {
     const trainingGameConfig: StartGameOptions = {
@@ -70,6 +86,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
       trainingIsRated: localRatedMode() === 'rated',
       trainingAIPlayStyle: localAIPlayStyle(),
       trainingGamePhase: localGamePhase(),
+      trainingTheme: localEndgameTheme() || undefined,
     };
 
     if (gameContext) {
@@ -162,7 +179,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
                   [styles.toggleButton]: true,
                   [styles.selectedToggle]: phase.value === localGamePhase(),
                 }}
-                disabled={phase.value !== 'opening'}
+                disabled={phase.value === 'middlegame'}
                 onClick={() => setLocalGamePhase(phase.value)}
               >
                 {phase.label}
@@ -171,6 +188,25 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
           </For>
         </div>
       </div>
+
+      <Show when={localGamePhase() === 'endgame'}>
+        <div class={styles.settingRow}>
+          <label class={styles.label}>Endgame Type:</label>
+          <div class={styles.optionGrid}>
+            <For each={ENDGAME_THEMES}>
+              {(theme) => (
+                <button
+                  class={styles.optionButton}
+                  classList={{ [styles.optionButtonActive]: localEndgameTheme() === theme.value }}
+                  onClick={() => setLocalEndgameTheme(theme.value)}
+                >
+                  {theme.label}
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
 
       <button class={styles.startButton} onClick={handleStartTraining}>
         Start Game

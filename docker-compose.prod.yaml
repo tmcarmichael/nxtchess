@@ -38,8 +38,8 @@ services:
 
   backend:
     build:
-      context: ./apps/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend.Dockerfile
     container_name: nxtchess_backend
     restart: unless-stopped
     env_file: .env.prod

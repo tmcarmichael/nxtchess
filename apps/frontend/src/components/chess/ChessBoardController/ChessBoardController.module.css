@@ -217,3 +217,72 @@
 .cancelButton:active {
   transform: scale(0.95);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Game Result Toast (Focus Mode)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.gameResultToast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md) var(--space-xl);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  animation: toastFadeIn 0.2s ease-out;
+}
+
+.gameResultToast.fadeOut {
+  animation: toastFadeOut 0.3s ease-in forwards;
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+.gameResultText {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Mobile: Slightly smaller toast */
+@media (max-width: 639px) {
+  .gameResultToast {
+    padding: var(--space-sm) var(--space-lg);
+  }
+
+  .gameResultText {
+    font-size: 1rem;
+  }
+}

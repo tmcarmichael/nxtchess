@@ -1,7 +1,7 @@
 import { splitProps, type Component, Show, onMount, onCleanup } from 'solid-js';
 import { useGameContext } from '../../../store/game/useGameContext';
 import styles from './ChessEndModal.module.css';
-import type { GameOverReason, GameWinner } from '../../../types/game';
+import type { GameOverReason, GameWinner, Side } from '../../../types/game';
 
 // Extended reason type to include training-specific reasons
 type ExtendedGameOverReason = GameOverReason | 'trainingOpeningComplete';
@@ -18,11 +18,43 @@ interface GameOverInfo {
   message: string;
 }
 
-const getGameOverInfoTraining = (finalEvalScore: number | null): GameOverInfo => {
-  const score = finalEvalScore ?? 0;
+const getGameOverInfoTraining = (
+  reason: ExtendedGameOverReason,
+  winner: GameWinner,
+  playerColor: Side
+): GameOverInfo => {
+  // Determine if player won
+  const playerWon = winner === playerColor;
+
+  if (reason === 'checkmate') {
+    const winnerName = winner === 'w' ? 'White' : 'Black';
+    return {
+      heading: 'Checkmate',
+      message: `${winnerName} wins by checkmate.`,
+    };
+  }
+  if (reason === 'stalemate') {
+    return {
+      heading: 'Stalemate',
+      message: '',
+    };
+  }
+  if (winner === 'draw') {
+    return {
+      heading: 'Draw',
+      message: '',
+    };
+  }
+  if (reason === 'resignation') {
+    return {
+      heading: 'Resignation',
+      message: `${playerWon ? 'Black' : 'White'} wins by resignation.`,
+    };
+  }
+  // Default for other training endings
   return {
-    heading: 'Training Round Complete',
-    message: `Final engine eval: ${score.toFixed(2)}`,
+    heading: 'Game Over',
+    message: '',
   };
 };
 
@@ -91,7 +123,11 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
 
   const getGameOverInfo = (): GameOverInfo => {
     if (chess.state.mode === 'training') {
-      return getGameOverInfoTraining(chess.state.trainingEvalScore);
+      return getGameOverInfoTraining(
+        local.gameOverReason,
+        local.gameWinner,
+        chess.state.playerColor
+      );
     }
     return getGameOverInfoPlay(local.gameOverReason, local.gameWinner);
   };

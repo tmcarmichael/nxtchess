@@ -5,7 +5,7 @@ import styles from './TrainingNavigationPanel.module.css';
 import type { MoveQuality } from '../../../types/moveQuality';
 
 const TrainingNavigationPanel: Component = () => {
-  const { chess, actions } = useTrainingGame();
+  const { chess, ui, actions } = useTrainingGame();
 
   let movesContainerRef: HTMLDivElement | undefined;
   createEffect(
@@ -49,6 +49,10 @@ const TrainingNavigationPanel: Component = () => {
   };
 
   const getQualityClass = (moveIndex: number): string => {
+    // Don't show quality colors in Focus Mode
+    if (ui.state.trainingFocusMode) {
+      return '';
+    }
     const quality = evaluationMap().get(moveIndex);
     if (!quality) {
       return '';
@@ -130,7 +134,11 @@ const TrainingNavigationPanel: Component = () => {
           →
         </button>
       </div>
-      <GameNotation fen={chess.state.fen} moveHistory={chess.state.moveHistory} />
+      <GameNotation
+        fen={chess.state.fen}
+        moveHistory={chess.state.moveHistory}
+        hidePgn={chess.state.trainingGamePhase === 'endgame'}
+      />
     </div>
   );
 };

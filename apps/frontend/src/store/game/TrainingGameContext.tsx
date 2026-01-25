@@ -46,7 +46,7 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
   const derived = {
     isEngineReady: () => engine.state.status === 'ready',
     isEngineLoading: () => engine.state.status === 'loading',
-    hasEngineError: () => engine.state.status === 'error',
+    hasEngineError: () => engine.state.status === 'error' || chess.state.initError !== null,
     isPlaying: () => chess.state.lifecycle === 'playing',
     material: () => {
       // capturedWhite = white pieces captured by black (material black gained)
@@ -76,6 +76,7 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
   onCleanup(() => {
     timer.stop();
     engine.terminate();
+    ui.cleanup();
     sessionManager.destroyAllSessions();
   });
 
@@ -99,7 +100,7 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
     engine: {
       state: {
         isThinking: engine.state.isThinking,
-        error: engine.state.error,
+        error: chess.state.initError || engine.state.error,
       },
     },
     timer: {
@@ -119,7 +120,7 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
       isEngineLoading: derived.isEngineLoading,
       hasEngineError: derived.hasEngineError,
       isMultiplayer: () => false,
-      showEvalBar: () => true,
+      showEvalBar: () => !ui.state.trainingFocusMode,
     },
   };
 
