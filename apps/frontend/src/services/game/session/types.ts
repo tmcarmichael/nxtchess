@@ -31,6 +31,8 @@ export interface GameSessionConfig {
   gamePhase?: GamePhase;
   isRated?: boolean;
   availableHints?: number;
+  /** Custom starting position FEN. If not provided, uses standard starting position. */
+  startingFen?: string;
 }
 
 // ============================================================================
@@ -74,6 +76,7 @@ export interface GameSessionState {
 
   // Training mode specific
   trainingEvalScore: number | null;
+  trainingStartEval: number | null;
   usedHints: number;
 
   // Multiplayer optimistic update state

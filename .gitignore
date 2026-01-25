@@ -55,6 +55,13 @@ bin/
 build/
 out/
 vendor/
+apps/backend/server
 
 # AI
 .claude/
+
+# Stockfish binaries (copied from node_modules at dev/build time)
+apps/frontend/public/stockfish/
+
+# In prog architecture MD
+docs/TRAINING_ARCHITECTURE.md

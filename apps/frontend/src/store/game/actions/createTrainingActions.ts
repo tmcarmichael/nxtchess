@@ -1,9 +1,18 @@
 import { moveEvalService } from '../../../services/engine/moveEvalService';
 import { getOpponentSide } from '../../../services/game/chessGameService';
 import { transition, canMakeMove } from '../../../services/game/gameLifecycle';
-import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../../shared/config/constants';
+import {
+  buildScenario,
+  resolvePositionSource,
+  evaluateTermination,
+  calculateScore,
+  determinePlayerWon,
+  type TrainingScenario,
+  type TrainingMetadata,
+  type GameStateForTermination,
+} from '../../../services/training';
 import type { Square, PromotionPiece } from '../../../types/chess';
-import type { Side, StartGameOptions } from '../../../types/game';
+import type { Side, StartGameOptions, GamePhase } from '../../../types/game';
 import type { ChessStore } from '../stores/createChessStore';
 import type { EngineStore } from '../stores/createEngineStore';
 import type { TimerStore } from '../stores/createTimerStore';
@@ -44,6 +53,14 @@ export const createTrainingActions = (
 ): TrainingActions => {
   const { chess, timer, engine, ui } = stores;
 
+  // Current training scenario (set during startNewGame)
+  let currentScenario: TrainingScenario | null = null;
+  let currentMetadata: TrainingMetadata = {};
+
+  // Generation counter to prevent stale async completions from executing
+  // Incremented at the start of each startNewGame call
+  let currentGameGeneration = 0;
+
   // ============================================================================
   // Internal Helpers
   // ============================================================================
@@ -78,8 +95,14 @@ export const createTrainingActions = (
       // and provides a more natural "thinking" pace for learning
       await randomDelay(TRAINING_AI_DELAY.min, TRAINING_AI_DELAY.max);
 
-      // Re-check game state after delay
-      if (chess.state.fen !== fenAtStart || !canMakeMove(chess.state.lifecycle)) {
+      // Re-check game state after delay - game could have ended, user could have exited,
+      // or a new game could have started during the delay
+      if (
+        chess.state.fen !== fenAtStart ||
+        !canMakeMove(chess.state.lifecycle) ||
+        chess.state.isGameOver ||
+        chess.state.lifecycle !== 'playing'
+      ) {
         return;
       }
 
@@ -114,33 +137,90 @@ export const createTrainingActions = (
     }
   };
 
+  /**
+   * Build the game state object for termination evaluation
+   */
+  const buildGameStateForTermination = (): GameStateForTermination => {
+    const session = chess.getSession();
+    return {
+      halfMoveCount: chess.state.moveHistory.length,
+      isCheckmate: session?.isCheckmate() ?? false,
+      isStalemate: session?.isStalemate() ?? false,
+      isDraw: session?.isDraw() ?? false,
+    };
+  };
+
+  /**
+   * End the training session with proper scoring
+   */
+  const endTrainingSession = async (
+    reason: 'move-limit' | 'checkmate' | 'stalemate' | 'draw' | 'resignation'
+  ) => {
+    const fenAtEnd = chess.state.fen;
+
+    // Wait for pending evaluations first
+    await moveEvalService.waitForPendingEvaluations();
+
+    // Get final evaluation
+    let finalEval = moveEvalService.getCachedEval(fenAtEnd);
+    if (finalEval === null) {
+      finalEval = await engine.getEval(fenAtEnd).catch(() => null);
+    }
+
+    // Determine if player won (for checkmate scenarios)
+    const playerWon = determinePlayerWon(reason, chess.state.playerColor, chess.state.gameWinner);
+
+    // Calculate score using the scoring method
+    if (currentScenario) {
+      const scoreResult = calculateScore({
+        method: currentScenario.scoringMethod,
+        metadata: currentMetadata,
+        finalEval,
+        playerSide: chess.state.playerColor,
+        endReason: reason,
+        playerWon,
+      });
+
+      // Map training end reasons to GameOverReason
+      // 'draw' and 'move-limit' map to null (no specific game-over reason)
+      const gameOverReason =
+        reason === 'checkmate'
+          ? 'checkmate'
+          : reason === 'stalemate'
+            ? 'stalemate'
+            : reason === 'resignation'
+              ? 'resignation'
+              : null;
+
+      const gameWinner =
+        reason === 'checkmate'
+          ? playerWon
+            ? chess.state.playerColor
+            : getOpponentSide(chess.state.playerColor)
+          : null;
+
+      chess.endGame(gameOverReason, gameWinner, scoreResult.score ?? undefined);
+    } else {
+      // Fallback for legacy behavior
+      chess.endGame(null, null, finalEval ?? undefined);
+    }
+
+    timer.stop();
+    // Note: Modal display and auto-restart logic is handled by ChessBoardController
+    // based on the autoRestartOnEnd prop passed from TrainingContainer
+  };
+
   const afterMoveChecks = async () => {
     if (chess.state.isGameOver) return;
 
-    // Check for training opening end
-    if (chess.state.mode === 'training' && chess.state.trainingGamePhase === 'opening') {
-      const moveCount = chess.state.moveHistory.length;
-      if (moveCount >= TRAINING_OPENING_MOVE_THRESHOLD) {
-        const fenAtStart = chess.state.fen;
+    // Use the training scenario's termination condition
+    if (currentScenario) {
+      const gameState = buildGameStateForTermination();
+      const termination = evaluateTermination(currentScenario.terminationCondition, gameState);
 
-        // Wait for any pending move evaluations to complete first
-        // This ensures the cache is populated and avoids conflicts with eval engine
-        await moveEvalService.waitForPendingEvaluations();
-
-        // Check if we already have the evaluation cached
-        let score = moveEvalService.getCachedEval(fenAtStart);
-
-        // If not cached, get it from the engine
-        if (score === null) {
-          score = await engine.getEval(fenAtStart);
-        }
-
-        // Verify state hasn't changed while we were waiting
-        if (chess.state.fen !== fenAtStart) return;
-
-        chess.endGame(null, null, score);
-        timer.stop();
-        ui.showEndModal();
+      if (termination.shouldEnd && termination.reason) {
+        await endTrainingSession(termination.reason);
+        return;
       }
     }
   };
@@ -150,6 +230,14 @@ export const createTrainingActions = (
   // ============================================================================
 
   const startNewGame = async (options: StartGameOptions) => {
+    // Increment generation to invalidate any in-flight async operations from previous calls
+    currentGameGeneration++;
+    const thisGeneration = currentGameGeneration;
+
+    // Reset scenario state immediately to prevent stale data
+    currentScenario = null;
+    currentMetadata = {};
+
     timer.stop();
     ui.hideEndModal();
     chess.clearMoveEvaluations();
@@ -164,42 +252,85 @@ export const createTrainingActions = (
       trainingAIPlayStyle = 'balanced',
       trainingGamePhase = 'opening',
       trainingAvailableHints = 0,
+      trainingTheme,
+      trainingExcludePositionId,
     } = options;
 
-    chess.startGame({
-      mode,
-      playerColor: side,
-      opponentType: 'ai',
-      timeControl: newTimeControl,
+    // Build scenario for the selected phase
+    const scenario = buildScenario(trainingGamePhase as GamePhase, {
       difficulty: newDifficultyLevel,
-      trainingIsRated,
-      trainingAIPlayStyle,
-      trainingGamePhase,
-      trainingAvailableHints,
+      theme: trainingTheme,
+      side: side,
+      excludePositionId: trainingExcludePositionId,
     });
 
-    timer.reset(newTimeControl);
-    ui.setBoardView(side);
+    // Set loading state for position fetch (for backend sources)
     chess.setLifecycle(transition('idle', 'START_GAME'));
 
     try {
+      // Resolve the starting position
+      const { fen, metadata } = await resolvePositionSource(scenario.positionSource);
+
+      // Check if a newer startNewGame call has superseded this one
+      if (thisGeneration !== currentGameGeneration) {
+        return; // Abort - a newer game initialization is in progress
+      }
+
+      // Now safe to set module-level state
+      currentScenario = scenario;
+      currentMetadata = metadata;
+
+      // Start the game with the resolved position
+      chess.startGame({
+        mode,
+        playerColor: side,
+        opponentType: 'ai',
+        timeControl: newTimeControl,
+        difficulty: newDifficultyLevel,
+        trainingIsRated,
+        trainingAIPlayStyle,
+        trainingGamePhase,
+        trainingAvailableHints,
+        trainingStartEval: metadata.startingEval,
+        trainingPositionId: metadata.positionId,
+        trainingTheme: metadata.theme,
+        fen,
+      });
+
+      timer.reset(newTimeControl);
+      ui.setBoardView(side);
+
       // Initialize both engines in parallel - eval engine is non-critical so we catch its errors
       await Promise.all([
         engine.initEval().catch(() => {}), // Eval failure is non-critical
         engine.init(newDifficultyLevel, getOpponentSide(side), trainingAIPlayStyle ?? 'balanced'),
       ]);
 
+      // Check again after engine init - another startNewGame may have been called
+      if (thisGeneration !== currentGameGeneration) {
+        return;
+      }
+
       chess.setLifecycle(transition('initializing', 'ENGINE_READY'));
 
       // Training mode typically doesn't use timer, but support it if needed
       // Timer not started for training mode
 
-      if (side === 'b') {
+      // If player is black OR if the starting position has white to move and player is white,
+      // we may need to trigger AI move
+      const positionSideToMove = metadata.sideToMove ?? 'w';
+      if (positionSideToMove !== side) {
+        // AI moves first
         performAIMove();
       }
     } catch (err) {
-      console.error('Engine initialization failed:', err);
+      console.error('Training initialization failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to start training';
+      chess.setInitError(errorMessage);
       chess.setLifecycle(transition('initializing', 'ENGINE_ERROR'));
+      // Reset scenario on error
+      currentScenario = null;
+      currentMetadata = {};
     }
   };
 
@@ -241,23 +372,26 @@ export const createTrainingActions = (
     if (!canMakeMove(chess.state.lifecycle)) return;
     timer.stop();
 
-    // Get current eval before ending game so it displays in the end modal
-    const currentFen = chess.state.fen;
-    const evalScore = await engine.getEval(currentFen).catch(() => 0);
-
-    // Player resigns, opponent wins
-    const winner = getOpponentSide(chess.state.playerColor);
-    chess.endGame('resignation', winner, evalScore);
-    ui.showEndModal();
+    await endTrainingSession('resignation');
   };
 
   const retryEngineInit = async () => {
+    // If there was an init error (e.g., position fetch failed), reset to idle
+    // so the training modal reopens for user to try again
+    if (chess.state.initError) {
+      chess.setInitError(null);
+      chess.setLifecycle(transition('error', 'EXIT_GAME'));
+      return;
+    }
+
     chess.setLifecycle(transition('error', 'RETRY_ENGINE'));
 
     await engine.retry(() => {
       chess.setLifecycle(transition('initializing', 'ENGINE_READY'));
 
-      if (chess.state.playerColor === 'b' && chess.state.moveHistory.length === 0) {
+      // Check if AI should move first based on position
+      const sideToMove = currentMetadata.sideToMove ?? 'w';
+      if (sideToMove !== chess.state.playerColor && chess.state.moveHistory.length === 0) {
         performAIMove();
       }
     });
@@ -278,8 +412,35 @@ export const createTrainingActions = (
       engine.release(chess.state.sessionId);
     }
 
+    // Clear scenario state
+    currentScenario = null;
+    currentMetadata = {};
+
     // coreActions.exitGame() calls chess.exitGame() which already sets lifecycle to 'idle'
     coreActions.exitGame();
+  };
+
+  /**
+   * Restart with the same training settings (for "Play Again" button)
+   */
+  const restartGame = async () => {
+    // Capture current position ID before starting new game (to exclude it)
+    const excludePositionId = chess.state.trainingPositionId ?? undefined;
+
+    // Build options from current state
+    const options: StartGameOptions = {
+      side: chess.state.playerColor,
+      mode: 'training',
+      newDifficultyLevel: engine.state.difficulty,
+      trainingIsRated: chess.state.trainingIsRated,
+      trainingAIPlayStyle: chess.state.trainingAIPlayStyle ?? 'balanced',
+      trainingGamePhase: chess.state.trainingGamePhase ?? 'endgame',
+      trainingAvailableHints: chess.state.trainingAvailableHints,
+      trainingTheme: chess.state.trainingTheme ?? undefined,
+      trainingExcludePositionId: excludePositionId,
+    };
+
+    await startNewGame(options);
   };
 
   return {
@@ -288,6 +449,7 @@ export const createTrainingActions = (
 
     // Training actions
     startNewGame,
+    restartGame,
     applyPlayerMove,
     resign,
     retryEngineInit,

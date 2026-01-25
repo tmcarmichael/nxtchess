@@ -1,9 +1,11 @@
-import { createMemo, createSignal, type Component } from 'solid-js';
+import { createMemo, createSignal, Show, type Component } from 'solid-js';
 import styles from './GameNotation.module.css';
 
 interface GameNotationProps {
   fen: string;
   moveHistory: string[];
+  /** Hide PGN row (useful for endgame positions without prior moves) */
+  hidePgn?: boolean;
 }
 
 const GameNotation: Component<GameNotationProps> = (props) => {
@@ -47,21 +49,23 @@ const GameNotation: Component<GameNotationProps> = (props) => {
 
   return (
     <div class={styles.notationContainer}>
-      <div class={styles.notationRow}>
-        <span class={styles.label}>PGN</span>
-        <div class={styles.valueContainer}>
-          <span class={styles.value}>{pgn() || '—'}</span>
+      <Show when={!props.hidePgn}>
+        <div class={styles.notationRow}>
+          <span class={styles.label}>PGN</span>
+          <div class={styles.valueContainer}>
+            <span class={styles.value}>{pgn() || '—'}</span>
+          </div>
+          <button
+            class={styles.copyButton}
+            classList={{ [styles.copied]: copiedField() === 'pgn' }}
+            onClick={() => copyToClipboard(pgn(), 'pgn')}
+            disabled={!pgn()}
+            title="Copy PGN"
+          >
+            {copiedField() === 'pgn' ? '✓' : '⧉'}
+          </button>
         </div>
-        <button
-          class={styles.copyButton}
-          classList={{ [styles.copied]: copiedField() === 'pgn' }}
-          onClick={() => copyToClipboard(pgn(), 'pgn')}
-          disabled={!pgn()}
-          title="Copy PGN"
-        >
-          {copiedField() === 'pgn' ? '✓' : '⧉'}
-        </button>
-      </div>
+      </Show>
       <div class={styles.notationRow}>
         <span class={styles.label}>FEN</span>
         <div class={styles.valueContainer}>

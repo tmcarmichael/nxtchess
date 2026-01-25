@@ -1,10 +1,60 @@
+import { existsSync, createReadStream } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import solid from 'vite-plugin-solid';
 import { VitePWA } from 'vite-plugin-pwa';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [
     solid(),
+    // Copy stockfish files from node_modules to dist during build
+    // Only copy the variants actually used (see StockfishEngine.ts ENGINE_PATHS):
+    // - full-mt: stockfish-16.1.js/.wasm (multi-threaded, 69MB)
+    // - full-st: stockfish-16.1-single.js/.wasm (single-threaded, 69MB)
+    // - lite-st: stockfish-16.1-lite-single.js/.wasm (mobile, 7MB)
+    viteStaticCopy({
+      targets: [
+        {
+          src: [
+            'node_modules/stockfish/src/stockfish-16.1.js',
+            'node_modules/stockfish/src/stockfish-16.1.wasm',
+            'node_modules/stockfish/src/stockfish-16.1-single.js',
+            'node_modules/stockfish/src/stockfish-16.1-single.wasm',
+            'node_modules/stockfish/src/stockfish-16.1-lite-single.js',
+            'node_modules/stockfish/src/stockfish-16.1-lite-single.wasm',
+          ],
+          dest: 'stockfish',
+        },
+      ],
+    }),
+    // Serve stockfish from node_modules during development
+    {
+      name: 'serve-stockfish-dev',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url?.startsWith('/stockfish/')) {
+            const filename = req.url.replace('/stockfish/', '');
+            const filepath = resolve(__dirname, 'node_modules/stockfish/src', filename);
+
+            if (existsSync(filepath)) {
+              const contentType = filename.endsWith('.wasm')
+                ? 'application/wasm'
+                : 'application/javascript';
+              res.setHeader('Content-Type', contentType);
+              res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+              res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+              createReadStream(filepath).pipe(res);
+              return;
+            }
+          }
+          next();
+        });
+      },
+    },
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'stockfish/**/*'],

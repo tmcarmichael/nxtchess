@@ -7,7 +7,7 @@ import styles from './HomeSiteHero.module.css';
 const HomeSiteHero: Component = () => {
   const navigate = useNavigate();
   const [pos, setPos] = createSignal({ x: 0, y: 0, r: 0 });
-  let intervalId: number | undefined;
+  let intervalId: ReturnType<typeof setInterval> | undefined;
 
   onMount(() => {
     intervalId = setInterval(() => {

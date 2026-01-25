@@ -66,6 +66,53 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   Mode Toggle (Eval/Focus)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.modeToggle {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  margin-bottom: var(--space-sm);
+}
+
+.modeButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.modeButton:hover:not(.modeButtonActive) {
+  background: var(--surface-4);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.modeButtonActive {
+  background: var(--accent-subtle);
+  border-color: var(--accent-muted);
+  color: var(--text-primary);
+  box-shadow: 0 0 12px var(--accent-ghost);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    Responsive Breakpoints
    ───────────────────────────────────────────────────────────────────────────── */
 

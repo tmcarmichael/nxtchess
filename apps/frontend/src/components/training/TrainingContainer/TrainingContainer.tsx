@@ -15,7 +15,7 @@ interface LocationState {
 const TrainingContainerInner: ParentComponent = () => {
   const navigate = useNavigate();
   const location = useLocation<LocationState>();
-  const { chess, actions } = useTrainingGame();
+  const { chess, ui, actions } = useTrainingGame();
   const [showTrainingModal, setShowTrainingModal] = createSignal(false);
 
   // Handle game start from navigation state (e.g., from header modal)
@@ -41,9 +41,29 @@ const TrainingContainerInner: ParentComponent = () => {
     }
   });
 
+  // Also show modal when lifecycle returns to idle (e.g., after error retry)
+  createEffect(
+    on(
+      () => chess.state.lifecycle,
+      (lifecycle, prevLifecycle) => {
+        if (lifecycle === 'idle' && prevLifecycle === 'error') {
+          setShowTrainingModal(true);
+        }
+      }
+    )
+  );
+
   const handleRequestNewGame = () => {
     setShowTrainingModal(true);
   };
+
+  const handleRestartGame = () => {
+    actions.restartGame();
+  };
+
+  // Auto-restart in focus mode for endgame training
+  const shouldAutoRestart = () =>
+    ui.state.trainingFocusMode && chess.state.trainingGamePhase === 'endgame';
 
   return (
     <GameContainer
@@ -51,7 +71,13 @@ const TrainingContainerInner: ParentComponent = () => {
       showModal={showTrainingModal()}
       modalContent={<TrainingModal onClose={() => setShowTrainingModal(false)} />}
       leftPanel={<TrainingNavigationPanel />}
-      boardContent={<ChessBoardController onRequestNewGame={handleRequestNewGame} />}
+      boardContent={
+        <ChessBoardController
+          onRequestNewGame={handleRequestNewGame}
+          onRestartGame={handleRestartGame}
+          autoRestartOnEnd={shouldAutoRestart}
+        />
+      }
       rightPanel={<TrainingControlPanel />}
     />
   );

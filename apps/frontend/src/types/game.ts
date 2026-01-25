@@ -27,6 +27,9 @@ export interface StartGameOptions {
   trainingAIPlayStyle?: AIPlayStyle;
   trainingGamePhase?: GamePhase;
   trainingAvailableHints?: number;
+  trainingTheme?: string;
+  /** Exclude a specific position ID to avoid repeats on restart */
+  trainingExcludePositionId?: string;
 }
 
 export interface MultiplayerGameOptions {
