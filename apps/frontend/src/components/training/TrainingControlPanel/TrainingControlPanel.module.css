@@ -113,6 +113,40 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   Endgame Info Panel
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.endgameInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.infoLabel {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.themeValue {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: capitalize;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    Responsive Breakpoints
    ───────────────────────────────────────────────────────────────────────────── */
 
