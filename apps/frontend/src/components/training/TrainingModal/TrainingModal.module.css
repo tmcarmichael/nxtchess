@@ -198,63 +198,6 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Style Selector (AI Play Styles)
-   ───────────────────────────────────────────────────────────────────────────── */
-
-.styleSelector {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-md);
-  margin-top: var(--space-sm);
-}
-
-.styleIconContainer {
-  position: relative;
-  width: 120px;
-  height: 90px;
-  border-radius: var(--radius-md);
-  background: var(--surface-3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast),
-    background var(--transition-fast);
-  border: 1px solid var(--border-subtle);
-}
-
-.styleIconContainer:hover {
-  transform: scale(1.05);
-  background: var(--surface-4);
-}
-
-.selectedIcon {
-  transform: scale(1.08);
-  background: var(--accent-subtle);
-  border-color: var(--accent-muted);
-  box-shadow: 0 0 20px var(--accent-ghost);
-}
-
-.opponentIcon {
-  width: 48px;
-  height: 48px;
-  opacity: 0.9;
-}
-
-.iconLabel {
-  margin-top: var(--space-xs);
-  font-family: var(--font-display);
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--text-secondary);
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
    Knight/Side Selector
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -366,26 +309,6 @@
 
   .settingRow {
     margin-bottom: var(--space-md);
-  }
-
-  .styleSelector {
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-    justify-content: center;
-  }
-
-  .styleIconContainer {
-    width: 90px;
-    height: 75px;
-  }
-
-  .opponentIcon {
-    width: 36px;
-    height: 36px;
-  }
-
-  .iconLabel {
-    font-size: 0.6rem;
   }
 
   .knightSelector {

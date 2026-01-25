@@ -1,12 +1,5 @@
 import type { Square, PromotionPiece } from '../../../types/chess';
-import type {
-  Side,
-  GameMode,
-  GameOverReason,
-  GameWinner,
-  AIPlayStyle,
-  GamePhase,
-} from '../../../types/game';
+import type { Side, GameMode, GameOverReason, GameWinner, GamePhase } from '../../../types/game';
 import type { GameLifecycle } from '../gameLifecycle';
 
 // ============================================================================
@@ -27,7 +20,6 @@ export interface GameSessionConfig {
   opponentType: OpponentType;
   timeControl?: TimeControl;
   difficulty?: number;
-  aiPlayStyle?: AIPlayStyle;
   gamePhase?: GamePhase;
   isRated?: boolean;
   availableHints?: number;

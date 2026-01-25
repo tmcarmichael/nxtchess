@@ -13,6 +13,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  user-select: none;
 }
 
 .infoPanelTitle {
@@ -23,6 +24,7 @@
   letter-spacing: 0.05em;
   color: var(--text-muted);
   margin-bottom: var(--space-xs);
+  user-select: none;
 }
 
 .infoPanelValue {
@@ -30,4 +32,5 @@
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-primary);
+  user-select: none;
 }

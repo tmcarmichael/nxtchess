@@ -1,5 +1,3 @@
-import { PLAYSTYLE_PRESETS } from '../../shared/config/constants';
-import { type AIPlayStyle } from '../../types/game';
 import { engineService } from './engineService';
 import { StockfishEngine, EngineError } from './StockfishEngine';
 
@@ -17,26 +15,50 @@ const aiEngine = new StockfishEngine({
   operationTimeoutMs: ENGINE_MOVE_TIMEOUT_MS,
 });
 
+// Mutex to prevent concurrent initAiEngine calls from racing
+// (e.g., pre-warm at 600 ELO vs actual game at 2400 ELO)
+let initMutex: Promise<void> = Promise.resolve();
+
 /**
  * Initialize the AI engine for single-game mode (backward compatibility).
- * For multi-game support, use engineService.initAiEngine(gameId, elo, style).
+ * For multi-game support, use engineService.initAiEngine(gameId, elo).
+ *
+ * Uses a proper mutex to prevent race conditions when multiple callers try to
+ * initialize with different ELO values (e.g., pre-warm vs actual game).
  */
-export const initAiEngine = async (elo: number, style: AIPlayStyle = 'balanced'): Promise<void> => {
-  if (!aiEngine.isInitialized) {
-    await aiEngine.init();
-  } else {
-    aiEngine.postMessage('ucinewgame');
+export const initAiEngine = async (elo: number): Promise<void> => {
+  // Chain this init after any pending init completes
+  // This ensures proper serialization even with multiple waiters
+  const previousInit = initMutex;
+
+  let releaseMutex: () => void;
+  initMutex = new Promise((resolve) => {
+    releaseMutex = resolve;
+  });
+
+  // Wait for previous init to complete
+  await previousInit;
+
+  try {
+    if (!aiEngine.isInitialized) {
+      await aiEngine.init();
+    } else {
+      aiEngine.postMessage('ucinewgame');
+      // Wait for ucinewgame to be processed before setting options
+      await aiEngine.waitForReady();
+    }
+
+    // Configure AI with ELO-limited strength
+    // Must set UCI_LimitStrength BEFORE UCI_Elo for proper effect
+    aiEngine.postMessage('setoption name UCI_LimitStrength value true');
+    aiEngine.postMessage(`setoption name UCI_Elo value ${elo}`);
+
+    // Ensure options are fully applied before returning
+    await aiEngine.waitForReady();
+  } finally {
+    // Release the mutex for next caller
+    releaseMutex!();
   }
-
-  const styleKey = style ?? 'balanced';
-  const { contempt, aggressiveness } = PLAYSTYLE_PRESETS[styleKey];
-
-  aiEngine.postMessage('setoption name UCI_LimitStrength value true');
-  aiEngine.postMessage(`setoption name UCI_Elo value ${elo}`);
-  aiEngine.postMessage(`setoption name Contempt value ${contempt}`);
-  aiEngine.postMessage(`setoption name Aggressiveness value ${aggressiveness}`);
-
-  await aiEngine.waitForReady();
 };
 
 const getBestMove = (fen: string): Promise<string> => {
@@ -90,12 +112,8 @@ export const isAiEngineInitialized = () => aiEngine.isInitialized;
 /**
  * Initialize AI engine for a specific game.
  */
-export const initAiEngineForGame = async (
-  gameId: string,
-  elo: number,
-  style: AIPlayStyle = 'balanced'
-): Promise<void> => {
-  return engineService.initAiEngine(gameId, elo, style);
+export const initAiEngineForGame = async (gameId: string, elo: number): Promise<void> => {
+  return engineService.initAiEngine(gameId, elo);
 };
 
 /**

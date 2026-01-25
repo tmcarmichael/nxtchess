@@ -95,9 +95,14 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       () => [chess.state.fen, derived.showEvalBar(), chess.state.lifecycle] as const,
       ([currentFen, showEval, lifecycle]) => {
         if (showEval && isEvalEngineInitialized() && lifecycle === 'playing') {
-          getEvaluation(currentFen).then((score: number) => {
-            setEvalScore(score ?? null);
-          });
+          getEvaluation(currentFen)
+            .then((score: number) => {
+              setEvalScore(score ?? null);
+            })
+            .catch(() => {
+              // Evaluation was cancelled by a newer request - ignore
+              // The next position change will trigger a new evaluation
+            });
         }
       }
     )

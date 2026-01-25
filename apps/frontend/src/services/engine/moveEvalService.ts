@@ -123,19 +123,28 @@ class MoveEvalService {
 
   /**
    * Get evaluation from cache or compute it
+   * Retries up to maxRetries times on failure (e.g., cancelled by eval bar)
    */
-  private async getEval(fen: string): Promise<number | null> {
+  private async getEval(fen: string, maxRetries: number = 3): Promise<number | null> {
     if (this.evalCache.has(fen)) {
       return this.evalCache.get(fen)!;
     }
 
-    try {
-      const score = await getEvaluation(fen);
-      this.evalCache.set(fen, score);
-      return score;
-    } catch {
-      return null;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const score = await getEvaluation(fen);
+        this.evalCache.set(fen, score);
+        return score;
+      } catch {
+        // Retry on failure (likely cancelled by eval bar request)
+        if (attempt < maxRetries - 1) {
+          // Small delay before retry to let eval bar finish
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      }
     }
+
+    return null;
   }
 
   /**

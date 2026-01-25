@@ -16,23 +16,7 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   gap: var(--space-md);
-}
-
-.AIPlayStyle {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 700;
-  margin-bottom: var(--space-xs);
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.AIPlayStyleLabel {
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-secondary);
+  user-select: none;
 }
 
 .panelSection {
@@ -56,6 +40,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
+  user-select: none;
 }
 
 .sectionValue {
@@ -63,6 +48,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-primary);
+  user-select: none;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -124,6 +110,7 @@
   padding: var(--space-md);
   background: var(--surface-2);
   border-radius: var(--radius-md);
+  user-select: none;
 }
 
 .infoRow {
@@ -136,6 +123,7 @@
   font-family: var(--font-body);
   font-size: 0.8rem;
   color: var(--text-secondary);
+  user-select: none;
 }
 
 .themeValue {
@@ -144,6 +132,7 @@
   font-weight: 600;
   color: var(--accent);
   text-transform: capitalize;
+  user-select: none;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -169,10 +158,6 @@
     margin-top: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
     gap: var(--space-sm);
-  }
-
-  .AIPlayStyle {
-    font-size: 0.8rem;
   }
 
   .sectionLabel {

@@ -56,10 +56,11 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `ChessSideSelector` — Color selection UI
 - `ChessDifficultySlider` — AI difficulty picker
 
-**`game/` (6 components)** — Game layout:
+**`game/` (7 components)** — Game layout:
 
 - `GameContainer` — Layout wrapper (two-column/single-column responsive)
 - `GameInfoPanel` — Player info and stats
+- `GameNotation` — Move history display with SAN notation
 - `ButtonPanel` — Action buttons container
 - `GamePanelButton` — Styled button component
 - `DifficultyDisplay` — Shows AI difficulty level
@@ -73,11 +74,12 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `PlayNavigationPanel` — Move history navigation
 - `PlayResignModal` — Resignation confirmation
 
-**`training/` (3 components)** — Training mode:
+**`training/` (4 components)** — Training mode:
 
 - `TrainingContainer` — Wraps with TrainingGameProvider
 - `TrainingControlPanel` — Training controls (hints, eval)
 - `TrainingModal` — Training setup dialog
+- `TrainingNavigationPanel` — Move history navigation for training mode
 
 **`home/` (2 components)** — Landing page:
 
@@ -159,6 +161,7 @@ TrainingActions = SinglePlayerActions
 - `EnginePool.ts` — Multi-engine allocation per (purpose, gameId), max 4 engines, 1min idle timeout
 - `ResilientEngine.ts` — Circuit breaker wrapper (3-strike rule, auto-recovery, command queuing)
 - `engineService.ts` — High-level engine service interface
+- `moveEvalService.ts` — Move quality evaluation for training hints (best move comparison)
 
 Two separate Web Workers prevent UCI command race conditions. Both support single-game (`computeAiMove`) and multi-game (`computeAiMoveForGame`) APIs.
 
@@ -199,6 +202,21 @@ Two separate Web Workers prevent UCI command race conditions. Both support singl
 
 - `PreferencesService.ts` — User settings storage (singleton, LocalStorage)
 
+#### Training Services (`services/training/`)
+
+Modular training infrastructure for endgame practice:
+
+- `index.ts` — Barrel export with full documentation
+- `types.ts` — Training type definitions (TrainingConfig, TrainingScenario, etc.)
+- `scenarios.ts` — Training scenario configurations (endgame themes, difficulty mapping)
+- `positionSource.ts` — Position source resolution (API for random positions, predefined for specific themes)
+- `terminationEvaluator.ts` — Training termination conditions (checkmate, draw, incorrect move)
+- `scoringCalculator.ts` — Training performance scoring logic
+
+#### Offline Services (`services/offline/`)
+
+- `AssetPreloader.ts` — Pre-loads critical assets (fonts, Stockfish WASM) for offline capability
+
 ### Key Types (`src/types/`)
 
 **chess.ts:**
@@ -219,7 +237,6 @@ GameMode = 'play' | 'training' | 'analysis';
 GameLifecycle = 'idle' | 'initializing' | 'playing' | 'error' | 'ended';
 OpponentType = 'ai' | 'human';
 RatedMode = 'rated' | 'casual';
-AIPlayStyle = 'aggressive' | 'defensive' | 'balanced' | 'random' | 'positional';
 GamePhase = 'opening' | 'middlegame' | 'endgame';
 GameWinner = Side | 'draw' | null;
 GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | null;
@@ -229,7 +246,7 @@ GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | null;
 
 **Config:**
 
-- `constants.ts` — `TIME_VALUES_MINUTES`, `DIFFICULTY_VALUES_ELO`, `PLAYSTYLE_PRESETS`, `TRAINING_OPENING_MOVE_THRESHOLD`
+- `constants.ts` — `TIME_VALUES_MINUTES`, `DIFFICULTY_VALUES_ELO` (6 UI levels: Beginner/Easy/Medium/Hard/Expert/Grandmaster mapping to internal 1-10)
 - `env.ts` — Environment variables (`VITE_BACKEND_URL`, `VITE_DEBUG`)
 
 **Hooks:**

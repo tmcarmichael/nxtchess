@@ -10,7 +10,6 @@ import type {
   GameMode,
   GameOverReason,
   GameWinner,
-  AIPlayStyle,
   GamePhase,
   GameLifecycle,
   OpponentType,
@@ -39,7 +38,6 @@ interface ChessState {
   lifecycle: GameLifecycle;
   // Training mode
   trainingIsRated: boolean;
-  trainingAIPlayStyle: AIPlayStyle;
   trainingGamePhase: GamePhase;
   trainingAvailableHints: number;
   trainingUsedHints: number;
@@ -63,7 +61,6 @@ export interface ChessStore {
     timeControl: number;
     difficulty?: number;
     trainingIsRated?: boolean;
-    trainingAIPlayStyle?: AIPlayStyle;
     trainingGamePhase?: GamePhase;
     trainingAvailableHints?: number;
     trainingStartEval?: number;
@@ -136,7 +133,6 @@ export const createChessStore = (): ChessStore => {
     capturedBlack: [],
     lifecycle: 'idle',
     trainingIsRated: false,
-    trainingAIPlayStyle: null,
     trainingGamePhase: null,
     trainingAvailableHints: 0,
     trainingUsedHints: 0,
@@ -191,7 +187,6 @@ export const createChessStore = (): ChessStore => {
     timeControl: number;
     difficulty?: number;
     trainingIsRated?: boolean;
-    trainingAIPlayStyle?: AIPlayStyle;
     trainingGamePhase?: GamePhase;
     trainingAvailableHints?: number;
     trainingStartEval?: number;
@@ -207,7 +202,6 @@ export const createChessStore = (): ChessStore => {
       opponentType: config.opponentType,
       timeControl: { initialTime: config.timeControl * 60 },
       difficulty: config.difficulty,
-      aiPlayStyle: config.trainingAIPlayStyle ?? undefined,
       gamePhase: config.trainingGamePhase ?? undefined,
       isRated: config.trainingIsRated,
       availableHints: config.trainingAvailableHints,
@@ -226,7 +220,6 @@ export const createChessStore = (): ChessStore => {
       setState('gameOverReason', null);
       setState('gameWinner', null);
       setState('trainingIsRated', config.trainingIsRated ?? false);
-      setState('trainingAIPlayStyle', config.trainingAIPlayStyle ?? null);
       setState('trainingGamePhase', config.trainingGamePhase ?? null);
       setState('trainingAvailableHints', config.trainingAvailableHints ?? 0);
       setState('trainingUsedHints', 0);

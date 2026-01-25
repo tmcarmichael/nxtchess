@@ -98,17 +98,13 @@ export interface MultiplayerDerived {
 // Play Mode Derived (all derived state)
 // ============================================================================
 
-export interface PlayDerived extends CoreDerived, EngineDerived, MultiplayerDerived {
-  formattedAIPlayStyle: () => string;
-}
+export type PlayDerived = CoreDerived & EngineDerived & MultiplayerDerived;
 
 // ============================================================================
 // Training Mode Derived
 // ============================================================================
 
-export interface TrainingDerived extends CoreDerived, EngineDerived {
-  formattedAIPlayStyle: () => string;
-}
+export type TrainingDerived = CoreDerived & EngineDerived;
 
 // ============================================================================
 // Context Value Types

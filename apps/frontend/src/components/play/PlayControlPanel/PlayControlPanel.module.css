@@ -14,6 +14,7 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   gap: var(--space-md);
+  user-select: none;
 }
 
 .panelTitle {
@@ -24,6 +25,7 @@
   letter-spacing: 0.05em;
   color: var(--text-muted);
   margin-bottom: var(--space-sm);
+  user-select: none;
 }
 
 .statusText {
@@ -32,6 +34,7 @@
   font-weight: 500;
   color: var(--text-secondary);
   text-align: center;
+  user-select: none;
 }
 
 .statusText.waiting {
