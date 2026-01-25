@@ -12,8 +12,11 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
-      # Note: Migrations are now run by the Go backend via golang-migrate
-      # These are kept for fresh database initialization only
+      # Migrations (run in order before seeds)
+      - ./db/migrations/000001_add_constraints_and_indexes.up.sql:/docker-entrypoint-initdb.d/01_migration.sql:ro
+      - ./db/migrations/000002_add_profile_icon.up.sql:/docker-entrypoint-initdb.d/02_migration.sql:ro
+      - ./db/migrations/000003_add_endgame_positions.up.sql:/docker-entrypoint-initdb.d/03_migration.sql:ro
+      # Seeds (run after migrations)
       - ./db/seeds/001_endgame_positions.sql:/docker-entrypoint-initdb.d/90_seed_endgames.sql:ro
       - ./db/seeds/endgame_positions_curated.sql:/docker-entrypoint-initdb.d/91_seed_endgames_curated.sql:ro
 
