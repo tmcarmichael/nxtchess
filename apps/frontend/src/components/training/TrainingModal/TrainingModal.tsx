@@ -103,6 +103,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
 
   return (
     <ChessGameModal title="Train" onClose={local.onClose}>
+      {/* Rated/Casual Toggle */}
       <div class={styles.buttonGroup}>
         <button
           classList={{
@@ -125,50 +126,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
         </button>
       </div>
 
-      <Show when={localRatedMode() === 'casual'}>
-        <div class={styles.settingRow}>
-          <label class={styles.label}>Difficulty:</label>
-          <div class={styles.optionGrid}>
-            <For each={DIFFICULTY_OPTIONS}>
-              {(option) => (
-                <button
-                  class={styles.optionButton}
-                  classList={{ [styles.optionButtonActive]: localDifficulty() === option.level }}
-                  onClick={() => setLocalDifficulty(option.level)}
-                >
-                  {option.label}
-                </button>
-              )}
-            </For>
-          </div>
-        </div>
-      </Show>
-
-      <div class={styles.settingRow}>
-        <label class={styles.label}>Play As:</label>
-        <ChessSideSelector selectedSide={localPlayerColor} onSideChange={setLocalPlayerColor} />
-      </div>
-
-      <div class={styles.settingRow}>
-        <label class={styles.label}>Opponent Style:</label>
-        <div class={styles.styleSelector}>
-          <For each={OPPONENT_STYLES}>
-            {(styleObj) => (
-              <div
-                classList={{
-                  [styles.styleIconContainer]: true,
-                  [styles.selectedIcon]: styleObj.value === localAIPlayStyle(),
-                }}
-                onClick={() => localSetAIPlayStyle(styleObj.value)}
-              >
-                <img src={styleObj.icon} alt={styleObj.label} class={styles.opponentIcon} />
-                <span class={styles.iconLabel}>{styleObj.label}</span>
-              </div>
-            )}
-          </For>
-        </div>
-      </div>
-
+      {/* Game Phase - second after rated/casual */}
       <div class={styles.settingRow}>
         <label class={styles.label}>Game Phase:</label>
         <div class={styles.buttonGroup}>
@@ -189,6 +147,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
         </div>
       </div>
 
+      {/* Endgame Type - only for endgame phase */}
       <Show when={localGamePhase() === 'endgame'}>
         <div class={styles.settingRow}>
           <label class={styles.label}>Endgame Type:</label>
@@ -202,6 +161,55 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
                 >
                   {theme.label}
                 </button>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
+
+      {/* Difficulty */}
+      <Show when={localRatedMode() === 'casual'}>
+        <div class={styles.settingRow}>
+          <label class={styles.label}>Difficulty:</label>
+          <div class={styles.optionGrid}>
+            <For each={DIFFICULTY_OPTIONS}>
+              {(option) => (
+                <button
+                  class={styles.optionButton}
+                  classList={{ [styles.optionButtonActive]: localDifficulty() === option.level }}
+                  onClick={() => setLocalDifficulty(option.level)}
+                >
+                  {option.label}
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
+
+      {/* Play As */}
+      <div class={styles.settingRow}>
+        <label class={styles.label}>Play As:</label>
+        <ChessSideSelector selectedSide={localPlayerColor} onSideChange={setLocalPlayerColor} />
+      </div>
+
+      {/* Opponent Style - only for opening/middlegame, not endgame */}
+      <Show when={localGamePhase() !== 'endgame'}>
+        <div class={styles.settingRow}>
+          <label class={styles.label}>Opponent Style:</label>
+          <div class={styles.styleSelector}>
+            <For each={OPPONENT_STYLES}>
+              {(styleObj) => (
+                <div
+                  classList={{
+                    [styles.styleIconContainer]: true,
+                    [styles.selectedIcon]: styleObj.value === localAIPlayStyle(),
+                  }}
+                  onClick={() => localSetAIPlayStyle(styleObj.value)}
+                >
+                  <img src={styleObj.icon} alt={styleObj.label} class={styles.opponentIcon} />
+                  <span class={styles.iconLabel}>{styleObj.label}</span>
+                </div>
               )}
             </For>
           </div>

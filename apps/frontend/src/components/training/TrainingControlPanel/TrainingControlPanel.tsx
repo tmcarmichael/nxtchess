@@ -5,6 +5,38 @@ import GameInfoPanel from '../../game/GameInfoPanel/GameInfoPanel';
 import GamePanelButton from '../../game/GamePanelButton/GamePanelButton';
 import styles from './TrainingControlPanel.module.css';
 
+// Map difficulty level to human-readable label
+const DIFFICULTY_LABELS: Record<number, string> = {
+  1: 'Beginner',
+  2: 'Easy',
+  3: 'Easy+',
+  4: 'Medium',
+  5: 'Medium+',
+  6: 'Hard',
+  7: 'Hard+',
+  8: 'Expert',
+  9: 'Expert+',
+  10: 'Grandmaster',
+};
+
+// Map theme values to human-readable labels
+const THEME_LABELS: Record<string, string> = {
+  basicMate: 'Basic Mates',
+  pawnEndgame: 'Pawn Endgame',
+  rookEndgame: 'Rook Endgame',
+  bishopEndgame: 'Bishop Endgame',
+  knightEndgame: 'Knight Endgame',
+  queenEndgame: 'Queen Endgame',
+  queenRookEndgame: 'Queen & Rook Endgame',
+  opposition: 'Opposition',
+  lucena: 'Lucena Position',
+  philidor: 'Philidor Position',
+  zugzwang: 'Zugzwang',
+};
+
+const getDifficultyLabel = (level: number): string => DIFFICULTY_LABELS[level] || `Level ${level}`;
+const getThemeLabel = (theme: string): string => THEME_LABELS[theme] || theme;
+
 const TrainingControlPanel: ParentComponent = () => {
   const { chess, engine, ui, actions, derived } = useTrainingGame();
 
@@ -72,12 +104,12 @@ const TrainingControlPanel: ParentComponent = () => {
           </div>
           <div class={styles.infoRow}>
             <span class={styles.infoLabel}>Difficulty:</span>
-            <span>{engine.state.difficulty}</span>
+            <span>{getDifficultyLabel(engine.state.difficulty)}</span>
           </div>
           <Show when={chess.state.trainingTheme}>
             <div class={styles.infoRow}>
               <span class={styles.infoLabel}>Theme:</span>
-              <span class={styles.themeValue}>{chess.state.trainingTheme}</span>
+              <span class={styles.themeValue}>{getThemeLabel(chess.state.trainingTheme!)}</span>
             </div>
           </Show>
         </div>
