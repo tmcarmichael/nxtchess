@@ -147,27 +147,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
         </div>
       </div>
 
-      {/* Endgame Type - only for endgame phase */}
-      <Show when={localGamePhase() === 'endgame'}>
-        <div class={styles.settingRow}>
-          <label class={styles.label}>Endgame Type:</label>
-          <div class={styles.optionGrid}>
-            <For each={ENDGAME_THEMES}>
-              {(theme) => (
-                <button
-                  class={styles.optionButton}
-                  classList={{ [styles.optionButtonActive]: localEndgameTheme() === theme.value }}
-                  onClick={() => setLocalEndgameTheme(theme.value)}
-                >
-                  {theme.label}
-                </button>
-              )}
-            </For>
-          </div>
-        </div>
-      </Show>
-
-      {/* Difficulty */}
+      {/* Difficulty - third (common to both modes) */}
       <Show when={localRatedMode() === 'casual'}>
         <div class={styles.settingRow}>
           <label class={styles.label}>Difficulty:</label>
@@ -187,13 +167,14 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
         </div>
       </Show>
 
-      {/* Play As */}
+      {/* Play As - fourth (common to both modes) */}
       <div class={styles.settingRow}>
         <label class={styles.label}>Play As:</label>
         <ChessSideSelector selectedSide={localPlayerColor} onSideChange={setLocalPlayerColor} />
       </div>
 
-      {/* Opponent Style - only for opening/middlegame, not endgame */}
+      {/* Mode-specific option (last position) */}
+      {/* Opponent Style - for opening/middlegame */}
       <Show when={localGamePhase() !== 'endgame'}>
         <div class={styles.settingRow}>
           <label class={styles.label}>Opponent Style:</label>
@@ -210,6 +191,26 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
                   <img src={styleObj.icon} alt={styleObj.label} class={styles.opponentIcon} />
                   <span class={styles.iconLabel}>{styleObj.label}</span>
                 </div>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
+
+      {/* Endgame Type - for endgame */}
+      <Show when={localGamePhase() === 'endgame'}>
+        <div class={styles.settingRow}>
+          <label class={styles.label}>Endgame Type:</label>
+          <div class={styles.optionGrid}>
+            <For each={ENDGAME_THEMES}>
+              {(theme) => (
+                <button
+                  class={styles.optionButton}
+                  classList={{ [styles.optionButtonActive]: localEndgameTheme() === theme.value }}
+                  onClick={() => setLocalEndgameTheme(theme.value)}
+                >
+                  {theme.label}
+                </button>
               )}
             </For>
           </div>
