@@ -65,9 +65,14 @@ func GetRandomEndgamePosition(w http.ResponseWriter, r *http.Request) {
 	params.ExcludePositionID = r.URL.Query().Get("exclude")
 
 	// Require opponent to have material (filter out trivial K vs K+pieces positions)
-	// Default to true unless explicitly set to false
+	// Default to true unless explicitly set to false, OR if theme is basicMate
+	// (basicMate positions are specifically K+piece vs lone K)
 	requireMaterial := r.URL.Query().Get("requireOpponentMaterial")
-	params.RequireOpponentMaterial = requireMaterial != "false"
+	if theme == "basicMate" {
+		params.RequireOpponentMaterial = false
+	} else {
+		params.RequireOpponentMaterial = requireMaterial != "false"
+	}
 
 	// Get random position from database
 	pos, err := database.GetRandomEndgamePosition(params)
