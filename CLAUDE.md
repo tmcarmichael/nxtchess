@@ -155,7 +155,14 @@ rating_history: id, user_id (FK), rating, created_at
 endgame_positions: position_id (PK), fen, rating, themes[], moves, initial_eval, side_to_move
 ```
 
-Migrations managed via golang-migrate in `db/migrations/`.
+Migrations managed via golang-migrate in `db/migrations/`. Seeds in `db/seeds/`.
+
+**Dev database initialization** (docker-compose.dev.yaml):
+1. `00_init.sql` - Base tables (profiles, games, rating_history)
+2. `01-03_migration.sql` - Migrations (constraints, profile_icon, endgame_positions table)
+3. `90-91_seed*.sql` - Seed data (endgame positions)
+
+Backend also runs golang-migrate on startup (idempotent).
 
 ## Key Patterns
 
@@ -349,7 +356,7 @@ VITE_BACKEND_URL=http://localhost:8080
 
 **Middlegame Training Mode**
 - Positional training from complex positions
-- Backend endpoint exists (`/api/training/middlegame/random`)
+- Similar architecture to endgame training
 
 ### Multiplayer & Competitive
 
