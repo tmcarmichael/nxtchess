@@ -1,4 +1,4 @@
-import { type ParentComponent } from 'solid-js';
+import { Show, type ParentComponent } from 'solid-js';
 import { useTrainingGame } from '../../../store/game/TrainingGameContext';
 import ButtonPanel from '../../game/ButtonPanel/ButtonPanel';
 import GameInfoPanel from '../../game/GameInfoPanel/GameInfoPanel';
@@ -53,14 +53,35 @@ const TrainingControlPanel: ParentComponent = () => {
           <span>Take Back</span>
         </GamePanelButton>
       </ButtonPanel>
-      <GameInfoPanel
-        playerColor={chess.state.playerColor}
-        difficulty={engine.state.difficulty}
-        material={derived.material}
-        capturedWhite={chess.state.capturedWhite}
-        capturedBlack={chess.state.capturedBlack}
-        extraInfo={aiPlayStyleInfo}
-      />
+      {/* Hide material display for endgame training - positions start with pieces off board */}
+      <Show when={chess.state.trainingGamePhase !== 'endgame'}>
+        <GameInfoPanel
+          playerColor={chess.state.playerColor}
+          difficulty={engine.state.difficulty}
+          material={derived.material}
+          capturedWhite={chess.state.capturedWhite}
+          capturedBlack={chess.state.capturedBlack}
+          extraInfo={aiPlayStyleInfo}
+        />
+      </Show>
+      <Show when={chess.state.trainingGamePhase === 'endgame'}>
+        <div class={styles.endgameInfo}>
+          <div class={styles.infoRow}>
+            <span class={styles.infoLabel}>Playing as:</span>
+            <span>{chess.state.playerColor === 'w' ? 'White' : 'Black'}</span>
+          </div>
+          <div class={styles.infoRow}>
+            <span class={styles.infoLabel}>Difficulty:</span>
+            <span>{engine.state.difficulty}</span>
+          </div>
+          <Show when={chess.state.trainingTheme}>
+            <div class={styles.infoRow}>
+              <span class={styles.infoLabel}>Theme:</span>
+              <span class={styles.themeValue}>{chess.state.trainingTheme}</span>
+            </div>
+          </Show>
+        </div>
+      </Show>
     </div>
   );
 };
