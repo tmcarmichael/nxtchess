@@ -43,7 +43,9 @@ go build -o server cmd/server/main.go  # Build binary
 | WebSocket | None | `GET /ws` |
 | OAuth | AuthRateLimiter (10/min) | `GET /auth/{google,github,discord}/{login,callback}` |
 | Logout | AuthRateLimiter, SmallBodyLimit | `POST /auth/logout` |
-| Protected | APIRateLimiter (60/min), SmallBodyLimit, Session | `GET /profile/{username}`, `GET /check-username`, `POST /set-username`, `POST /set-profile-icon` |
+| Public API | APIRateLimiter (60/min), SmallBodyLimit | `GET /profile/{username}`, `GET /api/training/endgame/{random,themes,stats}` |
+| Optional Session | APIRateLimiter, SmallBodyLimit, OptionalSession | `GET /check-username` |
+| Protected | APIRateLimiter (60/min), SmallBodyLimit, Session | `POST /set-username`, `POST /set-profile-icon` |
 
 ### Package Structure
 
@@ -61,11 +63,13 @@ internal/
 │   └── config.go                # Load(), IsProd()
 ├── controllers/                 # HTTP handlers
 │   ├── auth.go                  # Logout handler
-│   └── profile.go               # Profile endpoints
+│   ├── profile.go               # Profile endpoints
+│   └── training.go              # Training API (endgame positions)
 ├── database/                    # PostgreSQL operations
 │   ├── db.go                    # Connection pool setup
 │   ├── profile.go               # User queries
-│   └── game.go                  # Game queries (debug)
+│   ├── game.go                  # Game queries (debug)
+│   └── endgame.go               # Training position queries
 ├── httpx/                       # HTTP utilities
 │   └── httpx.go                 # JSON responses, cookies, IP extraction
 ├── logger/                      # Structured logging
@@ -80,9 +84,12 @@ internal/
 │   └── requestid.go             # Request ID tracing
 ├── models/                      # Data structures
 │   ├── profile.go               # Profile, PublicProfile
-│   └── game.go                  # Game model
+│   ├── game.go                  # Game model
+│   └── endgame_position.go      # EndgamePosition, query params
 ├── sessions/                    # Redis session store
 │   └── session_store.go         # CRUD operations
+├── migrate/                     # Database migrations
+│   └── migrate.go               # golang-migrate runner
 ├── validation/                  # Input validation
 │   └── validation.go            # Username, email, icon rules
 ├── utils/                       # Helpers
@@ -169,6 +176,25 @@ type Game struct {
     Result              string    // "1-0", "0-1", "1/2-1/2", "*"
     CreatedAt           time.Time
 }
+
+type EndgamePosition struct {
+    PositionID  string
+    FEN         string
+    Rating      int
+    Themes      []string
+    Moves       string
+    InitialEval int
+    SideToMove  string
+}
+
+type EndgameQueryParams struct {
+    MinRating               int
+    MaxRating               int
+    Theme                   string
+    Side                    string
+    ExcludePositionID       string
+    RequireOpponentMaterial bool
+}
 ```
 
 ## Database Schema
@@ -202,7 +228,20 @@ rating_history (
     rating INTEGER,
     created_at TIMESTAMP
 )
+
+endgame_positions (
+    position_id VARCHAR PRIMARY KEY,
+    fen VARCHAR NOT NULL,
+    rating INTEGER NOT NULL,
+    themes TEXT[] NOT NULL,      -- e.g., {'rookEndgame', 'lucena'}
+    moves TEXT,                  -- Solution moves
+    initial_eval INTEGER,        -- Centipawn evaluation
+    side_to_move CHAR(1),        -- 'w' or 'b'
+    created_at TIMESTAMP
+)
 ```
+
+Migrations managed via golang-migrate in `db/migrations/`. Endgame positions seeded from `db/seeds/`.
 
 ## Environment Variables
 
@@ -321,6 +360,47 @@ Uses `internal/chess` package (wraps `github.com/notnil/chess`):
 4. Players alternate: `MOVE` → sender gets `MOVE_ACCEPTED`, opponent gets `OPPONENT_MOVE`
 5. Both receive `TIME_UPDATE` every second
 6. Game ends: both receive `GAME_ENDED` with result and reason
+
+## Training API
+
+REST endpoints for endgame training positions. All public (no auth required).
+
+### GET /api/training/endgame/random
+
+Returns a random endgame position matching criteria.
+
+**Query Parameters:**
+- `difficulty` (1-10): Internal level mapping to rating ranges. UI exposes 6 levels:
+  - Beginner (1) → 0-500
+  - Easy (2) → 400-800
+  - Medium (4) → 1000-1400
+  - Hard (6) → 1600-2000
+  - Expert (8) → 2200-2600
+  - Grandmaster (10) → 2700-3500
+- `theme`: Filter by endgame theme (pawnEndgame, rookEndgame, bishopEndgame, knightEndgame, queenEndgame, queenRookEndgame, basicMate, opposition, lucena, philidor)
+- `side`: 'w' or 'b' (filter by side to move)
+- `exclude`: Position ID to exclude (avoid repeats)
+- `requireOpponentMaterial`: 'false' to include K vs K+pieces (default true, auto-disabled for basicMate)
+
+**Response:**
+```json
+{
+  "positionId": "abc123",
+  "fen": "8/8/4k3/8/4K3/4P3/8/8 w - - 0 1",
+  "initialEval": 450,
+  "theme": "pawnEndgame",
+  "difficulty": 3,
+  "solutionMoves": "Kd5 Kd7 e4..."
+}
+```
+
+### GET /api/training/endgame/themes
+
+Returns list of available endgame themes with counts.
+
+### GET /api/training/endgame/stats
+
+Returns position counts by difficulty level.
 
 ## Dependencies
 

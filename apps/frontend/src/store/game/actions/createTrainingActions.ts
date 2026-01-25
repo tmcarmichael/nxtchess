@@ -1,3 +1,4 @@
+import { Chess } from 'chess.js';
 import { moveEvalService } from '../../../services/engine/moveEvalService';
 import { getOpponentSide } from '../../../services/game/chessGameService';
 import { transition, canMakeMove } from '../../../services/game/gameLifecycle';
@@ -26,6 +27,111 @@ import type { TrainingActions, CoreActions } from '../types';
 // Training mode uses a fixed delay range for natural pacing
 // This also helps space out eval engine calls to prevent overload
 const TRAINING_AI_DELAY = { min: 500, max: 1500 };
+
+// Maximum number of retries when fetching positions that turn out to be invalid
+// Increased to handle various invalid position types (adjacent kings, illegal checks, etc.)
+const MAX_POSITION_FETCH_RETRIES = 5;
+
+/**
+ * Find the square of a king in the position.
+ * Returns null if king not found.
+ */
+function findKingSquare(fen: string, color: 'w' | 'b'): { file: number; rank: number } | null {
+  const board = fen.split(' ')[0];
+  const rows = board.split('/');
+  const kingChar = color === 'w' ? 'K' : 'k';
+
+  for (let rank = 0; rank < 8; rank++) {
+    let file = 0;
+    for (const char of rows[rank]) {
+      if (char >= '1' && char <= '8') {
+        file += parseInt(char, 10);
+      } else {
+        if (char === kingChar) {
+          return { file, rank };
+        }
+        file++;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Check if two kings are adjacent (illegal position).
+ */
+function areKingsAdjacent(fen: string): boolean {
+  const whiteKing = findKingSquare(fen, 'w');
+  const blackKing = findKingSquare(fen, 'b');
+
+  if (!whiteKing || !blackKing) {
+    return false; // Missing king is a different error
+  }
+
+  const fileDiff = Math.abs(whiteKing.file - blackKing.file);
+  const rankDiff = Math.abs(whiteKing.rank - blackKing.rank);
+
+  // Kings are adjacent if they differ by at most 1 in both file and rank
+  return fileDiff <= 1 && rankDiff <= 1;
+}
+
+/**
+ * Check if the side NOT to move is in check (illegal position).
+ * In a legal position, only the side to move can be in check.
+ */
+function isOpponentInCheck(fen: string): boolean {
+  try {
+    // Get the side to move from FEN
+    const parts = fen.split(' ');
+    const sideToMove = parts[1] as 'w' | 'b';
+
+    // Create a position with the OTHER side to move
+    const flippedFen = parts.slice();
+    flippedFen[1] = sideToMove === 'w' ? 'b' : 'w';
+    const flippedChess = new Chess(flippedFen.join(' '));
+
+    // If the flipped position has the "current" side (originally opponent) in check,
+    // then the original position was illegal
+    return flippedChess.isCheck();
+  } catch {
+    return false; // Can't determine, let other validation handle it
+  }
+}
+
+/**
+ * Validates that a position has legal moves and is playable.
+ * Returns an error message if invalid, or null if valid.
+ */
+function validatePosition(fen: string): string | null {
+  try {
+    // Check for adjacent kings (illegal position that chess.js may not catch)
+    if (areKingsAdjacent(fen)) {
+      return 'Invalid position: kings are adjacent';
+    }
+
+    // Check if opponent is in check (illegal - can't leave king in check)
+    if (isOpponentInCheck(fen)) {
+      return 'Invalid position: opponent king is in check';
+    }
+
+    const chess = new Chess(fen);
+    const moves = chess.moves();
+
+    if (moves.length === 0) {
+      if (chess.isCheckmate()) {
+        return 'Position is already checkmate';
+      }
+      if (chess.isStalemate()) {
+        return 'Position is already stalemate';
+      }
+      return 'Position has no legal moves';
+    }
+
+    return null; // Position is valid
+  } catch {
+    return 'Invalid FEN position';
+  }
+}
 
 const randomDelay = (min: number, max: number): Promise<void> => {
   const delay = min + Math.random() * (max - min);
@@ -249,7 +355,6 @@ export const createTrainingActions = (
       newTimeControl = 5,
       newDifficultyLevel = 3,
       trainingIsRated = false,
-      trainingAIPlayStyle = 'balanced',
       trainingGamePhase = 'opening',
       trainingAvailableHints = 0,
       trainingTheme,
@@ -257,8 +362,8 @@ export const createTrainingActions = (
     } = options;
 
     // Build scenario for the selected phase
+    // Note: difficulty is NOT passed here - it only affects engine strength, not position selection
     const scenario = buildScenario(trainingGamePhase as GamePhase, {
-      difficulty: newDifficultyLevel,
       theme: trainingTheme,
       side: side,
       excludePositionId: trainingExcludePositionId,
@@ -268,13 +373,53 @@ export const createTrainingActions = (
     chess.setLifecycle(transition('idle', 'START_GAME'));
 
     try {
-      // Resolve the starting position
-      const { fen, metadata } = await resolvePositionSource(scenario.positionSource);
+      // Resolve the starting position with retry logic for invalid positions
+      const excludeIds: string[] = trainingExcludePositionId ? [trainingExcludePositionId] : [];
+      let validPosition: { fen: string; metadata: TrainingMetadata } | null = null;
 
-      // Check if a newer startNewGame call has superseded this one
-      if (thisGeneration !== currentGameGeneration) {
-        return; // Abort - a newer game initialization is in progress
+      for (let retryCount = 0; retryCount <= MAX_POSITION_FETCH_RETRIES; retryCount++) {
+        // Rebuild scenario with updated exclusions on retry
+        const currentScenarioForFetch =
+          retryCount === 0
+            ? scenario
+            : buildScenario(trainingGamePhase as GamePhase, {
+                theme: trainingTheme,
+                side: side,
+                excludePositionId: excludeIds.join(','),
+              });
+
+        const resolved = await resolvePositionSource(currentScenarioForFetch.positionSource);
+
+        // Check if a newer startNewGame call has superseded this one
+        if (thisGeneration !== currentGameGeneration) {
+          return; // Abort - a newer game initialization is in progress
+        }
+
+        // Validate the position has legal moves
+        const validationError = validatePosition(resolved.fen);
+        if (!validationError) {
+          // Position is valid
+          validPosition = { fen: resolved.fen, metadata: resolved.metadata };
+          break;
+        }
+
+        // Position is invalid - add to exclusion list and retry
+        console.warn(
+          `Invalid position fetched (${validationError}), retrying...`,
+          resolved.metadata.positionId
+        );
+        if (resolved.metadata.positionId) {
+          excludeIds.push(resolved.metadata.positionId);
+        }
       }
+
+      if (!validPosition) {
+        throw new Error(
+          `Failed to find valid position after ${MAX_POSITION_FETCH_RETRIES} attempts`
+        );
+      }
+
+      const { fen, metadata } = validPosition;
 
       // Now safe to set module-level state
       currentScenario = scenario;
@@ -288,7 +433,6 @@ export const createTrainingActions = (
         timeControl: newTimeControl,
         difficulty: newDifficultyLevel,
         trainingIsRated,
-        trainingAIPlayStyle,
         trainingGamePhase,
         trainingAvailableHints,
         trainingStartEval: metadata.startingEval,
@@ -303,7 +447,7 @@ export const createTrainingActions = (
       // Initialize both engines in parallel - eval engine is non-critical so we catch its errors
       await Promise.all([
         engine.initEval().catch(() => {}), // Eval failure is non-critical
-        engine.init(newDifficultyLevel, getOpponentSide(side), trainingAIPlayStyle ?? 'balanced'),
+        engine.init(newDifficultyLevel, getOpponentSide(side)),
       ]);
 
       // Check again after engine init - another startNewGame may have been called
@@ -433,7 +577,6 @@ export const createTrainingActions = (
       mode: 'training',
       newDifficultyLevel: engine.state.difficulty,
       trainingIsRated: chess.state.trainingIsRated,
-      trainingAIPlayStyle: chess.state.trainingAIPlayStyle ?? 'balanced',
       trainingGamePhase: chess.state.trainingGamePhase ?? 'endgame',
       trainingAvailableHints: chess.state.trainingAvailableHints,
       trainingTheme: chess.state.trainingTheme ?? undefined,

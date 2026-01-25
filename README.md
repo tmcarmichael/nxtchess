@@ -1,76 +1,79 @@
 # NxtChess
 
-[![Status](https://img.shields.io/badge/status-alpha-blue)](#)
-[![License](https://img.shields.io/github/license/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/blob/main/LICENSE)
-[![Issues](https://img.shields.io/github/issues/tmcarmichael/nxtchess)](https://github.com/tmcarmichael/nxtchess/issues)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/status-beta-green)](#)
 
-[NxtChess](https://nxtchess.up.railway.app/) is a multiplayer chess platform with AI training modes. Play anonymous games via shareable links or sign in to track ratings and game history.
+Real-time multiplayer chess with AI training. Play via shareable links or sign in to track progress.
+
+[**Live Demo**](https://nxtchess.up.railway.app/) · [Report Bug](https://github.com/tmcarmichael/nxtchess/issues) · [Request Feature](https://github.com/tmcarmichael/nxtchess/issues)
+
+---
 
 ## Features
 
-- **Multiplayer** — Real-time games via WebSocket with shareable game links
-- **AI Training** — Play against Stockfish with configurable difficulty and playstyles
-- **Time Controls** — Blitz, rapid, and classical with increment support
-- **Server-side Validation** — All moves validated server-side to prevent cheating
+- **Multiplayer** — WebSocket-based real-time games with shareable links
+- **AI Training** — Stockfish at various difficulty
+- **Training Modes** — Opening and endgame practice with move evaluation
+- **PWA** — Installable, works offline with game persistence
+- **Server Validation** — All moves validated server-side
 
 ## Quick Start
 
-### Railway Early Alpha Build:
-
-https://nxtchess.up.railway.app/
-
-### Dev localhost Build:
-
-Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) and [Just](https://github.com/casey/just#installation).
+**Prerequisites:** [Docker](https://www.docker.com/products/docker-desktop/) and [Just](https://github.com/casey/just#installation)
 
 ```bash
+git clone https://github.com/tmcarmichael/nxtchess.git
+cd nxtchess
 just dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). Press `Ctrl+C` to stop.
-
-For OAuth sign-in, add credentials to `apps/backend/.env` (see `.env.example`).
+Open http://localhost:5173
 
 ## Tech Stack
 
-| Layer          | Technologies                                        |
-| -------------- | --------------------------------------------------- |
-| Frontend       | SolidJS, TypeScript, Vite, CSS Modules              |
-| Backend        | Go, Chi, WebSocket, Redis, PostgreSQL               |
-| Engine         | Stockfish WASM (browser), Stockfish binary (server) |
-| Infrastructure | Docker, Caddy, GitHub Actions                       |
+| Layer    | Stack                                  |
+| -------- | -------------------------------------- |
+| Frontend | SolidJS, TypeScript, Vite, CSS Modules |
+| Backend  | Go, Chi, gorilla/websocket             |
+| Database | PostgreSQL, Redis                      |
+| Engine   | Stockfish 16.1 WASM                    |
+| Infra    | Docker, Caddy, Railway                 |
 
-## Development
+## Commands
 
 ```bash
+just dev                    # Start all services
 just up PROFILES=backend    # Backend only
 just up PROFILES=frontend   # Frontend only
-just logs PROFILES=backend  # Follow logs
-just exec-db                # PostgreSQL shell
-just exec-redis             # Redis CLI
-just clean PROFILES=full    # Remove containers and volumes
+just logs                   # Follow logs
+just clean PROFILES=full    # Reset everything
 ```
 
-Run `just` to see all commands.
+## Architecture
+
+SolidJS frontend with Stockfish WASM for client-side analysis. Go backend handles WebSocket multiplayer, move validation, and game state. Caddy reverse proxy with PostgreSQL for persistence and Redis for sessions.
 
 ## Roadmap
 
-| Status  | Milestone                                                                                                                     |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Current | Game persistence, reconnection handling, premove support, UI lift                                                             |
-| Next    | CI/CD, observability, mobile support, mobile browser support, tournaments, social features, endgame/middlegame training modes |
+**Training & Analysis**
+- Syzygy tablebases integration (perfect endgame play)
+- Opening explorer with master game statistics
+- Post-game analysis with move classification
+- Tactics puzzles with spaced repetition
+- Analysis mode
+- Middlegame training mode
 
-## Architecture Northstar
+**Multiplayer & Competitive**
+- Multiplayer lobby
+- Tournaments
+- Rated play
 
-<div style="text-align: center;">
-  <img src="docs/diagrams/architecture.png" alt="Architecture diagram" />
-</div>
+**Platform**
+- Profile features
+- Mobile app
+- CI/CD
+- Observability (Grafana LGTM)
 
 ## Contributing
 
-Contributions welcome. Open an issue or submit a PR.
-
-## Contact
-
-- Email: ThomasCarmichael@pm.me
-- Issues: [GitHub Issues](https://github.com/tmcarmichael/nxtchess/issues)
+Contributions welcome. Please open an issue first to discuss changes.

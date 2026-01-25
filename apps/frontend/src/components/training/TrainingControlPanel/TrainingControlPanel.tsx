@@ -45,13 +45,6 @@ const TrainingControlPanel: ParentComponent = () => {
     actions.resign();
   };
 
-  const aiPlayStyleInfo = (
-    <div class={styles.AIPlayStyle}>
-      <span class={styles.AIPlayStyleLabel}>AI Playstyle:</span>
-      <span>{` ${derived.formattedAIPlayStyle()}`}</span>
-    </div>
-  );
-
   return (
     <div class={styles.panel}>
       <div class={styles.modeToggle}>
@@ -93,7 +86,6 @@ const TrainingControlPanel: ParentComponent = () => {
           material={derived.material}
           capturedWhite={chess.state.capturedWhite}
           capturedBlack={chess.state.capturedBlack}
-          extraInfo={aiPlayStyleInfo}
         />
       </Show>
       <Show when={chess.state.trainingGamePhase === 'endgame'}>

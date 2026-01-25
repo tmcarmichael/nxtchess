@@ -20,7 +20,20 @@ const evalEngine = new StockfishEngine({
 
 // Serialization state to prevent concurrent eval requests crashing WASM
 let evalInProgress = false;
-let pendingEval: { fen: string; depth?: number; resolve: (score: number) => void } | null = null;
+let pendingEval: {
+  fen: string;
+  depth?: number;
+  resolve: (score: number) => void;
+  reject: (reason: Error) => void;
+} | null = null;
+
+// Error thrown when an eval request is cancelled by a newer request
+class EvalCancelledError extends Error {
+  constructor() {
+    super('Evaluation cancelled by newer request');
+    this.name = 'EvalCancelledError';
+  }
+}
 
 /**
  * Initialize the eval engine for single-game mode (backward compatibility).
@@ -29,7 +42,7 @@ let pendingEval: { fen: string; depth?: number; resolve: (score: number) => void
 export const initEvalEngine = async (): Promise<void> => {
   // Reset serialization state on init
   if (pendingEval) {
-    pendingEval.resolve(0);
+    pendingEval.reject(new EvalCancelledError());
     pendingEval = null;
   }
   evalInProgress = false;
@@ -156,14 +169,15 @@ export const getEvaluation = async (fen: string, depth?: number): Promise<number
 
   // If an eval is already in progress, queue this one (replacing any previous pending)
   if (evalInProgress) {
-    // Cancel any previous pending request by resolving it with 0
+    // Cancel any previous pending request by rejecting it
+    // This ensures cancelled requests don't get cached as 0
     if (pendingEval) {
-      pendingEval.resolve(0);
+      pendingEval.reject(new EvalCancelledError());
     }
 
     // Create a new pending request
-    return new Promise<number>((resolve) => {
-      pendingEval = { fen, depth, resolve };
+    return new Promise<number>((resolve, reject) => {
+      pendingEval = { fen, depth, resolve, reject };
     });
   }
 
@@ -185,7 +199,7 @@ export const getEvaluation = async (fen: string, depth?: number): Promise<number
 export const terminateEvalEngine = () => {
   // Reset serialization state on terminate
   if (pendingEval) {
-    pendingEval.resolve(0);
+    pendingEval.reject(new EvalCancelledError());
     pendingEval = null;
   }
   evalInProgress = false;

@@ -145,7 +145,6 @@ export const createSinglePlayerActions = (
       newTimeControl = 5,
       newDifficultyLevel = 3,
       trainingIsRated = false,
-      trainingAIPlayStyle = 'balanced',
       trainingGamePhase = 'opening',
       trainingAvailableHints = 0,
     } = options;
@@ -158,7 +157,6 @@ export const createSinglePlayerActions = (
       timeControl: newTimeControl,
       difficulty: newDifficultyLevel,
       trainingIsRated,
-      trainingAIPlayStyle,
       trainingGamePhase,
       trainingAvailableHints,
     });
@@ -179,11 +177,7 @@ export const createSinglePlayerActions = (
 
     try {
       // Initialize AI engine
-      await engine.init(
-        newDifficultyLevel,
-        getOpponentSide(side),
-        trainingAIPlayStyle ?? 'balanced'
-      );
+      await engine.init(newDifficultyLevel, getOpponentSide(side));
 
       // Transition to playing state
       chess.setLifecycle(transition('initializing', 'ENGINE_READY'));

@@ -51,6 +51,8 @@
   color: var(--text-secondary);
   letter-spacing: 0.02em;
   white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
 }
 
 /* Positive evaluation */

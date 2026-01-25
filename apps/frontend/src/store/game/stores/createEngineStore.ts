@@ -12,7 +12,7 @@ import {
 } from '../../../services/engine/evalEngineWorker';
 import { DIFFICULTY_VALUES_ELO } from '../../../shared/config/constants';
 import { DEBUG } from '../../../shared/utils/debug';
-import type { Side, AIPlayStyle } from '../../../types/game';
+import type { Side } from '../../../types/game';
 
 export type EngineStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -22,12 +22,11 @@ interface EngineState {
   isThinking: boolean;
   difficulty: number;
   aiSide: Side;
-  aiPlayStyle: AIPlayStyle;
 }
 
 export interface EngineStore {
   state: EngineState;
-  init: (difficulty: number, aiSide: Side, aiPlayStyle?: AIPlayStyle) => Promise<void>;
+  init: (difficulty: number, aiSide: Side) => Promise<void>;
   initEval: () => Promise<void>;
   getMove: (fen: string) => Promise<{ from: string; to: string; promotion?: string } | null>;
   getEval: (fen: string) => Promise<number>;
@@ -43,20 +42,18 @@ export const createEngineStore = (): EngineStore => {
     isThinking: false,
     difficulty: 3,
     aiSide: 'b',
-    aiPlayStyle: 'balanced',
   });
 
-  let pendingRetryConfig: { difficulty: number; aiSide: Side; aiPlayStyle: AIPlayStyle } | null =
-    null;
+  let pendingRetryConfig: { difficulty: number; aiSide: Side } | null = null;
 
-  const init = async (difficulty: number, aiSide: Side, aiPlayStyle: AIPlayStyle = 'balanced') => {
-    setState({ status: 'loading', error: null, difficulty, aiSide, aiPlayStyle });
-    pendingRetryConfig = { difficulty, aiSide, aiPlayStyle };
+  const init = async (difficulty: number, aiSide: Side) => {
+    setState({ status: 'loading', error: null, difficulty, aiSide });
+    pendingRetryConfig = { difficulty, aiSide };
 
     const elo = DIFFICULTY_VALUES_ELO[difficulty - 1] ?? 600;
 
     try {
-      await initAiEngine(elo, aiPlayStyle);
+      await initAiEngine(elo);
       setState('status', 'ready');
     } catch (e) {
       const errorMessage =
@@ -122,11 +119,7 @@ export const createEngineStore = (): EngineStore => {
     setState({ status: 'loading', error: null });
 
     try {
-      await init(
-        pendingRetryConfig.difficulty,
-        pendingRetryConfig.aiSide,
-        pendingRetryConfig.aiPlayStyle
-      );
+      await init(pendingRetryConfig.difficulty, pendingRetryConfig.aiSide);
       onSuccess?.();
     } catch {
       // Error already handled in init

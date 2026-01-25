@@ -80,8 +80,6 @@ export const TRAINING_SCENARIOS: Record<ValidGamePhase, TrainingScenario> = {
 // ============================================================================
 
 export interface ScenarioOverrides {
-  /** Override difficulty level (added to backend params) */
-  difficulty?: number;
   /** Override theme filter (added to backend params) */
   theme?: string;
   /** Use a specific FEN instead of the scenario's position source */
@@ -128,14 +126,13 @@ export function buildScenario(phase: GamePhase, overrides?: ScenarioOverrides): 
   }
 
   // Add query params for backend position sources
+  // Note: difficulty is intentionally NOT sent to the backend - it only affects
+  // how the engine plays, not which positions are available
   if (scenario.positionSource.type === 'backend') {
     const params: Record<string, string> = {
       ...scenario.positionSource.params,
     };
 
-    if (overrides.difficulty !== undefined) {
-      params.difficulty = String(overrides.difficulty);
-    }
     if (overrides.theme) {
       params.theme = overrides.theme;
     }

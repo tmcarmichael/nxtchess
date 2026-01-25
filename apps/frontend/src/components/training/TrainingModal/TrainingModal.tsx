@@ -3,7 +3,6 @@ import { createSignal, Show, For, type ParentComponent, splitProps } from 'solid
 import { useTrainingGameOptional } from '../../../store/game/TrainingGameContext';
 import {
   type RatedMode,
-  type AIPlayStyle,
   type GamePhase,
   type Side,
   type StartGameOptions,
@@ -14,12 +13,6 @@ import styles from './TrainingModal.module.css';
 
 interface TrainingModalProps {
   onClose: () => void;
-}
-
-interface AIPlayStyleOption {
-  value: AIPlayStyle;
-  label: string;
-  icon: string;
 }
 
 interface GamePhaseOption {
@@ -40,14 +33,6 @@ const DIFFICULTY_OPTIONS = [
   { level: 6, label: 'Hard', elo: 1100 },
   { level: 8, label: 'Expert', elo: 1700 },
   { level: 10, label: 'Grandmaster', elo: 2400 },
-];
-
-const OPPONENT_STYLES: AIPlayStyleOption[] = [
-  { value: 'aggressive', label: 'Aggressive', icon: '/assets/trainingModeAggressive.svg' },
-  { value: 'defensive', label: 'Defensive', icon: '/assets/trainingModeDefensive.svg' },
-  { value: 'balanced', label: 'Balanced', icon: '/assets/trainingModeBalanced.svg' },
-  { value: 'random', label: 'Random', icon: '/assets/trainingModeRandom.svg' },
-  { value: 'positional', label: 'Positional', icon: '/assets/trainingModePositional.svg' },
 ];
 
 const GAME_PHASES: GamePhaseOption[] = [
@@ -73,7 +58,6 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
 
   const [localRatedMode, setLocalRatedMode] = createSignal<RatedMode>('casual');
   const [localDifficulty, setLocalDifficulty] = createSignal<number>(4);
-  const [localAIPlayStyle, localSetAIPlayStyle] = createSignal<AIPlayStyle>('balanced');
   const [localGamePhase, setLocalGamePhase] = createSignal<GamePhase>('opening');
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
   const [localEndgameTheme, setLocalEndgameTheme] = createSignal<string>('');
@@ -84,7 +68,6 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
       mode: 'training',
       newDifficultyLevel: localDifficulty(),
       trainingIsRated: localRatedMode() === 'rated',
-      trainingAIPlayStyle: localAIPlayStyle(),
       trainingGamePhase: localGamePhase(),
       trainingTheme: localEndgameTheme() || undefined,
     };
@@ -172,30 +155,6 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
         <label class={styles.label}>Play As:</label>
         <ChessSideSelector selectedSide={localPlayerColor} onSideChange={setLocalPlayerColor} />
       </div>
-
-      {/* Mode-specific option (last position) */}
-      {/* Opponent Style - for opening/middlegame */}
-      <Show when={localGamePhase() !== 'endgame'}>
-        <div class={styles.settingRow}>
-          <label class={styles.label}>Opponent Style:</label>
-          <div class={styles.styleSelector}>
-            <For each={OPPONENT_STYLES}>
-              {(styleObj) => (
-                <div
-                  classList={{
-                    [styles.styleIconContainer]: true,
-                    [styles.selectedIcon]: styleObj.value === localAIPlayStyle(),
-                  }}
-                  onClick={() => localSetAIPlayStyle(styleObj.value)}
-                >
-                  <img src={styleObj.icon} alt={styleObj.label} class={styles.opponentIcon} />
-                  <span class={styles.iconLabel}>{styleObj.label}</span>
-                </div>
-              )}
-            </For>
-          </div>
-        </div>
-      </Show>
 
       {/* Endgame Type - for endgame */}
       <Show when={localGamePhase() === 'endgame'}>

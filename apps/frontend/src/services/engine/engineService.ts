@@ -1,9 +1,7 @@
-import { PLAYSTYLE_PRESETS } from '../../shared/config/constants';
 import { DEBUG } from '../../shared/utils/debug';
 import { enginePool } from './EnginePool';
 import { type ResilientEngine } from './ResilientEngine';
 import { EngineError } from './StockfishEngine';
-import type { AIPlayStyle } from '../../types/game';
 
 // ============================================================================
 // Configuration
@@ -27,7 +25,6 @@ export interface AiMoveResult {
 export interface EngineServiceConfig {
   gameId: string;
   elo?: number;
-  style?: AIPlayStyle;
 }
 
 // ============================================================================
@@ -39,7 +36,7 @@ class EngineService {
   // AI Engine Operations
   // ============================================================================
 
-  async initAiEngine(gameId: string, elo: number, style: AIPlayStyle = 'balanced'): Promise<void> {
+  async initAiEngine(gameId: string, elo: number): Promise<void> {
     const engine = await enginePool.acquire('ai', gameId);
 
     // Initialize if not already
@@ -47,16 +44,10 @@ class EngineService {
       await engine.init();
     }
 
-    // Configure AI-specific options
-    const styleKey = style ?? 'balanced';
-    const { contempt, aggressiveness } = PLAYSTYLE_PRESETS[styleKey];
-
-    // Apply config through ResilientEngine so it persists through recovery
+    // Configure AI with ELO-limited strength
     await engine.applyConfig([
       'setoption name UCI_LimitStrength value true',
       `setoption name UCI_Elo value ${elo}`,
-      `setoption name Contempt value ${contempt}`,
-      `setoption name Aggressiveness value ${aggressiveness}`,
     ]);
   }
 

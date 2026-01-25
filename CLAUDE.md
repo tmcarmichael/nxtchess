@@ -71,9 +71,9 @@ just prod-up                # Start production stack
 
 components/
 ├── chess/           # Chess UI: ChessBoard, ChessBoardController, ChessPiece, ChessClock, ChessEvalBar
-├── game/            # Game layout: GameContainer, GameInfoPanel, ButtonPanel, GameStatusDisplay
-├── play/            # Multiplayer: PlayContainer, PlayModal, PlayControlPanel
-├── training/        # Training: TrainingContainer, TrainingModal, TrainingControlPanel
+├── game/            # Game layout: GameContainer, GameInfoPanel, GameNotation, ButtonPanel, DifficultyDisplay
+├── play/            # Multiplayer: PlayContainer, PlayModal, PlayControlPanel, PlayNavigationPanel
+├── training/        # Training: TrainingContainer, TrainingModal, TrainingControlPanel, TrainingNavigationPanel
 ├── home/            # Landing page
 ├── user/            # Auth & profile: UserSignInModal, UserProfile, UsernameSetup
 └── common/          # Header, Footer, 404, ErrorBoundary, NetworkStatus
@@ -92,7 +92,8 @@ services/
 │   ├── ResilientEngine.ts    # Circuit breaker with auto-recovery
 │   ├── EnginePool.ts         # Multi-engine allocation per (purpose, gameId)
 │   ├── aiEngineWorker.ts     # AI move computation (Web Worker)
-│   └── evalEngineWorker.ts   # Position evaluation (Web Worker)
+│   ├── evalEngineWorker.ts   # Position evaluation (Web Worker)
+│   └── moveEvalService.ts    # Move quality evaluation for training hints
 ├── game/            # Game logic
 │   ├── chessGameService.ts   # Move validation, legal move computation
 │   ├── gameLifecycle.ts      # State machine (idle → initializing → playing → ended)
@@ -101,7 +102,13 @@ services/
 ├── network/         # ReconnectingWebSocket with exponential backoff
 ├── sync/            # GameSyncService for multiplayer, useGameSync hook
 ├── persistence/     # IndexedDB: GamePersistence + useAutoPersist (5s periodic, 1s debounced)
-└── preferences/     # User settings storage
+├── preferences/     # User settings storage
+├── training/        # Training mode logic
+│   ├── scenarios.ts          # Training scenario configurations (endgame themes, difficulty)
+│   ├── positionSource.ts     # Position source resolution (API, predefined)
+│   ├── terminationEvaluator.ts  # Training termination conditions
+│   └── scoringCalculator.ts  # Training performance scoring
+└── offline/         # AssetPreloader for fonts, WASM pre-caching
 
 shared/
 ├── config/          # Constants (time values, difficulty, play styles)
@@ -120,12 +127,14 @@ internal/
 ├── auth/            # OAuth 2.0: oauth.go (handlers), providers.go (Google, GitHub, Discord)
 ├── chess/           # Server-side validation wrapping notnil/chess
 ├── config/          # Environment config loader
-├── controllers/     # HTTP handlers: auth.go, profile.go
+├── controllers/     # HTTP handlers: auth.go, profile.go, training.go
 ├── database/        # PostgreSQL: connection pooling, direct SQL queries (no ORM)
+│   └── endgame.go   # Training position queries
 ├── httpx/           # JSON responses, secure cookies, client IP extraction
 ├── logger/          # Structured logging: levels (DEBUG/INFO/WARN/ERROR), JSON mode
 ├── middleware/      # CORS, recovery, security headers, session, rate limit, body limit, request ID
-├── models/          # Data structures: Profile, PublicProfile, Game
+├── migrate/         # Database migrations runner (golang-migrate)
+├── models/          # Data structures: Profile, PublicProfile, Game, EndgamePosition
 ├── sessions/        # Redis session store (24h TTL)
 ├── validation/      # Username validation rules
 ├── ws/              # WebSocket multiplayer
@@ -143,7 +152,10 @@ internal/
 profiles: user_id (PK), username (UNIQUE), rating, profile_icon, created_at
 games: game_id (UUID PK), pgn, playerW_id, playerB_id, result, created_at
 rating_history: id, user_id (FK), rating, created_at
+endgame_positions: position_id (PK), fen, rating, themes[], moves, initial_eval, side_to_move
 ```
+
+Migrations managed via golang-migrate in `db/migrations/`.
 
 ## Key Patterns
 
@@ -239,7 +251,6 @@ Side = 'w' | 'b'
 GameMode = 'play' | 'training' | 'analysis'
 OpponentType = 'ai' | 'human'
 GameLifecycle = 'idle' | 'initializing' | 'playing' | 'error' | 'ended'
-AIPlayStyle = 'aggressive' | 'defensive' | 'balanced' | 'random' | 'positional'
 GamePhase = 'opening' | 'middlegame' | 'endgame'
 Square = 'a1' | 'a2' | ... (64 squares)
 PieceType = 'wP' | 'bP' | 'wN' | ... (white/black piece notation)
@@ -303,6 +314,74 @@ VITE_BACKEND_URL=http://localhost:8080
 /profile/:username  → UserProfile
 *                   → 404
 ```
+
+## Roadmap
+
+### Training & Analysis
+
+**Syzygy Tablebases Integration**
+- Mathematically perfect endgame play (7 pieces or fewer)
+- Shows DTZ (distance to zeroing) and WDL (win/draw/loss)
+- Options: Lichess Tablebase API or local WASM probing (Fathom)
+- Integrates with existing endgame training mode
+
+**Opening Explorer with Master Game Statistics**
+- Position statistics from master games ("e4: 52% win, 45k games")
+- Named opening recognition ("Sicilian Defense, Najdorf Variation")
+- Filter by rating range (2000+, 2200+, 2500+)
+- Lichess Opening Explorer API integration
+
+**Post-Game Analysis with Move Classification**
+- Classify moves: Best, Good, Inaccuracy, Mistake, Blunder
+- Centipawn loss graph showing critical moments
+- Accuracy percentage per game
+- Extends existing evalEngineWorker infrastructure
+
+**Tactics Puzzles with Spaced Repetition**
+- Themed puzzles (forks, pins, back rank mates)
+- Rating-matched difficulty
+- SM-2 spaced repetition for failed puzzles
+- Lichess Puzzle API integration (3M+ puzzles)
+
+**Analysis Mode**
+- Free analysis of any position
+- Engine evaluation without game constraints
+
+**Middlegame Training Mode**
+- Positional training from complex positions
+- Backend endpoint exists (`/api/training/middlegame/random`)
+
+### Multiplayer & Competitive
+
+**Multiplayer Lobby**
+- Browse and join open games
+- Filter by time control and rating
+
+**Tournaments**
+- Swiss and arena formats
+- Scheduled events
+
+**Rated Play**
+- ELO-based matchmaking
+- Rating history visualization (schema exists)
+
+### Platform
+
+**Profile Features**
+- Game history and statistics
+- Opening repertoire tracking
+
+**Mobile App**
+- Native wrapper or React Native port
+- Push notifications
+
+**CI/CD**
+- Automated testing pipeline
+- Deployment automation
+
+**Observability**
+- Grafana LGTM stack (Loki, Grafana, Tempo, Mimir)
+- Performance monitoring
 
 ## Git Conventions
 

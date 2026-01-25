@@ -143,7 +143,6 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       newIncrement = 0,
       newDifficultyLevel = 3,
       trainingIsRated = false,
-      trainingAIPlayStyle = 'balanced',
       trainingGamePhase = 'opening',
       trainingAvailableHints = 0,
     } = options;
@@ -155,7 +154,6 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       timeControl: newTimeControl,
       difficulty: newDifficultyLevel,
       trainingIsRated,
-      trainingAIPlayStyle,
       trainingGamePhase,
       trainingAvailableHints,
     });
@@ -171,11 +169,7 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
     }
 
     try {
-      await engine.init(
-        newDifficultyLevel,
-        getOpponentSide(side),
-        trainingAIPlayStyle ?? 'balanced'
-      );
+      await engine.init(newDifficultyLevel, getOpponentSide(side));
 
       chess.setLifecycle(transition('initializing', 'ENGINE_READY'));
 

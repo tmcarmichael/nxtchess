@@ -21,7 +21,9 @@ interface GameOverInfo {
 const getGameOverInfoTraining = (
   reason: ExtendedGameOverReason,
   winner: GameWinner,
-  playerColor: Side
+  playerColor: Side,
+  gamePhase: string | null,
+  evalScore: number | null
 ): GameOverInfo => {
   // Determine if player won
   const playerWon = winner === playerColor;
@@ -51,6 +53,17 @@ const getGameOverInfoTraining = (
       message: `${playerWon ? 'Black' : 'White'} wins by resignation.`,
     };
   }
+
+  // Opening complete (move-limit reached) - show eval
+  if (gamePhase === 'opening') {
+    const evalDisplay =
+      evalScore !== null ? `Final eval: ${evalScore > 0 ? '+' : ''}${evalScore.toFixed(2)}` : '';
+    return {
+      heading: 'Opening Complete',
+      message: evalDisplay,
+    };
+  }
+
   // Default for other training endings
   return {
     heading: 'Game Over',
@@ -126,7 +139,9 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
       return getGameOverInfoTraining(
         local.gameOverReason,
         local.gameWinner,
-        chess.state.playerColor
+        chess.state.playerColor,
+        chess.state.trainingGamePhase,
+        chess.state.trainingEvalScore
       );
     }
     return getGameOverInfoPlay(local.gameOverReason, local.gameWinner);

@@ -12,7 +12,7 @@ import './index.css';
 initOfflineSupport();
 
 // Pre-warm the Stockfish engine immediately on app load.
-initAiEngine(600, 'balanced').catch(() => {});
+initAiEngine(600).catch(() => {});
 
 // Terminate engines when user leaves the site
 window.addEventListener('beforeunload', () => {

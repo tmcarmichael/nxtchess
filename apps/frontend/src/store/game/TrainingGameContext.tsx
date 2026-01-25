@@ -62,11 +62,6 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
       // Positive diff = white is ahead, negative = black is ahead
       return { diff: whiteGained - blackGained };
     },
-    formattedAIPlayStyle: () => {
-      const style = chess.state.trainingAIPlayStyle;
-      if (!style) return '';
-      return style.charAt(0).toUpperCase() + style.slice(1);
-    },
   };
 
   // ============================================================================

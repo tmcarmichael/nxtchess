@@ -26,6 +26,7 @@
   margin-bottom: var(--space-sm);
   padding-bottom: var(--space-xs);
   border-bottom: 1px solid var(--border-subtle);
+  user-select: none;
 }
 
 .movesContainer {
@@ -75,6 +76,7 @@
   transition:
     background-color var(--transition-fast),
     color var(--transition-fast);
+  user-select: none;
 }
 
 .move:hover {
