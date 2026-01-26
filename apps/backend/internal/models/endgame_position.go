@@ -40,6 +40,9 @@ type EndgameQueryParams struct {
 	ExcludePositionID string
 	// RequireOpponentMaterial when true, excludes positions where opponent has only king
 	RequireOpponentMaterial bool
+	// RequirePawnForSideToMove when true, ensures the side to move has at least one pawn
+	// Used for knight/bishop endgames where a lone piece cannot force checkmate
+	RequirePawnForSideToMove bool
 }
 
 // DifficultyToRatingRange maps difficulty levels (1-10) to rating ranges

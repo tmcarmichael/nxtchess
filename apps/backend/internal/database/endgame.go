@@ -71,6 +71,17 @@ func GetRandomEndgamePosition(params models.EndgameQueryParams) (*models.Endgame
 		)`
 	}
 
+	// Require pawn for side to move (for knight/bishop endgames where lone piece can't mate)
+	// If side='w', check for uppercase P (white pawn)
+	// If side='b', check for lowercase p (black pawn)
+	if params.RequirePawnForSideToMove {
+		query += ` AND (
+			(split_part(fen, ' ', 2) = 'w' AND split_part(fen, ' ', 1) ~ '[P]')
+			OR
+			(split_part(fen, ' ', 2) = 'b' AND split_part(fen, ' ', 1) ~ '[p]')
+		)`
+	}
+
 	// Order by random and limit to 1
 	query += " ORDER BY RANDOM() LIMIT 1"
 
@@ -145,6 +156,13 @@ func GetEndgamePositionCount(params models.EndgameQueryParams) (int, error) {
 			(split_part(fen, ' ', 2) = 'w' AND split_part(fen, ' ', 1) ~ '[qrbnp]')
 			OR
 			(split_part(fen, ' ', 2) = 'b' AND split_part(fen, ' ', 1) ~ '[QRBNP]')
+		)`
+	}
+	if params.RequirePawnForSideToMove {
+		query += ` AND (
+			(split_part(fen, ' ', 2) = 'w' AND split_part(fen, ' ', 1) ~ '[P]')
+			OR
+			(split_part(fen, ' ', 2) = 'b' AND split_part(fen, ' ', 1) ~ '[p]')
 		)`
 	}
 

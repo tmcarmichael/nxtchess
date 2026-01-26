@@ -74,6 +74,12 @@ func GetRandomEndgamePosition(w http.ResponseWriter, r *http.Request) {
 		params.RequireOpponentMaterial = requireMaterial != "false"
 	}
 
+	// For knight and bishop endgames, require at least one pawn for the side to move
+	// A lone knight or bishop cannot force checkmate (K+N vs K and K+B vs K are draws)
+	if theme == "knightEndgame" || theme == "bishopEndgame" {
+		params.RequirePawnForSideToMove = true
+	}
+
 	// Get random position from database
 	pos, err := database.GetRandomEndgamePosition(params)
 	if err != nil {
