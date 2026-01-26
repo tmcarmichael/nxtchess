@@ -69,7 +69,7 @@ VALUES
 ('knight-1', '8/8/8/3k4/8/3K4/3P4/3N4 w - - 0 1', 1250, ARRAY['knightEndgame'], 600, 'Knight + pawn vs king', 'Generated'),
 ('knight-2', '8/8/8/3k4/8/2NK4/3P4/8 w - - 0 1', 1300, ARRAY['knightEndgame'], 650, 'Knight supporting pawn', 'Generated'),
 ('knight-3', '8/8/3n4/3k4/8/3K4/3P4/3N4 w - - 0 1', 1450, ARRAY['knightEndgame'], 200, 'Knight vs knight + pawn', 'Generated'),
-('knight-4', '8/3k4/8/3N4/8/3K4/8/8 w - - 0 1', 1200, ARRAY['knightEndgame'], 100, 'Lone knight - outpost', 'Generated'),
+('knight-4', '8/8/3k4/3N4/3P4/3K4/8/8 w - - 0 1', 1200, ARRAY['knightEndgame'], 500, 'Knight + pawn - outpost control', 'Generated'),
 
 -- Bishop vs Knight (Rating: 1500-1750)
 ('bvn-1', '8/8/8/3k4/8/3K4/3P4/B3n3 w - - 0 1', 1550, ARRAY['bishopEndgame', 'knightEndgame'], 150, 'Bishop vs knight - open position', 'Generated'),
