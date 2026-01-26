@@ -1,12 +1,7 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, Show, For, type ParentComponent, splitProps } from 'solid-js';
 import { useTrainingGameOptional } from '../../../store/game/TrainingGameContext';
-import {
-  type RatedMode,
-  type GamePhase,
-  type Side,
-  type StartGameOptions,
-} from '../../../types/game';
+import { type GamePhase, type Side, type StartGameOptions } from '../../../types/game';
 import ChessGameModal from '../../chess/ChessGameModal/ChessGameModal';
 import ChessSideSelector from '../../chess/ChessSideSelector/ChessSideSelector';
 import styles from './TrainingModal.module.css';
@@ -56,7 +51,6 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
   const navigate = useNavigate();
   const gameContext = useTrainingGameOptional();
 
-  const [localRatedMode, setLocalRatedMode] = createSignal<RatedMode>('casual');
   const [localDifficulty, setLocalDifficulty] = createSignal<number>(4);
   const [localGamePhase, setLocalGamePhase] = createSignal<GamePhase>('opening');
   const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
@@ -67,7 +61,6 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
       side: localPlayerColor(),
       mode: 'training',
       newDifficultyLevel: localDifficulty(),
-      trainingIsRated: localRatedMode() === 'rated',
       trainingGamePhase: localGamePhase(),
       trainingTheme: localEndgameTheme() || undefined,
     };
@@ -86,30 +79,7 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
 
   return (
     <ChessGameModal title="Train" onClose={local.onClose}>
-      {/* Rated/Casual Toggle */}
-      <div class={styles.buttonGroup}>
-        <button
-          classList={{
-            [styles.toggleButton]: true,
-            [styles.selectedToggle]: localRatedMode() === 'rated',
-          }}
-          disabled
-          onClick={() => setLocalRatedMode('rated')}
-        >
-          Rated
-        </button>
-        <button
-          classList={{
-            [styles.toggleButton]: true,
-            [styles.selectedToggle]: localRatedMode() === 'casual',
-          }}
-          onClick={() => setLocalRatedMode('casual')}
-        >
-          Casual
-        </button>
-      </div>
-
-      {/* Game Phase - second after rated/casual */}
+      {/* Game Phase */}
       <div class={styles.settingRow}>
         <label class={styles.label}>Game Phase:</label>
         <div class={styles.buttonGroup}>
@@ -130,27 +100,25 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
         </div>
       </div>
 
-      {/* Difficulty - third (common to both modes) */}
-      <Show when={localRatedMode() === 'casual'}>
-        <div class={styles.settingRow}>
-          <label class={styles.label}>Difficulty:</label>
-          <div class={styles.optionGrid}>
-            <For each={DIFFICULTY_OPTIONS}>
-              {(option) => (
-                <button
-                  class={styles.optionButton}
-                  classList={{ [styles.optionButtonActive]: localDifficulty() === option.level }}
-                  onClick={() => setLocalDifficulty(option.level)}
-                >
-                  {option.label}
-                </button>
-              )}
-            </For>
-          </div>
+      {/* Difficulty */}
+      <div class={styles.settingRow}>
+        <label class={styles.label}>Difficulty:</label>
+        <div class={styles.optionGrid}>
+          <For each={DIFFICULTY_OPTIONS}>
+            {(option) => (
+              <button
+                class={styles.optionButton}
+                classList={{ [styles.optionButtonActive]: localDifficulty() === option.level }}
+                onClick={() => setLocalDifficulty(option.level)}
+              >
+                {option.label}
+              </button>
+            )}
+          </For>
         </div>
-      </Show>
+      </div>
 
-      {/* Play As - fourth (common to both modes) */}
+      {/* Play As */}
       <div class={styles.settingRow}>
         <label class={styles.label}>Play As:</label>
         <ChessSideSelector selectedSide={localPlayerColor} onSideChange={setLocalPlayerColor} />

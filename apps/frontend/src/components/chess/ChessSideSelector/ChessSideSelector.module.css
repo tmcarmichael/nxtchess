@@ -19,8 +19,8 @@
   justify-content: center;
   transition: all var(--transition-fast);
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid var(--border-default);
+  background: var(--surface-4);
   padding: var(--space-xs);
 }
 
@@ -28,11 +28,8 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-
-.knightButton:hover:not(.selectedKnight) {
-  background: var(--surface-4);
-  border-color: var(--border-default);
+  user-select: none;
+  pointer-events: none;
 }
 
 .selectedKnight {

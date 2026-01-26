@@ -1,7 +1,6 @@
 export type Side = 'w' | 'b';
 export type GameWinner = Side | 'draw' | null;
 export type GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | null;
-export type RatedMode = 'rated' | 'casual';
 export type GamePhase = 'opening' | 'middlegame' | 'endgame' | null;
 export type GameMode = 'play' | 'training' | 'analysis';
 export type OpponentType = 'ai' | 'human';
@@ -22,7 +21,6 @@ export interface StartGameOptions {
   newTimeControl?: number;
   newIncrement?: number;
   newDifficultyLevel?: number;
-  trainingIsRated?: boolean;
   trainingGamePhase?: GamePhase;
   trainingAvailableHints?: number;
   trainingTheme?: string;

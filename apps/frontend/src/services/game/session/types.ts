@@ -21,7 +21,6 @@ export interface GameSessionConfig {
   timeControl?: TimeControl;
   difficulty?: number;
   gamePhase?: GamePhase;
-  isRated?: boolean;
   availableHints?: number;
   /** Custom starting position FEN. If not provided, uses standard starting position. */
   startingFen?: string;
