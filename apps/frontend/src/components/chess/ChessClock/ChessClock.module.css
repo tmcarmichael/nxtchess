@@ -17,6 +17,7 @@
   /* Fixed width to prevent resizing when tenths appear (e.g., "00:19.5") */
   min-width: 120px;
   width: 120px;
+  user-select: none;
 }
 
 /* Turn indicator dot - only visible when active */

@@ -37,7 +37,6 @@ interface ChessState {
   capturedBlack: string[];
   lifecycle: GameLifecycle;
   // Training mode
-  trainingIsRated: boolean;
   trainingGamePhase: GamePhase;
   trainingAvailableHints: number;
   trainingUsedHints: number;
@@ -60,7 +59,6 @@ export interface ChessStore {
     opponentType: OpponentType;
     timeControl: number;
     difficulty?: number;
-    trainingIsRated?: boolean;
     trainingGamePhase?: GamePhase;
     trainingAvailableHints?: number;
     trainingStartEval?: number;
@@ -132,7 +130,6 @@ export const createChessStore = (): ChessStore => {
     capturedWhite: [],
     capturedBlack: [],
     lifecycle: 'idle',
-    trainingIsRated: false,
     trainingGamePhase: null,
     trainingAvailableHints: 0,
     trainingUsedHints: 0,
@@ -186,7 +183,6 @@ export const createChessStore = (): ChessStore => {
     opponentType: OpponentType;
     timeControl: number;
     difficulty?: number;
-    trainingIsRated?: boolean;
     trainingGamePhase?: GamePhase;
     trainingAvailableHints?: number;
     trainingStartEval?: number;
@@ -203,7 +199,6 @@ export const createChessStore = (): ChessStore => {
       timeControl: { initialTime: config.timeControl * 60 },
       difficulty: config.difficulty,
       gamePhase: config.trainingGamePhase ?? undefined,
-      isRated: config.trainingIsRated,
       availableHints: config.trainingAvailableHints,
       startingFen: config.fen,
     });
@@ -219,7 +214,6 @@ export const createChessStore = (): ChessStore => {
       setState('isGameOver', false);
       setState('gameOverReason', null);
       setState('gameWinner', null);
-      setState('trainingIsRated', config.trainingIsRated ?? false);
       setState('trainingGamePhase', config.trainingGamePhase ?? null);
       setState('trainingAvailableHints', config.trainingAvailableHints ?? 0);
       setState('trainingUsedHints', 0);

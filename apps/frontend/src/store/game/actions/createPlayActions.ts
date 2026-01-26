@@ -142,7 +142,6 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       newTimeControl = 5,
       newIncrement = 0,
       newDifficultyLevel = 3,
-      trainingIsRated = false,
       trainingGamePhase = 'opening',
       trainingAvailableHints = 0,
     } = options;
@@ -153,7 +152,6 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       opponentType: 'ai',
       timeControl: newTimeControl,
       difficulty: newDifficultyLevel,
-      trainingIsRated,
       trainingGamePhase,
       trainingAvailableHints,
     });

@@ -63,14 +63,12 @@ describe('createChessStore', () => {
           opponentType: 'ai',
           timeControl: 10,
           difficulty: 5,
-          trainingIsRated: true,
           trainingGamePhase: 'middlegame',
           trainingAvailableHints: 3,
         });
 
         expect(store.state.mode).toBe('training');
         expect(store.state.playerColor).toBe('b');
-        expect(store.state.trainingIsRated).toBe(true);
         expect(store.state.trainingGamePhase).toBe('middlegame');
         expect(store.state.trainingAvailableHints).toBe(3);
 

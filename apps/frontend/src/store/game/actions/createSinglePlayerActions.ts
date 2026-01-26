@@ -144,7 +144,6 @@ export const createSinglePlayerActions = (
       mode = 'play',
       newTimeControl = 5,
       newDifficultyLevel = 3,
-      trainingIsRated = false,
       trainingGamePhase = 'opening',
       trainingAvailableHints = 0,
     } = options;
@@ -156,7 +155,6 @@ export const createSinglePlayerActions = (
       opponentType: 'ai',
       timeControl: newTimeControl,
       difficulty: newDifficultyLevel,
-      trainingIsRated,
       trainingGamePhase,
       trainingAvailableHints,
     });

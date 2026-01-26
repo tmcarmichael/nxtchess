@@ -198,59 +198,6 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Knight/Side Selector
-   ───────────────────────────────────────────────────────────────────────────── */
-
-.knightSelector {
-  display: flex;
-  margin-top: var(--space-md);
-  margin-bottom: var(--space-md);
-  justify-content: center;
-  gap: var(--space-xl);
-}
-
-.knightButton {
-  width: 64px;
-  height: 64px;
-  position: relative;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform var(--transition-base);
-  border-radius: var(--radius-md);
-}
-
-.knightButton img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.knightButton:hover {
-  transform: scale(1.15);
-}
-
-.selectedKnight {
-  transform: scale(1.15);
-}
-
-.selectedKnight::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--accent-muted) 20%, transparent 70%);
-  animation: selectionPulse 2s ease-in-out infinite;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
    Start Button
    ───────────────────────────────────────────────────────────────────────────── */
 
