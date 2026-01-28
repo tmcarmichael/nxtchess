@@ -25,7 +25,7 @@ yarn test:e2e:ui   # Playwright with UI
 
 ### Entry Point & Providers
 
-Entry point `src/index.tsx` wraps the app in `UserProvider` → `Router`. **GameProvider is NOT global** — each game mode (Play, Training) wraps itself with its own provider internally. This ensures multiplayer code is not loaded on training pages and vice versa.
+Entry point `src/index.tsx` wraps the app in `UserProvider` → `Router`. **GameProvider is NOT global** — each game mode (Play, Training, Analyze) wraps itself with its own provider internally. This ensures multiplayer code is not loaded on training/analysis pages and vice versa.
 
 Pre-warms Stockfish AI engine on app load. Terminates both AI and eval engines on `beforeunload`.
 
@@ -35,6 +35,7 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `/play` → PlayContainer (multiplayer or vs AI)
 - `/play/:gameId` → PlayContainer (join multiplayer game via URL)
 - `/training` → TrainingContainer (untimed practice with eval)
+- `/analyze` → AnalyzeContainer (position analysis with FEN/PGN import)
 - `/username-setup` → UsernameSetup
 - `/profile/:username` → UserProfile
 - `*` → CommonNotFoundPage
@@ -81,6 +82,14 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `TrainingModal` — Training setup dialog
 - `TrainingNavigationPanel` — Move history navigation for training mode
 
+**`analyze/` (5 components)** — Analysis mode:
+
+- `AnalyzeContainer` — Wraps with AnalyzeGameProvider, three-column layout
+- `AnalyzeEnginePanel` — Multi-line engine analysis display (MultiPV)
+- `AnalyzeControlPanel` — Analysis controls (import, reset)
+- `AnalyzeImportModal` — FEN/PGN import dialog
+- `AnalyzeNavigationPanel` — Move history navigation for analysis mode
+
 **`home/` (2 components)** — Landing page:
 
 - `HomeContainer` — Home page layout
@@ -106,7 +115,7 @@ Routes (all lazy-loaded via `routes.tsx`):
 
 **Controller/Presenter separation**: `ChessBoardController` handles all game logic (move validation, drag/drop, promotion, AI triggers). `ChessBoard` is purely presentational—receives callbacks and renders squares.
 
-**Container components** (`PlayContainer`, `TrainingContainer`) wrap themselves with their own provider and compose the controller with mode-specific panels and modals.
+**Container components** (`PlayContainer`, `TrainingContainer`, `AnalyzeContainer`) wrap themselves with their own provider and compose the controller with mode-specific panels and modals.
 
 ### State Management
 
@@ -131,7 +140,8 @@ Five independent SolidJS stores compose via context (NOT a monolithic store):
 
 - **`PlayGameContext.tsx`** — Creates all 5 stores, provides `PlayGameContextValue` with `PlayActions`
 - **`TrainingGameContext.tsx`** — Creates 4 stores (no multiplayer), provides `TrainingGameContextValue` with `TrainingActions`
-- **`useGameContext.ts`** — Unified interface that both modes implement, allows components like `ChessBoardController` to work across modes
+- **`AnalyzeGameContext.tsx`** — Creates 4 stores (no multiplayer), provides `AnalyzeGameContextValue` with `AnalyzeActions`, includes `AnalyzeEngineState` for multi-line analysis
+- **`useGameContext.ts`** — Unified interface that all modes implement, allows components like `ChessBoardController` to work across modes
 
 #### Action Factories (`store/game/actions/`)
 
@@ -140,6 +150,7 @@ Five independent SolidJS stores compose via context (NOT a monolithic store):
 - `createMultiplayerActions.ts` — Base multiplayer logic
 - `createPlayActions.ts` — Play-mode specific (AI coordination + multiplayer sync)
 - `createTrainingActions.ts` — Training-mode specific (eval computation, hint logic)
+- `createAnalyzeActions.ts` — Analysis-mode specific (FEN/PGN loading, move application with history truncation)
 
 #### Type Definitions (`store/game/types.ts`)
 
@@ -149,6 +160,7 @@ SinglePlayerActions extends CoreActions  // startNewGame, applyPlayerMove, resig
 MultiplayerActions extends CoreActions   // startMultiplayerGame, joinMultiplayerGame
 PlayActions = SinglePlayerActions & MultiplayerActions
 TrainingActions = SinglePlayerActions
+AnalyzeActions extends CoreActions  // loadFen, loadPgn, resetToStart, applyMove
 ```
 
 ### Services Layer
@@ -158,12 +170,13 @@ TrainingActions = SinglePlayerActions
 - `StockfishEngine.ts` — Low-level UCI protocol wrapper (`postMessage`, `sendCommand` with timeout)
 - `aiEngineWorker.ts` — AI move computation (Web Worker) with ELO limiting and playstyle options
 - `evalEngineWorker.ts` — Position evaluation (separate Web Worker) for training mode eval bar
+- `analysisEngineService.ts` — Multi-line analysis service for analyze mode (MultiPV, configurable depth/time)
 - `EnginePool.ts` — Multi-engine allocation per (purpose, gameId), max 4 engines, 1min idle timeout
 - `ResilientEngine.ts` — Circuit breaker wrapper (3-strike rule, auto-recovery, command queuing)
 - `engineService.ts` — High-level engine service interface
 - `moveEvalService.ts` — Move quality evaluation for training hints (best move comparison)
 
-Two separate Web Workers prevent UCI command race conditions. Both support single-game (`computeAiMove`) and multi-game (`computeAiMoveForGame`) APIs.
+Two separate Web Workers (ai/eval) prevent UCI command race conditions. Analysis mode uses a dedicated singleton engine instance.
 
 #### Game Services (`services/game/`)
 

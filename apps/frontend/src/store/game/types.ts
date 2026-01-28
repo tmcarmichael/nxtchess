@@ -107,6 +107,23 @@ export type PlayDerived = CoreDerived & EngineDerived & MultiplayerDerived;
 export type TrainingDerived = CoreDerived & EngineDerived;
 
 // ============================================================================
+// Analyze Mode Actions
+// ============================================================================
+
+export interface AnalyzeActions extends CoreActions {
+  loadFen: (fen: string) => boolean;
+  loadPgn: (pgn: string) => boolean;
+  resetToStart: () => void;
+  applyMove: (from: Square, to: Square, promotion?: PromotionPiece) => boolean;
+}
+
+// ============================================================================
+// Analyze Mode Derived
+// ============================================================================
+
+export type AnalyzeDerived = CoreDerived & EngineDerived;
+
+// ============================================================================
 // Context Value Types
 // ============================================================================
 
@@ -135,4 +152,13 @@ export interface TrainingGameContextValue {
   engine: EngineStore;
   actions: TrainingActions;
   derived: TrainingDerived;
+}
+
+export interface AnalyzeGameContextValue {
+  chess: ChessStore;
+  timer: TimerStore;
+  ui: UIStore;
+  engine: EngineStore;
+  actions: AnalyzeActions;
+  derived: AnalyzeDerived;
 }

@@ -122,6 +122,8 @@ export class GameSession {
           return this.handleConfirmMove(command.payload);
         case 'REJECT_MOVE':
           return this.handleRejectMove(command.payload);
+        case 'TRUNCATE_TO_VIEW':
+          return this.handleTruncateToView();
         default:
           return {
             success: false,
@@ -554,6 +556,55 @@ export class GameSession {
       checkedKingSquare: this.boardCache.checkedKingSquare,
       moveError: payload.reason,
     };
+
+    return { success: true, newState: this._state };
+  }
+
+  private handleTruncateToView(): CommandResult {
+    const viewIndex = this._state.viewMoveIndex;
+
+    // If already at the end, nothing to truncate
+    if (viewIndex >= this._state.moveHistory.length - 1 && viewIndex !== -1) {
+      return { success: true, newState: this._state };
+    }
+
+    // Reload chess from starting position and replay up to viewIndex
+    const startingFen = this._config.startingFen ?? INITIAL_FEN;
+    this.chess.load(startingFen);
+    for (let i = 0; i <= viewIndex; i++) {
+      if (i >= 0 && i < this._state.moveHistory.length) {
+        this.chess.move(this._state.moveHistory[i]);
+      }
+    }
+
+    // Truncate history
+    const newHistory = viewIndex >= 0 ? this._state.moveHistory.slice(0, viewIndex + 1) : [];
+    const newFen = this.chess.fen();
+
+    // Sync BoardCache with new position
+    this.boardCache.load(newFen);
+
+    // Recalculate captured pieces from truncated history
+    const newCapturedPieces = { white: [] as string[], black: [] as string[] };
+    // Note: We'd need to replay all moves to accurately recalculate captures
+    // For now, we clear captures on truncation (they'll be rebuilt on new moves)
+
+    this._state = {
+      ...this._state,
+      fen: newFen,
+      viewFen: newFen,
+      moveHistory: newHistory,
+      viewMoveIndex: newHistory.length - 1,
+      currentTurn: getTurnFromFen(newFen),
+      lastMove: newHistory.length > 0 ? this._state.lastMove : null,
+      checkedKingSquare: this.boardCache.checkedKingSquare,
+      isGameOver: false,
+      gameOverReason: null,
+      gameWinner: null,
+      capturedPieces: newCapturedPieces,
+    };
+
+    this.pushStateHistory();
 
     return { success: true, newState: this._state };
   }

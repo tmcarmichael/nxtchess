@@ -116,6 +116,7 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
       hasEngineError: derived.hasEngineError,
       isMultiplayer: () => false,
       showEvalBar: () => !ui.state.trainingFocusMode,
+      allowBothSides: () => false,
     },
   };
 
