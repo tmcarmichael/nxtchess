@@ -94,10 +94,18 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   // Only re-evaluate when FEN changes and eval bar is shown (not on every state update)
   // Skip evaluation during idle/ended states to avoid timeouts during exit
   // Debounce to prevent rapid eval calls during fast piece movement
+  // Note: When derived.getEvalScore is available (Analyze mode), we use that directly
+  // instead of running the evalEngineWorker
   createEffect(
     on(
       () => [chess.state.fen, derived.showEvalBar(), chess.state.lifecycle] as const,
       ([currentFen, showEval, lifecycle]) => {
+        // If context provides eval score (e.g., Analyze mode), skip this effect
+        // The eval bar will read from derived.getEvalScore() instead
+        if (derived.getEvalScore) {
+          return;
+        }
+
         // Clear any pending eval
         if (evalDebounceTimer) {
           clearTimeout(evalDebounceTimer);
@@ -876,7 +884,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
         <div class={styles.boardWithClocks}>
           <div class={styles.evalBoardRow}>
             <Show when={derived.showEvalBar()}>
-              <ChessEvalBar evalScore={evalScore()} />
+              <ChessEvalBar
+                evalScore={derived.getEvalScore ? derived.getEvalScore() : evalScore()}
+              />
             </Show>
             <div class={styles.chessBoardContainer}>
               <ChessBoard
