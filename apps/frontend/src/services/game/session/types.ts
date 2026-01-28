@@ -183,6 +183,11 @@ export interface RejectMoveCommand {
   };
 }
 
+export interface TruncateToViewCommand {
+  type: 'TRUNCATE_TO_VIEW';
+  payload: Record<string, never>;
+}
+
 export type GameCommand =
   | ApplyMoveCommand
   | SyncStateCommand
@@ -195,7 +200,8 @@ export type GameCommand =
   | NavigateHistoryCommand
   | OptimisticMoveCommand
   | ConfirmMoveCommand
-  | RejectMoveCommand;
+  | RejectMoveCommand
+  | TruncateToViewCommand;
 
 // ============================================================================
 // Command Result Types

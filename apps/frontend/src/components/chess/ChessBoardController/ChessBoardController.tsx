@@ -80,6 +80,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   let justDragged = false;
   // Toast dismiss timer ref
   let toastDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  // Eval debounce timer ref - prevents rapid eval calls during fast piece movement
+  let evalDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  const EVAL_DEBOUNCE_MS = 300;
 
   useKeyboardNavigation({
     onPrevious: actions.jumpToPreviousMove,
@@ -90,19 +93,28 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
   // Only re-evaluate when FEN changes and eval bar is shown (not on every state update)
   // Skip evaluation during idle/ended states to avoid timeouts during exit
+  // Debounce to prevent rapid eval calls during fast piece movement
   createEffect(
     on(
       () => [chess.state.fen, derived.showEvalBar(), chess.state.lifecycle] as const,
       ([currentFen, showEval, lifecycle]) => {
+        // Clear any pending eval
+        if (evalDebounceTimer) {
+          clearTimeout(evalDebounceTimer);
+          evalDebounceTimer = null;
+        }
+
         if (showEval && isEvalEngineInitialized() && lifecycle === 'playing') {
-          getEvaluation(currentFen)
-            .then((score: number) => {
-              setEvalScore(score ?? null);
-            })
-            .catch(() => {
-              // Evaluation was cancelled by a newer request - ignore
-              // The next position change will trigger a new evaluation
-            });
+          evalDebounceTimer = setTimeout(() => {
+            getEvaluation(currentFen)
+              .then((score: number) => {
+                setEvalScore(score ?? null);
+              })
+              .catch(() => {
+                // Evaluation was cancelled by a newer request - ignore
+                // The next position change will trigger a new evaluation
+              });
+          }, EVAL_DEBOUNCE_MS);
         }
       }
     )
@@ -172,6 +184,17 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                 setShowEndModal(true);
               }
             }, 800);
+          } else if (derived.allowBothSides()) {
+            // Analyze mode: show toast briefly, then allow continued analysis
+            // No modal, no auto-restart - user can navigate history and play alternatives
+            const message = getGameResultMessage();
+            setGameResultToast(message);
+            setToastFadingOut(false);
+
+            // Auto-dismiss toast after 2 seconds
+            toastDismissTimer = setTimeout(() => {
+              dismissToast();
+            }, 2000);
           } else {
             setShowEndModal(true);
           }
@@ -190,12 +213,13 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   // This allows the player to keep holding their piece after opponent moves
   createEffect(
     on(
-      () => chess.state.fen,
+      () => [chess.state.fen, chess.state.viewFen] as const,
       () => {
         const dragState = draggedPiece();
         if (dragState && chess.derived.isPlayerTurn()) {
           // Recalculate legal moves for the held piece based on new position
-          const newMoves = getLegalMoves(chess.state.fen, dragState.square);
+          const fen = getMoveCalculationFen();
+          const newMoves = getLegalMoves(fen, dragState.square);
           setHighlightedMoves(newMoves);
         }
       }
@@ -345,6 +369,11 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   );
 
   const resetViewIfNeeded = () => {
+    // In analyze mode (allowBothSides), skip resetting view
+    // The user should be able to play from historical positions
+    // Truncation is handled in the analyze actions layer
+    if (derived.allowBothSides()) return;
+
     if (chess.derived.isViewingHistory()) {
       // Jump to latest move to reset view
       chess.jumpToMoveIndex(chess.state.moveHistory.length - 1);
@@ -371,7 +400,26 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     }
   };
 
-  const canMove = () => chess.derived.canMove() && !engine.state.isThinking;
+  const canMove = () => {
+    // In analyze mode, allow moves even after game over if viewing a historical position
+    // This enables playing alternative lines from any point in the game
+    const isViewingHistory = chess.state.viewMoveIndex < chess.state.moveHistory.length - 1;
+    const gameOverCheck =
+      derived.allowBothSides() && isViewingHistory ? true : !chess.state.isGameOver;
+
+    const baseCheck =
+      !engine.state.isThinking && chess.state.lifecycle === 'playing' && gameOverCheck;
+
+    if (derived.allowBothSides()) {
+      return baseCheck; // Skip turn check for analysis mode
+    }
+    return baseCheck && chess.derived.isPlayerTurn();
+  };
+
+  // Get the FEN to use for move calculations - viewFen in analyze mode, fen otherwise
+  const getMoveCalculationFen = () => {
+    return derived.allowBothSides() ? chess.state.viewFen : chess.state.fen;
+  };
 
   const handleSquareClick = (square: Square) => {
     // Initialize audio on first interaction
@@ -394,10 +442,13 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       const piece = chess.derived.currentBoard().find((sq) => sq.square === square)?.piece;
       if (piece && isPlayerPiece(square) && !chess.state.isGameOver && !engine.state.isThinking) {
         selectSquare(square);
-        // Use premove-aware moves when it's not player's turn
-        const moves = chess.derived.isPlayerTurn()
-          ? getLegalMoves(chess.state.fen, square)
-          : getPremoveLegalMoves(chess.state.fen, square);
+        // In analysis mode, use viewFen for legal moves (allows moves from historical positions)
+        // Otherwise, use premove-aware moves when it's not player's turn
+        const fen = getMoveCalculationFen();
+        const moves =
+          derived.allowBothSides() || chess.derived.isPlayerTurn()
+            ? getLegalMoves(fen, square)
+            : getPremoveLegalMoves(chess.state.fen, square);
         setHighlightedMoves(moves);
       }
       return;
@@ -421,9 +472,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       // Clicked on another player piece - select it instead
       clearPremove();
       selectSquare(square);
-      const moves = chess.derived.isPlayerTurn()
-        ? getLegalMoves(chess.state.fen, square)
-        : getPremoveLegalMoves(chess.state.fen, square);
+      // In analysis mode, use viewFen for legal moves (allows moves from historical positions)
+      const fen = getMoveCalculationFen();
+      const moves =
+        derived.allowBothSides() || chess.derived.isPlayerTurn()
+          ? getLegalMoves(fen, square)
+          : getPremoveLegalMoves(chess.state.fen, square);
       setHighlightedMoves(moves);
     } else if (canMove() && highlightedMoves().length > 0 && !highlightedMoves().includes(square)) {
       // Attempted illegal move - play error sound and flash king
@@ -451,10 +505,13 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     resetViewIfNeeded();
     setDraggedPiece({ square, piece });
     setCursorPosition({ x: event.clientX, y: event.clientY });
-    // Use premove-aware moves when it's not player's turn
-    const moves = chess.derived.isPlayerTurn()
-      ? getLegalMoves(chess.state.fen, square)
-      : getPremoveLegalMoves(chess.state.fen, square);
+    // In analysis mode, use viewFen for legal moves (allows moves from historical positions)
+    // Otherwise, use premove-aware moves when it's not player's turn
+    const fen = getMoveCalculationFen();
+    const moves =
+      derived.allowBothSides() || chess.derived.isPlayerTurn()
+        ? getLegalMoves(fen, square)
+        : getPremoveLegalMoves(chess.state.fen, square);
     setHighlightedMoves(moves);
     setSelectedSquare(square);
     event.dataTransfer?.setDragImage(new Image(), 0, 0);
@@ -500,10 +557,13 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     setDraggedPiece({ square: touchStartPos.square, piece: touchStartPos.piece });
     // Use current position, not original - the finger has already moved past threshold
     setCursorPosition({ x: currentX, y: currentY });
-    // Use premove-aware moves when it's not player's turn
-    const moves = chess.derived.isPlayerTurn()
-      ? getLegalMoves(chess.state.fen, touchStartPos.square)
-      : getPremoveLegalMoves(chess.state.fen, touchStartPos.square);
+    // In analysis mode, use viewFen for legal moves (allows moves from historical positions)
+    // Otherwise, use premove-aware moves when it's not player's turn
+    const fen = getMoveCalculationFen();
+    const moves =
+      derived.allowBothSides() || chess.derived.isPlayerTurn()
+        ? getLegalMoves(fen, touchStartPos.square)
+        : getPremoveLegalMoves(chess.state.fen, touchStartPos.square);
     setHighlightedMoves(moves);
     setSelectedSquare(touchStartPos.square);
   };
@@ -591,6 +651,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   onCleanup(() => {
     if (rafId !== null) cancelAnimationFrame(rafId);
     if (toastDismissTimer) clearTimeout(toastDismissTimer);
+    if (evalDebounceTimer) clearTimeout(evalDebounceTimer);
   });
 
   const handleMouseUp = (targetSquare: Square) => {
@@ -658,7 +719,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   // Check if a piece at square belongs to the player (for picking up)
   const isPlayerPiece = (square: Square) => {
     const piece = chess.derived.currentBoard().find((sq) => sq.square === square)?.piece;
-    return !!piece && piece[0] === chess.state.playerColor;
+    if (!piece) return false;
+    if (derived.allowBothSides()) {
+      // In analysis mode, allow picking up pieces of the current turn's color
+      return piece[0] === chess.state.currentTurn;
+    }
+    return piece[0] === chess.state.playerColor;
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -673,6 +739,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const canSetPremove = (from: Square): boolean => {
+    // Premoves disabled in analysis mode - both sides move normally
+    if (derived.allowBothSides()) return false;
     // In training mode, only allow premoves in Focus Mode (when eval bar is hidden)
     // This prevents eval engine overload from rapid position changes
     if (chess.state.mode === 'training' && derived.showEvalBar()) return false;
@@ -712,6 +780,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     const pm = premove();
     if (!pm) return;
 
+    // Premoves always use the current fen (not viewFen) since they execute on current position
     const legalMoves = getLegalMoves(chess.state.fen, pm.from);
     if (legalMoves.includes(pm.to)) {
       executeMove(pm.from, pm.to, pm.promotion);
@@ -722,7 +791,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   const selectSquare = (square: Square) => {
     batch(() => {
       setSelectedSquare(square);
-      setHighlightedMoves(getLegalMoves(chess.state.fen, square));
+      const fen = getMoveCalculationFen();
+      setHighlightedMoves(getLegalMoves(fen, square));
     });
   };
 

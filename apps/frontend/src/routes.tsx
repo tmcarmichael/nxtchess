@@ -6,6 +6,9 @@ const PlayContainer = lazy(() => import('./components/play/PlayContainer/PlayCon
 const TrainingContainer = lazy(
   () => import('./components/training/TrainingContainer/TrainingContainer')
 );
+const AnalyzeContainer = lazy(
+  () => import('./components/analyze/AnalyzeContainer/AnalyzeContainer')
+);
 const UsernameSetup = lazy(() => import('./components/user/UsernameSetup/UsernameSetup'));
 const UserProfile = lazy(() => import('./components/user/UserProfile/UserProfile'));
 const NotFoundPage = lazy(
@@ -17,6 +20,7 @@ export const routes: RouteDefinition[] = [
   { path: '/play', component: PlayContainer },
   { path: '/play/:gameId', component: PlayContainer },
   { path: '/training', component: TrainingContainer },
+  { path: '/analyze', component: AnalyzeContainer },
   { path: '/username-setup', component: UsernameSetup },
   { path: '/profile/:username', component: UserProfile },
   { path: '*', component: NotFoundPage },

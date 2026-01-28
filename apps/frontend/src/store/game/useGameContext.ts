@@ -48,6 +48,7 @@ export interface UnifiedGameContext {
     hasEngineError: () => boolean;
     isMultiplayer: () => boolean;
     showEvalBar: () => boolean;
+    allowBothSides: () => boolean;
   };
 }
 

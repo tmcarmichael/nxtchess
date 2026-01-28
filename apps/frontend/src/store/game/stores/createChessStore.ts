@@ -83,6 +83,7 @@ export interface ChessStore {
   resign: () => void;
   takeBack: () => void;
   jumpToMoveIndex: (targetIndex: number) => void;
+  truncateToViewPosition: () => void;
   syncFromMultiplayer: (data: {
     fen: string;
     san: string;
@@ -385,6 +386,15 @@ export const createChessStore = (): ChessStore => {
     syncFromSession();
   };
 
+  const truncateToViewPosition = () => {
+    if (!currentSession) return;
+    sessionManager.applyCommand(currentSession.sessionId, {
+      type: 'TRUNCATE_TO_VIEW',
+      payload: {},
+    });
+    syncFromSession();
+  };
+
   const syncFromMultiplayer = (data: {
     fen: string;
     san: string;
@@ -502,6 +512,7 @@ export const createChessStore = (): ChessStore => {
     resign,
     takeBack,
     jumpToMoveIndex,
+    truncateToViewPosition,
     syncFromMultiplayer,
     setLifecycle,
     setPlayerColor,

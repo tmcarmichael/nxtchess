@@ -4,11 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NXT Chess is a **Progressive Web App (PWA)** for real-time multiplayer chess with AI training modes. Key features:
+NXT Chess is a **Progressive Web App (PWA)** for real-time multiplayer chess with AI training and analysis modes. Key features:
 
 - WebSocket-based multiplayer with shareable game links (`/play/:gameId`)
 - Timed games with server-managed clocks (100ms precision)
 - Training mode with Stockfish evaluation and hints
+- Analysis mode with multi-line engine evaluation and FEN/PGN import
 - Offline-capable with IndexedDB persistence
 - Adaptive Stockfish engine (multi-threaded 69MB or single-threaded 7MB based on device)
 
@@ -74,6 +75,7 @@ components/
 ├── game/            # Game layout: GameContainer, GameInfoPanel, GameNotation, ButtonPanel, DifficultyDisplay
 ├── play/            # Multiplayer: PlayContainer, PlayModal, PlayControlPanel, PlayNavigationPanel
 ├── training/        # Training: TrainingContainer, TrainingModal, TrainingControlPanel, TrainingNavigationPanel
+├── analyze/         # Analysis: AnalyzeContainer, AnalyzeEnginePanel, AnalyzeControlPanel, AnalyzeImportModal, AnalyzeNavigationPanel
 ├── home/            # Landing page
 ├── user/            # Auth & profile: UserSignInModal, UserProfile, UsernameSetup
 └── common/          # Header, Footer, 404, ErrorBoundary, NetworkStatus
@@ -81,7 +83,7 @@ components/
 store/
 ├── game/            # Multi-store architecture
 │   ├── stores/      # Independent store factories (chess, timer, engine, ui, multiplayer)
-│   ├── actions/     # Mode-specific actions (core, singlePlayer, training, multiplayer, play)
+│   ├── actions/     # Mode-specific actions (core, singlePlayer, training, multiplayer, play, analyze)
 │   └── types.ts     # Store type definitions
 └── user/            # UserContext + userStore (auth state, profile)
 
@@ -93,6 +95,7 @@ services/
 │   ├── EnginePool.ts         # Multi-engine allocation per (purpose, gameId)
 │   ├── aiEngineWorker.ts     # AI move computation (Web Worker)
 │   ├── evalEngineWorker.ts   # Position evaluation (Web Worker)
+│   ├── analysisEngineService.ts  # Multi-line analysis for analyze mode (MultiPV)
 │   └── moveEvalService.ts    # Move quality evaluation for training hints
 ├── game/            # Game logic
 │   ├── chessGameService.ts   # Move validation, legal move computation
@@ -158,6 +161,7 @@ endgame_positions: position_id (PK), fen, rating, themes[], moves, initial_eval,
 Migrations managed via golang-migrate in `db/migrations/`. Seeds in `db/seeds/`.
 
 **Dev database initialization** (docker-compose.dev.yaml):
+
 1. `00_init.sql` - Base tables (profiles, games, rating_history)
 2. `01-03_migration.sql` - Migrations (constraints, profile_icon, endgame_positions table)
 3. `90-91_seed*.sql` - Seed data (endgame positions)
@@ -184,7 +188,7 @@ multiplayer = createMultiplayerStore(); // gameId, opponent, connection
 
 ### Unified Context Abstraction
 
-`UnifiedGameContext` provides mode-agnostic interface. Components like `ChessBoardController` don't know about Play vs Training modes. Providers (`PlayGameProvider`, `TrainingGameProvider`) implement the unified interface differently.
+`UnifiedGameContext` provides mode-agnostic interface. Components like `ChessBoardController` don't know about Play vs Training vs Analyze modes. Providers (`PlayGameProvider`, `TrainingGameProvider`, `AnalyzeGameProvider`) implement the unified interface differently.
 
 ### Three-Layer Engine Resilience
 
@@ -317,6 +321,7 @@ VITE_BACKEND_URL=http://localhost:8080
 /play               → PlayContainer (vs AI or create multiplayer)
 /play/:gameId       → PlayContainer (join multiplayer via URL)
 /training           → TrainingContainer (untimed practice with eval)
+/analyze            → AnalyzeContainer (position analysis with FEN/PGN import)
 /username-setup     → UsernameSetup
 /profile/:username  → UserProfile
 *                   → 404
@@ -327,71 +332,86 @@ VITE_BACKEND_URL=http://localhost:8080
 ### Training & Analysis
 
 **Syzygy Tablebases Integration**
-- Mathematically perfect endgame play (7 pieces or fewer)
+
+- Mathematically perfect endgame play (6 pieces or fewer)
 - Shows DTZ (distance to zeroing) and WDL (win/draw/loss)
-- Options: Lichess Tablebase API or local WASM probing (Fathom)
 - Integrates with existing endgame training mode
 
 **Opening Explorer with Master Game Statistics**
+
 - Position statistics from master games ("e4: 52% win, 45k games")
 - Named opening recognition ("Sicilian Defense, Najdorf Variation")
 - Filter by rating range (2000+, 2200+, 2500+)
-- Lichess Opening Explorer API integration
+- Add to Analyze mode or include in Tools section
 
 **Post-Game Analysis with Move Classification**
+
 - Classify moves: Best, Good, Inaccuracy, Mistake, Blunder
 - Centipawn loss graph showing critical moments
 - Accuracy percentage per game
-- Extends existing evalEngineWorker infrastructure
+- Extends existing analysisEngineService infrastructure
+- Gamify post game analysis
 
 **Tactics Puzzles with Spaced Repetition**
+
 - Themed puzzles (forks, pins, back rank mates)
 - Rating-matched difficulty
 - SM-2 spaced repetition for failed puzzles
-- Lichess Puzzle API integration (3M+ puzzles)
-
-**Analysis Mode**
-- Free analysis of any position
-- Engine evaluation without game constraints
+- Mate in 1, 2, 3, 4 puzzle targets
 
 **Middlegame Training Mode**
+
 - Positional training from complex positions
 - Similar architecture to endgame training
+- Use positions from classical and famous games
 
 ### Multiplayer & Competitive
 
 **Multiplayer Lobby**
+
 - Browse and join open games
 - Filter by time control and rating
+- Quickjoin any open game option
 
 **Tournaments**
+
 - Swiss and arena formats
 - Scheduled events
+- Awards and profile achievements persisted
 
 **Rated Play**
+
 - ELO-based matchmaking
+- ELO range based option for lobby
 - Rating history visualization (schema exists)
 
 ### Platform
 
 **Profile Features**
+
 - Game history and statistics
 - Opening repertoire tracking
 
 **Mobile App**
+
 - Native wrapper or React Native port
 - Push notifications
+- PWA support
 
 **CI/CD**
+
 - Automated testing pipeline
 - Deployment automation
+- GitHub Actions
 
 **Observability**
-- Grafana LGTM stack (Loki, Grafana, Tempo, Mimir)
+
+- ~~Grafana LGTM stack (Loki, Grafana, Tempo, Mimir)~~
+- Consider instead PGL (Prometheus, Grafana, Loki)
 - Performance monitoring
 
 ## Git Conventions
 
-Commit prefixes: `feat:`, `fix:`, `chore:`, `refactor:`, `style:`
+Commit prefixes: `feat:`, `fix:`, `chore:`, `refactor:`, `style:`, `nit:`
 
 Example: `feat: PWA push notifications and offline support`

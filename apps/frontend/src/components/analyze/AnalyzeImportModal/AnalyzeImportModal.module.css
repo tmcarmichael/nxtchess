@@ -1,0 +1,173 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   AnalyzeImportModal - Obsidian Arena Theme
+   FEN/PGN import modal styling
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.tabContainer {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-xs);
+  background: var(--surface-1);
+  border-radius: var(--radius-md);
+}
+
+.tab {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.tab:hover:not(.tabActive) {
+  background: var(--surface-3);
+  color: var(--text-primary);
+}
+
+.tabActive {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+  border-color: var(--accent-muted);
+}
+
+.inputSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  text-align: left;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.textInput {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.textInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ghost);
+}
+
+.textInput::placeholder {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.textArea {
+  width: 100%;
+  min-height: 120px;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  resize: vertical;
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.textArea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ghost);
+}
+
+.textArea::placeholder {
+  color: var(--text-muted);
+}
+
+.loadButton {
+  align-self: center;
+  padding: var(--space-sm) var(--space-xl);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-on-accent);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+  min-width: 140px;
+}
+
+.loadButton:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-ghost);
+}
+
+.loadButton:active {
+  transform: translateY(0);
+}
+
+.errorMessage {
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--error);
+  background: var(--error-subtle);
+  border: 1px solid var(--error-muted);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Responsive Breakpoints
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 639px) {
+  .tabContainer {
+    margin-bottom: var(--space-md);
+  }
+
+  .tab {
+    font-size: 0.85rem;
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .textInput,
+  .textArea {
+    font-size: 0.8rem;
+  }
+
+  .textArea {
+    min-height: 100px;
+  }
+
+  .loadButton {
+    width: 100%;
+  }
+}

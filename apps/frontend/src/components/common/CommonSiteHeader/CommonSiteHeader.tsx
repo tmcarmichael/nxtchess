@@ -20,7 +20,7 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Play', showPlayModal: true, variant: 'primary' },
   { label: 'Train', showTrainingModal: true, variant: 'primary' },
-  { label: 'Analyze', tooltip: 'Coming soon', variant: 'upcoming' },
+  { label: 'Analyze', route: '/analyze', variant: 'primary' },
   { label: 'Puzzles', tooltip: 'Coming soon', variant: 'upcoming' },
   { label: 'Tools', tooltip: 'Coming soon', variant: 'upcoming' },
 ];
