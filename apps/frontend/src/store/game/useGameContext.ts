@@ -49,6 +49,8 @@ export interface UnifiedGameContext {
     isMultiplayer: () => boolean;
     showEvalBar: () => boolean;
     allowBothSides: () => boolean;
+    /** Optional eval score getter - when provided, ChessBoardController uses this instead of evalEngineWorker */
+    getEvalScore?: () => number | null;
   };
 }
 

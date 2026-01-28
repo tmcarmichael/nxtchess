@@ -248,6 +248,8 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
       isMultiplayer: () => false,
       showEvalBar: engineEnabled, // Dynamic based on toggle
       allowBothSides: () => true,
+      // Provide eval score from analysis engine for the eval bar
+      getEvalScore: () => analysis()?.score ?? null,
     },
   };
 
