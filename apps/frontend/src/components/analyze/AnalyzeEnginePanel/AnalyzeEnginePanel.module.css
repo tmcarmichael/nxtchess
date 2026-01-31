@@ -30,8 +30,8 @@
 
 .engineInfo {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
+  align-items: baseline;
+  gap: var(--space-xs);
 }
 
 .engineName {

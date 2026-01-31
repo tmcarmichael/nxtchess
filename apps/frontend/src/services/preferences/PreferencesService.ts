@@ -1,18 +1,18 @@
-import type { Side } from '../../types/game';
+import type { SideSelection } from '../../types/game';
 
 const STORAGE_KEY = 'nxtchess:prefs';
 
 export interface GamePreferences {
   lastTimeMinutes: number;
   lastDifficultyLevel: number;
-  lastPlayerColor: Side;
+  lastPlayerColor: SideSelection;
   boardFlipped: boolean;
 }
 
 const DEFAULT_PREFERENCES: GamePreferences = {
   lastTimeMinutes: 5,
   lastDifficultyLevel: 4, // Medium
-  lastPlayerColor: 'w',
+  lastPlayerColor: 'random',
   boardFlipped: false,
 };
 
@@ -23,11 +23,12 @@ export const preferences = {
       if (!stored) return { ...DEFAULT_PREFERENCES };
       const parsed = JSON.parse(stored);
 
-      // Validate Side type
+      // Validate SideSelection type
       if (
         parsed.lastPlayerColor &&
         parsed.lastPlayerColor !== 'w' &&
-        parsed.lastPlayerColor !== 'b'
+        parsed.lastPlayerColor !== 'b' &&
+        parsed.lastPlayerColor !== 'random'
       ) {
         parsed.lastPlayerColor = DEFAULT_PREFERENCES.lastPlayerColor;
       }
