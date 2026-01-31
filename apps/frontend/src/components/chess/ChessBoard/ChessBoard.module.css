@@ -9,6 +9,8 @@
   align-items: center;
   height: auto;
   padding: var(--space-md);
+  /* Prevent browser from hijacking touch events during piece dragging */
+  touch-action: none;
 }
 
 .board {
@@ -25,7 +27,8 @@
   /* Subtle inner glow on the board edge */
   outline: 1px solid var(--border-subtle);
   outline-offset: -1px;
-  touch-action: manipulation;
+  /* Prevent browser from hijacking touch for scrolling/zooming during piece drag */
+  touch-action: none;
   /* SVG board background eliminates subpixel rendering gaps between squares */
   background-image: url('/assets/board.svg');
   background-size: cover;
@@ -47,6 +50,8 @@
   /* Prevent content from affecting square size */
   contain: strict;
   overflow: hidden;
+  /* Prevent browser from hijacking touch events when dragging across squares */
+  touch-action: none;
 }
 
 .square.light {
@@ -82,6 +87,8 @@
   z-index: 2000;
   /* Subtle inner shadow for depth */
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  /* Prevent interference with touch/drag events */
+  pointer-events: none;
 }
 
 .highlightDot:hover {
@@ -106,13 +113,16 @@
 }
 
 /* Dragged piece styling - size responsive to board */
+/* Uses transform for positioning (GPU accelerated) instead of top/left (causes layout) */
 .draggedPiece {
   position: fixed;
+  left: 0;
+  top: 0;
   width: calc(min(var(--board-max-size), calc(100vw - 2rem), calc(100vh - 200px)) / 8);
   height: calc(min(var(--board-max-size), calc(100vw - 2rem), calc(100vh - 200px)) / 8);
   pointer-events: none;
   z-index: 10000;
-  transform: translate(-50%, -50%);
+  /* Transform is set via inline style for GPU-accelerated positioning */
   will-change: transform;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
 }

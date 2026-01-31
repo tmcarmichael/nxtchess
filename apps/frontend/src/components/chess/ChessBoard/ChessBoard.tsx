@@ -133,8 +133,13 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const dragState = local.draggedPiece();
     if (!dragState) return null;
     const { x, y } = local.cursorPosition();
+    // Use transform for GPU-accelerated positioning (avoids layout thrashing on mobile)
+    // Chain two translates: first positions at cursor, second centers the piece (-50%)
     return (
-      <div class={styles.draggedPiece} style={{ top: `${y}px`, left: `${x}px` }}>
+      <div
+        class={styles.draggedPiece}
+        style={{ transform: `translate(${x}px, ${y}px) translate(-50%, -50%)` }}
+      >
         <Piece type={dragState.piece as PieceType} />
       </div>
     );
