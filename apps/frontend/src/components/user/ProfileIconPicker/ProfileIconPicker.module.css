@@ -38,18 +38,18 @@
     transform var(--transition-fast);
 }
 
-.iconButton:hover:not(.disabled) {
+.iconButton:hover:not(.iconButtonDisabled) {
   background: var(--surface-2);
   border-color: var(--border-subtle);
   transform: scale(1.05);
 }
 
-.iconButton.selected {
+.iconButton.iconButtonSelected {
   border-color: var(--accent);
   background: var(--surface-2);
 }
 
-.iconButton.disabled {
+.iconButton.iconButtonDisabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

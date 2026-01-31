@@ -15,7 +15,7 @@ const PlayControlPanel: ParentComponent = () => {
 
   return (
     <div>
-      <div class={styles.panel}>
+      <div class={styles.playControlPanel}>
         <ButtonPanel>
           <GamePanelButton onClick={handleResign} disabled={!derived.isPlaying()}>
             <span>Resign</span>

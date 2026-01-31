@@ -1,18 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   AnalyzeContainer - Obsidian Arena Theme
-   Container layout for analysis mode
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .rightPanelStack {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
   width: 100%;
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
 
 @media (max-width: 1023px) {
   .rightPanelStack {

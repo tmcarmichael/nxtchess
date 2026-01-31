@@ -56,7 +56,7 @@ const CommonSiteHeader: ParentComponent = () => {
                   [styles.navItem]: true,
                   [styles.navItemPrimary]: item.variant === 'primary',
                   [styles.navItemUpcoming]: item.variant === 'upcoming',
-                  [styles.tooltip]: !!item.tooltip,
+                  [styles.navItemTooltip]: !!item.tooltip,
                 }}
                 data-tooltip={item.tooltip ?? undefined}
                 onClick={() => {

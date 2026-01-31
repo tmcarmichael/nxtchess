@@ -18,7 +18,7 @@ const ChessPromotionModal: Component<PromotionModalProps> = (props) => {
   const handleEscapeKey = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       if (closeButtonRef) {
-        closeButtonRef.classList.add(styles.escapeActive);
+        closeButtonRef.classList.add(styles.closeButtonEscapeActive);
         setTimeout(() => {
           local.onClose();
         }, 150);
@@ -63,7 +63,7 @@ const ChessPromotionModal: Component<PromotionModalProps> = (props) => {
           onClick={local.onClose}
           aria-label="Close promotion modal"
         >
-          <span class={styles.closeIcon}>&times;</span>
+          <span class={styles.closeButtonIcon}>&times;</span>
         </button>
         <div class={styles.promotionOptions}>
           <For each={PROMOTION_PIECES}>{(piece) => renderPromotionImage(piece)}</For>

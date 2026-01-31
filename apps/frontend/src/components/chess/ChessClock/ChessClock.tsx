@@ -28,13 +28,13 @@ const ChessClock: Component<GameClockProps> = (props) => {
     <div
       class={styles.gameClock}
       classList={{
-        [styles.active]: props.isActive?.() ?? false,
-        [styles.lowTime]: isLowTime(),
-        [styles.critical]: isCritical(),
+        [styles.activeTurn]: props.isActive?.() ?? false,
+        [styles.lowTimeWarning]: isLowTime(),
+        [styles.criticalTimeWarning]: isCritical(),
       }}
     >
-      <span class={styles.turnIndicator} />
-      <span class={styles.time}>{formatTime(props.timeMs())}</span>
+      <span class={styles.activeTurnDot} />
+      <span class={styles.clockTimeDisplay}>{formatTime(props.timeMs())}</span>
     </div>
   );
 };

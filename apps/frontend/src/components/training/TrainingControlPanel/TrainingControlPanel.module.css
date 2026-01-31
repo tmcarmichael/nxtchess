@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   TrainingControlPanel - Obsidian Arena Theme
-   Training mode control panel with AI info
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.panel {
+.trainingControlPanel {
   display: flex;
   margin-top: var(--space-2xl);
   width: 100%;
@@ -19,7 +14,7 @@
   user-select: none;
 }
 
-.panelSection {
+.controlSection {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -29,11 +24,11 @@
   width: 100%;
 }
 
-.panelSection:last-child {
+.controlSection:last-child {
   border-bottom: none;
 }
 
-.sectionLabel {
+.controlSectionLabel {
   font-family: var(--font-display);
   font-size: 0.65rem;
   font-weight: 700;
@@ -43,17 +38,13 @@
   user-select: none;
 }
 
-.sectionValue {
+.controlSectionValue {
   font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-primary);
   user-select: none;
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Mode Toggle (Eval/Focus)
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .modeToggle {
   display: flex;
@@ -98,10 +89,6 @@
   box-shadow: 0 0 12px var(--accent-ghost);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Endgame Info Panel
-   ───────────────────────────────────────────────────────────────────────────── */
-
 .endgameInfo {
   display: flex;
   flex-direction: column;
@@ -113,13 +100,13 @@
   user-select: none;
 }
 
-.infoRow {
+.endgameInfoRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.infoLabel {
+.endgameInfoLabel {
   font-family: var(--font-body);
   font-size: 0.8rem;
   color: var(--text-secondary);
@@ -135,36 +122,30 @@
   user-select: none;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Tablet: Compact layout */
 @media (max-width: 1023px) {
-  .panel {
+  .trainingControlPanel {
     margin-top: var(--space-md);
     min-height: auto;
     padding: var(--space-md);
   }
 
-  .panelSection {
+  .controlSection {
     padding: var(--space-sm) 0;
   }
 }
 
-/* Mobile: Stack vertically */
 @media (max-width: 639px) {
-  .panel {
+  .trainingControlPanel {
     margin-top: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
     gap: var(--space-sm);
   }
 
-  .sectionLabel {
+  .controlSectionLabel {
     font-size: 0.6rem;
   }
 
-  .sectionValue {
+  .controlSectionValue {
     font-size: 0.9rem;
   }
 }

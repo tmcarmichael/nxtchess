@@ -1,8 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   UserSignInModal - Obsidian Arena Theme
-   Authentication modal with OAuth buttons
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -30,7 +25,6 @@
   animation: slideUp var(--transition-slow) ease-out forwards;
 }
 
-/* Accent line */
 .modalContent::before {
   content: '';
   position: absolute;
@@ -53,10 +47,6 @@
   letter-spacing: -0.02em;
   text-transform: uppercase;
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Close Button
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .closeButton {
   position: absolute;
@@ -86,14 +76,10 @@
   transform: rotate(90deg);
 }
 
-.closeIcon {
+.closeButtonIcon {
   font-size: 1.1rem;
   line-height: 1;
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Sign In Options
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .signInOptions {
   display: flex;
@@ -133,10 +119,6 @@
 .signInButton:active {
   transform: translateY(0);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Error Banner
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .errorBanner {
   margin: var(--space-md) 0;
@@ -180,11 +162,6 @@
   transform: scale(0.98);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Mobile: Bottom sheet style */
 @media (max-width: 639px) {
   .modalOverlay {
     align-items: flex-end;

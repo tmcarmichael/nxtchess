@@ -1,4 +1,4 @@
-.overlay {
+.engineOverlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -12,21 +12,20 @@
   border-radius: 4px;
 }
 
-.content {
+.engineOverlayContent {
   text-align: center;
   padding: 2rem;
   max-width: 320px;
 }
 
-/* Loading State */
-.loadingState {
+.engineLoadingState {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
 }
 
-.spinner {
+.engineLoadingSpinner {
   width: 48px;
   height: 48px;
   border: 3px solid rgba(255, 255, 255, 0.1);
@@ -41,20 +40,19 @@
   }
 }
 
-.title {
+.engineLoadingTitle {
   color: var(--text-primary, #ffffff);
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0;
 }
 
-.message {
+.engineLoadingMessage {
   color: var(--text-secondary, #a0a0a0);
   font-size: 0.9rem;
   margin: 0;
 }
 
-/* Error State */
 .errorState {
   display: flex;
   flex-direction: column;

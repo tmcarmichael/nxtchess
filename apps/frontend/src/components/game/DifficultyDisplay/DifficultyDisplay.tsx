@@ -8,7 +8,7 @@ interface DifficultyDisplayProps {
 
 const DifficultyDisplay: Component<DifficultyDisplayProps> = (props) => {
   return (
-    <div class={styles.difficulty}>
+    <div class={styles.difficultyDisplayContainer}>
       <span class={styles.difficultyLabel}>Difficulty: </span>
       <span>{` ${DIFFICULTY_VALUES_ELO[props.difficulty - 1]} ELO`}</span>
     </div>

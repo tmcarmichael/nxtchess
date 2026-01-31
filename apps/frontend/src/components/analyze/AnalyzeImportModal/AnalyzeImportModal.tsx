@@ -60,8 +60,8 @@ const AnalyzeImportModal: Component<AnalyzeImportModalProps> = (props) => {
       <div class={styles.tabContainer}>
         <button
           classList={{
-            [styles.tab]: true,
-            [styles.tabActive]: activeTab() === 'fen',
+            [styles.importTab]: true,
+            [styles.importTabActive]: activeTab() === 'fen',
           }}
           onClick={() => handleTabChange('fen')}
         >
@@ -69,8 +69,8 @@ const AnalyzeImportModal: Component<AnalyzeImportModalProps> = (props) => {
         </button>
         <button
           classList={{
-            [styles.tab]: true,
-            [styles.tabActive]: activeTab() === 'pgn',
+            [styles.importTab]: true,
+            [styles.importTabActive]: activeTab() === 'pgn',
           }}
           onClick={() => handleTabChange('pgn')}
         >
@@ -80,7 +80,7 @@ const AnalyzeImportModal: Component<AnalyzeImportModalProps> = (props) => {
 
       <Show when={activeTab() === 'fen'}>
         <div class={styles.inputSection}>
-          <label class={styles.label} for="fen-input">
+          <label class={styles.importFieldLabel} for="fen-input">
             Paste a FEN string to load a position
           </label>
           <input
@@ -104,7 +104,7 @@ const AnalyzeImportModal: Component<AnalyzeImportModalProps> = (props) => {
 
       <Show when={activeTab() === 'pgn'}>
         <div class={styles.inputSection}>
-          <label class={styles.label} for="pgn-input">
+          <label class={styles.importFieldLabel} for="pgn-input">
             Paste PGN moves to replay a game
           </label>
           <textarea

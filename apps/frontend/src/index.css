@@ -1,12 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   OBSIDIAN ARENA - NXT Chess Design System
-   A refined dark theme with monospace precision and electric accents
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Typography: Space Mono for display, Outfit for body
-   Self-hosted fonts for offline support and reliability */
-
-/* Outfit - Variable font (weights 100-900) */
 @font-face {
   font-family: 'Outfit';
   font-style: normal;
@@ -15,7 +6,6 @@
   src: url('/fonts/outfit-variable.woff2') format('woff2');
 }
 
-/* Space Mono - Regular */
 @font-face {
   font-family: 'Space Mono';
   font-style: normal;
@@ -24,7 +14,6 @@
   src: url('/fonts/space-mono-400.woff2') format('woff2');
 }
 
-/* Space Mono - Bold */
 @font-face {
   font-family: 'Space Mono';
   font-style: normal;
@@ -33,54 +22,43 @@
   src: url('/fonts/space-mono-700.woff2') format('woff2');
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   CSS Custom Properties - Design Tokens
-   ───────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* ═══ Safe Area Insets (iOS notch support) ═══ */
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
 
-  /* ═══ Typography ═══ */
   --font-display: 'Space Mono', 'SF Mono', 'Fira Code', monospace;
   --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* ═══ Accent Color System - Electric Teal ═══ */
   --accent: #00ffd1;
   --accent-bright: #33ffd9;
   --accent-muted: rgba(0, 255, 209, 0.4);
   --accent-subtle: rgba(0, 255, 209, 0.15);
   --accent-ghost: rgba(0, 255, 209, 0.08);
 
-  /* ═══ Surface Elevation System ═══ */
-  --surface-0: #0a0a0a; /* Deepest: page background */
-  --surface-1: #111111; /* Recessed panels */
-  --surface-2: #181818; /* Default cards, modals */
-  --surface-3: #222222; /* Elevated: hover states */
-  --surface-4: #2a2a2a; /* Highest: active states, tooltips */
+  --surface-0: #0a0a0a;
+  --surface-1: #111111;
+  --surface-2: #181818;
+  --surface-3: #222222;
+  --surface-4: #2a2a2a;
 
-  /* ═══ Border System ═══ */
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-default: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.16);
   --border-accent: rgba(0, 255, 209, 0.3);
 
-  /* ═══ Text Colors ═══ */
   --text-primary: #f0f0f0;
   --text-secondary: #a0a0a0;
   --text-muted: #666666;
   --text-accent: var(--accent);
 
-  /* ═══ Semantic Colors ═══ */
   --success: #4ade80;
   --success-muted: rgba(74, 222, 128, 0.3);
   --error: #f87171;
   --error-muted: rgba(248, 113, 113, 0.3);
   --warning: #fbbf24;
 
-  /* ═══ Chess Board Colors ═══ */
   --board-light: #e8d5b5;
   --board-dark: #b08968;
   --board-selected: rgba(0, 255, 209, 0.35);
@@ -90,7 +68,6 @@
   --board-check: rgba(248, 113, 113, 0.5);
   --board-premove: rgba(235, 100, 120, 0.65);
 
-  /* ═══ Shadow System (light from top-left) ═══ */
   --shadow-xs: 1px 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-sm: 2px 2px 4px rgba(0, 0, 0, 0.35), -1px -1px 2px rgba(255, 255, 255, 0.02);
   --shadow-md: 4px 4px 12px rgba(0, 0, 0, 0.45), -2px -2px 4px rgba(255, 255, 255, 0.02);
@@ -99,13 +76,11 @@
   --shadow-glow: 0 0 30px rgba(0, 255, 209, 0.15);
   --shadow-board: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
 
-  /* ═══ Transitions ═══ */
   --transition-fast: 0.15s ease;
   --transition-base: 0.2s ease;
   --transition-slow: 0.3s ease;
   --transition-spring: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* ═══ Spacing Scale ═══ */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -113,26 +88,20 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
 
-  /* ═══ Border Radius ═══ */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 10px;
   --radius-xl: 16px;
   --radius-full: 9999px;
 
-  /* ═══ Layout Dimensions ═══ */
   --header-height: 4rem;
   --header-height-mobile: 3.5rem;
   --panel-width: 360px;
   --touch-target-min: 44px;
   --board-max-size: 720px;
-  /* Clock row height: padding (2*0.5rem) + font (~1.5rem) + border (2px) + margin (0.25rem) */
+
   --clock-row-height: calc(2.75rem + 2px);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Spacing Adjustments
-   ───────────────────────────────────────────────────────────────────────────── */
 
 @media (max-width: 639px) {
   :root {
@@ -143,10 +112,6 @@
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Touch Device Optimizations
-   ───────────────────────────────────────────────────────────────────────────── */
-
 @media (pointer: coarse) {
   button,
   [role='button'],
@@ -154,10 +119,6 @@
     min-height: var(--touch-target-min);
   }
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Prevent Text Selection on Interactive Elements
-   ───────────────────────────────────────────────────────────────────────────── */
 
 button,
 [role='button'],
@@ -173,9 +134,6 @@ label {
   user-select: none;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Global Reset & Base Styles
-   ───────────────────────────────────────────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -205,11 +163,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Ambient Background Effects
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Subtle top-down lighting */
 body::before {
   content: '';
   position: fixed;
@@ -225,7 +178,6 @@ body::before {
   z-index: 0;
 }
 
-/* Animated film grain overlay */
 body::after {
   content: '';
   position: fixed;
@@ -256,11 +208,6 @@ body::after {
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Typography Utilities
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Display/heading text - technical monospace aesthetic */
 h1,
 h2,
 h3,
@@ -274,7 +221,6 @@ h6,
   line-height: 1.2;
 }
 
-/* Body text */
 p,
 span,
 a,
@@ -286,23 +232,14 @@ label {
   font-family: var(--font-body);
 }
 
-/* Ensure user-select is off for interactive game elements */
 .no-select {
   user-select: none;
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Focus States (Accessibility)
-   ───────────────────────────────────────────────────────────────────────────── */
 
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Scrollbar Styling
-   ───────────────────────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -322,18 +259,10 @@ label {
   background: var(--text-muted);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Selection Styling
-   ───────────────────────────────────────────────────────────────────────────── */
-
 ::selection {
   background: var(--accent-muted);
   color: var(--text-primary);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Keyframe Animations
-   ───────────────────────────────────────────────────────────────────────────── */
 
 @keyframes fadeIn {
   from {
@@ -406,7 +335,6 @@ label {
   }
 }
 
-/* Clock urgency animation */
 @keyframes clockUrgent {
   0%,
   100% {
@@ -417,7 +345,6 @@ label {
   }
 }
 
-/* Selection pulse for knight/piece selection */
 @keyframes selectionPulse {
   0%,
   100% {
@@ -430,10 +357,6 @@ label {
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Reduced Motion Preferences (Accessibility)
-   ───────────────────────────────────────────────────────────────────────────── */
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -444,10 +367,6 @@ label {
     scroll-behavior: auto !important;
   }
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Screen Reader Only (Accessibility)
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .sr-only {
   position: absolute;

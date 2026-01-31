@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   AnalyzeEnginePanel - Obsidian Arena Theme
-   Engine analysis panel with toggle and top lines display
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.panel {
+.enginePanelRoot {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -15,11 +10,7 @@
   user-select: none;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Header - Engine name, depth, and toggle
-   ───────────────────────────────────────────────────────────────────────────── */
-
-.header {
+.enginePanelHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -48,10 +39,6 @@
   font-size: 0.7rem;
   color: var(--text-muted);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Toggle Switch
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .toggleButton {
   position: relative;
@@ -90,10 +77,6 @@
   transform: translateX(16px);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Lines Display
-   ───────────────────────────────────────────────────────────────────────────── */
-
 .linesContainer {
   display: flex;
   flex-direction: column;
@@ -101,7 +84,7 @@
   min-height: 80px;
 }
 
-.line {
+.analysisLine {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
@@ -113,11 +96,11 @@
   transition: background var(--transition-fast);
 }
 
-.line.clickable {
+.analysisLine.analysisLineClickable {
   cursor: pointer;
 }
 
-.line.clickable:hover {
+.analysisLine.analysisLineClickable:hover {
   background: var(--surface-3);
 }
 
@@ -152,10 +135,6 @@
   white-space: nowrap;
   flex: 1;
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   States
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .loadingState,
 .disabledState {
@@ -193,16 +172,12 @@
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
 @media (max-width: 1023px) {
-  .panel {
+  .enginePanelRoot {
     padding: var(--space-sm);
   }
 
-  .line {
+  .analysisLine {
     padding: var(--space-2xs) var(--space-xs);
     font-size: 0.75rem;
   }
@@ -221,7 +196,7 @@
     min-height: 60px;
   }
 
-  .line {
+  .analysisLine {
     gap: var(--space-xs);
   }
 

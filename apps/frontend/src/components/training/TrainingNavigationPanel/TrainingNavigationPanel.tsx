@@ -75,8 +75,8 @@ const TrainingNavigationPanel: Component = () => {
         {props.whiteMove && (
           <span
             classList={{
-              [styles.move]: true,
-              [styles.active]: whiteActive(),
+              [styles.moveCell]: true,
+              [styles.moveCellActive]: whiteActive(),
               [getQualityClass(props.whiteIndex)]: !!getQualityClass(props.whiteIndex),
             }}
             onClick={() => handleJumpToMoveIndex(props.whiteIndex)}
@@ -87,8 +87,8 @@ const TrainingNavigationPanel: Component = () => {
         {props.blackMove && (
           <span
             classList={{
-              [styles.move]: true,
-              [styles.active]: blackActive(),
+              [styles.moveCell]: true,
+              [styles.moveCellActive]: blackActive(),
               [getQualityClass(props.blackIndex)]: !!getQualityClass(props.blackIndex),
             }}
             onClick={() => handleJumpToMoveIndex(props.blackIndex)}
@@ -110,7 +110,7 @@ const TrainingNavigationPanel: Component = () => {
 
   return (
     <div class={styles.navigationPanel}>
-      <div class={styles.panelHeader}>Move History</div>
+      <div class={styles.navigationPanelHeader}>Move History</div>
       <div class={styles.movesContainer} ref={movesContainerRef}>
         <div class={styles.movesGrid}>
           <For each={movesRows()}>

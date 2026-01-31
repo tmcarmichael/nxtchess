@@ -58,8 +58,8 @@ const ProfileIconPicker: Component<ProfileIconPickerProps> = (props) => {
               type="button"
               class={styles.iconButton}
               classList={{
-                [styles.selected]: userState.profileIcon === icon.id,
-                [styles.disabled]: isLoading(),
+                [styles.iconButtonSelected]: userState.profileIcon === icon.id,
+                [styles.iconButtonDisabled]: isLoading(),
               }}
               onClick={() => handleIconSelect(icon.id)}
               disabled={isLoading()}

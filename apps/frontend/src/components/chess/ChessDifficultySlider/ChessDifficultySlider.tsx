@@ -12,14 +12,14 @@ const ChessDifficultySlider: Component<ChessDifficultySliderProps> = (props) => 
   const showElo = () => props.showElo !== false;
 
   return (
-    <div class={styles.settingRow}>
-      <label class={styles.rangeSliderLabel}>
+    <div class={styles.difficultySettingRow}>
+      <label class={styles.difficultySliderLabel}>
         Difficulty:&nbsp;&nbsp;&nbsp;{DIFFICULTY_VALUES_LEVEL[props.difficultyIndex()]}
         {showElo() && ` (ELO ${DIFFICULTY_VALUES_ELO[props.difficultyIndex()]})`}
       </label>
-      <div class={styles.rangeSliderContainer}>
+      <div class={styles.difficultySliderContainer}>
         <input
-          class={styles.rangeSlider}
+          class={styles.difficultySliderInput}
           type="range"
           min="0"
           max={DIFFICULTY_VALUES_LEVEL.length - 1}

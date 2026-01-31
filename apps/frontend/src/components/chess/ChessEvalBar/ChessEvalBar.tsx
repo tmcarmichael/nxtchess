@@ -56,8 +56,8 @@ const ChessEvalBar: Component<EvalBarProps> = (props) => {
 
   return (
     <div class={styles.evalBarContainer}>
-      <div class={styles.barBackground}>
-        <div class={styles.barFill} style={{ '--fill-percent': `${blackPortion()}%` }} />
+      <div class={styles.evalBarTrack}>
+        <div class={styles.evalBarFill} style={{ '--fill-percent': `${blackPortion()}%` }} />
       </div>
       <div class={styles.evalScore}>
         <Show when={props.evalScore !== null} fallback="--">

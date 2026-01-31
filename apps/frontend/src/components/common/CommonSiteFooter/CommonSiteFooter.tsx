@@ -30,7 +30,7 @@ const links = [
 
 const CommonSiteFooter: Component = () => {
   return (
-    <footer class={styles.footer}>
+    <footer class={styles.footerRoot}>
       <ul class={styles.footerList}>
         <For each={links}>
           {(link) => (

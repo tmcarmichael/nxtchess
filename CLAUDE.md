@@ -207,6 +207,10 @@ Detects device capabilities at runtime:
 
 `GameSession` executes commands: `APPLY_MOVE`, `RESIGN`, `TIMEOUT`, `NAVIGATE_HISTORY`. `SessionManager` (singleton) manages concurrent sessions with `BoardCache` for O(1) legal move lookups.
 
+### CSS Style Guidelines
+
+**No comments in CSS files.** Use expressive, readable class names and logical property grouping to convey intent instead of comments. Class names should be self-documenting (e.g., `.boardActiveTurnGlow` not `.glow` with a comment). Use blank lines to visually separate property groups instead of section divider comments.
+
 ### SolidJS Patterns
 
 - `createStore()` with `batch()` for atomic multi-property updates

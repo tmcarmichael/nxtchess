@@ -55,7 +55,7 @@ const NetworkStatusBanner: Component = () => {
   return (
     <Show when={showBanner()}>
       <div
-        class={styles.banner}
+        class={styles.networkBannerRoot}
         classList={{
           [styles.offline]: !isOnline(),
           [styles.online]: isOnline(),
@@ -63,8 +63,8 @@ const NetworkStatusBanner: Component = () => {
         role="status"
         aria-live="polite"
       >
-        <span class={styles.icon}>{isOnline() ? '✓' : '!'}</span>
-        <span class={styles.message}>
+        <span class={styles.statusIcon}>{isOnline() ? '✓' : '!'}</span>
+        <span class={styles.statusMessage}>
           {isOnline() ? 'Back online' : 'You are offline - some features may be unavailable'}
         </span>
         <Show when={!isOnline()}>

@@ -18,7 +18,7 @@ const ChessPiece: Component<GamePieceProps> = (props: GamePieceProps) => {
     <img
       src={pieceSrc}
       alt={local.type}
-      class={styles.piece}
+      class={styles.chessPiece}
       draggable={local.draggable}
       onDragStart={local.onDragStart}
       onTouchStart={local.onTouchStart}

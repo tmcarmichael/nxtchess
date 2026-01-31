@@ -53,8 +53,8 @@ const PlayNavigationPanel: Component = () => {
         {props.whiteMove && (
           <span
             classList={{
-              [styles.move]: true,
-              [styles.active]: whiteActive(),
+              [styles.moveCell]: true,
+              [styles.moveCellActive]: whiteActive(),
             }}
             onClick={() => handleJumpToMoveIndex(props.whiteIndex)}
           >
@@ -64,8 +64,8 @@ const PlayNavigationPanel: Component = () => {
         {props.blackMove && (
           <span
             classList={{
-              [styles.move]: true,
-              [styles.active]: blackActive(),
+              [styles.moveCell]: true,
+              [styles.moveCellActive]: blackActive(),
             }}
             onClick={() => handleJumpToMoveIndex(props.blackIndex)}
           >
@@ -86,7 +86,7 @@ const PlayNavigationPanel: Component = () => {
 
   return (
     <div class={styles.navigationPanel}>
-      <div class={styles.panelHeader}>Move History</div>
+      <div class={styles.navigationPanelHeader}>Move History</div>
       <div class={styles.movesContainer} ref={movesContainerRef}>
         <div class={styles.movesGrid}>
           <For each={movesRows()}>

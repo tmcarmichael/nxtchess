@@ -53,8 +53,8 @@ const AnalyzeNavigationPanel: Component = () => {
         {props.whiteMove && (
           <span
             classList={{
-              [styles.move]: true,
-              [styles.active]: whiteActive(),
+              [styles.moveCell]: true,
+              [styles.moveActive]: whiteActive(),
             }}
             onClick={() => handleJumpToMoveIndex(props.whiteIndex)}
           >
@@ -64,8 +64,8 @@ const AnalyzeNavigationPanel: Component = () => {
         {props.blackMove && (
           <span
             classList={{
-              [styles.move]: true,
-              [styles.active]: blackActive(),
+              [styles.moveCell]: true,
+              [styles.moveActive]: blackActive(),
             }}
             onClick={() => handleJumpToMoveIndex(props.blackIndex)}
           >
@@ -86,7 +86,7 @@ const AnalyzeNavigationPanel: Component = () => {
 
   return (
     <div class={styles.navigationPanel}>
-      <div class={styles.panelHeader}>Move History</div>
+      <div class={styles.navigationPanelHeader}>Move History</div>
       <div class={styles.movesContainer} ref={movesContainerRef}>
         <div class={styles.movesGrid}>
           <For each={movesRows()}>

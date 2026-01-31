@@ -19,7 +19,7 @@ const PlayResignModal: Component<ResignModalProps> = (props) => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       if (closeButtonRef) {
-        closeButtonRef.classList.add(styles.escapeActive);
+        closeButtonRef.classList.add(styles.closeButtonEscapeActive);
         setTimeout(() => {
           local.onClose();
         }, 150);
@@ -46,10 +46,10 @@ const PlayResignModal: Component<ResignModalProps> = (props) => {
           onClick={local.onClose}
           aria-label="Close"
         >
-          <span class={styles.closeIcon}>&times;</span>
+          <span class={styles.closeButtonIcon}>&times;</span>
         </button>
         <h1>{getSideLabel()} resigned</h1>
-        <div class={styles.actions}>
+        <div class={styles.resignModalActions}>
           <button onClick={local.onReplay}>Play Again</button>
           <button onClick={local.onHome}>Home</button>
         </div>

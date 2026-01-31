@@ -62,7 +62,7 @@ const UserSignInModal: Component<SignInModalProps> = (props) => {
           }}
           aria-label="Close"
         >
-          <span class={styles.closeIcon}>&times;</span>
+          <span class={styles.closeButtonIcon}>&times;</span>
         </button>
         <h2>Sign In</h2>
         {searchParams.error && (

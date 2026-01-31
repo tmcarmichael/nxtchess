@@ -1,8 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   GameInfoPanel - Obsidian Arena Theme
-   Game status and information display
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .infoPanel {
   display: flex;
   flex-direction: column;

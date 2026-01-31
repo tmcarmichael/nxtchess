@@ -1,8 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   ChessPromotionModal - Obsidian Arena Theme
-   Pawn promotion selection modal
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -29,7 +24,6 @@
   max-width: 400px;
 }
 
-/* Accent line */
 .modalContent::before {
   content: '';
   position: absolute;
@@ -110,23 +104,18 @@
 
 .closeButton:hover,
 .closeButton:focus,
-.closeButton.escapeActive {
+.closeButton.closeButtonEscapeActive {
   color: var(--text-primary);
   background: var(--surface-4);
   transform: rotate(90deg);
   outline: none;
 }
 
-.closeIcon {
+.closeButtonIcon {
   font-size: 1.1rem;
   line-height: 1;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Mobile: Bottom sheet style */
 @media (max-width: 639px) {
   .modalOverlay {
     align-items: flex-end;

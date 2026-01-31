@@ -1,8 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   CommonSiteHeader - Obsidian Arena Theme
-   Fixed navigation with monospace branding and refined interactions
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .headerRoot {
   position: fixed;
   top: 0;
@@ -22,10 +17,6 @@
   padding-right: max(var(--space-xl), var(--safe-area-right));
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Logo / Brand
-   ───────────────────────────────────────────────────────────────────────────── */
-
 .headerLeft {
   font-family: var(--font-display);
   font-size: 1.5rem;
@@ -41,10 +32,6 @@
 .headerLeft:hover {
   color: var(--accent);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Navigation Center
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .headerCenter {
   display: flex;
@@ -65,7 +52,6 @@
   transition: color var(--transition-fast);
 }
 
-/* Vertical divider between nav items */
 .navItem + .navItem {
   margin-left: clamp(1rem, 3vw, 2rem);
   padding-left: clamp(1rem, 3vw, 2rem);
@@ -90,7 +76,6 @@
   color: var(--text-primary);
 }
 
-/* Underline indicator */
 .navItem::after {
   content: '';
   position: absolute;
@@ -109,7 +94,6 @@
   transform-origin: left;
 }
 
-/* Primary nav items (Play, Training) */
 .navItemPrimary {
   color: var(--accent);
   font-size: 1.1rem;
@@ -120,7 +104,6 @@
   text-shadow: 0 0 6px rgba(var(--accent-rgb, 94, 234, 212), 0.4);
 }
 
-/* Upcoming nav items (Tools, Database) */
 .navItemUpcoming {
   opacity: 0.45;
   cursor: default;
@@ -136,7 +119,6 @@
   display: none;
 }
 
-/* "Soon" label for upcoming items - uses box-shadow for divider since ::before is taken */
 .navItemUpcoming::before {
   content: 'soon';
   position: absolute;
@@ -150,12 +132,10 @@
   opacity: 0.7;
 }
 
-/* Divider for upcoming items (can't use ::before, so use box-shadow) */
 .navItem + .navItemUpcoming {
   box-shadow: -2px 0 0 0 var(--border-default);
 }
 
-/* Override the ::before divider for upcoming items */
 .navItem + .navItemUpcoming::before {
   content: 'soon';
   position: absolute;
@@ -168,7 +148,6 @@
   background: none;
 }
 
-/* Active nav state */
 .navItem.active {
   color: var(--accent);
 }
@@ -176,10 +155,6 @@
 .navItem.active::after {
   transform: scaleX(1);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   User Section (Right)
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .headerRight {
   display: flex;
@@ -233,10 +208,6 @@
   color: var(--error);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Menu Button (Hamburger)
-   ───────────────────────────────────────────────────────────────────────────── */
-
 .mobileMenuButton {
   display: flex;
   width: 2.5rem;
@@ -273,15 +244,11 @@
   transition: transform var(--transition-fast);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Tooltip
-   ───────────────────────────────────────────────────────────────────────────── */
-
-.tooltip {
+.navItemTooltip {
   position: relative;
 }
 
-.tooltip:hover::after {
+.navItemTooltip:hover::after {
   content: attr(data-tooltip);
   position: absolute;
   background: var(--surface-3);
@@ -300,10 +267,6 @@
   box-shadow: var(--shadow-md);
   animation: fadeIn var(--transition-fast) ease-out;
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Sign In Button (when not logged in)
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .signInButton {
   font-family: var(--font-display);
@@ -327,18 +290,12 @@
   color: var(--surface-0);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Tablet: Hide center nav */
 @media (max-width: 1023px) {
   .headerCenter {
     display: none;
   }
 }
 
-/* Mobile: Compact header */
 @media (max-width: 639px) {
   .headerRoot {
     height: calc(var(--header-height-mobile) + var(--safe-area-top));

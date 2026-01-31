@@ -14,7 +14,7 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       if (closeButtonRef) {
-        closeButtonRef.classList.add(styles.escapeActive);
+        closeButtonRef.classList.add(styles.closeButtonEscapeActive);
         setTimeout(() => {
           props.onClose();
         }, 150);
@@ -41,7 +41,7 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
           onClick={props.onClose}
           aria-label="Close"
         >
-          <span class={styles.closeIcon}>&times;</span>
+          <span class={styles.closeButtonIcon}>&times;</span>
         </button>
         <h2>{props.title}</h2>
         {props.children}

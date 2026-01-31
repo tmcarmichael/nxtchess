@@ -46,7 +46,7 @@ const TrainingControlPanel: ParentComponent = () => {
   };
 
   return (
-    <div class={styles.panel}>
+    <div class={styles.trainingControlPanel}>
       <div class={styles.modeToggle}>
         <button
           classList={{
@@ -90,17 +90,17 @@ const TrainingControlPanel: ParentComponent = () => {
       </Show>
       <Show when={chess.state.trainingGamePhase === 'endgame'}>
         <div class={styles.endgameInfo}>
-          <div class={styles.infoRow}>
-            <span class={styles.infoLabel}>Playing as:</span>
+          <div class={styles.endgameInfoRow}>
+            <span class={styles.endgameInfoLabel}>Playing as:</span>
             <span>{chess.state.playerColor === 'w' ? 'White' : 'Black'}</span>
           </div>
-          <div class={styles.infoRow}>
-            <span class={styles.infoLabel}>Difficulty:</span>
+          <div class={styles.endgameInfoRow}>
+            <span class={styles.endgameInfoLabel}>Difficulty:</span>
             <span>{getDifficultyLabel(engine.state.difficulty)}</span>
           </div>
           <Show when={chess.state.trainingTheme}>
-            <div class={styles.infoRow}>
-              <span class={styles.infoLabel}>Theme:</span>
+            <div class={styles.endgameInfoRow}>
+              <span class={styles.endgameInfoLabel}>Theme:</span>
               <span class={styles.themeValue}>{getThemeLabel(chess.state.trainingTheme!)}</span>
             </div>
           </Show>

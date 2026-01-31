@@ -88,15 +88,15 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
   return (
     <ChessGameModal title="Train" onClose={local.onClose}>
       {/* Game Phase */}
-      <div class={styles.settingRow}>
-        <label class={styles.label}>Game Phase:</label>
-        <div class={styles.buttonGroup}>
+      <div class={styles.trainingSettingRow}>
+        <label class={styles.settingLabel}>Game Phase:</label>
+        <div class={styles.gamePhaseButtonGroup}>
           <For each={GAME_PHASES}>
             {(phase) => (
               <button
                 classList={{
-                  [styles.toggleButton]: true,
-                  [styles.selectedToggle]: phase.value === localGamePhase(),
+                  [styles.gamePhaseToggleButton]: true,
+                  [styles.gamePhaseToggleActive]: phase.value === localGamePhase(),
                 }}
                 disabled={phase.value === 'middlegame'}
                 onClick={() => setLocalGamePhase(phase.value)}
@@ -109,14 +109,16 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
       </div>
 
       {/* Difficulty */}
-      <div class={styles.settingRow}>
-        <label class={styles.label}>Difficulty:</label>
-        <div class={styles.optionGrid}>
+      <div class={styles.trainingSettingRow}>
+        <label class={styles.settingLabel}>Difficulty:</label>
+        <div class={styles.settingOptionGrid}>
           <For each={DIFFICULTY_OPTIONS}>
             {(option) => (
               <button
-                class={styles.optionButton}
-                classList={{ [styles.optionButtonActive]: localDifficulty() === option.level }}
+                class={styles.settingOptionButton}
+                classList={{
+                  [styles.settingOptionButtonActive]: localDifficulty() === option.level,
+                }}
                 onClick={() => setLocalDifficulty(option.level)}
               >
                 {option.label}
@@ -127,21 +129,23 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
       </div>
 
       {/* Play As */}
-      <div class={styles.settingRow}>
-        <label class={styles.label}>Play As:</label>
+      <div class={styles.trainingSettingRow}>
+        <label class={styles.settingLabel}>Play As:</label>
         <ChessSideSelector selectedSide={localPlayerColor} onSideChange={setLocalPlayerColor} />
       </div>
 
       {/* Endgame Type - for endgame */}
       <Show when={localGamePhase() === 'endgame'}>
-        <div class={styles.settingRow}>
-          <label class={styles.label}>Endgame Type:</label>
-          <div class={styles.optionGrid}>
+        <div class={styles.trainingSettingRow}>
+          <label class={styles.settingLabel}>Endgame Type:</label>
+          <div class={styles.settingOptionGrid}>
             <For each={ENDGAME_THEMES}>
               {(theme) => (
                 <button
-                  class={styles.optionButton}
-                  classList={{ [styles.optionButtonActive]: localEndgameTheme() === theme.value }}
+                  class={styles.settingOptionButton}
+                  classList={{
+                    [styles.settingOptionButtonActive]: localEndgameTheme() === theme.value,
+                  }}
                   onClick={() => setLocalEndgameTheme(theme.value)}
                 >
                   {theme.label}

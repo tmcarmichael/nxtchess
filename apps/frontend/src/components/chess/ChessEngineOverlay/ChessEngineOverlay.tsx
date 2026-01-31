@@ -11,13 +11,13 @@ interface ChessEngineOverlayProps {
 const ChessEngineOverlay: Component<ChessEngineOverlayProps> = (props) => {
   return (
     <Show when={props.isLoading || props.hasError}>
-      <div class={styles.overlay}>
-        <div class={styles.content}>
+      <div class={styles.engineOverlay}>
+        <div class={styles.engineOverlayContent}>
           <Show when={props.isLoading && !props.hasError}>
-            <div class={styles.loadingState}>
-              <div class={styles.spinner} />
-              <h3 class={styles.title}>Initializing Chess Engine</h3>
-              <p class={styles.message}>Loading Stockfish...</p>
+            <div class={styles.engineLoadingState}>
+              <div class={styles.engineLoadingSpinner} />
+              <h3 class={styles.engineLoadingTitle}>Initializing Chess Engine</h3>
+              <p class={styles.engineLoadingMessage}>Loading Stockfish...</p>
             </div>
           </Show>
 

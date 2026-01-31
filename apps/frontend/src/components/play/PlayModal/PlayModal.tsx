@@ -164,8 +164,8 @@ const PlayModal: Component<PlayModalProps> = (props) => {
   return (
     <ChessGameModal title={getModalTitle()} onClose={local.onClose}>
       {/* Opponent Type Selector */}
-      <div class={styles.settingRow}>
-        <label class={styles.label}>Opponent:</label>
+      <div class={styles.playSettingRow}>
+        <label class={styles.settingLabel}>Opponent:</label>
         <div class={styles.opponentSelector}>
           <button
             class={styles.opponentButton}
@@ -186,7 +186,7 @@ const PlayModal: Component<PlayModalProps> = (props) => {
 
       {/* Human: Create/Join selector */}
       <Show when={opponentType() === 'human'}>
-        <div class={styles.settingRow}>
+        <div class={styles.playSettingRow}>
           <div class={styles.modeSelector}>
             <button
               class={styles.modeButton}
@@ -214,8 +214,8 @@ const PlayModal: Component<PlayModalProps> = (props) => {
 
       {/* Join Game: Game ID input */}
       <Show when={opponentType() === 'human' && multiplayerMode() === 'join'}>
-        <div class={styles.settingRow}>
-          <label class={styles.label}>Game ID:</label>
+        <div class={styles.playSettingRow}>
+          <label class={styles.settingLabel}>Game ID:</label>
           <input
             type="text"
             class={styles.gameIdInput}
@@ -227,21 +227,21 @@ const PlayModal: Component<PlayModalProps> = (props) => {
             }}
           />
           <Show when={joinError()}>
-            <p class={styles.errorText}>{joinError()}</p>
+            <p class={styles.modalErrorText}>{joinError()}</p>
           </Show>
         </div>
       </Show>
 
       {/* AI: Time Control buttons */}
       <Show when={opponentType() === 'ai'}>
-        <div class={styles.settingRow}>
-          <label class={styles.label}>Time Control:</label>
-          <div class={styles.optionGrid}>
+        <div class={styles.playSettingRow}>
+          <label class={styles.settingLabel}>Time Control:</label>
+          <div class={styles.settingOptionGrid}>
             <For each={TIME_OPTIONS}>
               {(minutes) => (
                 <button
-                  class={styles.optionButton}
-                  classList={{ [styles.optionButtonActive]: timeMinutes() === minutes }}
+                  class={styles.settingOptionButton}
+                  classList={{ [styles.settingOptionButtonActive]: timeMinutes() === minutes }}
                   onClick={() => setTimeMinutes(minutes)}
                 >
                   {minutes} min
@@ -254,14 +254,14 @@ const PlayModal: Component<PlayModalProps> = (props) => {
 
       {/* Human Create: Time control buttons with increments */}
       <Show when={opponentType() === 'human' && multiplayerMode() === 'create'}>
-        <div class={styles.settingRow}>
-          <label class={styles.label}>Time Control:</label>
-          <div class={styles.optionGrid}>
+        <div class={styles.playSettingRow}>
+          <label class={styles.settingLabel}>Time Control:</label>
+          <div class={styles.settingOptionGrid}>
             <For each={HUMAN_TIME_OPTIONS}>
               {(option, index) => (
                 <button
-                  class={styles.optionButton}
-                  classList={{ [styles.optionButtonActive]: humanTimeIndex() === index() }}
+                  class={styles.settingOptionButton}
+                  classList={{ [styles.settingOptionButtonActive]: humanTimeIndex() === index() }}
                   onClick={() => setHumanTimeIndex(index())}
                 >
                   {option.label}
@@ -274,14 +274,16 @@ const PlayModal: Component<PlayModalProps> = (props) => {
 
       {/* AI: Difficulty buttons */}
       <Show when={opponentType() === 'ai'}>
-        <div class={styles.settingRow}>
-          <label class={styles.label}>Difficulty:</label>
-          <div class={styles.optionGrid}>
+        <div class={styles.playSettingRow}>
+          <label class={styles.settingLabel}>Difficulty:</label>
+          <div class={styles.settingOptionGrid}>
             <For each={DIFFICULTY_OPTIONS}>
               {(option) => (
                 <button
-                  class={styles.optionButton}
-                  classList={{ [styles.optionButtonActive]: difficultyLevel() === option.level }}
+                  class={styles.settingOptionButton}
+                  classList={{
+                    [styles.settingOptionButtonActive]: difficultyLevel() === option.level,
+                  }}
                   onClick={() => setDifficultyLevel(option.level)}
                 >
                   {option.label}
@@ -294,8 +296,8 @@ const PlayModal: Component<PlayModalProps> = (props) => {
 
       {/* Create game: Side Selector */}
       <Show when={opponentType() === 'ai' || multiplayerMode() === 'create'}>
-        <div class={styles.settingRow}>
-          <label class={styles.label}>Play As:</label>
+        <div class={styles.playSettingRow}>
+          <label class={styles.settingLabel}>Play As:</label>
           <ChessSideSelector selectedSide={localPlayerColor} onSideChange={setLocalPlayerColor} />
         </div>
       </Show>

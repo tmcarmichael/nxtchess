@@ -1,24 +1,18 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   ChessEvalBar - Obsidian Arena Theme
-   Position evaluation display with refined visuals
-   Anchored to chessboard - height matches board dynamically
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .evalBarContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  /* Match board height using same calculation */
+
   height: min(var(--board-max-size), calc(100vw - 2rem), calc(100vh - 200px));
   position: relative;
-  /* Align with board top (account for boardContainer padding) */
+
   margin-top: var(--space-md);
-  /* Sit flush against the board */
+
   margin-right: calc(var(--space-md) * -1);
 }
 
-.barBackground {
+.evalBarTrack {
   position: relative;
   width: 16px;
   height: 100%;
@@ -31,7 +25,7 @@
   flex-shrink: 0;
 }
 
-.barFill {
+.evalBarFill {
   position: absolute;
   top: 0;
   width: 100%;
@@ -55,26 +49,18 @@
   pointer-events: none;
 }
 
-/* Positive evaluation */
-.evalScore.positive {
+.evalScore.scorePositive {
   color: var(--text-primary);
 }
 
-/* Negative evaluation */
-.evalScore.negative {
+.evalScore.scoreNegative {
   color: var(--text-muted);
 }
 
-/* Mate score */
-.evalScore.mate {
+.evalScore.scoreMate {
   color: var(--accent);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Tablet portrait: Horizontal bar below board */
 @media (max-width: 1023px) {
   .evalBarContainer {
     flex-direction: row;
@@ -86,7 +72,7 @@
     margin-right: 0;
   }
 
-  .barBackground {
+  .evalBarTrack {
     width: 100%;
     height: 16px;
     background: linear-gradient(90deg, var(--surface-0) 0%, var(--text-primary) 100%);
@@ -94,7 +80,7 @@
     border: 1px solid var(--border-subtle);
   }
 
-  .barFill {
+  .evalBarFill {
     top: auto;
     left: 0;
     width: var(--fill-percent, 50%);
@@ -111,7 +97,6 @@
   }
 }
 
-/* Tablet landscape: Vertical bar beside board */
 @media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
   .evalBarContainer {
     flex-direction: column;
@@ -123,7 +108,7 @@
     margin-right: calc(var(--space-md) * -1);
   }
 
-  .barBackground {
+  .evalBarTrack {
     width: 16px;
     height: 100%;
     background: linear-gradient(180deg, var(--text-primary) 0%, #e0e0e0 100%);
@@ -132,7 +117,7 @@
     border-right: none;
   }
 
-  .barFill {
+  .evalBarFill {
     top: 0;
     left: auto;
     width: 100%;
@@ -149,7 +134,6 @@
   }
 }
 
-/* Mobile: Horizontal bar layout - placed below board */
 @media (max-width: 639px) {
   .evalBarContainer {
     flex-direction: row;
@@ -161,7 +145,7 @@
     margin-right: 0;
   }
 
-  .barBackground {
+  .evalBarTrack {
     width: 100%;
     height: 16px;
     background: linear-gradient(90deg, var(--surface-0) 0%, var(--text-primary) 100%);
@@ -169,7 +153,7 @@
     border: 1px solid var(--border-subtle);
   }
 
-  .barFill {
+  .evalBarFill {
     top: auto;
     left: 0;
     width: var(--fill-percent, 50%);

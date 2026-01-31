@@ -1,8 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   TrainingModal - Obsidian Arena Theme
-   Training configuration modal with refined controls
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -30,7 +25,6 @@
   animation: slideUp var(--transition-slow) ease-out forwards;
 }
 
-/* Subtle top accent line */
 .modalContent::before {
   content: '';
   position: absolute;
@@ -55,10 +49,6 @@
   text-transform: uppercase;
   border-bottom: 1px solid var(--border-subtle);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Close Button
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .closeButton {
   position: absolute;
@@ -89,23 +79,19 @@
   transform: rotate(90deg);
 }
 
-.closeIcon {
+.closeButtonIcon {
   font-size: 1.1rem;
   line-height: 1;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Settings Row
-   ───────────────────────────────────────────────────────────────────────────── */
-
-.settingRow {
+.trainingSettingRow {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
 }
 
-.label {
+.settingLabel {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.75rem;
@@ -114,18 +100,14 @@
   letter-spacing: 0.05em;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Option Grid (Difficulty)
-   ───────────────────────────────────────────────────────────────────────────── */
-
-.optionGrid {
+.settingOptionGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-sm);
   width: 100%;
 }
 
-.optionButton {
+.settingOptionButton {
   padding: var(--space-sm) var(--space-xs);
   font-family: var(--font-display);
   font-size: 0.8rem;
@@ -139,30 +121,26 @@
   white-space: nowrap;
 }
 
-.optionButton:hover:not(.optionButtonActive) {
+.settingOptionButton:hover:not(.settingOptionButtonActive) {
   background: var(--surface-4);
   color: var(--text-secondary);
   border-color: var(--border-default);
 }
 
-.optionButtonActive {
+.settingOptionButtonActive {
   background: var(--accent-subtle);
   border-color: var(--accent-muted);
   color: var(--text-primary);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Button Group / Toggle Buttons
-   ───────────────────────────────────────────────────────────────────────────── */
-
-.buttonGroup {
+.gamePhaseButtonGroup {
   display: flex;
   justify-content: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
 }
 
-.toggleButton {
+.gamePhaseToggleButton {
   background: var(--surface-3);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
@@ -179,27 +157,23 @@
   font-weight: 500;
 }
 
-.toggleButton:hover:not(:disabled) {
+.gamePhaseToggleButton:hover:not(:disabled) {
   background: var(--surface-4);
   border-color: var(--border-default);
   color: var(--text-primary);
 }
 
-.toggleButton:disabled {
+.gamePhaseToggleButton:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 
-.selectedToggle {
+.gamePhaseToggleActive {
   background: var(--accent-subtle);
   border-color: var(--accent-muted);
   color: var(--text-primary);
   box-shadow: 0 0 12px var(--accent-ghost);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Start Button
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .startButton {
   margin-top: var(--space-lg);
@@ -228,11 +202,6 @@
   transform: translateY(0);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Mobile: Bottom sheet style */
 @media (max-width: 639px) {
   .modalOverlay {
     align-items: flex-end;
@@ -254,39 +223,39 @@
     padding-bottom: var(--space-sm);
   }
 
-  .settingRow {
+  .trainingSettingRow {
     margin-bottom: var(--space-md);
   }
 
-  .knightSelector {
+  .sideSelector {
     gap: var(--space-lg);
   }
 
-  .knightButton {
+  .sideSelectorButton {
     width: 56px;
     height: 56px;
   }
 
-  .selectedKnight::before {
+  .sideSelectorButtonActive::before {
     width: 70px;
     height: 70px;
   }
 
-  .buttonGroup {
+  .gamePhaseButtonGroup {
     flex-wrap: wrap;
     gap: var(--space-xs);
   }
 
-  .toggleButton {
+  .gamePhaseToggleButton {
     padding: var(--space-xs) var(--space-md);
     font-size: 0.85rem;
   }
 
-  .optionGrid {
+  .settingOptionGrid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .optionButton {
+  .settingOptionButton {
     font-size: 0.75rem;
     padding: var(--space-xs);
   }

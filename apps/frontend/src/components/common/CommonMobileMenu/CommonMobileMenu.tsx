@@ -83,19 +83,19 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
   };
 
   return (
-    <div class={styles.overlay} onClick={handleClose}>
-      <nav class={styles.menu} onClick={(e) => e.stopPropagation()}>
+    <div class={styles.mobileMenuOverlay} onClick={handleClose}>
+      <nav class={styles.mobileMenuPanel} onClick={(e) => e.stopPropagation()}>
         <div class={styles.menuHeader}>
           <span class={styles.menuTitle}>Menu</span>
           <button
             classList={{
               [styles.closeButton]: true,
-              [styles.closing]: isClosing(),
+              [styles.closeButtonAnimating]: isClosing(),
             }}
             onClick={handleClose}
             aria-label="Close menu"
           >
-            <span class={styles.closeIcon}>&times;</span>
+            <span class={styles.closeButtonIcon}>&times;</span>
           </button>
         </div>
 
@@ -145,9 +145,9 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
                 <img
                   src={getProfileIconAsset(userState.profileIcon)}
                   alt="Profile icon"
-                  class={styles.profileIcon}
+                  class={styles.profileButtonIcon}
                 />
-                <span class={styles.username}>{userState.username}</span>
+                <span class={styles.profileButtonUsername}>{userState.username}</span>
               </button>
             </Show>
             <button class={styles.signOutButton} onClick={() => props.onSignOut()}>

@@ -3,30 +3,27 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: -4vh; /* Subtle lift to improve vertical centering */
+  margin-top: -4vh;
   min-height: 500px;
   text-align: center;
   position: relative;
-  /* Prevent browser from hijacking touch for scrolling during piece drag */
+
   touch-action: none;
 }
 
-.rowWrapper {
+.boardLayoutRow {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   justify-content: center;
 }
 
-/* Wrapper for eval bar + board to ensure proper vertical alignment */
 .evalBoardRow {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  /* No gap - eval bar sits flush against board */
 }
 
-/* Tablet portrait & Mobile: Stack eval bar below board */
 @media (max-width: 1023px) {
   .evalBoardRow {
     flex-direction: column;
@@ -34,7 +31,6 @@
   }
 }
 
-/* Tablet landscape: Keep eval bar beside board */
 @media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
   .evalBoardRow {
     flex-direction: row;
@@ -42,9 +38,8 @@
   }
 }
 
-/* Mobile: Stack layout */
 @media (max-width: 639px) {
-  .rowWrapper {
+  .boardLayoutRow {
     flex-direction: column;
     align-items: center;
   }
@@ -53,7 +48,7 @@
 .boardWithClocks {
   display: flex;
   flex-direction: column;
-  /* Let the board determine width, clocks will match */
+
   width: fit-content;
 }
 
@@ -64,31 +59,28 @@
   position: relative;
 }
 
-/* Clock container - holds both clocks in a column layout */
 .clockColumn {
-  display: contents; /* Let children position independently */
+  display: contents;
 }
 
-/* Both clocks right-aligned to the actual 8x8 grid (not the container padding/border) */
 .clockTop,
 .clockBottom {
   display: flex;
   justify-content: flex-end;
-  /* Offset by board container padding + board border to align with actual grid */
+
   padding-right: calc(var(--space-md) + 2px);
 }
 
 .clockTop {
-  order: -1; /* Move above board */
+  order: -1;
   margin-bottom: var(--space-xs);
 }
 
 .clockBottom {
-  order: 1; /* Move below board */
+  order: 1;
   margin-top: var(--space-xs);
 }
 
-/* Waiting for opponent overlay */
 .waitingOverlay {
   position: absolute;
   top: 0;
@@ -161,7 +153,7 @@
   max-width: 280px;
 }
 
-.copyButton {
+.copyUrlButton {
   background: rgba(74, 222, 128, 0.15);
   border: 1px solid rgba(74, 222, 128, 0.3);
   color: #4ade80;
@@ -174,16 +166,16 @@
   white-space: nowrap;
 }
 
-.copyButton:hover {
+.copyUrlButton:hover {
   background: rgba(74, 222, 128, 0.25);
   border-color: rgba(74, 222, 128, 0.5);
 }
 
-.copyButton:active {
+.copyUrlButton:active {
   transform: scale(0.95);
 }
 
-.spinner {
+.waitingSpinner {
   width: 40px;
   height: 40px;
   border: 3px solid rgba(255, 255, 255, 0.1);
@@ -198,7 +190,7 @@
   }
 }
 
-.cancelButton {
+.cancelWaitingButton {
   margin-top: 0.5rem;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -210,19 +202,15 @@
   transition: all 0.15s ease;
 }
 
-.cancelButton:hover {
+.cancelWaitingButton:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.3);
   color: #fff;
 }
 
-.cancelButton:active {
+.cancelWaitingButton:active {
   transform: scale(0.95);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Game Result Toast (Focus Mode)
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .gameResultToast {
   position: absolute;
@@ -243,7 +231,7 @@
   animation: toastFadeIn 0.2s ease-out;
 }
 
-.gameResultToast.fadeOut {
+.gameResultToast.toastFadeOut {
   animation: toastFadeOut 0.3s ease-in forwards;
 }
 
@@ -278,7 +266,6 @@
   white-space: nowrap;
 }
 
-/* Mobile: Slightly smaller toast */
 @media (max-width: 639px) {
   .gameResultToast {
     padding: var(--space-sm) var(--space-lg);
