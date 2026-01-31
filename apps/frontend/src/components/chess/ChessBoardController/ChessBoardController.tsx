@@ -578,19 +578,28 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
   // RAF-throttled mouse/touch move to prevent 60+ style recalcs/second
   let rafId: number | null = null;
+  // Track latest mouse position for RAF to use (avoids stale closure capture)
+  let latestMousePos = { x: 0, y: 0 };
+
   const handleMouseMove = (e: MouseEvent) => {
     if (draggedPiece()) {
-      if (rafId !== null) return; // Skip if RAF pending
+      latestMousePos = { x: e.clientX, y: e.clientY };
+      if (rafId !== null) return; // Skip scheduling if RAF pending (but latestMousePos is already updated)
       rafId = requestAnimationFrame(() => {
-        setCursorPosition({ x: e.clientX, y: e.clientY });
+        // Always reset rafId first to prevent permanent blocking on errors
         rafId = null;
+        setCursorPosition(latestMousePos);
       });
     }
   };
 
   const handleTouchMove = (e: TouchEvent) => {
     const touch = e.touches[0];
-    if (!touch) return;
+    if (!touch) {
+      // Multi-touch edge case: primary touch lifted while secondary still active
+      // Keep tracking but don't update position
+      return;
+    }
 
     // Always track latest position - RAF will read from this to avoid stale closures
     latestTouchPos = { x: touch.clientX, y: touch.clientY };
@@ -605,13 +614,22 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     }
 
     // Schedule position update if actively dragging
-    if (isTouchDragging && draggedPiece()) {
-      if (rafId !== null) return; // Skip if RAF pending
+    // Check isTouchDragging first (sync) before draggedPiece() (async signal)
+    if (isTouchDragging) {
+      // If draggedPiece became null unexpectedly (effect cleared it), reset touch state
+      if (!draggedPiece()) {
+        touchStartPos = null;
+        isTouchDragging = false;
+        return;
+      }
+
+      if (rafId !== null) return; // Skip scheduling if RAF pending (but latestTouchPos is already updated)
       rafId = requestAnimationFrame(() => {
+        // Always reset rafId first to prevent permanent blocking on errors
+        rafId = null;
         // Use latestTouchPos instead of captured touch coordinates
         // This ensures we get the most recent position even if events were skipped
         setCursorPosition(latestTouchPos);
-        rafId = null;
       });
     }
   };
@@ -805,6 +823,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const clearDraggingState = () => {
+    // Clear touch tracking state to stay in sync with signal state
+    touchStartPos = null;
+    isTouchDragging = false;
     batch(() => {
       setDraggedPiece(null);
       setSelectedSquare(null);
