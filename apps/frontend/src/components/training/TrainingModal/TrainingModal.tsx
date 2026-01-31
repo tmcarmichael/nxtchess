@@ -1,7 +1,12 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, Show, For, type ParentComponent, splitProps } from 'solid-js';
 import { useTrainingGameOptional } from '../../../store/game/TrainingGameContext';
-import { type GamePhase, type Side, type StartGameOptions } from '../../../types/game';
+import {
+  type GamePhase,
+  type Side,
+  type SideSelection,
+  type StartGameOptions,
+} from '../../../types/game';
 import ChessGameModal from '../../chess/ChessGameModal/ChessGameModal';
 import ChessSideSelector from '../../chess/ChessSideSelector/ChessSideSelector';
 import styles from './TrainingModal.module.css';
@@ -53,12 +58,15 @@ const TrainingModal: ParentComponent<TrainingModalProps> = (props) => {
 
   const [localDifficulty, setLocalDifficulty] = createSignal<number>(4);
   const [localGamePhase, setLocalGamePhase] = createSignal<GamePhase>('opening');
-  const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>('w');
+  const [localPlayerColor, setLocalPlayerColor] = createSignal<SideSelection>('random');
   const [localEndgameTheme, setLocalEndgameTheme] = createSignal<string>('');
+
+  const resolveSide = (selection: SideSelection): Side =>
+    selection === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : selection;
 
   const handleStartTraining = () => {
     const trainingGameConfig: StartGameOptions = {
-      side: localPlayerColor(),
+      side: resolveSide(localPlayerColor()),
       mode: 'training',
       newDifficultyLevel: localDifficulty(),
       trainingGamePhase: localGamePhase(),

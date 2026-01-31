@@ -1,4 +1,5 @@
 export type Side = 'w' | 'b';
+export type SideSelection = Side | 'random';
 export type GameWinner = Side | 'draw' | null;
 export type GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | null;
 export type GamePhase = 'opening' | 'middlegame' | 'endgame' | null;

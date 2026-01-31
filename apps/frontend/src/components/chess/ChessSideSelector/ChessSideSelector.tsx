@@ -1,10 +1,10 @@
 import { type Component, type Accessor } from 'solid-js';
-import { type Side } from '../../../types/game';
+import { type SideSelection } from '../../../types/game';
 import styles from './ChessSideSelector.module.css';
 
 interface ChessSideSelectorProps {
-  selectedSide: Accessor<Side>;
-  onSideChange: (side: Side) => void;
+  selectedSide: Accessor<SideSelection>;
+  onSideChange: (side: SideSelection) => void;
 }
 
 const ChessSideSelector: Component<ChessSideSelectorProps> = (props) => {
@@ -17,7 +17,16 @@ const ChessSideSelector: Component<ChessSideSelectorProps> = (props) => {
         }}
         onClick={() => props.onSideChange('w')}
       >
-        <img src="/assets/wN.svg" alt="White Knight" />
+        <img src="/assets/wN.svg" alt="White" />
+      </div>
+      <div
+        classList={{
+          [styles.knightButton]: true,
+          [styles.selectedKnight]: props.selectedSide() === 'random',
+        }}
+        onClick={() => props.onSideChange('random')}
+      >
+        <img class={styles.diceIcon} src="/assets/trainingModeRandom.svg" alt="Random" />
       </div>
       <div
         classList={{
@@ -26,7 +35,7 @@ const ChessSideSelector: Component<ChessSideSelectorProps> = (props) => {
         }}
         onClick={() => props.onSideChange('b')}
       >
-        <img src="/assets/bN.svg" alt="Black Knight" />
+        <img src="/assets/bN.svg" alt="Black" />
       </div>
     </div>
   );

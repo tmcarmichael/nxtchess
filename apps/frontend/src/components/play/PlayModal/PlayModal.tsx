@@ -2,7 +2,12 @@ import { useNavigate } from '@solidjs/router';
 import { createSignal, splitProps, onMount, onCleanup, type Component, Show, For } from 'solid-js';
 import { preferences } from '../../../services/preferences/PreferencesService';
 import { usePlayGameOptional } from '../../../store/game/PlayGameContext';
-import { type Side, type StartGameOptions, type MultiplayerGameOptions } from '../../../types/game';
+import {
+  type Side,
+  type SideSelection,
+  type StartGameOptions,
+  type MultiplayerGameOptions,
+} from '../../../types/game';
 import ChessGameModal from '../../chess/ChessGameModal/ChessGameModal';
 import ChessSideSelector from '../../chess/ChessSideSelector/ChessSideSelector';
 import styles from './PlayModal.module.css';
@@ -61,7 +66,7 @@ const PlayModal: Component<PlayModalProps> = (props) => {
   const [timeMinutes, setTimeMinutes] = createSignal(safeTimeMinutes);
   const [humanTimeIndex, setHumanTimeIndex] = createSignal(3); // Default to 5+0
   const [difficultyLevel, setDifficultyLevel] = createSignal(safeDifficultyLevel);
-  const [localPlayerColor, setLocalPlayerColor] = createSignal<Side>(savedPrefs.lastPlayerColor);
+  const [localPlayerColor, setLocalPlayerColor] = createSignal<SideSelection>('random');
   const [joinGameId, setJoinGameId] = createSignal('');
   const [joinError, setJoinError] = createSignal<string | null>(null);
   const [isOnline, setIsOnline] = createSignal(navigator.onLine);
@@ -83,6 +88,9 @@ const PlayModal: Component<PlayModalProps> = (props) => {
   // Check if start button should be disabled (offline + human opponent)
   const isStartDisabled = () => !isOnline() && opponentType() === 'human';
 
+  const resolveSide = (selection: SideSelection): Side =>
+    selection === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : selection;
+
   const handleStartGame = () => {
     const opponent = opponentType();
 
@@ -101,7 +109,7 @@ const PlayModal: Component<PlayModalProps> = (props) => {
         // Create new multiplayer game
         const selectedTimeControl = HUMAN_TIME_OPTIONS[humanTimeIndex()];
         const multiplayerConfig: MultiplayerGameOptions = {
-          side: localPlayerColor(),
+          side: resolveSide(localPlayerColor()),
           mode: 'play',
           newTimeControl: selectedTimeControl.minutes,
           increment: selectedTimeControl.increment,
@@ -120,13 +128,13 @@ const PlayModal: Component<PlayModalProps> = (props) => {
       // AI game
       const selectedTime = timeMinutes();
       const selectedLevel = difficultyLevel();
-      const chosenSide = localPlayerColor();
+      const chosenSide = resolveSide(localPlayerColor());
 
-      // Save preferences for next session
+      // Save preferences for next session (preserve 'random' selection)
       preferences.set({
         lastTimeMinutes: selectedTime,
         lastDifficultyLevel: selectedLevel,
-        lastPlayerColor: chosenSide,
+        lastPlayerColor: localPlayerColor(),
       });
 
       const playGameConfig: StartGameOptions = {

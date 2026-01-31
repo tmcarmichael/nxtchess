@@ -32,6 +32,10 @@
   pointer-events: none;
 }
 
+.diceIcon {
+  filter: invert(0.85);
+}
+
 .selectedKnight {
   background: var(--accent-subtle);
   border-color: var(--accent-muted);
