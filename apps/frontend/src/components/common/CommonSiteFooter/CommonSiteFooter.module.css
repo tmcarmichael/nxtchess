@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   CommonSiteFooter - Obsidian Arena Theme
-   Minimal floating footer with refined styling
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.footer {
+.footerRoot {
   position: fixed;
   bottom: calc(var(--space-md) + var(--safe-area-bottom));
   left: 50%;

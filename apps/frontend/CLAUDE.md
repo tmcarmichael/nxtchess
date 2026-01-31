@@ -277,6 +277,8 @@ GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | null;
 
 All components use `.module.css` files. Import as `styles` and reference as `styles.className`.
 
+**No comments in CSS.** Use expressive, readable class names and logical property grouping instead of comments. Class names should be self-documenting (e.g., `.boardActiveTurnGlow` instead of `.glow` with a `/* Active turn indicator */` comment). Group related properties with blank lines for visual separation instead of section dividers.
+
 ### Keyboard Shortcuts
 
 Defined in `useKeyboardNavigation` hook, used by `ChessBoardController`:

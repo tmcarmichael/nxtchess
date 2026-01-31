@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   GameNotation - Minimalistic PGN/FEN display
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .notationContainer {
   display: flex;
   flex-direction: column;
@@ -17,7 +13,7 @@
   gap: var(--space-sm);
 }
 
-.label {
+.notationFieldLabel {
   flex-shrink: 0;
   width: 2.5rem;
   font-family: var(--font-display);
@@ -29,13 +25,13 @@
   user-select: none;
 }
 
-.valueContainer {
+.notationValueContainer {
   flex: 1;
   min-width: 0;
   overflow: hidden;
 }
 
-.value {
+.notationFieldValue {
   display: block;
   font-family: var(--font-mono, monospace);
   font-size: 0.7rem;
@@ -76,15 +72,11 @@
   cursor: not-allowed;
 }
 
-.copied {
+.copyButtonCopiedState {
   background-color: var(--accent-subtle);
   border-color: var(--accent-muted);
   color: var(--accent);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
 
 @media (max-width: 639px) {
   .notationContainer {
@@ -92,12 +84,12 @@
     padding-top: var(--space-sm);
   }
 
-  .label {
+  .notationFieldLabel {
     font-size: 0.6rem;
     width: 2rem;
   }
 
-  .value {
+  .notationFieldValue {
     font-size: 0.65rem;
   }
 

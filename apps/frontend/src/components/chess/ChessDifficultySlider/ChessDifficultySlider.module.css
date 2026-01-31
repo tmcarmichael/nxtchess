@@ -1,11 +1,11 @@
-.settingRow {
+.difficultySettingRow {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
 
-.rangeSliderContainer {
+.difficultySliderContainer {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -13,7 +13,7 @@
   margin-bottom: 1rem;
 }
 
-.rangeSliderLabel {
+.difficultySliderLabel {
   font-weight: 500;
   margin-bottom: 0.5rem;
   color: #acacac;
@@ -22,7 +22,7 @@
   text-align: center;
 }
 
-.rangeSlider {
+.difficultySliderInput {
   -webkit-appearance: none;
   appearance: none;
   width: 70%;
@@ -33,13 +33,13 @@
   cursor: pointer;
 }
 
-.rangeSlider::-webkit-slider-runnable-track {
+.difficultySliderInput::-webkit-slider-runnable-track {
   height: 6px;
   background: #444;
   border-radius: 4px;
 }
 
-.rangeSlider::-webkit-slider-thumb {
+.difficultySliderInput::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 24px;
@@ -54,25 +54,25 @@
     transform 0.1s ease;
 }
 
-.rangeSlider::-moz-range-track {
+.difficultySliderInput::-moz-range-track {
   height: 6px;
   background: #666;
   border-radius: 4px;
 }
 
-.rangeSlider::-ms-track {
+.difficultySliderInput::-ms-track {
   height: 6px;
   background: transparent;
   color: transparent;
   border: none;
 }
 
-.rangeSlider::-ms-fill-lower {
+.difficultySliderInput::-ms-fill-lower {
   background: #666;
   border-radius: 4px;
 }
 
-.rangeSlider::-ms-fill-upper {
+.difficultySliderInput::-ms-fill-upper {
   background: #666;
   border-radius: 4px;
 }

@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   AnalyzeControlPanel - Obsidian Arena Theme
-   Analysis mode control panel
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.panel {
+.controlPanelRoot {
   display: flex;
   width: 100%;
   min-height: 200px;
@@ -18,7 +13,7 @@
   user-select: none;
 }
 
-.panelHeader {
+.controlPanelHeader {
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
@@ -28,7 +23,7 @@
   text-align: center;
 }
 
-.description {
+.controlPanelDescription {
   font-family: var(--font-body);
   font-size: 0.85rem;
   color: var(--text-secondary);
@@ -38,30 +33,24 @@
   padding: 0 var(--space-sm);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Tablet: Compact layout */
 @media (max-width: 1023px) {
-  .panel {
+  .controlPanelRoot {
     min-height: auto;
     padding: var(--space-md);
   }
 }
 
-/* Mobile: Stack vertically */
 @media (max-width: 639px) {
-  .panel {
+  .controlPanelRoot {
     padding: var(--space-sm) var(--space-md);
     gap: var(--space-sm);
   }
 
-  .panelHeader {
+  .controlPanelHeader {
     font-size: 0.9rem;
   }
 
-  .description {
+  .controlPanelDescription {
     font-size: 0.8rem;
   }
 }

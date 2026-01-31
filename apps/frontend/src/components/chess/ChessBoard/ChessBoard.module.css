@@ -1,15 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   ChessBoard - Obsidian Arena Theme
-   The centerpiece of the application with dramatic grounding shadows
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .boardContainer {
   display: flex;
   justify-content: center;
   align-items: center;
   height: auto;
   padding: var(--space-md);
-  /* Prevent browser from hijacking touch events during piece dragging */
+
   touch-action: none;
 }
 
@@ -24,18 +19,17 @@
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-board);
   overflow: hidden;
-  /* Subtle inner glow on the board edge */
+
   outline: 1px solid var(--border-subtle);
   outline-offset: -1px;
-  /* Prevent browser from hijacking touch for scrolling/zooming during piece drag */
+
   touch-action: none;
-  /* SVG board background eliminates subpixel rendering gaps between squares */
+
   background-image: url('/assets/board.svg');
   background-size: cover;
   background-repeat: no-repeat;
 }
 
-/* Active turn indicator - board glows when it's your move */
 .board[data-active-turn='true'] {
   box-shadow: var(--shadow-board), var(--shadow-glow);
   transition: box-shadow var(--transition-slow);
@@ -47,31 +41,28 @@
   height: 100%;
   aspect-ratio: 1;
   transition: background-color var(--transition-base);
-  /* Prevent content from affecting square size */
+
   contain: strict;
   overflow: hidden;
-  /* Prevent browser from hijacking touch events when dragging across squares */
+
   touch-action: none;
 }
 
-.square.light {
-  /* Transparent - SVG background shows through */
+.square.lightSquare {
   background-color: transparent;
 }
 
-.square.dark {
-  /* Transparent - SVG background shows through */
+.square.darkSquare {
   background-color: transparent;
 }
 
-.square.selected {
+.square.selectedSquare {
   background-color: var(--board-selected);
-  /* Layered selection effect */
+
   box-shadow: inset 0 0 0 3px var(--accent-muted);
 }
 
-/* Valid move indicator dot */
-.highlightDot {
+.legalMoveIndicator {
   width: 28%;
   height: 28%;
   background-color: var(--board-move-dot);
@@ -85,19 +76,18 @@
     transform var(--transition-fast),
     opacity var(--transition-fast);
   z-index: 2000;
-  /* Subtle inner shadow for depth */
+
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
-  /* Prevent interference with touch/drag events */
+
   pointer-events: none;
 }
 
-.highlightDot:hover {
+.legalMoveIndicator:hover {
   transform: translate(-50%, -50%) scale(1.25);
   opacity: 1;
 }
 
-/* Capture indicator - red ring instead of dot */
-.enemyDot {
+.captureIndicator {
   background-color: transparent;
   width: 100%;
   height: 100%;
@@ -106,14 +96,12 @@
   opacity: 0.9;
 }
 
-.enemyDot:hover {
+.captureIndicator:hover {
   transform: translate(-50%, -50%) scale(1);
   box-shadow: inset 0 0 0 5px var(--error);
   opacity: 1;
 }
 
-/* Dragged piece styling - size responsive to board */
-/* Uses transform for positioning (GPU accelerated) instead of top/left (causes layout) */
 .draggedPiece {
   position: fixed;
   left: 0;
@@ -122,12 +110,11 @@
   height: calc(min(var(--board-max-size), calc(100vw - 2rem), calc(100vh - 200px)) / 8);
   pointer-events: none;
   z-index: 10000;
-  /* Transform is set via inline style for GPU-accelerated positioning */
+
   will-change: transform;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
 }
 
-/* Animating piece for smooth move transitions */
 .animatingPiece {
   position: absolute;
   width: 12.5%;
@@ -137,12 +124,11 @@
   will-change: transform;
 }
 
-/* Last move highlight */
-.lastMove {
+.lastMoveHighlight {
   position: relative;
 }
 
-.lastMove::after {
+.lastMoveHighlight::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -151,12 +137,11 @@
   transition: background-color var(--transition-base);
 }
 
-/* Premove highlight */
-.premove {
+.premoveHighlight {
   position: relative;
 }
 
-.premove::after {
+.premoveHighlight::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -175,7 +160,6 @@
   }
 }
 
-/* Check indicator on king's square */
 .checkedKing {
   position: relative;
   animation: checkPulse 1s ease-in-out infinite;
@@ -199,7 +183,6 @@
   }
 }
 
-/* Flash animation for illegal move attempt (pinned piece, etc.) */
 .flashKing {
   position: relative;
   animation: illegalMoveFlash 0.4s ease-out;
@@ -232,7 +215,6 @@
   }
 }
 
-/* File labels (a-h) */
 .fileLabel {
   position: absolute;
   bottom: 2px;
@@ -246,16 +228,14 @@
   user-select: none;
 }
 
-/* Adapt label color to square */
-.light .fileLabel {
+.lightSquare .fileLabel {
   color: var(--board-dark);
 }
 
-.dark .fileLabel {
+.darkSquare .fileLabel {
   color: var(--board-light);
 }
 
-/* Rank labels (1-8) */
 .rankLabel {
   position: absolute;
   top: 2px;
@@ -268,19 +248,14 @@
   user-select: none;
 }
 
-.light .rankLabel {
+.lightSquare .rankLabel {
   color: var(--board-dark);
 }
 
-.dark .rankLabel {
+.darkSquare .rankLabel {
   color: var(--board-light);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Tablet: Adjust board constraints */
 @media (max-width: 1023px) {
   .board {
     width: min(600px, calc(100vw - 2rem), calc(100vh - 280px));
@@ -292,7 +267,6 @@
   }
 }
 
-/* Mobile: Full width board */
 @media (max-width: 639px) {
   .boardContainer {
     padding: var(--space-sm);
@@ -313,7 +287,6 @@
   }
 }
 
-/* Small mobile: Extra compact */
 @media (max-width: 374px) {
   .board {
     width: calc(100vw - 0.5rem);

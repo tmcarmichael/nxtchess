@@ -33,9 +33,9 @@ const HomeContainer: ParentComponent<HomeContainerProps> = (props) => {
   };
 
   return (
-    <div class={styles.container}>
+    <div class={styles.homePageRoot}>
       {location.pathname === '/' && <HomeSiteHero />}
-      <main class={styles.content}>{local.children}</main>
+      <main class={styles.homeMainContent}>{local.children}</main>
       <Show when={showSignInModal()}>
         <SignInModal onClose={closeModal} />
       </Show>

@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   NetworkStatusBanner - Obsidian Arena Theme
-   Connection status indicator for offline/online states
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.banner {
+.networkBannerRoot {
   position: fixed;
   top: calc(var(--header-height) + var(--safe-area-top));
   left: 50%;
@@ -36,35 +31,33 @@
   }
 }
 
-/* Offline state - warning style */
 .offline {
   background: rgba(251, 191, 36, 0.15);
   border: 1px solid rgba(251, 191, 36, 0.4);
   color: var(--warning);
 }
 
-.offline .icon {
+.offline .statusIcon {
   color: var(--warning);
 }
 
-/* Online state - success style */
 .online {
   background: rgba(74, 222, 128, 0.15);
   border: 1px solid rgba(74, 222, 128, 0.4);
   color: var(--success);
 }
 
-.online .icon {
+.online .statusIcon {
   color: var(--success);
 }
 
-.icon {
+.statusIcon {
   font-size: 1rem;
   font-weight: 700;
   flex-shrink: 0;
 }
 
-.message {
+.statusMessage {
   white-space: nowrap;
 }
 
@@ -94,14 +87,13 @@
   transform: scale(1.1);
 }
 
-/* Mobile adjustments */
 @media (max-width: 639px) {
-  .banner {
+  .networkBannerRoot {
     top: calc(var(--header-height-mobile) + var(--safe-area-top));
     padding: var(--space-sm) var(--space-md);
   }
 
-  .message {
+  .statusMessage {
     white-space: normal;
     text-align: center;
   }

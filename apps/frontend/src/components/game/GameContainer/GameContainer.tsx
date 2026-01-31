@@ -23,10 +23,10 @@ const GameContainer: Component<GameContainerProps> = (props) => {
           classList={{ [styles.threeColumn]: props.layout === 'three-column' }}
         >
           <Show when={props.layout === 'three-column' && props.leftPanel}>
-            <div class={styles.panelWrapper}>{props.leftPanel}</div>
+            <div class={styles.gameSidePanelWrapper}>{props.leftPanel}</div>
           </Show>
-          <div class={styles.boardWrapper}>{props.boardContent}</div>
-          <div class={styles.panelWrapper}>{props.rightPanel}</div>
+          <div class={styles.gameBoardWrapper}>{props.boardContent}</div>
+          <div class={styles.gameSidePanelWrapper}>{props.rightPanel}</div>
         </div>
       </div>
     </CommonErrorBoundary>

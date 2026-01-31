@@ -51,13 +51,13 @@ const GameNotation: Component<GameNotationProps> = (props) => {
     <div class={styles.notationContainer}>
       <Show when={!props.hidePgn}>
         <div class={styles.notationRow}>
-          <span class={styles.label}>PGN</span>
-          <div class={styles.valueContainer}>
-            <span class={styles.value}>{pgn() || '—'}</span>
+          <span class={styles.notationFieldLabel}>PGN</span>
+          <div class={styles.notationValueContainer}>
+            <span class={styles.notationFieldValue}>{pgn() || '—'}</span>
           </div>
           <button
             class={styles.copyButton}
-            classList={{ [styles.copied]: copiedField() === 'pgn' }}
+            classList={{ [styles.copyButtonCopiedState]: copiedField() === 'pgn' }}
             onClick={() => copyToClipboard(pgn(), 'pgn')}
             disabled={!pgn()}
             title="Copy PGN"
@@ -67,13 +67,13 @@ const GameNotation: Component<GameNotationProps> = (props) => {
         </div>
       </Show>
       <div class={styles.notationRow}>
-        <span class={styles.label}>FEN</span>
-        <div class={styles.valueContainer}>
-          <span class={styles.value}>{props.fen}</span>
+        <span class={styles.notationFieldLabel}>FEN</span>
+        <div class={styles.notationValueContainer}>
+          <span class={styles.notationFieldValue}>{props.fen}</span>
         </div>
         <button
           class={styles.copyButton}
-          classList={{ [styles.copied]: copiedField() === 'fen' }}
+          classList={{ [styles.copyButtonCopiedState]: copiedField() === 'fen' }}
           onClick={() => copyToClipboard(props.fen, 'fen')}
           title="Copy FEN"
         >

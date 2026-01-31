@@ -16,9 +16,9 @@ const AnalyzeControlPanel: ParentComponent<AnalyzeControlPanelProps> = (props) =
   };
 
   return (
-    <div class={styles.panel}>
-      <div class={styles.panelHeader}>Analysis Board</div>
-      <p class={styles.description}>
+    <div class={styles.controlPanelRoot}>
+      <div class={styles.controlPanelHeader}>Analysis Board</div>
+      <p class={styles.controlPanelDescription}>
         Move pieces freely for both sides. Use the evaluation bar to analyze positions.
       </p>
       <ButtonPanel>

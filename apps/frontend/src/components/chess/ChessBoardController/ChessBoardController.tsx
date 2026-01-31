@@ -901,7 +901,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       onTouchCancel={handleTouchCancel}
       class={styles.chessGameContainer}
     >
-      <div class={styles.rowWrapper}>
+      <div class={styles.boardLayoutRow}>
         <div class={styles.boardWithClocks}>
           <div class={styles.evalBoardRow}>
             <Show when={derived.showEvalBar()}>
@@ -941,7 +941,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
               <Show when={gameResultToast()}>
                 <div
                   class={styles.gameResultToast}
-                  classList={{ [styles.fadeOut]: toastFadingOut() }}
+                  classList={{ [styles.toastFadeOut]: toastFadingOut() }}
                   role="status"
                   aria-live="polite"
                 >
@@ -952,7 +952,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
               <Show when={multiplayer?.state.isWaiting}>
                 <div class={styles.waitingOverlay}>
                   <div class={styles.waitingContent}>
-                    <div class={styles.spinner} />
+                    <div class={styles.waitingSpinner} />
                     <h3>Waiting for Opponent</h3>
                     <Show
                       when={multiplayer?.state.gameId}
@@ -964,7 +964,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                           {`${window.location.origin}/play/${multiplayer?.state.gameId}`}
                         </code>
                         <button
-                          class={styles.copyButton}
+                          class={styles.copyUrlButton}
                           onClick={() => {
                             const url = `${window.location.origin}/play/${multiplayer?.state.gameId}`;
                             navigator.clipboard.writeText(url);
@@ -974,7 +974,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                         </button>
                       </div>
                     </Show>
-                    <button class={styles.cancelButton} onClick={actions.exitGame}>
+                    <button class={styles.cancelWaitingButton} onClick={actions.exitGame}>
                       Cancel
                     </button>
                   </div>

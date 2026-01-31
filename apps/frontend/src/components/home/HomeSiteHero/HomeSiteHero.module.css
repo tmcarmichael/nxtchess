@@ -1,8 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   HomeSiteHero - Obsidian Arena Theme
-   Landing page hero with dramatic presentation
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .hero {
   position: relative;
   display: flex;
@@ -14,7 +9,6 @@
   gap: var(--space-xl);
 }
 
-/* Accent border lines */
 .hero::before,
 .hero::after {
   content: '';
@@ -42,7 +36,6 @@
   bottom: 15%;
 }
 
-/* Background knight decoration */
 .knight {
   position: absolute;
   user-select: none;
@@ -65,7 +58,6 @@
   }
 }
 
-/* Hero title */
 .heroTitle {
   position: relative;
   z-index: 1;
@@ -82,7 +74,6 @@
   color: var(--accent);
 }
 
-/* Tagline */
 .heroTagline {
   position: relative;
   z-index: 1;
@@ -94,7 +85,6 @@
   max-width: 400px;
 }
 
-/* Play Now CTA Button */
 .playNowButton {
   position: relative;
   z-index: 1;

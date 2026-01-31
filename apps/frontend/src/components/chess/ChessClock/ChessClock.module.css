@@ -1,8 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   ChessClock - Obsidian Arena Theme
-   Monospace precision timing display
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .gameClock {
   display: flex;
   align-items: center;
@@ -14,14 +9,13 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-sm);
-  /* Fixed width to prevent resizing when tenths appear (e.g., "00:19.5") */
+
   min-width: 120px;
   width: 120px;
   user-select: none;
 }
 
-/* Turn indicator dot - only visible when active */
-.turnIndicator {
+.activeTurnDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -29,39 +23,35 @@
   flex-shrink: 0;
 }
 
-.gameClock.active .turnIndicator {
+.gameClock.activeTurn .activeTurnDot {
   background: var(--success);
   box-shadow: 0 0 6px var(--success);
 }
 
-/* Time display with tabular nums to prevent width changes */
-.time {
+.clockTimeDisplay {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  /* Tabular nums ensures all digits have equal width */
+
   font-variant-numeric: tabular-nums;
-  /* Fixed width for time string with tenths (e.g., "00:19.5" = 7 chars) */
+
   min-width: 7ch;
   text-align: center;
 }
 
-/* Active player's clock */
-.gameClock.active {
+.gameClock.activeTurn {
   background: var(--surface-2);
   border-color: var(--accent-muted);
   box-shadow: 0 0 12px var(--accent-ghost);
 }
 
-/* Low time warning (under 30 seconds) */
-.gameClock.lowTime {
+.gameClock.lowTimeWarning {
   color: var(--warning);
   border-color: rgba(251, 191, 36, 0.3);
 }
 
-/* Critical time (under 10 seconds) */
-.gameClock.critical {
+.gameClock.criticalTimeWarning {
   animation: clockUrgent 0.5s ease-in-out infinite;
   border-color: var(--error-muted);
 }

@@ -195,13 +195,13 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
           tabIndex={isSelected ? 0 : -1}
           classList={{
             [styles.square]: true,
-            [styles.light]: isLightSquare,
-            [styles.dark]: !isLightSquare,
-            [styles.selected]: isSelected,
-            [styles.lastMove]: isLastMove,
+            [styles.lightSquare]: isLightSquare,
+            [styles.darkSquare]: !isLightSquare,
+            [styles.selectedSquare]: isSelected,
+            [styles.lastMoveHighlight]: isLastMove,
             [styles.checkedKing]: isCheckedKing,
             [styles.flashKing]: isFlashingKing,
-            [styles.premove]: isPremove,
+            [styles.premoveHighlight]: isPremove,
           }}
           onClick={() => local.onSquareClick(props.square)}
           onMouseUp={() => local.onSquareMouseUp(props.square)}
@@ -209,7 +209,9 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
           {showFile && <span class={styles.fileLabel}>{file}</span>}
           {showRank && <span class={styles.rankLabel}>{rank}</span>}
           {isHighlighted && (
-            <div class={`${styles.highlightDot} ${isEnemyPiece ? styles.enemyDot : ''}`} />
+            <div
+              class={`${styles.legalMoveIndicator} ${isEnemyPiece ? styles.captureIndicator : ''}`}
+            />
           )}
           {props.piece && (
             <Piece

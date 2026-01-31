@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   PlayControlPanel - Obsidian Arena Theme
-   Game control panel with clock display
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.panel {
+.playControlPanel {
   display: flex;
   width: 100%;
   flex-direction: column;
@@ -17,7 +12,7 @@
   user-select: none;
 }
 
-.panelTitle {
+.playControlPanelTitle {
   font-family: var(--font-display);
   font-size: 0.7rem;
   font-weight: 700;
@@ -28,7 +23,7 @@
   user-select: none;
 }
 
-.statusText {
+.gameStatusText {
   font-family: var(--font-body);
   font-size: 0.85rem;
   font-weight: 500;
@@ -37,28 +32,22 @@
   user-select: none;
 }
 
-.statusText.waiting {
+.gameStatusText.statusWaiting {
   color: var(--warning);
 }
 
-.statusText.playing {
+.gameStatusText.statusPlaying {
   color: var(--accent);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Tablet */
 @media (max-width: 1023px) {
-  .panel {
+  .playControlPanel {
     padding: var(--space-md);
   }
 }
 
-/* Mobile */
 @media (max-width: 639px) {
-  .panel {
+  .playControlPanel {
     padding: var(--space-sm) var(--space-md);
     gap: var(--space-sm);
   }

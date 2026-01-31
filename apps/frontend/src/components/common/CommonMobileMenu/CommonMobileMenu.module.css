@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   CommonMobileMenu - Obsidian Arena Theme
-   Slide-in drawer navigation for mobile/tablet
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.overlay {
+.mobileMenuOverlay {
   position: fixed;
   inset: 0;
   z-index: 10000;
@@ -22,7 +17,7 @@
   }
 }
 
-.menu {
+.mobileMenuPanel {
   position: absolute;
   top: 0;
   right: 0;
@@ -44,10 +39,6 @@
     transform: translateX(0);
   }
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Menu Header
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .menuHeader {
   display: flex;
@@ -85,21 +76,17 @@
 }
 
 .closeButton:hover,
-.closeButton.closing {
+.closeButton.closeButtonAnimating {
   background: var(--surface-3);
   border-color: var(--border-default);
   transform: rotate(90deg);
 }
 
-.closeIcon {
+.closeButtonIcon {
   font-size: 1.5rem;
   line-height: 1;
   color: var(--text-muted);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Navigation Items
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .navItems {
   flex: 1;
@@ -162,10 +149,6 @@
   color: var(--text-muted);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Links Section (Footer Links)
-   ───────────────────────────────────────────────────────────────────────────── */
-
 .linksSection {
   display: flex;
   flex-wrap: wrap;
@@ -188,10 +171,6 @@
 .footerLink:hover {
   color: var(--accent);
 }
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Menu Footer (User Section)
-   ───────────────────────────────────────────────────────────────────────────── */
 
 .menuFooter {
   display: flex;
@@ -225,13 +204,13 @@
   border-color: var(--border-default);
 }
 
-.profileIcon {
+.profileButtonIcon {
   width: 2rem;
   height: 2rem;
   object-fit: contain;
 }
 
-.username {
+.profileButtonUsername {
   font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 700;

@@ -9,11 +9,11 @@ interface ChessSideSelectorProps {
 
 const ChessSideSelector: Component<ChessSideSelectorProps> = (props) => {
   return (
-    <div class={styles.knightSelector}>
+    <div class={styles.sideSelector}>
       <div
         classList={{
-          [styles.knightButton]: true,
-          [styles.selectedKnight]: props.selectedSide() === 'w',
+          [styles.sideSelectorButton]: true,
+          [styles.sideSelectorButtonActive]: props.selectedSide() === 'w',
         }}
         onClick={() => props.onSideChange('w')}
       >
@@ -21,17 +21,17 @@ const ChessSideSelector: Component<ChessSideSelectorProps> = (props) => {
       </div>
       <div
         classList={{
-          [styles.knightButton]: true,
-          [styles.selectedKnight]: props.selectedSide() === 'random',
+          [styles.sideSelectorButton]: true,
+          [styles.sideSelectorButtonActive]: props.selectedSide() === 'random',
         }}
         onClick={() => props.onSideChange('random')}
       >
-        <img class={styles.diceIcon} src="/assets/trainingModeRandom.svg" alt="Random" />
+        <img class={styles.randomSideIcon} src="/assets/trainingModeRandom.svg" alt="Random" />
       </div>
       <div
         classList={{
-          [styles.knightButton]: true,
-          [styles.selectedKnight]: props.selectedSide() === 'b',
+          [styles.sideSelectorButton]: true,
+          [styles.sideSelectorButtonActive]: props.selectedSide() === 'b',
         }}
         onClick={() => props.onSideChange('b')}
       >

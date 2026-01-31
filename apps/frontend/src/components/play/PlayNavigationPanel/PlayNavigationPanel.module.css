@@ -1,8 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   PlayNavigationPanel - Obsidian Arena Theme
-   Move history navigation panel
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .navigationPanel {
   display: flex;
   flex-direction: column;
@@ -16,7 +11,7 @@
   box-shadow: var(--shadow-md);
 }
 
-.panelHeader {
+.navigationPanelHeader {
   font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 500;
@@ -65,7 +60,7 @@
   gap: var(--space-sm);
 }
 
-.move {
+.moveCell {
   display: block;
   padding: var(--space-xs);
   font-family: var(--font-display);
@@ -79,12 +74,12 @@
   user-select: none;
 }
 
-.move:hover {
+.moveCell:hover {
   background-color: var(--surface-3);
   cursor: pointer;
 }
 
-.active {
+.moveCellActive {
   background-color: var(--accent-subtle);
   color: var(--text-primary);
 }
@@ -121,18 +116,12 @@
   background-color: var(--surface-4);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/* Tablet: Reduced height */
 @media (max-width: 1023px) {
   .movesContainer {
     height: 12rem;
   }
 }
 
-/* Mobile: Compact panel */
 @media (max-width: 639px) {
   .navigationPanel {
     padding: var(--space-sm);
@@ -145,7 +134,7 @@
     margin-bottom: var(--space-sm);
   }
 
-  .move {
+  .moveCell {
     font-size: 0.85rem;
     padding: var(--space-xs);
   }

@@ -1,8 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   AnalyzeImportModal - Obsidian Arena Theme
-   FEN/PGN import modal styling
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 .tabContainer {
   display: flex;
   gap: var(--space-sm);
@@ -12,7 +7,7 @@
   border-radius: var(--radius-md);
 }
 
-.tab {
+.importTab {
   flex: 1;
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-body);
@@ -29,12 +24,12 @@
     border-color var(--transition-fast);
 }
 
-.tab:hover:not(.tabActive) {
+.importTab:hover:not(.importTabActive) {
   background: var(--surface-3);
   color: var(--text-primary);
 }
 
-.tabActive {
+.importTabActive {
   background: var(--accent-subtle);
   color: var(--text-primary);
   border-color: var(--accent-muted);
@@ -47,7 +42,7 @@
   text-align: left;
 }
 
-.label {
+.importFieldLabel {
   font-family: var(--font-body);
   font-size: 0.85rem;
   color: var(--text-secondary);
@@ -144,16 +139,12 @@
   text-align: center;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Responsive Breakpoints
-   ───────────────────────────────────────────────────────────────────────────── */
-
 @media (max-width: 639px) {
   .tabContainer {
     margin-bottom: var(--space-md);
   }
 
-  .tab {
+  .importTab {
     font-size: 0.85rem;
     padding: var(--space-xs) var(--space-sm);
   }

@@ -46,8 +46,8 @@ const AnalyzeEnginePanel: Component<AnalyzeEnginePanelProps> = (props) => {
   };
 
   return (
-    <div class={styles.panel}>
-      <div class={styles.header}>
+    <div class={styles.enginePanelRoot}>
+      <div class={styles.enginePanelHeader}>
         <div class={styles.engineInfo}>
           <span class={styles.engineName}>{props.engineInfo.name}</span>
           <Show when={props.analysis && props.enabled}>
@@ -81,8 +81,10 @@ const AnalyzeEnginePanel: Component<AnalyzeEnginePanelProps> = (props) => {
             <For each={props.analysis?.lines ?? []}>
               {(line, index) => (
                 <div
-                  class={styles.line}
-                  classList={{ [styles.clickable]: !!props.onPlayMove && line.pv.length > 0 }}
+                  class={styles.analysisLine}
+                  classList={{
+                    [styles.analysisLineClickable]: !!props.onPlayMove && line.pv.length > 0,
+                  }}
                   onClick={() => handleLineClick(line)}
                 >
                   <span class={styles.lineIndex}>{index() + 1}.</span>

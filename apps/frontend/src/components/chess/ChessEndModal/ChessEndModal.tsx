@@ -114,7 +114,7 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       if (closeButtonRef) {
-        closeButtonRef.classList.add(styles.escapeActive);
+        closeButtonRef.classList.add(styles.closeButtonEscapeActive);
         setTimeout(() => {
           local.onClose();
         }, 150);
@@ -167,14 +167,14 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
           onClick={local.onClose}
           aria-label="Close"
         >
-          <span class={styles.closeIcon}>&times;</span>
+          <span class={styles.closeButtonIcon}>&times;</span>
         </button>
         <Show when={playerResult}>
           <h1 class={styles.playerResult}>{playerResult}</h1>
         </Show>
         <h2>{heading}</h2>
         <p>{message}</p>
-        <div class={styles.actions}>
+        <div class={styles.endModalActions}>
           <button onClick={local.onPlayAgain}>{isMultiplayer() ? 'New Game' : 'Play Again'}</button>
           <button onClick={local.onClose}>Exit</button>
         </div>
