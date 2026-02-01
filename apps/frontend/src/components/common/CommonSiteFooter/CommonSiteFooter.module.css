@@ -15,7 +15,7 @@
   -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow-lg);
   max-width: 500px;
-  z-index: 100;
+  z-index: var(--z-footer);
 }
 
 .footerList {

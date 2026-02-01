@@ -13,7 +13,7 @@
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  width: min(var(--board-max-size), calc(100vw - 2rem), calc(100vh - 200px));
+  width: min(var(--board-max-size), calc(100vw - 2rem));
   aspect-ratio: 1;
   border: 2px solid var(--surface-4);
   border-radius: var(--radius-sm);
@@ -75,7 +75,7 @@
   transition:
     transform var(--transition-fast),
     opacity var(--transition-fast);
-  z-index: 2000;
+  z-index: var(--z-board-indicators);
 
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 
@@ -106,10 +106,10 @@
   position: fixed;
   left: 0;
   top: 0;
-  width: calc(min(var(--board-max-size), calc(100vw - 2rem), calc(100vh - 200px)) / 8);
-  height: calc(min(var(--board-max-size), calc(100vw - 2rem), calc(100vh - 200px)) / 8);
+  width: calc(min(var(--board-max-size), calc(100vw - 2rem)) / 8);
+  height: calc(min(var(--board-max-size), calc(100vw - 2rem)) / 8);
   pointer-events: none;
-  z-index: 10000;
+  z-index: var(--z-board-drag);
 
   will-change: transform;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
@@ -120,7 +120,7 @@
   width: 12.5%;
   height: 12.5%;
   pointer-events: none;
-  z-index: 100;
+  z-index: var(--z-board-animation);
   will-change: transform;
 }
 
@@ -258,12 +258,12 @@
 
 @media (max-width: 1023px) {
   .board {
-    width: min(600px, calc(100vw - 2rem), calc(100vh - 280px));
+    width: min(600px, calc(100vw - 2rem));
   }
 
   .draggedPiece {
-    width: calc(min(600px, calc(100vw - 2rem), calc(100vh - 280px)) / 8);
-    height: calc(min(600px, calc(100vw - 2rem), calc(100vh - 280px)) / 8);
+    width: calc(min(600px, calc(100vw - 2rem)) / 8);
+    height: calc(min(600px, calc(100vw - 2rem)) / 8);
   }
 }
 

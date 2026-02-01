@@ -55,7 +55,7 @@ export interface AnalyzeOptions {
 // ============================================================================
 
 const ENGINE_ANALYSIS_TIMEOUT_MS = 30000;
-const DEFAULT_MULTI_PV = 3;
+const DEFAULT_MULTI_PV = 5;
 const DEFAULT_TIME_MS = 10000; // 10 seconds
 
 // ============================================================================

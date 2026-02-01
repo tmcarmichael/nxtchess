@@ -3,27 +3,27 @@
   height: 20rem;
   margin: 3rem auto;
   padding: 2rem;
-  background-color: rgba(93, 93, 93, 0.105);
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  background-color: var(--surface-2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: 'Open Sans', Arial, sans-serif;
+  font-family: var(--font-body);
 }
 
 .usernameSetupTitle {
   font-size: 1.8rem;
   margin-bottom: 2.75rem;
-  color: #d2d2d2;
+  color: var(--text-primary);
   font-weight: 600;
   text-align: center;
 }
 
 .usernameSetupSubtitle {
   font-size: 1rem;
-  color: #ccc;
+  color: var(--text-secondary);
   margin-bottom: 1.5rem;
   text-align: center;
   max-width: 80%;
@@ -34,38 +34,38 @@
   margin-bottom: 0.5rem;
   padding: 0.75rem;
   font-size: 1rem;
-  color: #ddd;
-  background-color: #555;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  transition: border-color 0.2s;
+  color: var(--text-primary);
+  background-color: var(--surface-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-base);
 }
 
 .usernameSetupInput:focus {
   outline: none;
-  border-color: #68d46b;
+  border-color: var(--success);
 }
 
 .usernameSetupButton {
-  background-color: #298a2cc0;
-  color: #e4e4e4;
+  background-color: var(--success-muted);
+  color: var(--text-primary);
   padding: 0.6rem 1.2rem;
   border: none;
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(22, 22, 22, 0.8);
-  transition: background-color 0.2s;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  transition: background-color var(--transition-base);
   margin-top: 1rem;
 }
 
 .usernameSetupButton:hover {
-  background-color: #368c3a;
+  background-color: var(--success);
 }
 
 .usernameSetupError {
-  color: red;
+  color: var(--error);
   margin-top: 0.75rem;
   font-size: 0.9rem;
   text-align: center;
@@ -73,7 +73,7 @@
 
 .usernameSetupLoading {
   font-size: 1rem;
-  color: #ccc;
+  color: var(--text-secondary);
   text-align: center;
 }
 

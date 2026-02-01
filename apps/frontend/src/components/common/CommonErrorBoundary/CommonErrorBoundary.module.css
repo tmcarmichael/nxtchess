@@ -3,9 +3,9 @@
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  padding: 2rem;
-  background-color: var(--bg-secondary, #1a1a1a);
-  border-radius: 8px;
+  padding: var(--space-xl);
+  background-color: var(--surface-2);
+  border-radius: var(--radius-lg);
 }
 
 .errorContent {
@@ -14,53 +14,53 @@
 }
 
 .errorTitle {
-  color: var(--text-error, #ef4444);
+  color: var(--error);
   font-size: 1.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-md);
 }
 
 .errorMessage {
-  color: var(--text-secondary, #a0a0a0);
+  color: var(--text-secondary);
   font-size: 0.95rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-lg);
   line-height: 1.5;
 }
 
 .errorActions {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-md);
   justify-content: center;
 }
 
 .retryButton {
   padding: 0.75rem 1.5rem;
-  background-color: var(--accent-primary, #3b82f6);
-  color: white;
+  background-color: var(--accent);
+  color: var(--surface-0);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 500;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-base);
 }
 
 .retryButton:hover {
-  background-color: var(--accent-primary-hover, #2563eb);
+  background-color: var(--accent-bright);
 }
 
 .homeButton {
   padding: 0.75rem 1.5rem;
   background-color: transparent;
-  color: var(--text-secondary, #a0a0a0);
-  border: 1px solid var(--border-color, #333);
-  border-radius: 6px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .homeButton:hover {
-  background-color: var(--bg-tertiary, #2a2a2a);
-  color: var(--text-primary, #ffffff);
+  background-color: var(--surface-4);
+  color: var(--text-primary);
 }

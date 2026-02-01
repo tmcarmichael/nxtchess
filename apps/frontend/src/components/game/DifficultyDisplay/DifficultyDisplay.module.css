@@ -1,13 +1,13 @@
 .difficultyDisplayContainer {
   font-size: 0.9rem;
   font-weight: 500;
-  color: #a2ffa2;
+  color: var(--success);
   user-select: none;
 }
 
 .difficultyLabel {
   font-weight: 200;
-  color: #c3c3c3;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   margin-top: 0.5rem;
   user-select: none;

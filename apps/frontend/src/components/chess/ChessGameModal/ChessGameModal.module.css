@@ -7,8 +7,13 @@
   background-color: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 9999;
+  z-index: var(--z-modal);
   animation: fadeIn var(--transition-slow) ease-out forwards;
+}
+
+.modalOverlayPriority {
+  z-index: var(--z-modal-priority);
+  background-color: rgba(0, 0, 0, 0.75);
 }
 
 .modalContent {
@@ -23,6 +28,15 @@
   border: 1px solid var(--border-default);
   box-shadow: var(--shadow-xl);
   animation: slideUp var(--transition-slow) ease-out forwards;
+}
+
+.modalContentMd {
+  max-width: 420px;
+  padding: var(--space-xl);
+}
+
+.modalContentSm {
+  max-width: 400px;
 }
 
 .modalContent::before {
@@ -98,6 +112,10 @@
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     max-height: 90vh;
     overflow-y: auto;
+  }
+
+  .modalContentMd {
+    padding: var(--space-lg);
   }
 
   .closeButton {

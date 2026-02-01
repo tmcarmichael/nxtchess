@@ -1,10 +1,12 @@
-import { type ParentComponent, type JSX, onMount, onCleanup } from 'solid-js';
+import { type ParentComponent, type JSX, onMount, onCleanup, Show } from 'solid-js';
 import styles from './ChessGameModal.module.css';
 
 interface ChessGameModalProps {
-  title: string;
+  title?: string;
   onClose: () => void;
   children: JSX.Element;
+  size?: 'sm' | 'md';
+  priority?: boolean;
 }
 
 const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
@@ -33,8 +35,21 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
   });
 
   return (
-    <div class={styles.modalOverlay} onClick={props.onClose}>
-      <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+    <div
+      classList={{
+        [styles.modalOverlay]: true,
+        [styles.modalOverlayPriority]: !!props.priority,
+      }}
+      onClick={props.onClose}
+    >
+      <div
+        classList={{
+          [styles.modalContent]: true,
+          [styles.modalContentSm]: props.size === 'sm',
+          [styles.modalContentMd]: props.size === 'md',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           ref={closeButtonRef}
           class={styles.closeButton}
@@ -43,7 +58,9 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
         >
           <span class={styles.closeButtonIcon}>&times;</span>
         </button>
-        <h2>{props.title}</h2>
+        <Show when={props.title}>
+          <h2>{props.title}</h2>
+        </Show>
         {props.children}
       </div>
     </div>

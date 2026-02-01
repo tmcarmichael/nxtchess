@@ -1,5 +1,6 @@
-import { splitProps, type Component, Show, onMount, onCleanup } from 'solid-js';
+import { splitProps, type Component, Show } from 'solid-js';
 import { useGameContext } from '../../../store/game/useGameContext';
+import ChessGameModal from '../ChessGameModal/ChessGameModal';
 import styles from './ChessEndModal.module.css';
 import type { GameOverReason, GameWinner, Side } from '../../../types/game';
 
@@ -108,29 +109,6 @@ const getGameOverInfoPlay = (reason: ExtendedGameOverReason, winner: GameWinner)
 const ChessEndModal: Component<ChessEndModalProps> = (props) => {
   const [local] = splitProps(props, ['onClose', 'onPlayAgain', 'gameOverReason', 'gameWinner']);
   const { chess } = useGameContext();
-  // eslint-disable-next-line no-undef
-  let closeButtonRef: HTMLButtonElement | undefined;
-
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      if (closeButtonRef) {
-        closeButtonRef.classList.add(styles.closeButtonEscapeActive);
-        setTimeout(() => {
-          local.onClose();
-        }, 150);
-      } else {
-        local.onClose();
-      }
-    }
-  };
-
-  onMount(() => {
-    document.addEventListener('keydown', handleKeyDown);
-  });
-
-  onCleanup(() => {
-    document.removeEventListener('keydown', handleKeyDown);
-  });
 
   const isMultiplayer = () => chess.state.opponentType === 'human';
 
@@ -159,27 +137,17 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
   const playerResult = getPlayerResult();
 
   return (
-    <div class={styles.modalOverlay} onClick={local.onClose}>
-      <div class={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-        <button
-          ref={closeButtonRef}
-          class={styles.closeButton}
-          onClick={local.onClose}
-          aria-label="Close"
-        >
-          <span class={styles.closeButtonIcon}>&times;</span>
-        </button>
-        <Show when={playerResult}>
-          <h1 class={styles.playerResult}>{playerResult}</h1>
-        </Show>
-        <h2>{heading}</h2>
-        <p>{message}</p>
-        <div class={styles.endModalActions}>
-          <button onClick={local.onPlayAgain}>{isMultiplayer() ? 'New Game' : 'Play Again'}</button>
-          <button onClick={local.onClose}>Exit</button>
-        </div>
+    <ChessGameModal onClose={local.onClose} size="md">
+      <Show when={playerResult}>
+        <h1 class={styles.playerResult}>{playerResult}</h1>
+      </Show>
+      <h2 class={styles.endHeading}>{heading}</h2>
+      <p class={styles.endMessage}>{message}</p>
+      <div class={styles.endModalActions}>
+        <button onClick={local.onPlayAgain}>{isMultiplayer() ? 'New Game' : 'Play Again'}</button>
+        <button onClick={local.onClose}>Exit</button>
       </div>
-    </div>
+    </ChessGameModal>
   );
 };
 
