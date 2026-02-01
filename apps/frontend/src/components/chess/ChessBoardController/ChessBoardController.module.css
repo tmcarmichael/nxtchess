@@ -3,8 +3,6 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: -4vh;
-  min-height: 500px;
   text-align: center;
   position: relative;
 
@@ -92,7 +90,7 @@
   align-items: center;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(4px);
-  z-index: 100;
+  z-index: var(--z-board-overlay);
   border-radius: 4px;
 }
 
@@ -102,7 +100,7 @@
   align-items: center;
   gap: 1rem;
   padding: 2rem;
-  color: #e0e0e0;
+  color: var(--text-secondary);
   text-align: center;
 }
 
@@ -110,65 +108,65 @@
   margin: 0;
   font-size: 1.4rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .gameIdText {
   margin: 0;
   font-size: 0.95rem;
-  color: #aaa;
+  color: var(--text-muted);
 }
 
 .gameIdText code {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-default);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-family: monospace;
-  color: #4ade80;
+  color: var(--success);
   user-select: all;
 }
 
 .waitingHint {
   margin: 0;
   font-size: 0.85rem;
-  color: #888;
+  color: var(--text-muted);
 }
 
 .gameUrlContainer {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-2);
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-default);
 }
 
 .gameUrl {
   font-family: monospace;
   font-size: 0.85rem;
-  color: #4ade80;
+  color: var(--success);
   user-select: all;
   word-break: break-all;
   max-width: 280px;
 }
 
 .copyUrlButton {
-  background: rgba(74, 222, 128, 0.15);
-  border: 1px solid rgba(74, 222, 128, 0.3);
-  color: #4ade80;
+  background: var(--success-subtle);
+  border: 1px solid var(--success-muted);
+  color: var(--success);
   padding: 0.35rem 0.75rem;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.8rem;
   font-weight: 500;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   white-space: nowrap;
 }
 
 .copyUrlButton:hover {
-  background: rgba(74, 222, 128, 0.25);
-  border-color: rgba(74, 222, 128, 0.5);
+  background: var(--success-muted);
+  border-color: var(--success);
 }
 
 .copyUrlButton:active {
@@ -178,34 +176,28 @@
 .waitingSpinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #4ade80;
+  border: 3px solid var(--border-default);
+  border-top-color: var(--success);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .cancelWaitingButton {
   margin-top: 0.5rem;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #aaa;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
   padding: 0.5rem 1.5rem;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .cancelWaitingButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #fff;
+  background: var(--border-default);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 .cancelWaitingButton:active {
@@ -217,7 +209,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 150;
+  z-index: var(--z-board-toast);
   display: flex;
   align-items: center;
   justify-content: center;

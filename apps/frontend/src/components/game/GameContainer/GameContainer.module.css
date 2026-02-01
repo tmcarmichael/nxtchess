@@ -11,15 +11,14 @@
   box-sizing: border-box;
   min-height: 100vh;
   position: relative;
-  z-index: 1;
+  z-index: var(--z-base);
 }
 
 .gameLayout {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-2xl);
+  align-items: center;
+  gap: var(--space-xl);
   margin-top: var(--space-2xl);
-  min-height: 70vh;
   max-width: 1400px;
   justify-content: center;
   width: 100%;
@@ -43,7 +42,7 @@
   height: 120%;
   background: radial-gradient(ellipse at center, var(--accent-ghost) 0%, transparent 60%);
   pointer-events: none;
-  z-index: -1;
+  z-index: var(--z-behind);
   opacity: 0.5;
 }
 
@@ -53,8 +52,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-
-  padding-top: var(--clock-row-height);
 }
 
 @media (min-width: 1400px) {
@@ -69,7 +66,7 @@
 
 @media (max-width: 1199px) {
   .gameLayout {
-    gap: var(--space-xl);
+    gap: var(--space-lg);
   }
 
   .gameSidePanelWrapper {
@@ -139,6 +136,5 @@
     order: 0;
     width: min(360px, 35vw);
     max-width: 400px;
-    padding-top: var(--clock-row-height);
   }
 }

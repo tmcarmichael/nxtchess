@@ -1,6 +1,6 @@
 .notFoundContainer {
   text-align: center;
-  color: #c4c4c4;
+  color: var(--text-secondary);
 }
 
 .notFoundTitle {
@@ -11,22 +11,22 @@
 
 .notFoundText {
   font-size: 1.1rem;
-  color: #c4c4c4;
+  color: var(--text-secondary);
 }
 
 .backLink {
   display: inline-block;
   margin-top: 1rem;
   padding: 0.5rem 1rem;
-  background-color: #636363b2;
-  color: #ccc;
-  border-radius: 4px;
+  background-color: var(--surface-3);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
   text-decoration: none;
-  box-shadow: 0 4px 12px rgba(22, 22, 22, 0.8);
-  transition: background-color 0.2s ease;
+  box-shadow: var(--shadow-md);
+  transition: background-color var(--transition-base);
 }
 
 .backLink:hover {
-  background-color: #555;
-  color: #c4c4c4;
+  background-color: var(--surface-4);
+  color: var(--text-primary);
 }

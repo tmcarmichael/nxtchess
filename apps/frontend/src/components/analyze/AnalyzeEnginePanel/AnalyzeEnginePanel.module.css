@@ -35,7 +35,7 @@
 }
 
 .depth {
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
   font-size: 0.7rem;
   color: var(--text-muted);
 }
@@ -91,7 +91,7 @@
   padding: var(--space-xs) var(--space-sm);
   background: var(--surface-2);
   border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
   font-size: 0.8rem;
   transition: background var(--transition-fast);
 }

@@ -2,12 +2,12 @@
   width: 60rem;
   margin: 3rem auto;
   padding: 2rem;
-  background-color: rgba(93, 93, 93, 0.25);
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-  font-family: 'Open Sans', Arial, sans-serif;
+  background-color: var(--surface-2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-body);
   text-align: center;
-  color: #c0c0c0c3;
+  color: var(--text-secondary);
 }
 
 .userProfileHeader {
@@ -33,19 +33,19 @@
 
 .userProfileRating {
   font-size: 1.2rem;
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .userProfileLoading {
   font-size: 1rem;
-  color: #aaa;
+  color: var(--text-muted);
 }
 
 .userProfileGraph {
   margin-top: 1rem;
   padding: 2rem;
-  background: #5e5e5e28;
-  border-radius: 6px;
+  background: var(--surface-3);
+  border-radius: var(--radius-md);
   font-size: 1rem;
-  color: #ccc;
+  color: var(--text-secondary);
 }

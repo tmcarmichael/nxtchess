@@ -2,13 +2,13 @@
   display: flex;
   flex-direction: column;
   height: 100px;
-  color: #ddd;
+  color: var(--text-primary);
   margin-top: auto;
 }
 
 .materialDiff {
   font-weight: 600;
-  color: #c3c3c3;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   margin-top: 0.8rem;
 }
@@ -18,12 +18,12 @@
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  border: 1px solid #444;
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   height: 60px;
   width: 320px;
   overflow: hidden;
-  background-color: rgba(81, 81, 81, 0.35);
+  background-color: var(--surface-3);
 }
 
 .capturesRow {

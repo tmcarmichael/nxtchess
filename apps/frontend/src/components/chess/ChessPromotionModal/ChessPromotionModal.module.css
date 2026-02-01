@@ -1,52 +1,3 @@
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn var(--transition-slow) ease-out;
-  z-index: 10000;
-}
-
-.modalContent {
-  background: var(--surface-2);
-  padding: var(--space-xl);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-default);
-  position: relative;
-  text-align: center;
-  box-shadow: var(--shadow-xl);
-  animation: slideUp var(--transition-slow) ease-out;
-  width: 90%;
-  max-width: 400px;
-}
-
-.modalContent::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50px;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  border-radius: var(--radius-full);
-  opacity: 0.6;
-}
-
-.modalContent h3 {
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary);
-  margin-bottom: var(--space-md);
-}
-
 .promotionOptions {
   display: flex;
   gap: var(--space-md);
@@ -81,54 +32,7 @@
   outline: none;
 }
 
-.closeButton {
-  position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  background: var(--surface-3);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-full);
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition:
-    transform var(--transition-fast),
-    color var(--transition-fast),
-    background var(--transition-fast);
-}
-
-.closeButton:hover,
-.closeButton:focus,
-.closeButton.closeButtonEscapeActive {
-  color: var(--text-primary);
-  background: var(--surface-4);
-  transform: rotate(90deg);
-  outline: none;
-}
-
-.closeButtonIcon {
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
 @media (max-width: 639px) {
-  .modalOverlay {
-    align-items: flex-end;
-  }
-
-  .modalContent {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: var(--space-lg);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  }
-
   .promotionOptions {
     gap: var(--space-sm);
   }
@@ -137,10 +41,5 @@
     width: 64px;
     height: 64px;
     padding: var(--space-xs);
-  }
-
-  .closeButton {
-    top: var(--space-sm);
-    right: var(--space-sm);
   }
 }
