@@ -8,7 +8,7 @@
 .settingLabel {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -24,7 +24,7 @@
 .settingOptionButton {
   padding: var(--space-sm) var(--space-xs);
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--text-base);
   font-weight: 700;
   background: var(--surface-3);
   border: 1px solid var(--border-subtle);
@@ -67,7 +67,7 @@
     color var(--transition-fast),
     transform var(--transition-fast);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: var(--text-md);
   font-weight: 500;
 }
 
@@ -93,7 +93,7 @@
   margin-top: var(--space-lg);
   padding: var(--space-sm) var(--space-xl);
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: var(--text-md);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -121,20 +121,6 @@
     margin-bottom: var(--space-md);
   }
 
-  .sideSelector {
-    gap: var(--space-lg);
-  }
-
-  .sideSelectorButton {
-    width: 56px;
-    height: 56px;
-  }
-
-  .sideSelectorButtonActive::before {
-    width: 70px;
-    height: 70px;
-  }
-
   .gamePhaseButtonGroup {
     flex-wrap: wrap;
     gap: var(--space-xs);
@@ -142,7 +128,7 @@
 
   .gamePhaseToggleButton {
     padding: var(--space-xs) var(--space-md);
-    font-size: 0.85rem;
+    font-size: var(--text-base);
   }
 
   .settingOptionGrid {
@@ -150,7 +136,7 @@
   }
 
   .settingOptionButton {
-    font-size: 0.75rem;
+    font-size: var(--text-sm);
     padding: var(--space-xs);
   }
 

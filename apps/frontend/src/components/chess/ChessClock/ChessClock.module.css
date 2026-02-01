@@ -30,7 +30,7 @@
 
 .clockTimeDisplay {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: 0.02em;
 
@@ -48,7 +48,7 @@
 
 .gameClock.lowTimeWarning {
   color: var(--warning);
-  border-color: rgba(251, 191, 36, 0.3);
+  border-color: var(--warning-muted);
 }
 
 .gameClock.criticalTimeWarning {

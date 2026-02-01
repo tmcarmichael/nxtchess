@@ -1,7 +1,7 @@
 .userProfileContainer {
   width: 60rem;
-  margin: 3rem auto;
-  padding: 2rem;
+  margin: var(--space-2xl) auto;
+  padding: var(--space-xl);
   background-color: var(--surface-2);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
@@ -14,8 +14,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 
 .userProfileIcon {
@@ -26,7 +26,7 @@
 
 .userProfileTitle {
   user-select: text;
-  font-size: 1.8rem;
+  font-size: var(--text-4xl);
   margin: 0;
   font-weight: 600;
 }
@@ -37,15 +37,15 @@
 }
 
 .userProfileLoading {
-  font-size: 1rem;
+  font-size: var(--text-lg);
   color: var(--text-muted);
 }
 
 .userProfileGraph {
-  margin-top: 1rem;
-  padding: 2rem;
+  margin-top: var(--space-md);
+  padding: var(--space-xl);
   background: var(--surface-3);
   border-radius: var(--radius-md);
-  font-size: 1rem;
+  font-size: var(--text-lg);
   color: var(--text-secondary);
 }

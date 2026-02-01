@@ -8,83 +8,10 @@
 .settingLabel {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.rangeSliderContainer {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: var(--space-lg);
-}
-
-.rangeSliderLabel {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.75rem;
-  margin-bottom: var(--space-sm);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  text-align: center;
-}
-
-.rangeSlider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 75%;
-  height: 4px;
-  background: var(--surface-4);
-  border-radius: var(--radius-full);
-  outline: none;
-  cursor: pointer;
-}
-
-.rangeSlider::-webkit-slider-runnable-track {
-  height: 4px;
-  background: linear-gradient(90deg, var(--accent-subtle), var(--accent-muted));
-  border-radius: var(--radius-full);
-}
-
-.rangeSlider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  margin-top: -8px;
-  background: var(--surface-4);
-  border: 2px solid var(--accent);
-  border-radius: 50%;
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast);
-}
-
-.rangeSlider::-webkit-slider-thumb:hover {
-  background: var(--accent);
-  transform: scale(1.15);
-  box-shadow: 0 0 12px var(--accent-muted);
-}
-
-.rangeSlider::-moz-range-track {
-  height: 4px;
-  background: linear-gradient(90deg, var(--accent-subtle), var(--accent-muted));
-  border-radius: var(--radius-full);
-}
-
-.rangeSlider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: var(--surface-4);
-  border: 2px solid var(--accent);
-  border-radius: 50%;
-  cursor: pointer;
 }
 
 .modalActions {
@@ -94,7 +21,7 @@
 .modalActions button {
   padding: var(--space-sm) var(--space-lg);
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   background: var(--accent-subtle);
   border: 1px solid var(--accent-muted);
@@ -112,7 +39,7 @@
   background: var(--accent-muted);
   border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 255, 209, 0.2);
+  box-shadow: 0 4px 16px var(--accent-glow);
 }
 
 .modalActions button:active {
@@ -122,7 +49,7 @@
 .startButton {
   padding: var(--space-sm) var(--space-xl);
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: var(--text-md);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -150,7 +77,7 @@
 
 .offlineHint {
   margin-top: var(--space-sm);
-  font-size: 0.8rem;
+  font-size: var(--text-base);
   color: var(--text-muted);
 }
 
@@ -164,7 +91,7 @@
   min-width: 100px;
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--text-base);
   font-weight: 700;
   background: var(--surface-3);
   border: 1px solid var(--border-subtle);
@@ -196,7 +123,7 @@
   min-width: 100px;
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--text-base);
   font-weight: 700;
   background: var(--surface-3);
   border: 1px solid var(--border-subtle);
@@ -218,39 +145,6 @@
   color: var(--text-primary);
 }
 
-.timeButtonGroup {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
-.timeButton {
-  padding: var(--space-sm) var(--space-md);
-  min-width: 70px;
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  font-weight: 700;
-  background: var(--surface-3);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.timeButton:hover:not(.timeButtonActive) {
-  background: var(--surface-4);
-  color: var(--text-secondary);
-  border-color: var(--border-default);
-}
-
-.timeButtonActive {
-  background: var(--accent-subtle);
-  border-color: var(--accent-muted);
-  color: var(--text-primary);
-}
-
 .settingOptionGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -261,7 +155,7 @@
 .settingOptionButton {
   padding: var(--space-sm) var(--space-xs);
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--text-base);
   font-weight: 700;
   background: var(--surface-3);
   border: 1px solid var(--border-subtle);
@@ -290,14 +184,13 @@
   align-self: center;
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: var(--text-lg);
   font-weight: 400;
   background: var(--surface-1);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   text-align: center;
-  outline: none;
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
@@ -314,7 +207,7 @@
 
 .modalErrorText {
   margin: var(--space-sm) 0 0;
-  font-size: 0.85rem;
+  font-size: var(--text-base);
   color: var(--error);
 }
 
@@ -323,33 +216,17 @@
     margin-bottom: var(--space-md);
   }
 
-  .sideSelector {
-    gap: var(--space-lg);
-  }
-
-  .sideSelectorButton {
-    width: 56px;
-    height: 56px;
-  }
-
-  .sideSelectorButtonActive::before {
-    width: 70px;
-    height: 70px;
-  }
-
   .opponentSelector,
-  .modeSelector,
-  .timeButtonGroup {
+  .modeSelector {
     flex-wrap: wrap;
     gap: var(--space-xs);
   }
 
   .opponentButton,
-  .modeButton,
-  .timeButton {
+  .modeButton {
     min-width: 80px;
     padding: var(--space-xs) var(--space-sm);
-    font-size: 0.75rem;
+    font-size: var(--text-sm);
   }
 
   .settingOptionGrid {
@@ -357,12 +234,8 @@
   }
 
   .settingOptionButton {
-    font-size: 0.75rem;
+    font-size: var(--text-sm);
     padding: var(--space-xs);
-  }
-
-  .rangeSlider {
-    width: 90%;
   }
 
   .modalActions {

@@ -4,7 +4,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--overlay-medium);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: var(--z-modal);
@@ -13,7 +13,7 @@
 
 .modalOverlayPriority {
   z-index: var(--z-modal-priority);
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: var(--overlay-heavy);
 }
 
 .modalContent {
@@ -28,6 +28,8 @@
   border: 1px solid var(--border-default);
   box-shadow: var(--shadow-xl);
   animation: slideUp var(--transition-slow) ease-out forwards;
+  max-height: 90dvh;
+  overflow-y: auto;
 }
 
 .modalContentMd {
@@ -56,7 +58,7 @@
   margin: var(--space-sm) 0 var(--space-lg);
   padding-bottom: var(--space-md);
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -76,7 +78,7 @@
   background: var(--surface-3);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-full);
-  font-size: 1.25rem;
+  font-size: var(--text-2xl);
   color: var(--text-muted);
   cursor: pointer;
   transition:
@@ -95,7 +97,7 @@
 }
 
 .closeButtonIcon {
-  font-size: 1.1rem;
+  font-size: var(--text-xl);
   line-height: 1;
 }
 
@@ -110,8 +112,7 @@
     margin: 0;
     padding: var(--space-md);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    max-height: 90vh;
-    overflow-y: auto;
+    max-height: 90dvh;
   }
 
   .modalContentMd {

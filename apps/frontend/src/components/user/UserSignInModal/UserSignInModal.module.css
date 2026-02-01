@@ -12,7 +12,7 @@
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-lg);
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   background: var(--accent-subtle);
   color: var(--text-primary);
@@ -30,7 +30,7 @@
   transform: translateY(-2px);
   background: var(--accent-muted);
   border-color: var(--accent);
-  box-shadow: 0 4px 16px rgba(0, 255, 209, 0.2);
+  box-shadow: 0 4px 16px var(--accent-glow);
 }
 
 .signInButton:active {
@@ -50,7 +50,7 @@
 .errorBanner p {
   margin: 0;
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: var(--text-base);
   font-weight: 500;
   line-height: 1.4;
 }
@@ -59,7 +59,7 @@
   margin-top: var(--space-sm);
   padding: var(--space-xs) var(--space-sm);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: var(--text-base);
   font-weight: 500;
   border: none;
   border-radius: var(--radius-sm);

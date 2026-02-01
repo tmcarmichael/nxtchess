@@ -13,7 +13,7 @@
 
 .infoPanelTitle {
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -24,7 +24,7 @@
 
 .infoPanelValue {
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 500;
   color: var(--text-primary);
   user-select: none;
