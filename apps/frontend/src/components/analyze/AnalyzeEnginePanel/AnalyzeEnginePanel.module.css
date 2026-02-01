@@ -27,7 +27,7 @@
 
 .engineName {
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -92,7 +92,7 @@
   background: var(--surface-2);
   border-radius: var(--radius-sm);
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--text-base);
   transition: background var(--transition-fast);
 }
 
@@ -129,7 +129,7 @@
 
 .lineMoves {
   color: var(--text-primary);
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -144,7 +144,7 @@
   min-height: 80px;
   color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: var(--text-base);
 }
 
 .thinkingIndicator {
@@ -179,7 +179,7 @@
 
   .analysisLine {
     padding: var(--space-2xs) var(--space-xs);
-    font-size: 0.75rem;
+    font-size: var(--text-sm);
   }
 
   .lineMoves {

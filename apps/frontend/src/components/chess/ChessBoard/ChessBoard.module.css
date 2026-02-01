@@ -1,4 +1,6 @@
 .boardContainer {
+  --board-size: min(var(--board-max-size), calc(100vw - 2rem));
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,7 +15,7 @@
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  width: min(var(--board-max-size), calc(100vw - 2rem));
+  width: var(--board-size);
   aspect-ratio: 1;
   border: 2px solid var(--surface-4);
   border-radius: var(--radius-sm);
@@ -106,8 +108,8 @@
   position: fixed;
   left: 0;
   top: 0;
-  width: calc(min(var(--board-max-size), calc(100vw - 2rem)) / 8);
-  height: calc(min(var(--board-max-size), calc(100vw - 2rem)) / 8);
+  width: calc(var(--board-size) / 8);
+  height: calc(var(--board-size) / 8);
   pointer-events: none;
   z-index: var(--z-board-drag);
 
@@ -257,43 +259,26 @@
 }
 
 @media (max-width: 1023px) {
-  .board {
-    width: min(600px, calc(100vw - 2rem));
-  }
-
-  .draggedPiece {
-    width: calc(min(600px, calc(100vw - 2rem)) / 8);
-    height: calc(min(600px, calc(100vw - 2rem)) / 8);
+  .boardContainer {
+    --board-size: min(600px, calc(100vw - 2rem));
   }
 }
 
 @media (max-width: 639px) {
   .boardContainer {
+    --board-size: min(480px, calc(100vw - 1rem));
+
     padding: var(--space-sm);
-  }
-
-  .board {
-    width: min(480px, calc(100vw - 1rem));
-  }
-
-  .draggedPiece {
-    width: calc(min(480px, calc(100vw - 1rem)) / 8);
-    height: calc(min(480px, calc(100vw - 1rem)) / 8);
   }
 
   .fileLabel,
   .rankLabel {
-    font-size: 0.5rem;
+    font-size: var(--text-2xs);
   }
 }
 
 @media (max-width: 374px) {
-  .board {
-    width: calc(100vw - 0.5rem);
-  }
-
-  .draggedPiece {
-    width: calc((100vw - 0.5rem) / 8);
-    height: calc((100vw - 0.5rem) / 8);
+  .boardContainer {
+    --board-size: calc(100vw - 0.5rem);
   }
 }

@@ -1,8 +1,8 @@
 .usernameSetupContainer {
   width: 30rem;
   height: 20rem;
-  margin: 3rem auto;
-  padding: 2rem;
+  margin: var(--space-2xl) auto;
+  padding: var(--space-xl);
   background-color: var(--surface-2);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
@@ -14,26 +14,26 @@
 }
 
 .usernameSetupTitle {
-  font-size: 1.8rem;
-  margin-bottom: 2.75rem;
+  font-size: var(--text-4xl);
+  margin-bottom: var(--space-2xl);
   color: var(--text-primary);
   font-weight: 600;
   text-align: center;
 }
 
 .usernameSetupSubtitle {
-  font-size: 1rem;
+  font-size: var(--text-lg);
   color: var(--text-secondary);
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-lg);
   text-align: center;
   max-width: 80%;
 }
 
 .usernameSetupInput {
   width: 80%;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-sm);
   padding: 0.75rem;
-  font-size: 1rem;
+  font-size: var(--text-lg);
   color: var(--text-primary);
   background-color: var(--surface-4);
   border: 1px solid var(--border-default);
@@ -42,7 +42,6 @@
 }
 
 .usernameSetupInput:focus {
-  outline: none;
   border-color: var(--success);
 }
 
@@ -52,12 +51,12 @@
   padding: 0.6rem 1.2rem;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 500;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-md);
   transition: background-color var(--transition-base);
-  margin-top: 1rem;
+  margin-top: var(--space-md);
 }
 
 .usernameSetupButton:hover {
@@ -67,12 +66,12 @@
 .usernameSetupError {
   color: var(--error);
   margin-top: 0.75rem;
-  font-size: 0.9rem;
+  font-size: var(--text-md);
   text-align: center;
 }
 
 .usernameSetupLoading {
-  font-size: 1rem;
+  font-size: var(--text-lg);
   color: var(--text-secondary);
   text-align: center;
 }

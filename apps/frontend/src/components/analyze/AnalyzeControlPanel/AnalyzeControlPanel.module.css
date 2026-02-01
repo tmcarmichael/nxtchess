@@ -15,7 +15,7 @@
 
 .controlPanelHeader {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--text-primary);
   text-transform: uppercase;
@@ -25,7 +25,7 @@
 
 .controlPanelDescription {
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: var(--text-base);
   color: var(--text-secondary);
   text-align: center;
   line-height: 1.5;
@@ -47,10 +47,10 @@
   }
 
   .controlPanelHeader {
-    font-size: 0.9rem;
+    font-size: var(--text-md);
   }
 
   .controlPanelDescription {
-    font-size: 0.8rem;
+    font-size: var(--text-base);
   }
 }

@@ -11,7 +11,7 @@
   flex: 1;
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: var(--text-md);
   font-weight: 500;
   color: var(--text-secondary);
   background: transparent;
@@ -44,7 +44,7 @@
 
 .importFieldLabel {
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: var(--text-base);
   color: var(--text-secondary);
 }
 
@@ -52,12 +52,11 @@
   width: 100%;
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: var(--text-base);
   color: var(--text-primary);
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  outline: none;
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
@@ -70,7 +69,7 @@
 
 .textInput::placeholder {
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
 }
 
 .textArea {
@@ -78,13 +77,12 @@
   min-height: 120px;
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: var(--text-base);
   color: var(--text-primary);
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   resize: vertical;
-  outline: none;
   transition:
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
@@ -103,7 +101,7 @@
   align-self: center;
   padding: var(--space-sm) var(--space-xl);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: var(--text-md);
   font-weight: 600;
   color: var(--surface-0);
   background: var(--accent);
@@ -131,7 +129,7 @@
   margin-top: var(--space-md);
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: var(--text-base);
   color: var(--error);
   background: var(--error-subtle);
   border: 1px solid var(--error-muted);
@@ -145,13 +143,13 @@
   }
 
   .importTab {
-    font-size: 0.85rem;
+    font-size: var(--text-base);
     padding: var(--space-xs) var(--space-sm);
   }
 
   .textInput,
   .textArea {
-    font-size: 0.8rem;
+    font-size: var(--text-base);
   }
 
   .textArea {

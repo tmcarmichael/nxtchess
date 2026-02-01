@@ -78,7 +78,7 @@
   position: relative;
   z-index: 1;
   font-family: var(--font-body);
-  font-size: 1.1rem;
+  font-size: var(--text-xl);
   font-weight: 400;
   color: var(--text-secondary);
   text-align: center;
@@ -90,7 +90,7 @@
   z-index: 1;
   padding: var(--space-md) var(--space-2xl);
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;

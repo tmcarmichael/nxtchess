@@ -13,7 +13,7 @@
 
 .navigationPanelHeader {
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -29,7 +29,8 @@
   overflow-y: auto;
   padding: var(--space-sm);
   margin-bottom: var(--space-md);
-  height: 24rem;
+  max-height: 24rem;
+  min-height: 8rem;
   scrollbar-width: thin;
   scrollbar-color: var(--surface-4) transparent;
 }
@@ -64,7 +65,7 @@
   display: block;
   padding: var(--space-xs);
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: var(--text-md);
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
   text-align: center;
@@ -92,7 +93,7 @@
 
 .arrowButton {
   flex: 1;
-  font-size: 1.25rem;
+  font-size: var(--text-2xl);
   padding: var(--space-sm);
   background: var(--surface-2);
   border: 1px solid var(--border-subtle);
@@ -122,7 +123,8 @@
 
 @media (max-width: 1023px) {
   .movesContainer {
-    height: 12rem;
+    max-height: 12rem;
+    min-height: 6rem;
   }
 }
 
@@ -133,18 +135,19 @@
   }
 
   .movesContainer {
-    height: 8rem;
+    max-height: 8rem;
+    min-height: 4rem;
     padding: var(--space-xs);
     margin-bottom: var(--space-sm);
   }
 
   .moveCell {
-    font-size: 0.85rem;
+    font-size: var(--text-base);
     padding: var(--space-xs);
   }
 
   .arrowButton {
     padding: var(--space-xs) var(--space-sm);
-    font-size: 1.1rem;
+    font-size: var(--text-xl);
   }
 }

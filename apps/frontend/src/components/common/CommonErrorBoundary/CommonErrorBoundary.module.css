@@ -15,13 +15,13 @@
 
 .errorTitle {
   color: var(--error);
-  font-size: 1.5rem;
+  font-size: var(--text-3xl);
   margin-bottom: var(--space-md);
 }
 
 .errorMessage {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: var(--text-lg);
   margin-bottom: var(--space-lg);
   line-height: 1.5;
 }
@@ -39,7 +39,7 @@
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: var(--text-lg);
   font-weight: 500;
   transition: background-color var(--transition-base);
 }
@@ -55,7 +55,7 @@
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: var(--text-lg);
   font-weight: 500;
   transition: all var(--transition-base);
 }

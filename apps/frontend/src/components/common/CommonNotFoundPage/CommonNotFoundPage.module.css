@@ -5,19 +5,19 @@
 
 .notFoundTitle {
   font-size: 2rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-lg);
   font-weight: 600;
 }
 
 .notFoundText {
-  font-size: 1.1rem;
+  font-size: var(--text-xl);
   color: var(--text-secondary);
 }
 
 .backLink {
   display: inline-block;
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   background-color: var(--surface-3);
   color: var(--text-secondary);
   border-radius: var(--radius-sm);

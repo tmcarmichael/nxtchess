@@ -1,14 +1,14 @@
 .pickerContainer {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
+  margin-top: var(--space-lg);
+  padding: var(--space-lg);
   background: rgba(30, 30, 30, 0.5);
   border-radius: 8px;
   border: 1px solid var(--border-subtle);
 }
 
 .pickerTitle {
-  margin: 0 0 1rem 0;
-  font-size: 1rem;
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -18,7 +18,7 @@
 .iconGrid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 0.75rem;
+  gap: var(--space-sm);
 }
 
 .iconButton {
@@ -27,7 +27,7 @@
   justify-content: center;
   width: 100%;
   aspect-ratio: 1;
-  padding: 0.5rem;
+  padding: var(--space-sm);
   background: var(--surface-1);
   border: 2px solid transparent;
   border-radius: var(--radius-md);
@@ -61,7 +61,7 @@
 }
 
 .errorText {
-  margin-top: 0.75rem;
-  font-size: 0.85rem;
+  margin-top: var(--space-sm);
+  font-size: var(--text-base);
   color: var(--error);
 }

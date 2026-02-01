@@ -8,7 +8,7 @@
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-sm) var(--space-lg);
-  background: rgba(10, 10, 10, 0.8);
+  background: var(--surface-chrome);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(12px);
@@ -28,7 +28,7 @@
 
 .footerList li {
   font-family: var(--font-display);
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;

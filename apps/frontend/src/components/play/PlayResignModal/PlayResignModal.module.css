@@ -1,7 +1,7 @@
 .resignTitle {
   margin: var(--space-sm) 0 var(--space-xl);
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -17,7 +17,7 @@
   min-width: 120px;
   padding: var(--space-sm) var(--space-lg);
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   background: var(--accent-subtle);
   border: 1px solid var(--accent-muted);
@@ -35,7 +35,7 @@
   background: var(--accent-muted);
   border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 255, 209, 0.2);
+  box-shadow: 0 4px 16px var(--accent-glow);
 }
 
 .resignModalActions button:active {
@@ -44,7 +44,7 @@
 
 @media (max-width: 639px) {
   .resignTitle {
-    font-size: 1.1rem;
+    font-size: var(--text-xl);
   }
 
   .resignModalActions {

@@ -9,7 +9,7 @@
 .materialDiff {
   font-weight: 600;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--text-md);
   margin-top: 0.8rem;
 }
 
