@@ -1,4 +1,4 @@
-import { For, createMemo, createEffect, on, type Component } from 'solid-js';
+import { For, Show, createMemo, createEffect, on, type Component } from 'solid-js';
 import { useTrainingGame } from '../../../store/game/TrainingGameContext';
 import GameNotation from '../../game/GameNotation/GameNotation';
 import styles from './TrainingNavigationPanel.module.css';
@@ -49,7 +49,6 @@ const TrainingNavigationPanel: Component = () => {
   };
 
   const getQualityClass = (moveIndex: number): string => {
-    // Don't show quality colors in Focus Mode
     if (ui.state.trainingFocusMode) {
       return '';
     }
@@ -58,6 +57,22 @@ const TrainingNavigationPanel: Component = () => {
       return '';
     }
     return styles[quality] || '';
+  };
+
+  const qualityLabels: Record<MoveQuality, string> = {
+    best: 'best move',
+    excellent: 'excellent',
+    good: 'good',
+    inaccuracy: 'inaccuracy',
+    mistake: 'mistake',
+    blunder: 'blunder',
+  };
+
+  const getQualityLabel = (moveIndex: number): string | null => {
+    if (ui.state.trainingFocusMode) return null;
+    const quality = evaluationMap().get(moveIndex);
+    if (!quality) return null;
+    return qualityLabels[quality] ?? null;
   };
 
   const MoveRow: Component<{
@@ -73,28 +88,36 @@ const TrainingNavigationPanel: Component = () => {
     return (
       <div class={styles.moveRow}>
         {props.whiteMove && (
-          <span
+          <button
             classList={{
               [styles.moveCell]: true,
               [styles.moveCellActive]: whiteActive(),
               [getQualityClass(props.whiteIndex)]: !!getQualityClass(props.whiteIndex),
             }}
+            aria-current={whiteActive() ? 'step' : undefined}
             onClick={() => handleJumpToMoveIndex(props.whiteIndex)}
           >
             {`${props.turnNumber}. ${props.whiteMove}`}
-          </span>
+            <Show when={getQualityLabel(props.whiteIndex)}>
+              <span class="sr-only">{getQualityLabel(props.whiteIndex)}</span>
+            </Show>
+          </button>
         )}
         {props.blackMove && (
-          <span
+          <button
             classList={{
               [styles.moveCell]: true,
               [styles.moveCellActive]: blackActive(),
               [getQualityClass(props.blackIndex)]: !!getQualityClass(props.blackIndex),
             }}
+            aria-current={blackActive() ? 'step' : undefined}
             onClick={() => handleJumpToMoveIndex(props.blackIndex)}
           >
             {`${props.turnNumber}.. ${props.blackMove}`}
-          </span>
+            <Show when={getQualityLabel(props.blackIndex)}>
+              <span class="sr-only">{getQualityLabel(props.blackIndex)}</span>
+            </Show>
+          </button>
         )}
       </div>
     );
@@ -127,10 +150,10 @@ const TrainingNavigationPanel: Component = () => {
         </div>
       </div>
       <div class={styles.arrowButtons}>
-        <button onClick={goToPreviousMove} class={styles.arrowButton}>
+        <button onClick={goToPreviousMove} class={styles.arrowButton} aria-label="Previous move">
           ←
         </button>
-        <button onClick={goToNextMove} class={styles.arrowButton}>
+        <button onClick={goToNextMove} class={styles.arrowButton} aria-label="Next move">
           →
         </button>
       </div>

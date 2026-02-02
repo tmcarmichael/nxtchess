@@ -54,8 +54,24 @@ const ChessEvalBar: Component<EvalBarProps> = (props) => {
   // Black's portion is the inverse (barFill represents black, positioned at top)
   const blackPortion = () => 100 - whitePortion();
 
+  const evalDescription = createMemo(() => {
+    if (props.evalScore === null) return 'Position evaluation: not available';
+    const mate = mateInfo();
+    if (mate) {
+      const side = mate.isWhiteMating ? 'White' : 'Black';
+      return `Position evaluation: ${side} has checkmate in ${mate.mateDistance}`;
+    }
+    const score = props.evalScore;
+    const abs = Math.abs(score);
+    if (abs < 0.3) return 'Position evaluation: equal';
+    const side = score > 0 ? 'White' : 'Black';
+    const descriptor = abs < 1 ? 'slightly better' : abs < 3 ? 'better' : 'winning';
+    const sign = score > 0 ? 'plus' : 'minus';
+    return `Position evaluation: ${side} is ${descriptor}, ${sign} ${abs.toFixed(1)} pawns`;
+  });
+
   return (
-    <div class={styles.evalBarContainer}>
+    <div class={styles.evalBarContainer} role="img" aria-label={evalDescription()}>
       <div class={styles.evalBarTrack}>
         <div class={styles.evalBarFill} style={{ '--fill-percent': `${blackPortion()}%` }} />
       </div>

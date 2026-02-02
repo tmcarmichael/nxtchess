@@ -24,9 +24,18 @@ const ChessClock: Component<GameClockProps> = (props) => {
   const isLowTime = () => props.timeMs() < 30000;
   const isCritical = () => props.timeMs() < 10000;
 
+  const clockLabel = () => {
+    const display = formatTime(props.timeMs());
+    if (isCritical()) return `${display} — critical`;
+    if (isLowTime()) return `${display} — low time`;
+    return display;
+  };
+
   return (
     <div
       class={styles.gameClock}
+      role="timer"
+      aria-label={clockLabel()}
       classList={{
         [styles.activeTurn]: props.isActive?.() ?? false,
         [styles.lowTimeWarning]: isLowTime(),
