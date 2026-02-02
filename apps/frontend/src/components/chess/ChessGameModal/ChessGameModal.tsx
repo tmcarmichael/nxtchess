@@ -1,4 +1,4 @@
-import { type ParentComponent, type JSX, onMount, onCleanup, Show } from 'solid-js';
+import { type ParentComponent, type JSX, onMount, onCleanup, Show, createUniqueId } from 'solid-js';
 import styles from './ChessGameModal.module.css';
 
 interface ChessGameModalProps {
@@ -10,6 +10,7 @@ interface ChessGameModalProps {
 }
 
 const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
+  const modalTitleId = createUniqueId();
   // eslint-disable-next-line no-undef
   let closeButtonRef: HTMLButtonElement | undefined;
 
@@ -48,6 +49,9 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
           [styles.modalContentSm]: props.size === 'sm',
           [styles.modalContentMd]: props.size === 'md',
         }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={props.title ? modalTitleId : undefined}
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -59,7 +63,7 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
           <span class={styles.closeButtonIcon}>&times;</span>
         </button>
         <Show when={props.title}>
-          <h2>{props.title}</h2>
+          <h2 id={modalTitleId}>{props.title}</h2>
         </Show>
         {props.children}
       </div>

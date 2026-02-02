@@ -61,6 +61,7 @@ const GameNotation: Component<GameNotationProps> = (props) => {
             onClick={() => copyToClipboard(pgn(), 'pgn')}
             disabled={!pgn()}
             title="Copy PGN"
+            aria-label={copiedField() === 'pgn' ? 'Copied PGN' : 'Copy PGN'}
           >
             {copiedField() === 'pgn' ? '✓' : '⧉'}
           </button>
@@ -76,6 +77,7 @@ const GameNotation: Component<GameNotationProps> = (props) => {
           classList={{ [styles.copyButtonCopiedState]: copiedField() === 'fen' }}
           onClick={() => copyToClipboard(props.fen, 'fen')}
           title="Copy FEN"
+          aria-label={copiedField() === 'fen' ? 'Copied FEN' : 'Copy FEN'}
         >
           {copiedField() === 'fen' ? '✓' : '⧉'}
         </button>

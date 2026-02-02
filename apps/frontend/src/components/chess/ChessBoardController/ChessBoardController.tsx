@@ -71,6 +71,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   } | null>(null);
   // Flash king square when illegal move attempted
   const [flashKingSquare, setFlashKingSquare] = createSignal<Square | null>(null);
+  const [gameEventAnnouncement, setGameEventAnnouncement] = createSignal('');
   // Focus mode game result toast
   const [gameResultToast, setGameResultToast] = createSignal<string | null>(null);
   const [toastFadingOut, setToastFadingOut] = createSignal(false);
@@ -246,15 +247,17 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
           const isCheck = chess.state.checkedKingSquare !== null;
 
           if (isCapture && isCheck) {
-            // Capture + check: play capture sound, then check sound
             audioService.playMoveSound(true);
             setTimeout(() => audioService.playCheck(), 80);
           } else if (isCheck) {
-            // Check only: play check sound
             audioService.playCheck();
           } else {
-            // Normal move or capture
             audioService.playMoveSound(isCapture);
+          }
+
+          if (isCheck) {
+            setGameEventAnnouncement('Check');
+            setTimeout(() => setGameEventAnnouncement(''), 1000);
           }
         }
       }
@@ -400,10 +403,11 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   // Trigger illegal move feedback (sound + king flash)
   const triggerIllegalMoveFeedback = () => {
     audioService.playIllegalMove();
+    setGameEventAnnouncement('Illegal move');
+    setTimeout(() => setGameEventAnnouncement(''), 1000);
     const kingSquare = findPlayerKingSquare();
     if (kingSquare) {
       setFlashKingSquare(kingSquare);
-      // Clear flash after animation duration (400ms)
       setTimeout(() => setFlashKingSquare(null), 400);
     }
   };
@@ -901,6 +905,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       onTouchCancel={handleTouchCancel}
       class={styles.chessGameContainer}
     >
+      <div role="status" aria-live="assertive" class="sr-only">
+        {gameEventAnnouncement()}
+      </div>
       <div class={styles.boardLayoutRow}>
         <div class={styles.boardWithClocks}>
           <div class={styles.evalBoardRow}>

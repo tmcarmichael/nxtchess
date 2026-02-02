@@ -51,26 +51,28 @@ const PlayNavigationPanel: Component = () => {
     return (
       <div class={styles.moveRow}>
         {props.whiteMove && (
-          <span
+          <button
             classList={{
               [styles.moveCell]: true,
               [styles.moveCellActive]: whiteActive(),
             }}
+            aria-current={whiteActive() ? 'step' : undefined}
             onClick={() => handleJumpToMoveIndex(props.whiteIndex)}
           >
             {`${props.turnNumber}. ${props.whiteMove}`}
-          </span>
+          </button>
         )}
         {props.blackMove && (
-          <span
+          <button
             classList={{
               [styles.moveCell]: true,
               [styles.moveCellActive]: blackActive(),
             }}
+            aria-current={blackActive() ? 'step' : undefined}
             onClick={() => handleJumpToMoveIndex(props.blackIndex)}
           >
             {`${props.turnNumber}.. ${props.blackMove}`}
-          </span>
+          </button>
         )}
       </div>
     );
@@ -103,10 +105,10 @@ const PlayNavigationPanel: Component = () => {
         </div>
       </div>
       <div class={styles.arrowButtons}>
-        <button onClick={goToPreviousMove} class={styles.arrowButton}>
+        <button onClick={goToPreviousMove} class={styles.arrowButton} aria-label="Previous move">
           ←
         </button>
-        <button onClick={goToNextMove} class={styles.arrowButton}>
+        <button onClick={goToNextMove} class={styles.arrowButton} aria-label="Next move">
           →
         </button>
       </div>

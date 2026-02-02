@@ -51,26 +51,28 @@ const AnalyzeNavigationPanel: Component = () => {
     return (
       <div class={styles.moveRow}>
         {props.whiteMove && (
-          <span
+          <button
             classList={{
               [styles.moveCell]: true,
               [styles.moveActive]: whiteActive(),
             }}
+            aria-current={whiteActive() ? 'step' : undefined}
             onClick={() => handleJumpToMoveIndex(props.whiteIndex)}
           >
             {`${props.turnNumber}. ${props.whiteMove}`}
-          </span>
+          </button>
         )}
         {props.blackMove && (
-          <span
+          <button
             classList={{
               [styles.moveCell]: true,
               [styles.moveActive]: blackActive(),
             }}
+            aria-current={blackActive() ? 'step' : undefined}
             onClick={() => handleJumpToMoveIndex(props.blackIndex)}
           >
             {`${props.turnNumber}.. ${props.blackMove}`}
-          </span>
+          </button>
         )}
       </div>
     );
@@ -103,10 +105,10 @@ const AnalyzeNavigationPanel: Component = () => {
         </div>
       </div>
       <div class={styles.arrowButtons}>
-        <button onClick={goToPreviousMove} class={styles.arrowButton}>
+        <button onClick={goToPreviousMove} class={styles.arrowButton} aria-label="Previous move">
           <span class={styles.arrowIcon}>&larr;</span>
         </button>
-        <button onClick={goToNextMove} class={styles.arrowButton}>
+        <button onClick={goToNextMove} class={styles.arrowButton} aria-label="Next move">
           <span class={styles.arrowIcon}>&rarr;</span>
         </button>
       </div>

@@ -9,6 +9,7 @@
   -webkit-backdrop-filter: blur(8px);
   z-index: var(--z-modal);
   animation: fadeIn var(--transition-slow) ease-out forwards;
+  contain: layout;
 }
 
 .modalOverlayPriority {
@@ -30,6 +31,7 @@
   animation: slideUp var(--transition-slow) ease-out forwards;
   max-height: 90dvh;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modalContentMd {

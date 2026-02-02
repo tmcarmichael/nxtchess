@@ -6,6 +6,7 @@
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   animation: fadeIn var(--transition-fast) ease-out;
+  contain: layout;
 }
 
 .mobileMenuPanel {
