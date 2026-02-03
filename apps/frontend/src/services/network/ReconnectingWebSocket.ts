@@ -228,7 +228,7 @@ export class ReconnectingWebSocket {
     this.attemptCount++;
 
     const delay = this.calculateBackoffDelay();
-    console.log(
+    console.warn(
       `ReconnectingWebSocket: Reconnecting in ${delay}ms (attempt ${this.attemptCount}/${this.config.maxAttempts})`
     );
 

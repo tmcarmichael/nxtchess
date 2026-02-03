@@ -19,8 +19,8 @@ const PlayResignModal: Component<ResignModalProps> = (props) => {
     <ChessGameModal onClose={local.onClose} size="md">
       <h1 class={styles.resignTitle}>{getSideLabel()} resigned</h1>
       <div class={styles.resignModalActions}>
-        <button onClick={local.onReplay}>Play Again</button>
-        <button onClick={local.onHome}>Home</button>
+        <button onClick={() => local.onReplay()}>Play Again</button>
+        <button onClick={() => local.onHome()}>Home</button>
       </div>
     </ChessGameModal>
   );

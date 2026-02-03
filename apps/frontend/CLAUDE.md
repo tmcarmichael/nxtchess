@@ -27,7 +27,7 @@ yarn test:e2e:ui   # Playwright with UI
 
 ### Entry Point & Providers
 
-Entry point `src/index.tsx` wraps the app in `UserProvider` → `Router`. **GameProvider is NOT global** — each game mode (Play, Training, Analyze) wraps itself with its own provider internally. This ensures multiplayer code is not loaded on training/analysis pages and vice versa.
+Entry point `src/index.tsx` wraps the app in `SettingsProvider` → `UserProvider` → `Router`. **GameProvider is NOT global** — each game mode (Play, Training, Analyze, Puzzle) wraps itself with its own provider internally. This ensures multiplayer code is not loaded on training/analysis pages and vice versa.
 
 Pre-warms Stockfish AI engine on app load. Terminates both AI and eval engines on `beforeunload`.
 
@@ -38,16 +38,18 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `/play/:gameId` → PlayContainer (join multiplayer game via URL)
 - `/training` → TrainingContainer (untimed practice with eval)
 - `/analyze` → AnalyzeContainer (position analysis with FEN/PGN import)
+- `/puzzles` → PuzzleContainer (mate-in-N tactics puzzles)
 - `/username-setup` → UsernameSetup
 - `/profile/:username` → UserProfile
 - `*` → CommonNotFoundPage
 
 ### Component Organization
 
-**`chess/` (12 components)** — Core chess UI:
+**`chess/` (13 components)** — Core chess UI:
 
 - `ChessBoardController` — Main game controller (move validation, drag/drop, AI triggers, animations)
 - `ChessBoard` — Presentational board (receives callbacks, renders squares)
+- `ChessBoardArrows` — Right-click drag arrow annotations with valid move filtering
 - `ChessPiece` — Individual piece renderer with drag support
 - `ChessClock` — Timer display
 - `ChessEvalBar` — Evaluation visualization bar
@@ -59,11 +61,12 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `ChessSideSelector` — Color selection UI
 - `ChessDifficultySlider` — AI difficulty picker
 
-**`game/` (7 components)** — Game layout:
+**`game/` (8 components)** — Game layout:
 
 - `GameContainer` — Layout wrapper (two-column/single-column responsive)
 - `GameInfoPanel` — Player info and stats
 - `GameNotation` — Move history display with SAN notation
+- `MoveHistoryPanel` — Move history panel wrapper
 - `ButtonPanel` — Action buttons container
 - `GamePanelButton` — Styled button component
 - `DifficultyDisplay` — Shows AI difficulty level
@@ -92,6 +95,14 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `AnalyzeImportModal` — FEN/PGN import dialog
 - `AnalyzeNavigationPanel` — Move history navigation for analysis mode
 
+**`puzzle/` (5 components)** — Puzzle/tactics mode:
+
+- `PuzzleContainer` — Wraps with PuzzleGameProvider
+- `PuzzleModal` — Puzzle category selection (mate-in-1/2/3)
+- `PuzzleControlPanel` — Puzzle controls (next puzzle, category)
+- `PuzzleNavigationPanel` — Move history navigation for puzzle mode
+- `PuzzleFeedbackModal` — Correct/incorrect feedback after puzzle attempt
+
 **`home/` (2 components)** — Landing page:
 
 - `HomeContainer` — Home page layout
@@ -104,22 +115,31 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `UserProfile` — Player profile page
 - `ProfileIconPicker` — Avatar selector
 
-**`common/` (6 components)** — Shared layout:
+**`common/` (7 components)** — Shared layout:
 
 - `CommonSiteHeader` — Top navigation bar
 - `CommonSiteFooter` — Footer
 - `CommonErrorBoundary` — Error handling wrapper
 - `CommonNotFoundPage` — 404 page
 - `CommonMobileMenu` — Mobile navigation drawer
+- `CommonSettingsDropdown` — Theme toggle (dark/light) and sound control
 - `NetworkStatusBanner` — Online/offline indicator
 
 ### Component Patterns
 
 **Controller/Presenter separation**: `ChessBoardController` handles all game logic (move validation, drag/drop, promotion, AI triggers). `ChessBoard` is purely presentational—receives callbacks and renders squares.
 
-**Container components** (`PlayContainer`, `TrainingContainer`, `AnalyzeContainer`) wrap themselves with their own provider and compose the controller with mode-specific panels and modals.
+**Container components** (`PlayContainer`, `TrainingContainer`, `AnalyzeContainer`, `PuzzleContainer`) wrap themselves with their own provider and compose the controller with mode-specific panels and modals.
 
 ### State Management
+
+#### Global Settings Store (`store/settings/`)
+
+- `SettingsContext.tsx` — Wraps entire app (above UserProvider) with theme and sound state
+- Backed by `services/settings/SettingsService.ts` (localStorage, key: `nxtchess:settings`)
+- State: `theme` ('dark' | 'light'), `soundEnabled` (boolean)
+- Actions: `toggleTheme()`, `toggleSound()`
+- Theme applied via `data-theme="light"` attribute on `<body>`, with flash-prevention script in `index.html`
 
 #### Global User Store (`store/user/`)
 
@@ -143,6 +163,7 @@ Five independent SolidJS stores compose via context (NOT a monolithic store):
 - **`PlayGameContext.tsx`** — Creates all 5 stores, provides `PlayGameContextValue` with `PlayActions`
 - **`TrainingGameContext.tsx`** — Creates 4 stores (no multiplayer), provides `TrainingGameContextValue` with `TrainingActions`
 - **`AnalyzeGameContext.tsx`** — Creates 4 stores (no multiplayer), provides `AnalyzeGameContextValue` with `AnalyzeActions`, includes `AnalyzeEngineState` for multi-line analysis
+- **`PuzzleGameContext.tsx`** — Creates 4 stores (no multiplayer), provides `PuzzleGameContextValue` with `PuzzleActions`
 - **`useGameContext.ts`** — Unified interface that all modes implement, allows components like `ChessBoardController` to work across modes
 
 #### Action Factories (`store/game/actions/`)
@@ -153,6 +174,7 @@ Five independent SolidJS stores compose via context (NOT a monolithic store):
 - `createPlayActions.ts` — Play-mode specific (AI coordination + multiplayer sync)
 - `createTrainingActions.ts` — Training-mode specific (eval computation, hint logic)
 - `createAnalyzeActions.ts` — Analysis-mode specific (FEN/PGN loading, move application with history truncation)
+- `createPuzzleActions.ts` — Puzzle-mode specific (puzzle loading, move validation against solution, feedback)
 
 #### Type Definitions (`store/game/types.ts`)
 
@@ -161,8 +183,9 @@ CoreActions       // jumpToMove, flipBoard, exitGame
 SinglePlayerActions extends CoreActions  // startNewGame, applyPlayerMove, resign
 MultiplayerActions extends CoreActions   // startMultiplayerGame, joinMultiplayerGame
 PlayActions = SinglePlayerActions & MultiplayerActions
-TrainingActions = SinglePlayerActions
+TrainingActions extends SinglePlayerActions  // restartGame
 AnalyzeActions extends CoreActions  // loadFen, loadPgn, resetToStart, applyMove
+PuzzleActions extends CoreActions   // startNewGame, applyPlayerMove, loadNextPuzzle, dismissFeedback
 ```
 
 ### Services Layer
@@ -217,6 +240,16 @@ Two separate Web Workers (ai/eval) prevent UCI command race conditions. Analysis
 
 - `PreferencesService.ts` — User settings storage (singleton, LocalStorage)
 
+#### Puzzle Services (`services/puzzle/`)
+
+- `puzzleData.ts` — Client-side puzzle definitions (mate-in-1/2/3), shuffled queue with deduplication
+- `setupMoveComputer.ts` — Computes animated setup moves for puzzle initialization
+- `index.ts` — Barrel exports (`getRandomPuzzle`, `uciToFromTo`, `computeSetupMove`)
+
+#### Settings Services (`services/settings/`)
+
+- `SettingsService.ts` — Theme ('dark'|'light') and sound settings via localStorage (key: `nxtchess:settings`)
+
 #### Training Services (`services/training/`)
 
 Modular training infrastructure for endgame practice:
@@ -248,13 +281,21 @@ PIECE_VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9 }
 
 ```typescript
 Side = 'w' | 'b';
-GameMode = 'play' | 'training' | 'analysis';
+GameMode = 'play' | 'training' | 'analysis' | 'puzzle';
 GameLifecycle = 'idle' | 'initializing' | 'playing' | 'error' | 'ended';
 OpponentType = 'ai' | 'human';
 RatedMode = 'rated' | 'casual';
-GamePhase = 'opening' | 'middlegame' | 'endgame';
+GamePhase = 'opening' | 'middlegame' | 'endgame' | null;
+PuzzleCategory = 'mate-in-1' | 'mate-in-2' | 'mate-in-3' | 'random';
 GameWinner = Side | 'draw' | null;
 GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | null;
+```
+
+**moveQuality.ts:**
+
+```typescript
+MoveQuality = 'best' | 'excellent' | 'good' | 'inaccuracy' | 'mistake' | 'blunder';
+QUALITY_THRESHOLDS = { excellent: 20, good: 50, inaccuracy: 100, mistake: 200 }; // centipawns
 ```
 
 ### Shared Utilities (`src/shared/`)

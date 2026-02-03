@@ -180,20 +180,33 @@ type Game struct {
 type EndgamePosition struct {
     PositionID  string
     FEN         string
+    Moves       string        // optional, UCI solution
     Rating      int
     Themes      []string
-    Moves       string
-    InitialEval int
-    SideToMove  string
+    InitialEval *int          // nullable, centipawns
+    Description string        // optional, human-readable title
+    Source      string        // optional, attribution
+    CreatedAt   time.Time
+}
+
+type EndgamePositionResponse struct {
+    PositionID     string `json:"position_id"`
+    FEN            string `json:"fen"`
+    InitialEval    *int   `json:"initial_eval,omitempty"`
+    Theme          string `json:"theme,omitempty"`
+    Difficulty     int    `json:"difficulty"`
+    SolutionMoves  string `json:"solution_moves,omitempty"`
+    ExpectedResult string `json:"expected_result,omitempty"`
 }
 
 type EndgameQueryParams struct {
-    MinRating               int
-    MaxRating               int
-    Theme                   string
-    Side                    string
-    ExcludePositionID       string
-    RequireOpponentMaterial bool
+    MinRating                int
+    MaxRating                int
+    Theme                    string
+    Side                     string    // filters via FEN parsing (split_part)
+    ExcludePositionID        string
+    RequireOpponentMaterial  bool
+    RequirePawnForSideToMove bool      // for knight/bishop endgames
 }
 ```
 
@@ -230,13 +243,14 @@ rating_history (
 )
 
 endgame_positions (
-    position_id VARCHAR PRIMARY KEY,
-    fen VARCHAR NOT NULL,
-    rating INTEGER NOT NULL,
-    themes TEXT[] NOT NULL,      -- e.g., {'rookEndgame', 'lucena'}
-    moves TEXT,                  -- Solution moves
-    initial_eval INTEGER,        -- Centipawn evaluation
-    side_to_move CHAR(1),        -- 'w' or 'b'
+    position_id TEXT PRIMARY KEY,
+    fen TEXT NOT NULL,
+    moves TEXT,                  -- Solution moves (UCI format)
+    rating INT NOT NULL DEFAULT 1500 CHECK (rating >= 0 AND rating <= 4000),
+    themes TEXT[] NOT NULL DEFAULT '{}',  -- e.g., {'rookEndgame', 'lucena'}
+    initial_eval INT,            -- Centipawn evaluation
+    description TEXT,            -- Human-readable title
+    source TEXT,                 -- Attribution
     created_at TIMESTAMP
 )
 ```
@@ -411,7 +425,7 @@ joho/godotenv           v1.5.1      # .env loading
 lib/pq                  v1.10.9     # PostgreSQL driver
 notnil/chess            v1.10.0     # Chess logic
 redis/go-redis/v9       v9.7.0      # Redis client
-golang.org/x/oauth2     v0.26.0     # OAuth2
+golang.org/x/oauth2     v0.30.0     # OAuth2
 ```
 
 ## Adding New Endpoints

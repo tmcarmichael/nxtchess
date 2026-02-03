@@ -28,7 +28,7 @@ const ChessEngineOverlay: Component<ChessEngineOverlayProps> = (props) => {
               <p class={styles.errorMessage}>
                 {props.errorMessage || 'The chess engine could not be initialized.'}
               </p>
-              <button class={styles.retryButton} onClick={props.onRetry}>
+              <button class={styles.retryButton} onClick={() => props.onRetry()}>
                 Retry
               </button>
             </div>

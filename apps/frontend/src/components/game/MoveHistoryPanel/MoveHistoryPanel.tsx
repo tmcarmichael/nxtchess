@@ -45,10 +45,12 @@ const MoveHistoryPanel: Component<MoveHistoryPanelProps> = (props) => {
 
   const movesRows = createMemo(() => {
     const totalRows = Math.max(whiteMoves().length, blackMoves().length);
+    const white = whiteMoves();
+    const black = blackMoves();
     return Array.from({ length: totalRows }, (_, i) => ({
       turnNumber: i + 1,
-      whiteMove: whiteMoves()[i] || '',
-      blackMove: blackMoves()[i] || '',
+      whiteMove: white[i] || '',
+      blackMove: black[i] || '',
       whiteIndex: i * 2,
       blackIndex: i * 2 + 1,
     }));
@@ -144,20 +146,32 @@ const MoveHistoryPanel: Component<MoveHistoryPanelProps> = (props) => {
         </div>
       </div>
       <div class={styles.arrowButtons}>
-        <button onClick={props.onJumpToFirstMove} class={styles.skipButton} aria-label="First move">
+        <button
+          onClick={() => props.onJumpToFirstMove()}
+          class={styles.skipButton}
+          aria-label="First move"
+        >
           ≪
         </button>
         <button
-          onClick={props.onJumpToPreviousMove}
+          onClick={() => props.onJumpToPreviousMove()}
           class={styles.arrowButton}
           aria-label="Previous move"
         >
           ←
         </button>
-        <button onClick={props.onJumpToNextMove} class={styles.arrowButton} aria-label="Next move">
+        <button
+          onClick={() => props.onJumpToNextMove()}
+          class={styles.arrowButton}
+          aria-label="Next move"
+        >
           →
         </button>
-        <button onClick={props.onJumpToLastMove} class={styles.skipButton} aria-label="Last move">
+        <button
+          onClick={() => props.onJumpToLastMove()}
+          class={styles.skipButton}
+          aria-label="Last move"
+        >
           ≫
         </button>
       </div>

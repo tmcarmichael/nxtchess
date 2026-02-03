@@ -24,11 +24,13 @@ const AnalyzeNavigationPanel: Component = () => {
   const blackMoves = createMemo(() => chess.state.moveHistory.filter((_, i) => i % 2 === 1));
 
   const movesRows = createMemo(() => {
-    const totalRows = Math.max(whiteMoves().length, blackMoves().length);
+    const white = whiteMoves();
+    const black = blackMoves();
+    const totalRows = Math.max(white.length, black.length);
     return Array.from({ length: totalRows }, (_, i) => ({
       turnNumber: i + 1,
-      whiteMove: whiteMoves()[i] || '',
-      blackMove: blackMoves()[i] || '',
+      whiteMove: white[i] || '',
+      blackMove: black[i] || '',
       whiteIndex: i * 2,
       blackIndex: i * 2 + 1,
     }));

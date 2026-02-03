@@ -133,19 +133,18 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
     return 'You Lost';
   };
 
-  const { heading, message } = getGameOverInfo();
-  const playerResult = getPlayerResult();
-
   return (
     <ChessGameModal onClose={local.onClose} size="md">
-      <Show when={playerResult}>
-        <h1 class={styles.playerResult}>{playerResult}</h1>
+      <Show when={getPlayerResult()}>
+        <h1 class={styles.playerResult}>{getPlayerResult()}</h1>
       </Show>
-      <h2 class={styles.endHeading}>{heading}</h2>
-      <p class={styles.endMessage}>{message}</p>
+      <h2 class={styles.endHeading}>{getGameOverInfo().heading}</h2>
+      <p class={styles.endMessage}>{getGameOverInfo().message}</p>
       <div class={styles.endModalActions}>
-        <button onClick={local.onPlayAgain}>{isMultiplayer() ? 'New Game' : 'Play Again'}</button>
-        <button onClick={local.onClose}>Exit</button>
+        <button onClick={() => local.onPlayAgain()}>
+          {isMultiplayer() ? 'New Game' : 'Play Again'}
+        </button>
+        <button onClick={() => local.onClose()}>Exit</button>
       </div>
     </ChessGameModal>
   );

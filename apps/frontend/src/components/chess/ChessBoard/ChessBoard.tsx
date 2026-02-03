@@ -8,7 +8,6 @@ import {
   createSignal,
   createEffect,
   on,
-  type Accessor,
 } from 'solid-js';
 import { isPieceSide } from '../../../services/game/pieceUtils';
 import {
@@ -177,41 +176,37 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const flashSquare = local.flashKingSquare();
     const rightClickSet = local.rightClickHighlights();
 
-    // Apple accessor pattern for rendering squares
-    const renderSquare = (squareAccessor: Accessor<BoardSquare>): JSX.Element => {
-      const props = squareAccessor();
-      const file = props.square[0];
-      const rank = props.square[1];
-      const isHighlighted = highlightSet().has(props.square);
-      const isSelected = selected === props.square;
-      const isDragging = dragState?.square === props.square;
-      const isAnimating = animPiece?.to === props.square;
-      const isLastMove = last !== null && (last.from === props.square || last.to === props.square);
+    const renderSquare = (sq: BoardSquare): JSX.Element => {
+      const file = sq.square[0];
+      const rank = sq.square[1];
+      const isHighlighted = highlightSet().has(sq.square);
+      const isSelected = selected === sq.square;
+      const isDragging = dragState?.square === sq.square;
+      const isAnimating = animPiece?.to === sq.square;
+      const isLastMove = last !== null && (last.from === sq.square || last.to === sq.square);
       const isEnemyPiece =
         isHighlighted &&
-        !!props.piece &&
+        !!sq.piece &&
         !!local.activePieceColor() &&
-        !isPieceSide(props.piece, local.activePieceColor());
-      const isCheckedKing = checkedSquare === props.square;
-      const isFlashingKing = flashSquare === props.square;
-      const isRightClickHighlighted = rightClickSet.has(props.square);
+        !isPieceSide(sq.piece, local.activePieceColor());
+      const isCheckedKing = checkedSquare === sq.square;
+      const isFlashingKing = flashSquare === sq.square;
+      const isRightClickHighlighted = rightClickSet.has(sq.square);
       const isPremove =
-        premove !== null && (premove.from === props.square || premove.to === props.square);
+        premove !== null && (premove.from === sq.square || premove.to === sq.square);
       const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
       const view = local.boardView();
       const showFile = (view === 'w' && rank === '1') || (view === 'b' && rank === '8');
       const showRank = (view === 'w' && file === 'h') || (view === 'b' && file === 'a');
 
-      // Determine piece opacity: hidden if dragging or animating to this square
       const pieceOpacity = isDragging ? 0.5 : isAnimating ? 0 : 1;
 
-      // Build accessible label for this square
-      const pieceName = props.piece ? PIECE_NAMES[props.piece] || props.piece : null;
-      const squareLabel = pieceName ? `${props.square}, ${pieceName}` : `${props.square}, empty`;
+      const pieceName = sq.piece ? PIECE_NAMES[sq.piece] || sq.piece : null;
+      const squareLabel = pieceName ? `${sq.square}, ${pieceName}` : `${sq.square}, empty`;
 
       return (
         <div
-          data-square={props.square}
+          data-square={sq.square}
           role="gridcell"
           aria-label={squareLabel}
           aria-selected={isSelected}
@@ -227,15 +222,15 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
             [styles.premoveHighlight]: isPremove,
             [styles.rightClickHighlight]: isRightClickHighlighted,
           }}
-          onClick={() => local.onSquareClick(props.square)}
+          onClick={() => local.onSquareClick(sq.square)}
           onMouseDown={(e) => {
-            if (e.button === 2) local.onSquareRightMouseDown(props.square);
+            if (e.button === 2) local.onSquareRightMouseDown(sq.square);
           }}
           onMouseUp={(e) => {
-            if (e.button === 2) local.onSquareRightMouseUp(props.square);
-            else local.onSquareMouseUp(props.square);
+            if (e.button === 2) local.onSquareRightMouseUp(sq.square);
+            else local.onSquareMouseUp(sq.square);
           }}
-          onMouseEnter={() => local.onSquareMouseEnter(props.square)}
+          onMouseEnter={() => local.onSquareMouseEnter(sq.square)}
         >
           {showFile && <span class={styles.fileLabel}>{file}</span>}
           {showRank && <span class={styles.rankLabel}>{rank}</span>}
@@ -244,12 +239,12 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
               class={`${styles.legalMoveIndicator} ${isEnemyPiece ? styles.captureIndicator : ''}`}
             />
           )}
-          {props.piece && (
+          {sq.piece && (
             <Piece
-              type={props.piece as PieceType}
+              type={sq.piece as PieceType}
               draggable
-              onDragStart={(e: DragEvent) => local.onDragStart(props.square, props.piece!, e)}
-              onTouchStart={(e: TouchEvent) => local.onTouchStart(props.square, props.piece!, e)}
+              onDragStart={(e: DragEvent) => local.onDragStart(sq.square, sq.piece!, e)}
+              onTouchStart={(e: TouchEvent) => local.onTouchStart(sq.square, sq.piece!, e)}
               style={{ opacity: pieceOpacity, transition: 'opacity 0.05s ease' }}
             />
           )}
@@ -257,7 +252,8 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
       );
     };
 
-    return <Index each={squares}>{(square) => renderSquare(square)}</Index>;
+    // eslint-disable-next-line solid/reactivity -- square() is called within Index's tracked callback
+    return <Index each={squares}>{(square) => renderSquare(square())}</Index>;
   };
 
   const renderAnimatingPiece = () => {

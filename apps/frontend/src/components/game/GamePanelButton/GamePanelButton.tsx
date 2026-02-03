@@ -10,7 +10,7 @@ interface GamePanelButtonProps {
 const GamePanelButton: ParentComponent<GamePanelButtonProps> = (props) => {
   return (
     <button
-      onClick={props.onClick}
+      onClick={() => props.onClick()}
       class={`${styles.gamePanelButton} ${props.class || ''}`}
       disabled={props.disabled}
     >
