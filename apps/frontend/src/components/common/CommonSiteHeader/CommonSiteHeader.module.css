@@ -27,6 +27,9 @@
   transition: color var(--transition-fast);
   text-decoration: none;
   flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 .headerLeft:hover {
@@ -50,26 +53,24 @@
   padding: var(--space-xs) 0;
   text-decoration: none;
   transition: color var(--transition-fast);
+  background: none;
+  border: none;
 }
 
 .navItem + .navItem {
-  margin-left: clamp(1rem, 3vw, 2rem);
-  padding-left: clamp(1rem, 3vw, 2rem);
+  --nav-gap: clamp(1rem, 3vw, 2rem);
+  margin-left: calc(var(--nav-gap) * 2);
 }
 
 .navItem + .navItem::before {
   content: '';
   position: absolute;
-  left: 0;
+  left: calc(-1 * var(--nav-gap));
   top: 50%;
   transform: translateY(-50%);
   height: 1.4em;
   width: 2px;
   background: var(--border-default);
-}
-
-.navItem + .navItem::after {
-  left: clamp(1rem, 3vw, 2rem);
 }
 
 .navItem:hover {
@@ -169,6 +170,9 @@
   gap: var(--space-sm);
   cursor: pointer;
   transition: opacity var(--transition-fast);
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 .userSection:hover {
@@ -201,6 +205,11 @@
   transition:
     opacity var(--transition-fast),
     color var(--transition-fast);
+  background: none;
+  border: none;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-right: 0;
 }
 
 .signOutText:hover {
