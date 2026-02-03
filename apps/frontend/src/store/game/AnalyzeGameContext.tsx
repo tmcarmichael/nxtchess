@@ -98,7 +98,9 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
         // Stop any running analysis when position changes
         analysisEngine.stopAnalysis();
 
-        if (!enabled || lifecycle !== 'playing') {
+        const isActive =
+          lifecycle === 'playing' || (lifecycle === 'ended' && chess.derived.isViewingHistory());
+        if (!enabled || !isActive) {
           setAnalysis(null);
           setIsAnalyzing(false);
           currentAnalysisFen = null;

@@ -1,4 +1,4 @@
-import { useNavigate } from '@solidjs/router';
+import { useNavigate, useLocation } from '@solidjs/router';
 import { Show, For, createSignal, onMount, onCleanup, type Component } from 'solid-js';
 import { useUserStore } from '../../../store/user/UserContext';
 import { getProfileIconAsset } from '../../user/ProfileIconPicker/ProfileIconPicker';
@@ -36,12 +36,14 @@ type CommonMobileMenuProps = {
   onClose: () => void;
   onShowPlayModal: () => void;
   onShowTrainingModal: () => void;
+  onShowPuzzleModal: () => void;
   onShowSignInModal: () => void;
   onSignOut: () => void;
 };
 
 const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userState] = useUserStore();
   const [isClosing, setIsClosing] = createSignal(false);
 
@@ -64,12 +66,17 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
 
   const handleNavClick = (item: (typeof NAV_ITEMS)[number]) => {
     if (item.route) {
-      navigate(item.route);
+      navigate(
+        item.route,
+        location.pathname === item.route ? { state: { reset: Date.now() } } : undefined
+      );
       props.onClose();
     } else if (item.showPlayModal) {
       props.onShowPlayModal();
     } else if (item.showTrainingModal) {
       props.onShowTrainingModal();
+    } else if (item.showPuzzleModal) {
+      props.onShowPuzzleModal();
     } else {
       props.onClose();
     }

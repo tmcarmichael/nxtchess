@@ -1,0 +1,214 @@
+.navigationPanel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: var(--space-md);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  background-color: var(--surface-1);
+  box-sizing: border-box;
+  box-shadow: var(--shadow-md);
+}
+
+.navigationPanelHeader {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--border-subtle);
+  user-select: none;
+}
+
+.movesContainer {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: var(--space-sm);
+  margin-bottom: var(--space-md);
+  max-height: 24rem;
+  min-height: 8rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-4) transparent;
+  overscroll-behavior: contain;
+  contain: content;
+}
+
+.movesContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.movesContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.movesContainer::-webkit-scrollbar-thumb {
+  background-color: var(--surface-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.movesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.moveRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1.6rem;
+}
+
+.moveCell {
+  display: block;
+  padding: var(--space-xs);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+  border-left: 3px solid transparent;
+  user-select: none;
+
+  background: none;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  cursor: pointer;
+}
+
+.moveCell:hover {
+  background-color: var(--surface-3);
+  cursor: pointer;
+}
+
+.moveCellActive {
+  background-color: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+.best {
+  border-left-color: var(--move-best);
+  background-color: var(--move-best-bg);
+}
+
+.best:hover {
+  background-color: var(--move-best-hover);
+}
+
+.excellent {
+  border-left-color: var(--move-excellent);
+  background-color: var(--move-excellent-bg);
+}
+
+.excellent:hover {
+  background-color: var(--move-excellent-hover);
+}
+
+.good {
+  border-left-color: var(--move-good);
+  background-color: var(--move-good-bg);
+}
+
+.good:hover {
+  background-color: var(--move-good-hover);
+}
+
+.inaccuracy {
+  border-left-color: var(--move-inaccuracy);
+  background-color: var(--move-inaccuracy-bg);
+}
+
+.inaccuracy:hover {
+  background-color: var(--move-inaccuracy-hover);
+}
+
+.mistake {
+  border-left-color: var(--move-mistake);
+  background-color: var(--move-mistake-bg);
+}
+
+.mistake:hover {
+  background-color: var(--move-mistake-hover);
+}
+
+.blunder {
+  border-left-color: var(--move-blunder);
+  background-color: var(--move-blunder-bg);
+}
+
+.blunder:hover {
+  background-color: var(--move-blunder-hover);
+}
+
+.arrowButtons {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.arrowButton {
+  flex: 1;
+  font-size: var(--text-2xl);
+  padding: var(--space-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+  min-height: var(--touch-target-min);
+}
+
+.arrowButton:hover {
+  background-color: var(--surface-3);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.arrowButton:active {
+  background-color: var(--surface-4);
+}
+
+@media (max-width: 1023px) {
+  .movesContainer {
+    max-height: 12rem;
+    min-height: 6rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .navigationPanel {
+    padding: var(--space-sm);
+    margin-top: var(--space-sm);
+  }
+
+  .movesContainer {
+    max-height: 8rem;
+    min-height: 4rem;
+    padding: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  .moveCell {
+    font-size: var(--text-base);
+    padding: var(--space-xs);
+  }
+
+  .arrowButton {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-xl);
+  }
+}

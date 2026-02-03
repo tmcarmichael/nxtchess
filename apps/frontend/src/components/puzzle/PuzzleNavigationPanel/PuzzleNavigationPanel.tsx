@@ -1,9 +1,9 @@
 import { type Component } from 'solid-js';
-import { useTrainingGame } from '../../../store/game/TrainingGameContext';
+import { usePuzzleGame } from '../../../store/game/PuzzleGameContext';
 import MoveHistoryPanel from '../../game/MoveHistoryPanel/MoveHistoryPanel';
 
-const TrainingNavigationPanel: Component = () => {
-  const { chess, ui, actions } = useTrainingGame();
+const PuzzleNavigationPanel: Component = () => {
+  const { chess, ui, actions } = usePuzzleGame();
 
   return (
     <MoveHistoryPanel
@@ -12,7 +12,7 @@ const TrainingNavigationPanel: Component = () => {
       viewMoveIndex={chess.state.viewMoveIndex}
       moveEvaluations={chess.state.trainingMoveEvaluations}
       focusMode={ui.state.trainingFocusMode}
-      hidePgn={chess.state.trainingGamePhase === 'endgame'}
+      hidePgn={true}
       onJumpToMove={actions.jumpToMove}
       onJumpToPreviousMove={actions.jumpToPreviousMove}
       onJumpToNextMove={actions.jumpToNextMove}
@@ -20,4 +20,4 @@ const TrainingNavigationPanel: Component = () => {
   );
 };
 
-export default TrainingNavigationPanel;
+export default PuzzleNavigationPanel;

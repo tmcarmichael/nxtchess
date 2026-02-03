@@ -89,7 +89,11 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     onPrevious: actions.jumpToPreviousMove,
     onNext: actions.jumpToNextMove,
     onFlip: actions.flipBoard,
-    enabled: () => !chess.state.isGameOver || chess.state.mode === 'training',
+    enabled: () =>
+      !chess.state.isGameOver ||
+      chess.state.mode === 'training' ||
+      chess.state.mode === 'puzzle' ||
+      chess.state.mode === 'analysis',
   });
 
   // Only re-evaluate when FEN changes and eval bar is shown (not on every state update)
@@ -193,17 +197,11 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                 setShowEndModal(true);
               }
             }, 800);
+          } else if (chess.state.mode === 'puzzle') {
+            // Puzzle feedback handled entirely by PuzzleContainer
+            // (focus mode hits the autoRestart branch above, eval mode uses PuzzleFeedbackModal)
           } else if (derived.allowBothSides()) {
-            // Analyze mode: show toast briefly, then allow continued analysis
-            // No modal, no auto-restart - user can navigate history and play alternatives
-            const message = getGameResultMessage();
-            setGameResultToast(message);
-            setToastFadingOut(false);
-
-            // Auto-dismiss toast after 2 seconds
-            toastDismissTimer = setTimeout(() => {
-              dismissToast();
-            }, 2000);
+            // Analyze mode: no toast or modal - user can navigate history and play alternatives
           } else {
             setShowEndModal(true);
           }
@@ -214,6 +212,23 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
             dismissToast();
           }
         }
+      }
+    )
+  );
+
+  // Puzzle feedback toast (focus mode only - eval mode uses PuzzleFeedbackModal)
+  createEffect(
+    on(
+      () => derived.getPuzzleFeedback?.(),
+      (feedback) => {
+        if (!feedback) return;
+        if (!local.autoRestartOnEnd?.()) return;
+        if (toastDismissTimer) clearTimeout(toastDismissTimer);
+        setGameResultToast(feedback.message);
+        setToastFadingOut(false);
+        toastDismissTimer = setTimeout(() => {
+          dismissToast();
+        }, 2000);
       }
     )
   );
@@ -293,11 +308,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     )
   );
 
-  // Play sound when game starts
+  // Play sound when game starts (not in analysis mode)
   createEffect(
     on(
       () => chess.state.lifecycle,
       (lifecycle, prevLifecycle) => {
+        if (chess.state.mode === 'analysis') return;
         // Play game start sound when transitioning to 'playing' state
         if (lifecycle === 'playing' && prevLifecycle !== 'playing') {
           audioService.playGameStart();
@@ -371,6 +387,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       () =>
         [chess.state.isGameOver, chess.derived.isViewingHistory(), chess.state.lifecycle] as const,
       ([isGameOver, isViewingHistory, lifecycle]) => {
+        // In analyze mode, don't clear state when game is over (allows history interaction)
+        if (derived.allowBothSides() && isGameOver) return;
         if (isGameOver || isViewingHistory || lifecycle !== 'playing') {
           clearPremove();
           clearDraggingState();
@@ -412,18 +430,22 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     }
   };
 
-  const canMove = () => {
-    // In analyze mode, allow moves even after game over if viewing a historical position
-    // This enables playing alternative lines from any point in the game
-    const isViewingHistory = chess.state.viewMoveIndex < chess.state.moveHistory.length - 1;
-    const gameOverCheck =
-      derived.allowBothSides() && isViewingHistory ? true : !chess.state.isGameOver;
+  // In analyze mode, allow interaction when viewing history even after game over
+  const isAnalyzeHistoryOverride = () =>
+    derived.allowBothSides() &&
+    chess.state.isGameOver &&
+    chess.state.viewMoveIndex < chess.state.moveHistory.length - 1;
 
-    const baseCheck =
-      !engine.state.isThinking && chess.state.lifecycle === 'playing' && gameOverCheck;
+  const canMove = () => {
+    const isViewingHistory = chess.state.viewMoveIndex < chess.state.moveHistory.length - 1;
+    const analyzeOverride = derived.allowBothSides() && isViewingHistory;
+    const gameOverCheck = analyzeOverride ? true : !chess.state.isGameOver;
+    const lifecycleCheck = analyzeOverride ? true : chess.state.lifecycle === 'playing';
+
+    const baseCheck = !engine.state.isThinking && lifecycleCheck && gameOverCheck;
 
     if (derived.allowBothSides()) {
-      return baseCheck; // Skip turn check for analysis mode
+      return baseCheck;
     }
     return baseCheck && chess.derived.isPlayerTurn();
   };
@@ -452,10 +474,13 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       clearPremove();
       // Allow selecting player's pieces even during opponent's turn
       const piece = chess.derived.currentBoard().find((sq) => sq.square === square)?.piece;
-      if (piece && isPlayerPiece(square) && !chess.state.isGameOver && !engine.state.isThinking) {
+      if (
+        piece &&
+        isPlayerPiece(square) &&
+        (!chess.state.isGameOver || isAnalyzeHistoryOverride()) &&
+        !engine.state.isThinking
+      ) {
         selectSquare(square);
-        // In analysis mode, use viewFen for legal moves (allows moves from historical positions)
-        // Otherwise, use premove-aware moves when it's not player's turn
         const fen = getMoveCalculationFen();
         const moves =
           derived.allowBothSides() || chess.derived.isPlayerTurn()
@@ -480,11 +505,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     } else if (canSetPremove(currentSelection) && highlightedMoves().includes(square)) {
       // Set premove during opponent's turn
       setPremoveWithPromotion(currentSelection, square);
-    } else if (isPlayerPiece(square) && !chess.state.isGameOver) {
-      // Clicked on another player piece - select it instead
+    } else if (isPlayerPiece(square) && (!chess.state.isGameOver || isAnalyzeHistoryOverride())) {
       clearPremove();
       selectSquare(square);
-      // In analysis mode, use viewFen for legal moves (allows moves from historical positions)
       const fen = getMoveCalculationFen();
       const moves =
         derived.allowBothSides() || chess.derived.isPlayerTurn()
@@ -500,10 +523,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
-    // Allow picking up player's pieces even during opponent's turn (premove preparation)
     if (!isPlayerPiece(square)) return;
-    // Don't allow picking up during game over or when engine is thinking
-    if (chess.state.isGameOver || engine.state.isThinking) return;
+    if ((chess.state.isGameOver && !isAnalyzeHistoryOverride()) || engine.state.isThinking) return;
 
     // Clear any existing premove when starting a new drag
     clearPremove();
@@ -538,10 +559,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   let latestTouchPos = { x: 0, y: 0 };
 
   const handleTouchStart = (square: Square, piece: string, event: TouchEvent) => {
-    // Allow picking up player's pieces even during opponent's turn (premove preparation)
     if (!isPlayerPiece(square)) return;
-    // Don't allow picking up during game over or when engine is thinking
-    if (chess.state.isGameOver || engine.state.isThinking) return;
+    if ((chess.state.isGameOver && !isAnalyzeHistoryOverride()) || engine.state.isThinking) return;
 
     // Initialize audio on first interaction
     audioService.init();
@@ -685,7 +704,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   });
 
   const handleMouseUp = (targetSquare: Square) => {
-    if (chess.state.isGameOver) return;
+    if (chess.state.isGameOver && !isAnalyzeHistoryOverride()) return;
     resetViewIfNeeded();
     const dragState = draggedPiece();
     if (!dragState) return;
@@ -751,8 +770,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     const piece = chess.derived.currentBoard().find((sq) => sq.square === square)?.piece;
     if (!piece) return false;
     if (derived.allowBothSides()) {
-      // In analysis mode, allow picking up pieces of the current turn's color
-      return piece[0] === chess.state.currentTurn;
+      // In analysis mode, use the viewed position's turn (handles history navigation)
+      const turn = chess.state.viewFen.split(' ')[1] as Side;
+      return piece[0] === turn;
     }
     return piece[0] === chess.state.playerColor;
   };
@@ -862,8 +882,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const handleCloseEndGame = () => {
-    // In training mode, just close the modal so user can review moves
-    if (chess.state.mode === 'training') {
+    // In training/puzzle mode, just close the modal so user can review moves
+    if (chess.state.mode === 'training' || chess.state.mode === 'puzzle') {
       setShowEndModal(false);
       return;
     }
@@ -937,6 +957,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                 }}
                 animatingMove={animatingMove}
                 flashKingSquare={flashKingSquare}
+                playerColor={() => chess.state.playerColor}
               />
               <ChessEngineOverlay
                 isLoading={derived.isEngineLoading()}

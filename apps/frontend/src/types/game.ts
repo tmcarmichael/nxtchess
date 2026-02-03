@@ -3,7 +3,8 @@ export type SideSelection = Side | 'random';
 export type GameWinner = Side | 'draw' | null;
 export type GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | null;
 export type GamePhase = 'opening' | 'middlegame' | 'endgame' | null;
-export type GameMode = 'play' | 'training' | 'analysis';
+export type GameMode = 'play' | 'training' | 'analysis' | 'puzzle';
+export type PuzzleCategory = 'mate-in-1' | 'mate-in-2' | 'mate-in-3' | 'random';
 export type OpponentType = 'ai' | 'human';
 
 /**
@@ -27,6 +28,7 @@ export interface StartGameOptions {
   trainingTheme?: string;
   /** Exclude a specific position ID to avoid repeats on restart */
   trainingExcludePositionId?: string;
+  puzzleCategory?: PuzzleCategory;
 }
 
 export interface MultiplayerGameOptions {

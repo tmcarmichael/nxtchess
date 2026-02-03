@@ -124,6 +124,24 @@ export interface AnalyzeActions extends CoreActions {
 export type AnalyzeDerived = CoreDerived & EngineDerived;
 
 // ============================================================================
+// Puzzle Mode Actions
+// ============================================================================
+
+export interface PuzzleActions extends CoreActions {
+  startNewGame: (options: StartGameOptions) => Promise<void>;
+  applyPlayerMove: (from: Square, to: Square, promotion?: PromotionPiece) => void;
+  loadNextPuzzle: () => Promise<void>;
+  retryEngineInit: () => Promise<void>;
+  dismissFeedback: () => void;
+}
+
+// ============================================================================
+// Puzzle Mode Derived
+// ============================================================================
+
+export type PuzzleDerived = CoreDerived & EngineDerived;
+
+// ============================================================================
 // Context Value Types
 // ============================================================================
 
@@ -161,4 +179,13 @@ export interface AnalyzeGameContextValue {
   engine: EngineStore;
   actions: AnalyzeActions;
   derived: AnalyzeDerived;
+}
+
+export interface PuzzleGameContextValue {
+  chess: ChessStore;
+  timer: TimerStore;
+  ui: UIStore;
+  engine: EngineStore;
+  actions: PuzzleActions;
+  derived: PuzzleDerived;
 }

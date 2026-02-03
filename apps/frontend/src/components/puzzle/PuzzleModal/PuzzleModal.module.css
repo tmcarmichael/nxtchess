@@ -1,0 +1,161 @@
+.puzzleSettingRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.settingLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modeSelector {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.modeButton {
+  min-width: 100px;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modeButton:hover:not(.modeButtonActive):not(.modeButtonDisabled) {
+  background: var(--surface-4);
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+}
+
+.modeButtonActive {
+  background: var(--accent-subtle);
+  border-color: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+.modeButtonDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.categoryButton {
+  min-width: 106px;
+  padding: var(--space-sm) calc(var(--space-md) + 3px);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.categoryButton:hover:not(.categoryButtonActive) {
+  background: var(--surface-4);
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+}
+
+.categoryButtonActive {
+  background: var(--accent-subtle);
+  border-color: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+.modalActions {
+  margin-top: var(--space-xl);
+}
+
+.startButton {
+  padding: var(--space-sm) var(--space-xl);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, var(--accent-muted), var(--accent-subtle));
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.startButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 255, 209, 0.25);
+}
+
+.startButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.startButtonDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--surface-3);
+  border-color: var(--border-subtle);
+}
+
+.comingSoonHint {
+  margin-top: var(--space-sm);
+  font-size: var(--text-base);
+  color: var(--text-muted);
+}
+
+@media (max-width: 639px) {
+  .puzzleSettingRow {
+    margin-bottom: var(--space-md);
+  }
+
+  .modeSelector {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .modeButton {
+    min-width: 80px;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-sm);
+  }
+
+  .categoryButton {
+    min-width: 80px;
+    font-size: var(--text-sm);
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .modalActions {
+    margin-top: var(--space-lg);
+  }
+
+  .startButton {
+    width: 100%;
+    padding: var(--space-md);
+  }
+}

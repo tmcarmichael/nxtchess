@@ -71,12 +71,12 @@
 
 .clockTop {
   order: -1;
-  margin-bottom: var(--space-xs);
+  margin-bottom: 2px;
 }
 
 .clockBottom {
   order: 1;
-  margin-top: var(--space-xs);
+  margin-top: 2px;
 }
 
 .waitingOverlay {

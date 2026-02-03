@@ -1,4 +1,5 @@
-import { type ParentComponent, createSignal, onMount } from 'solid-js';
+import { useLocation } from '@solidjs/router';
+import { type ParentComponent, createSignal, onMount, createEffect, on } from 'solid-js';
 import { AnalyzeGameProvider, useAnalyzeGame } from '../../../store/game/AnalyzeGameContext';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
 import GameContainer from '../../game/GameContainer/GameContainer';
@@ -9,7 +10,13 @@ import AnalyzeNavigationPanel from '../AnalyzeNavigationPanel/AnalyzeNavigationP
 import styles from './AnalyzeContainer.module.css';
 import type { PromotionPiece, Square } from '../../../types/chess';
 
+interface AnalyzeLocationState {
+  importFen?: string;
+  reset?: number;
+}
+
 const AnalyzeContainerInner: ParentComponent = () => {
+  const location = useLocation<AnalyzeLocationState>();
   const { chess, actions, analyzeEngine } = useAnalyzeGame();
   const [showImportModal, setShowImportModal] = createSignal(false);
 
@@ -19,6 +26,20 @@ const AnalyzeContainerInner: ParentComponent = () => {
       actions.resetToStart();
     }
   });
+
+  // Handle FEN import from navigation state (e.g., from puzzle "Evaluate Puzzle")
+  createEffect(
+    on(
+      () => location.state,
+      (state) => {
+        if (state?.importFen) {
+          actions.loadFen(state.importFen);
+        } else if (state?.reset) {
+          actions.resetToStart();
+        }
+      }
+    )
+  );
 
   const handleOpenImportModal = () => {
     setShowImportModal(true);
