@@ -296,8 +296,8 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
             boardView={local.boardView}
           />
           {renderAnimatingPiece()}
-          {renderDraggedPiece()}
         </div>
+        {renderDraggedPiece()}
         <Show when={local.playerColor()}>
           <div
             classList={{
