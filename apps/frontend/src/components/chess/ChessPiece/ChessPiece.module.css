@@ -6,13 +6,7 @@
   height: 100%;
   object-fit: contain;
   user-select: none;
-  cursor: grab;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
-  transition:
-    transform var(--transition-fast),
-    filter var(--transition-fast);
-  will-change: transform;
-  backface-visibility: hidden;
 
   touch-action: none;
 
@@ -21,15 +15,23 @@
 }
 
 @media (hover: hover) {
+  .chessPiece {
+    cursor: grab;
+    transition:
+      transform var(--transition-fast),
+      filter var(--transition-fast);
+    will-change: transform;
+  }
+
   .chessPiece:hover {
-    transform: scale(1.04);
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35)) brightness(1.08);
+    transform: scale(1.02);
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3)) brightness(1.05);
   }
 
   .chessPiece:active {
     cursor: grabbing;
-    transform: scale(1.12);
-    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4)) brightness(1.1);
+    transform: scale(1.05);
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.35)) brightness(1.07);
   }
 }
 
