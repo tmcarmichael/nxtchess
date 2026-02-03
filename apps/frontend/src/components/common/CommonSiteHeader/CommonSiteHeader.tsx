@@ -7,6 +7,7 @@ import TrainingModal from '../../training/TrainingModal/TrainingModal';
 import { getProfileIconAsset } from '../../user/ProfileIconPicker/ProfileIconPicker';
 import SignInModal from '../../user/UserSignInModal/UserSignInModal';
 import CommonMobileMenu from '../CommonMobileMenu/CommonMobileMenu';
+import CommonSettingsDropdown from '../CommonSettingsDropdown/CommonSettingsDropdown';
 import styles from './CommonSiteHeader.module.css';
 
 export type NavItem = {
@@ -115,6 +116,7 @@ const CommonSiteHeader: ParentComponent = () => {
               Sign Out
             </span>
           </Show>
+          <CommonSettingsDropdown />
           <button
             class={styles.mobileMenuButton}
             onClick={() => setShowMobileMenu(true)}

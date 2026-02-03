@@ -5,6 +5,7 @@ import { routes } from './routes';
 import { initAiEngine, terminateAiEngine } from './services/engine/aiEngineWorker';
 import { terminateEvalEngine } from './services/engine/evalEngineWorker';
 import { initOfflineSupport } from './services/offline/AssetPreloader';
+import { SettingsProvider } from './store/settings/SettingsContext';
 import { UserProvider } from './store/user/UserContext';
 import './index.css';
 
@@ -26,9 +27,11 @@ window.addEventListener('beforeunload', () => {
 
 render(
   () => (
-    <UserProvider>
-      <Router root={App}>{routes}</Router>
-    </UserProvider>
+    <SettingsProvider>
+      <UserProvider>
+        <Router root={App}>{routes}</Router>
+      </UserProvider>
+    </SettingsProvider>
   ),
   document.body
 );

@@ -172,6 +172,71 @@
   --z-mobile-menu: 960;
 }
 
+body[data-theme='light'] {
+  --accent: #009b7d;
+  --accent-bright: #00b892;
+  --accent-muted: rgba(0, 155, 125, 0.4);
+  --accent-subtle: rgba(0, 155, 125, 0.12);
+  --accent-ghost: rgba(0, 155, 125, 0.06);
+  --accent-glow: rgba(0, 155, 125, 0.15);
+
+  --overlay-light: rgba(0, 0, 0, 0.3);
+  --overlay-medium: rgba(0, 0, 0, 0.45);
+  --overlay-heavy: rgba(0, 0, 0, 0.55);
+  --overlay-opaque: rgba(0, 0, 0, 0.7);
+
+  --surface-0: #f5f0e8;
+  --surface-1: #ede7dd;
+  --surface-2: #e5ded3;
+  --surface-3: #ddd5c9;
+  --surface-4: #d4cbbe;
+  --surface-chrome: rgba(245, 240, 232, 0.88);
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.18);
+  --border-accent: rgba(0, 155, 125, 0.35);
+
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-muted: #7a7a7a;
+  --text-accent: var(--accent);
+
+  --success: #16a34a;
+  --success-muted: rgba(22, 163, 74, 0.25);
+  --success-subtle: rgba(22, 163, 74, 0.1);
+  --error: #dc2626;
+  --error-muted: rgba(220, 38, 38, 0.25);
+  --error-subtle: rgba(220, 38, 38, 0.08);
+  --error-light: #b91c1c;
+  --warning: #d97706;
+  --warning-muted: rgba(217, 119, 6, 0.25);
+  --warning-subtle: rgba(217, 119, 6, 0.1);
+
+  --shadow-xs: 1px 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 2px 2px 4px rgba(0, 0, 0, 0.08), -1px -1px 2px rgba(255, 255, 255, 0.5);
+  --shadow-md: 4px 4px 12px rgba(0, 0, 0, 0.1), -2px -2px 4px rgba(255, 255, 255, 0.4);
+  --shadow-lg: 8px 8px 24px rgba(0, 0, 0, 0.12), -4px -4px 8px rgba(255, 255, 255, 0.4);
+  --shadow-xl: 12px 12px 40px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 30px rgba(0, 155, 125, 0.1);
+  --shadow-board: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+body[data-theme='light']::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.02) 0%,
+    transparent 30%,
+    transparent 70%,
+    rgba(0, 0, 0, 0.06) 100%
+  );
+}
+
+body[data-theme='light']::after {
+  opacity: 0.02;
+  mix-blend-mode: multiply;
+}
+
 @media (max-width: 639px) {
   :root {
     --space-lg: 1rem;

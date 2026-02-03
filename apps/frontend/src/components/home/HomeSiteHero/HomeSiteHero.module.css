@@ -49,6 +49,10 @@
   animation: knightFloat 8s ease-in-out infinite alternate;
 }
 
+:global(body[data-theme='light']) .knight {
+  filter: grayscale(100%) brightness(0.8);
+}
+
 @keyframes knightFloat {
   0% {
     transform: translateY(0) rotate(-2deg);
