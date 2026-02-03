@@ -19,13 +19,13 @@
   align-items: center;
   gap: var(--space-xl);
   margin-top: var(--space-2xl);
-  max-width: 1400px;
+  max-width: 1536px;
   justify-content: center;
   width: 100%;
 }
 
 .gameBoardWrapper {
-  flex-shrink: 0;
+  min-width: 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -54,9 +54,9 @@
   gap: var(--space-md);
 }
 
-@media (min-width: 1400px) {
+@media (min-width: 1800px) {
   .gameLayout {
-    max-width: 1600px;
+    max-width: 1680px;
   }
 
   .gameSidePanelWrapper {

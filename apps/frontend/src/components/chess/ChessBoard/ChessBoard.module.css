@@ -1,5 +1,9 @@
 .boardContainer {
-  --board-size: min(var(--board-max-size), calc(100vw - 2rem));
+  --board-size: min(
+    var(--board-max-size),
+    calc(100vw - 2 * var(--panel-width) - 2 * var(--space-xl) - 4 * var(--space-md)),
+    calc(100vh - 19rem)
+  );
 
   display: flex;
   justify-content: center;
@@ -256,6 +260,26 @@
 
 .darkSquare .rankLabel {
   color: var(--board-light);
+}
+
+@media (min-width: 1800px) {
+  .boardContainer {
+    --board-size: min(
+      var(--board-max-size),
+      calc(100vw - 2 * 420px - 2 * var(--space-xl) - 4 * var(--space-md)),
+      calc(100vh - 19rem)
+    );
+  }
+}
+
+@media (max-width: 1199px) {
+  .boardContainer {
+    --board-size: min(
+      var(--board-max-size),
+      calc(100vw - 2 * 320px - 2 * var(--space-lg) - 4 * var(--space-md)),
+      calc(100vh - 19rem)
+    );
+  }
 }
 
 @media (max-width: 1023px) {
