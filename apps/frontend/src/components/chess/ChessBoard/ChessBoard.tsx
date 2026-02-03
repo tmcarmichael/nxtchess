@@ -11,7 +11,12 @@ import {
   type Accessor,
 } from 'solid-js';
 import { isPieceSide } from '../../../services/game/pieceUtils';
-import { type PieceType, type BoardSquare, type Square, type BoardArrow } from '../../../types/chess';
+import {
+  type PieceType,
+  type BoardSquare,
+  type Square,
+  type BoardArrow,
+} from '../../../types/chess';
 import { type Side } from '../../../types/game';
 import ChessBoardArrows from '../ChessBoardArrows/ChessBoardArrows';
 import Piece from '../ChessPiece/ChessPiece';

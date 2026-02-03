@@ -47,10 +47,7 @@ const buildStraightPath = (
   return `M ${from.x},${from.y} L ${endX},${endY}`;
 };
 
-const buildKnightPath = (
-  from: { x: number; y: number },
-  to: { x: number; y: number }
-): string => {
+const buildKnightPath = (from: { x: number; y: number }, to: { x: number; y: number }): string => {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const absDx = Math.abs(dx);
@@ -79,10 +76,7 @@ const buildKnightPath = (
   return `M ${from.x},${from.y} L ${bendX},${bendY} L ${endX},${endY}`;
 };
 
-const buildArrowPath = (
-  from: { x: number; y: number },
-  to: { x: number; y: number }
-): string => {
+const buildArrowPath = (from: { x: number; y: number }, to: { x: number; y: number }): string => {
   if (isKnightMove(from, to)) {
     return buildKnightPath(from, to);
   }

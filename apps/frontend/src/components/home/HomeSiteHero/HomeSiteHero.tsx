@@ -1,11 +1,13 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, onMount, onCleanup, type Component, createMemo } from 'solid-js';
 import { getRandomQuickPlayConfig } from '../../../services/game/chessGameService';
+import { useSettings } from '../../../store/settings/SettingsContext';
 import { type StartGameOptions } from '../../../types/game';
 import styles from './HomeSiteHero.module.css';
 
 const HomeSiteHero: Component = () => {
   const navigate = useNavigate();
+  const [settingsState] = useSettings();
   const [pos, setPos] = createSignal({ x: 0, y: 0, r: 0 });
   let intervalId: ReturnType<typeof setInterval> | undefined;
 
@@ -43,7 +45,7 @@ const HomeSiteHero: Component = () => {
   return (
     <section class={styles.hero}>
       <img
-        src="/assets/wN.svg"
+        src={settingsState.theme === 'dark' ? '/assets/wN.svg' : '/assets/bN.svg'}
         alt="Faded Knight Hero Image"
         class={styles.knight}
         style={knightStyle()}

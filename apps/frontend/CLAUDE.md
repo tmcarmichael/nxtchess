@@ -6,6 +6,8 @@ See also: [Root CLAUDE.md](../../CLAUDE.md) for full-stack commands and backend 
 
 ## Development Commands
 
+**Important:** All `yarn` commands below must be run from `apps/frontend/`, not from the monorepo root. Tools like `prettier`, `eslint`, and `vite` are installed in this package's `node_modules` and won't be found otherwise. If `node_modules` is missing or empty, run `yarn install` from this directory first.
+
 ```bash
 yarn dev           # Vite dev server (http://localhost:5173)
 yarn build         # TypeScript + Vite production build (runs format:check + lint)

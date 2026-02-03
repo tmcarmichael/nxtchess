@@ -27,6 +27,16 @@
     <link rel="mask-icon" href="/icons/icon-maskable.svg" color="#00ffd1" />
   </head>
   <body>
+    <script>
+      try {
+        var s = JSON.parse(localStorage.getItem('nxtchess:settings') || '{}');
+        if (s.theme === 'light') {
+          document.body.setAttribute('data-theme', 'light');
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute('content', '#f5f0e8');
+        }
+      } catch (e) {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>
