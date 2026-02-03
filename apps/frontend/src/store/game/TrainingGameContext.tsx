@@ -103,13 +103,14 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
     },
     multiplayer: null, // Training mode has no multiplayer
     actions: {
+      jumpToFirstMove: actions.jumpToFirstMove,
       jumpToPreviousMove: actions.jumpToPreviousMove,
       jumpToNextMove: actions.jumpToNextMove,
+      jumpToLastMove: actions.jumpToLastMove,
       flipBoard: actions.flipBoard,
       exitGame: actions.exitGame,
       retryEngineInit: actions.retryEngineInit,
       applyPlayerMove: actions.applyPlayerMove,
-      // No multiplayer moves in training mode
     },
     derived: {
       isEngineLoading: derived.isEngineLoading,

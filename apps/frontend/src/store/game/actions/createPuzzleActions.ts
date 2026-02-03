@@ -2,7 +2,12 @@ import { Chess } from 'chess.js';
 import { moveEvalService } from '../../../services/engine/moveEvalService';
 import { getOpponentSide } from '../../../services/game/chessGameService';
 import { transition } from '../../../services/game/gameLifecycle';
-import { getRandomPuzzle, uciToFromTo, type PuzzleDefinition } from '../../../services/puzzle';
+import {
+  getRandomPuzzle,
+  uciToFromTo,
+  computeSetupMove,
+  type PuzzleDefinition,
+} from '../../../services/puzzle';
 import type { Square, PromotionPiece } from '../../../types/chess';
 import type { Side, StartGameOptions, PuzzleCategory } from '../../../types/game';
 import type { ChessStore } from '../stores/createChessStore';
@@ -17,6 +22,9 @@ const randomDelay = (min: number, max: number): Promise<void> => {
   const delay = min + Math.random() * (max - min);
   return new Promise((resolve) => setTimeout(resolve, delay));
 };
+
+const nextFrame = (): Promise<void> =>
+  new Promise((resolve) => requestAnimationFrame(() => resolve()));
 
 export interface PuzzleStores {
   chess: ChessStore;
@@ -94,6 +102,27 @@ export const createPuzzleActions = (
     chess.setLifecycle(transition('idle', 'START_GAME'));
 
     try {
+      const fenTurn = puzzle.fen.split(' ')[1] as Side;
+      const isOpponentFirst = fenTurn !== puzzle.playerSide;
+
+      let gameFen: string;
+      let setupMoveUci: string | null = null;
+      let setupIsFromSolution = false;
+
+      if (isOpponentFirst && puzzle.solutionUci.length > 0) {
+        gameFen = puzzle.fen;
+        setupMoveUci = puzzle.solutionUci[0];
+        setupIsFromSolution = true;
+      } else {
+        const computed = computeSetupMove(puzzle.fen, puzzle.playerSide);
+        if (computed) {
+          gameFen = computed.setupFen;
+          setupMoveUci = computed.setupMoveUci;
+        } else {
+          gameFen = puzzle.fen;
+        }
+      }
+
       chess.startGame({
         mode: 'puzzle',
         playerColor: puzzle.playerSide,
@@ -102,23 +131,34 @@ export const createPuzzleActions = (
         puzzleCategory: puzzle.category,
         puzzleId: puzzle.id,
         puzzleStartFen: puzzle.fen,
-        fen: puzzle.fen,
+        fen: gameFen,
       });
 
       timer.reset(0);
       ui.setBoardView(puzzle.playerSide);
 
-      // Init eval engine (non-critical)
-      await engine.initEval().catch(() => {});
+      // Init eval engine in background (non-blocking)
+      engine.initEval().catch(() => {});
 
       if (thisGeneration !== currentGameGeneration) return;
 
       chess.setLifecycle(transition('initializing', 'ENGINE_READY'));
 
-      // If the first move in the solution belongs to the opponent, auto-play it
-      const fenTurn = puzzle.fen.split(' ')[1] as Side;
-      if (fenTurn !== puzzle.playerSide && puzzle.solutionUci.length > 0) {
-        await performOpponentMove(thisGeneration);
+      // Animate the setup move immediately
+      if (setupMoveUci) {
+        await nextFrame();
+        if (thisGeneration !== currentGameGeneration) return;
+
+        const move = uciToFromTo(setupMoveUci);
+        chess.applyMove(
+          move.from as Square,
+          move.to as Square,
+          move.promotion as PromotionPiece | undefined
+        );
+
+        if (setupIsFromSolution) {
+          chess.setPuzzleSolutionIndex(1);
+        }
       }
     } catch (err) {
       console.error('Puzzle initialization failed:', err);
