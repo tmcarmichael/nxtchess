@@ -92,6 +92,10 @@
 
   --eval-bar-light: #e0e0e0;
 
+  --piece-white: #f7f7f7;
+  --piece-black: #1a1a1a;
+  --piece-border: #6b6b6b;
+
   --board-light: #e8d5b5;
   --board-dark: #b08968;
   --board-selected: rgba(0, 255, 209, 0.35);

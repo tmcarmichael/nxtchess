@@ -78,12 +78,20 @@ const AnalyzeNavigationPanel: Component = () => {
     );
   };
 
+  const goToFirstMove = () => {
+    actions.jumpToFirstMove();
+  };
+
   const goToPreviousMove = () => {
     actions.jumpToPreviousMove();
   };
 
   const goToNextMove = () => {
     actions.jumpToNextMove();
+  };
+
+  const goToLastMove = () => {
+    actions.jumpToLastMove();
   };
 
   return (
@@ -105,11 +113,17 @@ const AnalyzeNavigationPanel: Component = () => {
         </div>
       </div>
       <div class={styles.arrowButtons}>
+        <button onClick={goToFirstMove} class={styles.skipButton} aria-label="First move">
+          ≪
+        </button>
         <button onClick={goToPreviousMove} class={styles.arrowButton} aria-label="Previous move">
-          <span class={styles.arrowIcon}>&larr;</span>
+          ←
         </button>
         <button onClick={goToNextMove} class={styles.arrowButton} aria-label="Next move">
-          <span class={styles.arrowIcon}>&rarr;</span>
+          →
+        </button>
+        <button onClick={goToLastMove} class={styles.skipButton} aria-label="Last move">
+          ≫
         </button>
       </div>
       <GameNotation fen={chess.state.fen} moveHistory={chess.state.moveHistory} />

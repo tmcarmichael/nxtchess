@@ -16,6 +16,8 @@ const PuzzleNavigationPanel: Component = () => {
       onJumpToMove={actions.jumpToMove}
       onJumpToPreviousMove={actions.jumpToPreviousMove}
       onJumpToNextMove={actions.jumpToNextMove}
+      onJumpToFirstMove={actions.jumpToFirstMove}
+      onJumpToLastMove={actions.jumpToLastMove}
     />
   );
 };

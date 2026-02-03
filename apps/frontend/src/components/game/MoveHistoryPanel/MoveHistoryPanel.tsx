@@ -13,6 +13,8 @@ interface MoveHistoryPanelProps {
   onJumpToMove: (index: number) => void;
   onJumpToPreviousMove: () => void;
   onJumpToNextMove: () => void;
+  onJumpToFirstMove: () => void;
+  onJumpToLastMove: () => void;
 }
 
 const MoveHistoryPanel: Component<MoveHistoryPanelProps> = (props) => {
@@ -142,6 +144,9 @@ const MoveHistoryPanel: Component<MoveHistoryPanelProps> = (props) => {
         </div>
       </div>
       <div class={styles.arrowButtons}>
+        <button onClick={props.onJumpToFirstMove} class={styles.skipButton} aria-label="First move">
+          ≪
+        </button>
         <button
           onClick={props.onJumpToPreviousMove}
           class={styles.arrowButton}
@@ -151,6 +156,9 @@ const MoveHistoryPanel: Component<MoveHistoryPanelProps> = (props) => {
         </button>
         <button onClick={props.onJumpToNextMove} class={styles.arrowButton} aria-label="Next move">
           →
+        </button>
+        <button onClick={props.onJumpToLastMove} class={styles.skipButton} aria-label="Last move">
+          ≫
         </button>
       </div>
       <GameNotation fen={props.fen} moveHistory={props.moveHistory} hidePgn={props.hidePgn} />

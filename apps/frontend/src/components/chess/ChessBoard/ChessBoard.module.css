@@ -21,7 +21,7 @@
   grid-template-rows: repeat(8, 1fr);
   width: var(--board-size);
   aspect-ratio: 1;
-  border: 2px solid var(--surface-4);
+  border: 2px solid #3a3a3a;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-board);
   overflow: hidden;
@@ -232,17 +232,17 @@
   width: 29px;
   height: 29px;
   border-radius: 50%;
-  border: 2.5px solid #9a9a9a;
+  border: 2.5px solid var(--piece-border);
   pointer-events: none;
-  opacity: 0.7;
+  opacity: 0.9;
 }
 
 .playerColorWhite {
-  background-color: #e8e8e8;
+  background-color: var(--piece-white);
 }
 
 .playerColorBlack {
-  background-color: #1a1a1a;
+  background-color: var(--piece-black);
 }
 
 .fileLabel {
