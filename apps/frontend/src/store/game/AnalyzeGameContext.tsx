@@ -237,8 +237,10 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
     },
     multiplayer: null,
     actions: {
+      jumpToFirstMove: actions.jumpToFirstMove,
       jumpToPreviousMove: actions.jumpToPreviousMove,
       jumpToNextMove: actions.jumpToNextMove,
+      jumpToLastMove: actions.jumpToLastMove,
       flipBoard: actions.flipBoard,
       exitGame: actions.exitGame,
       retryEngineInit: async () => {},

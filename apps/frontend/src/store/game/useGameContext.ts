@@ -33,8 +33,10 @@ export interface UnifiedGameContext {
 
   // Unified actions that work across modes
   actions: {
+    jumpToFirstMove: () => void;
     jumpToPreviousMove: () => void;
     jumpToNextMove: () => void;
+    jumpToLastMove: () => void;
     flipBoard: () => void;
     exitGame: () => void;
     retryEngineInit: () => Promise<void>;
