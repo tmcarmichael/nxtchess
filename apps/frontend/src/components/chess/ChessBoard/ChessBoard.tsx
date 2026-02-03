@@ -43,10 +43,6 @@ interface ChessBoardProps {
   selectedSquare: () => Square | null;
   draggedPiece: () => { square: Square; piece: string } | null;
   cursorPosition: () => { x: number; y: number };
-  onSquareClick: (square: Square) => void;
-  onSquareMouseUp: (square: Square) => void;
-  onDragStart: (square: Square, piece: string, event: DragEvent) => void;
-  onTouchStart: (square: Square, piece: string, event: TouchEvent) => void;
   lastMove: () => { from: Square; to: Square } | null;
   checkedKingSquare: () => Square | null;
   boardView: () => Side;
@@ -72,10 +68,6 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     'selectedSquare',
     'draggedPiece',
     'cursorPosition',
-    'onSquareClick',
-    'onSquareMouseUp',
-    'onDragStart',
-    'onTouchStart',
     'lastMove',
     'checkedKingSquare',
     'boardView',
@@ -153,8 +145,6 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const dragState = local.draggedPiece();
     if (!dragState) return null;
     const { x, y } = local.cursorPosition();
-    // Use transform for GPU-accelerated positioning (avoids layout thrashing on mobile)
-    // Chain two translates: first positions at cursor, second centers the piece (-50%)
     return (
       <div
         class={styles.draggedPiece}
@@ -222,13 +212,11 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
             [styles.premoveHighlight]: isPremove,
             [styles.rightClickHighlight]: isRightClickHighlighted,
           }}
-          onClick={() => local.onSquareClick(sq.square)}
           onMouseDown={(e) => {
             if (e.button === 2) local.onSquareRightMouseDown(sq.square);
           }}
           onMouseUp={(e) => {
             if (e.button === 2) local.onSquareRightMouseUp(sq.square);
-            else local.onSquareMouseUp(sq.square);
           }}
           onMouseEnter={() => local.onSquareMouseEnter(sq.square)}
         >
@@ -242,9 +230,6 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
           {sq.piece && (
             <Piece
               type={sq.piece as PieceType}
-              draggable
-              onDragStart={(e: DragEvent) => local.onDragStart(sq.square, sq.piece!, e)}
-              onTouchStart={(e: TouchEvent) => local.onTouchStart(sq.square, sq.piece!, e)}
               style={{ opacity: pieceOpacity, transition: 'opacity 0.05s ease' }}
             />
           )}
@@ -263,14 +248,8 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
 
     const view = local.boardView();
     const toCoords = squareToCoords(animPiece.to, view);
-
-    // Position using percentage of board (each square = 12.5%)
-    const squarePercent = 12.5;
-    const leftPercent = toCoords.x * squarePercent;
-    const topPercent = toCoords.y * squarePercent;
-    // Offset in percentage of element size (element is 1 square, so 100% = 1 square)
-    const offsetXPercent = offset.x * 100;
-    const offsetYPercent = offset.y * 100;
+    const leftPercent = toCoords.x * 12.5;
+    const topPercent = toCoords.y * 12.5;
 
     return (
       <div
@@ -278,7 +257,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
         style={{
           left: `${leftPercent}%`,
           top: `${topPercent}%`,
-          transform: `translate(${offsetXPercent}%, ${offsetYPercent}%)`,
+          transform: `translate(${offset.x * 100}%, ${offset.y * 100}%)`,
           transition:
             offset.x === 0 && offset.y === 0
               ? `transform ${ANIMATION_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`

@@ -4,14 +4,11 @@ import styles from './ChessPiece.module.css';
 
 interface GamePieceProps {
   type: PieceType;
-  draggable?: boolean;
-  onDragStart?: (event: DragEvent) => void;
-  onTouchStart?: (event: TouchEvent) => void;
   style?: JSX.CSSProperties;
 }
 
 const ChessPiece: Component<GamePieceProps> = (props: GamePieceProps) => {
-  const [local] = splitProps(props, ['type', 'draggable', 'onDragStart', 'onTouchStart', 'style']);
+  const [local] = splitProps(props, ['type', 'style']);
   const pieceSrc = () => `/assets/${local.type}.svg`;
 
   return (
@@ -19,9 +16,7 @@ const ChessPiece: Component<GamePieceProps> = (props: GamePieceProps) => {
       src={pieceSrc()}
       alt={local.type}
       class={styles.chessPiece}
-      draggable={local.draggable}
-      onDragStart={(e) => local.onDragStart?.(e)}
-      onTouchStart={(e) => local.onTouchStart?.(e)}
+      draggable={false}
       style={local.style}
     />
   );
