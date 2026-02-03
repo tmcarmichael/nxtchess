@@ -87,6 +87,11 @@ export type Board = (PieceType | null)[][];
 
 export type PromotionPiece = 'q' | 'r' | 'b' | 'n';
 
+export interface BoardArrow {
+  from: Square;
+  to: Square;
+}
+
 export const PIECE_VALUES: Record<string, number> = {
   P: 1,
   N: 3,
