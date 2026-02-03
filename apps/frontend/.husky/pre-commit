@@ -1,1 +1,1 @@
-cd apps/frontend && npx lint-staged
+cd apps/frontend && npx lint-staged && npx tsc -b
