@@ -131,7 +131,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     square: Square;
     piece: string;
   } | null = null;
-  let isPointerDragging = false;
   let latestPointerPos = { x: 0, y: 0 };
   let boardRef: HTMLElement | null = null;
   const DRAG_THRESHOLD = 8;
@@ -623,14 +622,10 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       square,
       piece,
     };
-    isPointerDragging = false;
 
-    // Capture pointer to receive events even if pointer leaves the element
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    addDocumentDragListeners();
     e.preventDefault();
 
-    // Immediate visual feedback — show selection and legal moves right away
-    // (critical for mobile where there's no hover state)
     const fen = getMoveCalculationFen();
     const moves =
       derived.allowBothSides() || chess.derived.isPlayerTurn()
@@ -639,28 +634,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     batch(() => {
       setSelectedSquare(square);
       setHighlightedMoves(moves);
-    });
-  };
-
-  // Activates drag mode after movement threshold exceeded
-  const activatePointerDrag = (currentX: number, currentY: number) => {
-    if (!pointerTracking || isPointerDragging) return;
-    isPointerDragging = true;
-
-    // Clear any existing premove when starting a new drag
-    clearPremove();
-
-    resetViewIfNeeded();
-    const fen = getMoveCalculationFen();
-    const moves =
-      derived.allowBothSides() || chess.derived.isPlayerTurn()
-        ? getLegalMoves(fen, pointerTracking.square)
-        : getPremoveLegalMoves(chess.state.fen, pointerTracking.square);
-    batch(() => {
-      setDraggedPiece({ square: pointerTracking!.square, piece: pointerTracking!.piece });
-      setCursorPosition({ x: currentX, y: currentY });
-      setHighlightedMoves(moves);
-      setSelectedSquare(pointerTracking!.square);
+      setDraggedPiece({ square, piece });
+      setCursorPosition({ x: e.clientX, y: e.clientY });
     });
   };
 
@@ -672,17 +647,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
     latestPointerPos = { x: e.clientX, y: e.clientY };
 
-    // Check if we should activate drag mode (movement exceeded threshold)
-    if (!isPointerDragging) {
-      const dx = e.clientX - pointerTracking.startX;
-      const dy = e.clientY - pointerTracking.startY;
-      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
-        activatePointerDrag(e.clientX, e.clientY);
-      }
-      return;
-    }
-
-    // Schedule RAF-throttled position update
     if (rafId !== null) return;
     rafId = requestAnimationFrame(() => {
       rafId = null;
@@ -695,8 +659,11 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     if (!pointerTracking || e.pointerId !== pointerTracking.pointerId) return;
 
     const tracking = pointerTracking;
+    const dx = e.clientX - tracking.startX;
+    const dy = e.clientY - tracking.startY;
+    const wasDrag = Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD;
 
-    if (isPointerDragging) {
+    if (wasDrag) {
       // Drag completed - handle drop
       const targetSquare = getSquareFromCoordinates(e.clientX, e.clientY);
       if (targetSquare) {
@@ -705,9 +672,13 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
         clearDraggingState();
       }
     } else {
-      // Tap (no drag occurred) - select piece and show legal moves
+      // Tap (no drag occurred) - hide ghost piece, keep selection
+      removeDocumentDragListeners();
       pointerTracking = null;
-      isPointerDragging = false;
+      batch(() => {
+        setDraggedPiece(null);
+        setDragHoverSquare(null);
+      });
       selectSquare(tracking.square);
       const fen = getMoveCalculationFen();
       const moves =
@@ -723,16 +694,22 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     clearDraggingState();
   };
 
-  // Detect when the browser forcibly releases pointer capture
-  // (e.g., system gesture, app switch, notification panel)
-  const handleLostCapture = (e: PointerEvent) => {
-    if (pointerTracking && e.pointerId === pointerTracking.pointerId) {
-      clearDraggingState();
-    }
+  // Document-level drag listener management
+  // Registered on pointerdown, removed on pointerup/cancel/cleanup
+  const addDocumentDragListeners = () => {
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+    document.addEventListener('pointercancel', handlePointerCancel);
   };
 
-  // Register pointer event listeners on the board element via addEventListener
-  // to bypass SolidJS event delegation (which can interfere with setPointerCapture)
+  const removeDocumentDragListeners = () => {
+    document.removeEventListener('pointermove', handlePointerMove);
+    document.removeEventListener('pointerup', handlePointerUp);
+    document.removeEventListener('pointercancel', handlePointerCancel);
+  };
+
+  // Register pointerdown on the board element via addEventListener
+  // to bypass SolidJS event delegation
   createEffect(() => {
     if (!containerRef) return;
 
@@ -743,23 +720,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     const el = boardRef;
 
     const onPointerDown = (e: Event) => handlePointerDown(e as PointerEvent);
-    const onPointerMove = (e: Event) => handlePointerMove(e as PointerEvent);
-    const onPointerUp = (e: Event) => handlePointerUp(e as PointerEvent);
-    const onPointerCancel = (e: Event) => handlePointerCancel(e as PointerEvent);
-    const onLostCapture = (e: Event) => handleLostCapture(e as PointerEvent);
 
     el.addEventListener('pointerdown', onPointerDown);
-    el.addEventListener('pointermove', onPointerMove);
-    el.addEventListener('pointerup', onPointerUp);
-    el.addEventListener('pointercancel', onPointerCancel);
-    el.addEventListener('lostpointercapture', onLostCapture);
 
     onCleanup(() => {
       el.removeEventListener('pointerdown', onPointerDown);
-      el.removeEventListener('pointermove', onPointerMove);
-      el.removeEventListener('pointerup', onPointerUp);
-      el.removeEventListener('pointercancel', onPointerCancel);
-      el.removeEventListener('lostpointercapture', onLostCapture);
+      removeDocumentDragListeners();
     });
   });
 
@@ -806,10 +772,16 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   });
 
   const handleDrop = (targetSquare: Square) => {
-    if (chess.state.isGameOver && !isAnalyzeHistoryOverride()) return;
+    if (chess.state.isGameOver && !isAnalyzeHistoryOverride()) {
+      clearDraggingState();
+      return;
+    }
     resetViewIfNeeded();
     const dragState = draggedPiece();
-    if (!dragState) return;
+    if (!dragState) {
+      clearDraggingState();
+      return;
+    }
 
     // Player's turn - execute valid moves, then clear
     if (canMove()) {
@@ -947,8 +919,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const clearDraggingState = () => {
+    removeDocumentDragListeners();
     pointerTracking = null;
-    isPointerDragging = false;
     batch(() => {
       setDraggedPiece(null);
       setDragHoverSquare(null);

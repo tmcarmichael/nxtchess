@@ -145,19 +145,8 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     )
   );
 
-  const renderDraggedPiece = () => {
-    const dragState = local.draggedPiece();
-    if (!dragState) return null;
-    const { x, y } = local.cursorPosition();
-    return (
-      <div
-        class={styles.draggedPiece}
-        style={{ transform: `translate(${x}px, ${y}px) translate(-50%, -50%)` }}
-      >
-        <Piece type={dragState.piece as PieceType} />
-      </div>
-    );
-  };
+  // Ghost piece rendering is handled inline with <Show> for fine-grained
+  // reactivity — only the transform style updates per frame, no DOM churn.
 
   const renderedSquares = () => {
     const selected = local.selectedSquare();
@@ -307,7 +296,18 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
           />
           {renderAnimatingPiece()}
         </div>
-        {renderDraggedPiece()}
+        <Show when={local.draggedPiece()}>
+          {(dragState) => (
+            <div
+              class={styles.draggedPiece}
+              style={{
+                transform: `translate3d(${local.cursorPosition().x}px, ${local.cursorPosition().y}px, 0) translate(-50%, -50%)`,
+              }}
+            >
+              <Piece type={dragState().piece as PieceType} />
+            </div>
+          )}
+        </Show>
         <Show when={local.playerColor()}>
           <div
             classList={{
