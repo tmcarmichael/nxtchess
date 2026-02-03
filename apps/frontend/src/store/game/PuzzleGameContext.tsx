@@ -1,5 +1,6 @@
-import { createContext, useContext, onCleanup, type JSX } from 'solid-js';
+import { createContext, useContext, onCleanup, createMemo, type JSX } from 'solid-js';
 import { sessionManager } from '../../services/game/session/SessionManager';
+import { computeMaterialDiff } from '../../types/chess';
 import { createCoreActions } from './actions/createCoreActions';
 import { createPuzzleActions } from './actions/createPuzzleActions';
 import { createChessStore } from './stores/createChessStore';
@@ -8,8 +9,6 @@ import { createTimerStore } from './stores/createTimerStore';
 import { createUIStore } from './stores/createUIStore';
 import { UnifiedGameContextInstance, type UnifiedGameContext } from './useGameContext';
 import type { PuzzleGameContextValue } from './types';
-
-const PIECE_VALUES: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 
 const PuzzleGameContext = createContext<PuzzleGameContextValue>();
 
@@ -22,22 +21,16 @@ export const PuzzleGameProvider = (props: { children: JSX.Element }) => {
   const coreActions = createCoreActions({ chess, ui });
   const actions = createPuzzleActions({ chess, timer, engine, ui }, coreActions);
 
+  const material = createMemo(() =>
+    computeMaterialDiff(chess.state.capturedWhite, chess.state.capturedBlack)
+  );
+
   const derived = {
     isEngineReady: () => engine.state.status === 'ready',
     isEngineLoading: () => engine.state.status === 'loading',
     hasEngineError: () => engine.state.status === 'error' || chess.state.initError !== null,
     isPlaying: () => chess.state.lifecycle === 'playing',
-    material: () => {
-      const blackGained = chess.state.capturedWhite.reduce(
-        (sum, p) => sum + (PIECE_VALUES[p[1]?.toLowerCase()] ?? 0),
-        0
-      );
-      const whiteGained = chess.state.capturedBlack.reduce(
-        (sum, p) => sum + (PIECE_VALUES[p[1]?.toLowerCase()] ?? 0),
-        0
-      );
-      return { diff: whiteGained - blackGained };
-    },
+    material,
   };
 
   onCleanup(() => {

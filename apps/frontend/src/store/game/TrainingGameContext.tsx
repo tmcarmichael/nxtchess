@@ -1,5 +1,6 @@
-import { createContext, useContext, onCleanup, type JSX } from 'solid-js';
+import { createContext, useContext, onCleanup, createMemo, type JSX } from 'solid-js';
 import { sessionManager } from '../../services/game/session/SessionManager';
+import { computeMaterialDiff } from '../../types/chess';
 import { createCoreActions } from './actions/createCoreActions';
 import { createTrainingActions } from './actions/createTrainingActions';
 import { createChessStore } from './stores/createChessStore';
@@ -14,12 +15,6 @@ import type { TrainingGameContextValue } from './types';
 // ============================================================================
 
 const TrainingGameContext = createContext<TrainingGameContextValue>();
-
-// ============================================================================
-// Piece Values for Material Calculation
-// ============================================================================
-
-const PIECE_VALUES: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 
 // ============================================================================
 // Training Game Provider
@@ -43,25 +38,16 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
   // Derived State
   // ============================================================================
 
+  const material = createMemo(() =>
+    computeMaterialDiff(chess.state.capturedWhite, chess.state.capturedBlack)
+  );
+
   const derived = {
     isEngineReady: () => engine.state.status === 'ready',
     isEngineLoading: () => engine.state.status === 'loading',
     hasEngineError: () => engine.state.status === 'error' || chess.state.initError !== null,
     isPlaying: () => chess.state.lifecycle === 'playing',
-    material: () => {
-      // capturedWhite = white pieces captured by black (material black gained)
-      // capturedBlack = black pieces captured by white (material white gained)
-      const blackGained = chess.state.capturedWhite.reduce(
-        (sum, p) => sum + (PIECE_VALUES[p[1]?.toLowerCase()] ?? 0),
-        0
-      );
-      const whiteGained = chess.state.capturedBlack.reduce(
-        (sum, p) => sum + (PIECE_VALUES[p[1]?.toLowerCase()] ?? 0),
-        0
-      );
-      // Positive diff = white is ahead, negative = black is ahead
-      return { diff: whiteGained - blackGained };
-    },
+    material,
   };
 
   // ============================================================================

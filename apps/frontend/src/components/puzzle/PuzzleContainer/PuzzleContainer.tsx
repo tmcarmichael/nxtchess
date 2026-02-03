@@ -115,7 +115,16 @@ const PuzzleContainerInner: ParentComponent = () => {
       <GameContainer
         layout="three-column"
         showModal={showPuzzleModal()}
-        modalContent={<PuzzleModal onClose={() => setShowPuzzleModal(false)} />}
+        modalContent={
+          <PuzzleModal
+            onClose={() => {
+              setShowPuzzleModal(false);
+              if (chess.state.lifecycle === 'idle') {
+                navigate('/', { replace: true });
+              }
+            }}
+          />
+        }
         leftPanel={<PuzzleNavigationPanel />}
         boardContent={
           <ChessBoardController

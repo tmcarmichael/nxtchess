@@ -100,3 +100,12 @@ export const PIECE_VALUES: Record<string, number> = {
   Q: 9,
   K: 0,
 };
+
+export function computeMaterialDiff(
+  capturedWhite: string[],
+  capturedBlack: string[]
+): { diff: number } {
+  const blackGained = capturedWhite.reduce((sum, p) => sum + (PIECE_VALUES[p[1]] ?? 0), 0);
+  const whiteGained = capturedBlack.reduce((sum, p) => sum + (PIECE_VALUES[p[1]] ?? 0), 0);
+  return { diff: whiteGained - blackGained };
+}

@@ -90,7 +90,16 @@ const PlayContainerInner: ParentComponent = () => {
     <GameContainer
       layout="three-column"
       showModal={showPlayModal()}
-      modalContent={<PlayModal onClose={() => setShowPlayModal(false)} />}
+      modalContent={
+        <PlayModal
+          onClose={() => {
+            setShowPlayModal(false);
+            if (chess.state.lifecycle === 'idle') {
+              navigate('/', { replace: true });
+            }
+          }}
+        />
+      }
       leftPanel={<PlayNavigationPanel />}
       boardContent={<ChessBoardController onRequestNewGame={handleRequestNewGame} />}
       rightPanel={<PlayControlPanel />}

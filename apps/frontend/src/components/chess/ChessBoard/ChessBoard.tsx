@@ -54,6 +54,8 @@ interface ChessBoardProps {
   rightClickHighlights: () => Set<Square>;
   rightClickArrows: () => BoardArrow[];
   previewArrow: () => BoardArrow | null;
+  castlingHintSquares: () => Set<Square>;
+  dragHoverSquare: () => Square | null;
   onSquareRightMouseDown: (square: Square) => void;
   onSquareRightMouseUp: (square: Square) => void;
   onSquareMouseEnter: (square: Square) => void;
@@ -79,6 +81,8 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     'rightClickHighlights',
     'rightClickArrows',
     'previewArrow',
+    'castlingHintSquares',
+    'dragHoverSquare',
     'onSquareRightMouseDown',
     'onSquareRightMouseUp',
     'onSquareMouseEnter',
@@ -165,11 +169,15 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const animPiece = animatingPiece();
     const flashSquare = local.flashKingSquare();
     const rightClickSet = local.rightClickHighlights();
+    const castlingHints = local.castlingHintSquares();
+    const hoverSquare = local.dragHoverSquare();
 
     const renderSquare = (sq: BoardSquare): JSX.Element => {
       const file = sq.square[0];
       const rank = sq.square[1];
-      const isHighlighted = highlightSet().has(sq.square);
+      const isCastlingHint = castlingHints.has(sq.square);
+      const isCastlingHintHover = isCastlingHint && hoverSquare === sq.square;
+      const isHighlighted = highlightSet().has(sq.square) && !isCastlingHint;
       const isSelected = selected === sq.square;
       const isDragging = dragState?.square === sq.square;
       const isAnimating = animPiece?.to === sq.square;
@@ -210,6 +218,8 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
             [styles.checkedKing]: isCheckedKing,
             [styles.flashKing]: isFlashingKing,
             [styles.premoveHighlight]: isPremove,
+            [styles.castlingHint]: isCastlingHint,
+            [styles.castlingHintHover]: isCastlingHintHover,
             [styles.rightClickHighlight]: isRightClickHighlighted,
           }}
           onMouseDown={(e) => {

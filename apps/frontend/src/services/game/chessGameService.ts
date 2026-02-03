@@ -1,8 +1,39 @@
-import { Chess } from 'chess.js';
+import { Chess, type Square as ChessSquare } from 'chess.js';
 import { type Square, type BoardSquare, type PromotionPiece } from '../../types/chess';
 import { type Side } from '../../types/game';
 import { getTurnFromFen } from './fenUtils';
 import { getPieceColor, makePiece } from './pieceUtils';
+
+// ============================================================================
+// Castling Normalization
+// ============================================================================
+
+const CASTLING_ROOK_TO_DESTINATION: Partial<Record<Square, Partial<Record<Square, Square>>>> = {
+  e1: { h1: 'g1', a1: 'c1' },
+  e8: { h8: 'g8', a8: 'c8' },
+};
+
+const CASTLING_DESTINATION_TO_ROOK: Partial<Record<Square, Square>> = {
+  g1: 'h1',
+  c1: 'a1',
+  g8: 'h8',
+  c8: 'a8',
+};
+
+export const normalizeCastlingTarget = (from: Square, to: Square): Square => {
+  return CASTLING_ROOK_TO_DESTINATION[from]?.[to] ?? to;
+};
+
+export const getCastlingHintSquares = (legalMoves: Square[]): Set<Square> => {
+  const hints = new Set<Square>();
+  for (const move of legalMoves) {
+    const rookSquare = CASTLING_DESTINATION_TO_ROOK[move];
+    if (rookSquare && legalMoves.includes(rookSquare)) {
+      hints.add(rookSquare);
+    }
+  }
+  return hints;
+};
 
 // ============================================================================
 // Types
@@ -68,7 +99,20 @@ export const fenToBoard = (fen: string): BoardSquare[] => {
 export const getLegalMoves = (fen: string, square: Square): Square[] => {
   const chess = new Chess(fen);
   const legalMoves = chess.moves({ square, verbose: true });
-  return legalMoves.map((move) => move.to as Square);
+  const targets = legalMoves.map((move) => move.to as Square);
+
+  // When a king can castle, also highlight the rook square as a valid destination
+  const piece = chess.get(square as ChessSquare);
+  if (piece?.type === 'k') {
+    for (const target of [...targets]) {
+      const rookSquare = CASTLING_DESTINATION_TO_ROOK[target];
+      if (rookSquare) {
+        targets.push(rookSquare);
+      }
+    }
+  }
+
+  return targets;
 };
 
 /**
@@ -91,6 +135,17 @@ export const getPremoveLegalMoves = (fen: string, square: Square): Square[] => {
   const chess = new Chess(flippedFen);
   const legalMoves = chess.moves({ square, verbose: true });
   const legalSquares = legalMoves.map((move) => move.to as Square);
+
+  // When a king can castle, also include the rook square as a valid premove destination
+  const piece = chess.get(square as ChessSquare);
+  if (piece?.type === 'k') {
+    for (const target of [...legalSquares]) {
+      const rookSquare = CASTLING_DESTINATION_TO_ROOK[target];
+      if (rookSquare) {
+        legalSquares.push(rookSquare);
+      }
+    }
+  }
 
   // Also add squares occupied by own pieces that this piece could theoretically reach
   // This allows premoves to target squares where your own piece might be captured
