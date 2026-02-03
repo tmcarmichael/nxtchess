@@ -12,16 +12,16 @@ interface GamePieceProps {
 
 const ChessPiece: Component<GamePieceProps> = (props: GamePieceProps) => {
   const [local] = splitProps(props, ['type', 'draggable', 'onDragStart', 'onTouchStart', 'style']);
-  const pieceSrc = `/assets/${local.type}.svg`;
+  const pieceSrc = () => `/assets/${local.type}.svg`;
 
   return (
     <img
-      src={pieceSrc}
+      src={pieceSrc()}
       alt={local.type}
       class={styles.chessPiece}
       draggable={local.draggable}
-      onDragStart={local.onDragStart}
-      onTouchStart={local.onTouchStart}
+      onDragStart={(e) => local.onDragStart?.(e)}
+      onTouchStart={(e) => local.onTouchStart?.(e)}
       style={local.style}
     />
   );

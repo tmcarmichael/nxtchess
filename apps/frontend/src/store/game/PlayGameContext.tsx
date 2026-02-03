@@ -91,7 +91,7 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
   });
 
   multiplayer.on('game:opponent_left', () => {
-    console.log('Opponent left the game');
+    console.warn('Opponent left the game');
   });
 
   multiplayer.on('game:error', ({ message }) => {

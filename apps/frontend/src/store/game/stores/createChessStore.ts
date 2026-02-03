@@ -192,6 +192,7 @@ export const createChessStore = (): ChessStore => {
   };
 
   // Subscribe to session events
+  // eslint-disable-next-line solid/reactivity -- state.sessionId is accessed at event time, not for reactive tracking
   sessionManager.onEvent((event) => {
     if (event.sessionId !== state.sessionId) return;
     const session = sessionManager.getSession(event.sessionId);

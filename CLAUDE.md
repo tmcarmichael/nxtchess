@@ -71,20 +71,22 @@ just prod-up                # Start production stack
 @types/              # External library types (stockfish-js.d.ts)
 
 components/
-├── chess/           # Chess UI: ChessBoard, ChessBoardController, ChessPiece, ChessClock, ChessEvalBar
-├── game/            # Game layout: GameContainer, GameInfoPanel, GameNotation, ButtonPanel, DifficultyDisplay
+├── chess/           # Chess UI: ChessBoard, ChessBoardController, ChessBoardArrows, ChessPiece, ChessClock, ChessEvalBar
+├── game/            # Game layout: GameContainer, GameInfoPanel, GameNotation, MoveHistoryPanel, ButtonPanel, DifficultyDisplay
 ├── play/            # Multiplayer: PlayContainer, PlayModal, PlayControlPanel, PlayNavigationPanel
 ├── training/        # Training: TrainingContainer, TrainingModal, TrainingControlPanel, TrainingNavigationPanel
 ├── analyze/         # Analysis: AnalyzeContainer, AnalyzeEnginePanel, AnalyzeControlPanel, AnalyzeImportModal, AnalyzeNavigationPanel
+├── puzzle/          # Puzzles: PuzzleContainer, PuzzleModal, PuzzleControlPanel, PuzzleNavigationPanel, PuzzleFeedbackModal
 ├── home/            # Landing page
 ├── user/            # Auth & profile: UserSignInModal, UserProfile, UsernameSetup
-└── common/          # Header, Footer, 404, ErrorBoundary, NetworkStatus
+└── common/          # Header, Footer, 404, ErrorBoundary, NetworkStatus, SettingsDropdown
 
 store/
 ├── game/            # Multi-store architecture
 │   ├── stores/      # Independent store factories (chess, timer, engine, ui, multiplayer)
-│   ├── actions/     # Mode-specific actions (core, singlePlayer, training, multiplayer, play, analyze)
+│   ├── actions/     # Mode-specific actions (core, singlePlayer, training, multiplayer, play, analyze, puzzle)
 │   └── types.ts     # Store type definitions
+├── settings/        # SettingsContext + SettingsProvider (theme, sound)
 └── user/            # UserContext + userStore (auth state, profile)
 
 services/
@@ -106,6 +108,8 @@ services/
 ├── sync/            # GameSyncService for multiplayer, useGameSync hook
 ├── persistence/     # IndexedDB: GamePersistence + useAutoPersist (5s periodic, 1s debounced)
 ├── preferences/     # User settings storage
+├── puzzle/          # Puzzle data (mate-in-N definitions), setup move computation
+├── settings/        # SettingsService (theme/sound via localStorage)
 ├── training/        # Training mode logic
 │   ├── scenarios.ts          # Training scenario configurations (endgame themes, difficulty)
 │   ├── positionSource.ts     # Position source resolution (API, predefined)
@@ -118,7 +122,7 @@ shared/
 ├── hooks/           # useKeyboardNavigation
 └── utils/           # Debug, ID generation, strings, EventEmitter
 
-types/               # chess.ts (Square, PieceType, Board), game.ts (Side, GameMode, etc.)
+types/               # chess.ts (Square, PieceType, Board), game.ts (Side, GameMode, etc.), moveQuality.ts
 ```
 
 ### Backend Structure (apps/backend/)
@@ -155,7 +159,7 @@ internal/
 profiles: user_id (PK), username (UNIQUE), rating, profile_icon, created_at
 games: game_id (UUID PK), pgn, playerW_id, playerB_id, result, created_at
 rating_history: id, user_id (FK), rating, created_at
-endgame_positions: position_id (PK), fen, rating, themes[], moves, initial_eval, side_to_move
+endgame_positions: position_id (PK), fen, rating, themes[], moves, initial_eval, description, source
 ```
 
 Migrations managed via golang-migrate in `db/migrations/`. Seeds in `db/seeds/`.
@@ -188,7 +192,7 @@ multiplayer = createMultiplayerStore(); // gameId, opponent, connection
 
 ### Unified Context Abstraction
 
-`UnifiedGameContext` provides mode-agnostic interface. Components like `ChessBoardController` don't know about Play vs Training vs Analyze modes. Providers (`PlayGameProvider`, `TrainingGameProvider`, `AnalyzeGameProvider`) implement the unified interface differently.
+`UnifiedGameContext` provides mode-agnostic interface. Components like `ChessBoardController` don't know about Play vs Training vs Analyze vs Puzzle modes. Providers (`PlayGameProvider`, `TrainingGameProvider`, `AnalyzeGameProvider`, `PuzzleGameProvider`) implement the unified interface differently.
 
 ### Three-Layer Engine Resilience
 
@@ -201,6 +205,7 @@ multiplayer = createMultiplayerStore(); // gameId, opponent, connection
 Detects device capabilities at runtime:
 
 - `full-mt` (69MB): Multi-threaded, requires SharedArrayBuffer + COOP/COEP headers
+- `full-st`: Single-threaded full version
 - `lite-st` (7MB): Single-threaded, mobile-optimized fallback
 
 ### Session Layer (Command Pattern)
@@ -263,10 +268,12 @@ Applied in Caddy, Nginx, and Vite dev server.
 
 ```typescript
 Side = 'w' | 'b'
-GameMode = 'play' | 'training' | 'analysis'
+GameMode = 'play' | 'training' | 'analysis' | 'puzzle'
 OpponentType = 'ai' | 'human'
 GameLifecycle = 'idle' | 'initializing' | 'playing' | 'error' | 'ended'
-GamePhase = 'opening' | 'middlegame' | 'endgame'
+GamePhase = 'opening' | 'middlegame' | 'endgame' | null
+PuzzleCategory = 'mate-in-1' | 'mate-in-2' | 'mate-in-3' | 'random'
+MoveQuality = 'best' | 'excellent' | 'good' | 'inaccuracy' | 'mistake' | 'blunder'
 Square = 'a1' | 'a2' | ... (64 squares)
 PieceType = 'wP' | 'bP' | 'wN' | ... (white/black piece notation)
 ```
@@ -326,6 +333,7 @@ VITE_BACKEND_URL=http://localhost:8080
 /play/:gameId       → PlayContainer (join multiplayer via URL)
 /training           → TrainingContainer (untimed practice with eval)
 /analyze            → AnalyzeContainer (position analysis with FEN/PGN import)
+/puzzles            → PuzzleContainer (mate-in-N tactics puzzles)
 /username-setup     → UsernameSetup
 /profile/:username  → UserProfile
 *                   → 404
@@ -356,12 +364,13 @@ VITE_BACKEND_URL=http://localhost:8080
 - Extends existing analysisEngineService infrastructure
 - Gamify post game analysis
 
-**Tactics Puzzles with Spaced Repetition**
+**Tactics Puzzles with Spaced Repetition** *(basic puzzle mode implemented — mate-in-1/2/3 with client-side puzzle data)*
 
+- ~~Mate in 1, 2, 3 puzzle targets~~ (done)
 - Themed puzzles (forks, pins, back rank mates)
 - Rating-matched difficulty
 - SM-2 spaced repetition for failed puzzles
-- Mate in 1, 2, 3, 4 puzzle targets
+- Server-side puzzle database
 
 **Middlegame Training Mode**
 

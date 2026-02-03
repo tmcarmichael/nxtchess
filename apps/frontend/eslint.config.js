@@ -85,7 +85,7 @@ export default [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
@@ -93,6 +93,7 @@ export default [
 
       // SolidJS rules
       ...solidPlugin.configs.recommended.rules,
+      'solid/reactivity': 'error',
 
       // Import rules
       'import/order': [
@@ -106,7 +107,7 @@ export default [
       'import/no-duplicates': 'error',
 
       // General rules
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': ['error', { allow: ['warn', 'error'] }],
       'no-debugger': 'error',
       'prefer-const': 'error',
       eqeqeq: ['error', 'always', { null: 'ignore' }],

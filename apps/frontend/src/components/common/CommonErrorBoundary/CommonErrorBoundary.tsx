@@ -13,7 +13,7 @@ const ErrorFallback = (props: ErrorFallbackProps) => {
         <h2 class={styles.errorTitle}>Something went wrong</h2>
         <p class={styles.errorMessage}>{props.error.message || 'An unexpected error occurred'}</p>
         <div class={styles.errorActions}>
-          <button class={styles.retryButton} onClick={props.reset}>
+          <button class={styles.retryButton} onClick={() => props.reset()}>
             Try Again
           </button>
           <button class={styles.homeButton} onClick={() => (window.location.href = '/')}>

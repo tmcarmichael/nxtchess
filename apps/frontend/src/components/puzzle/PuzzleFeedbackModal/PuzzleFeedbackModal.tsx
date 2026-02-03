@@ -41,7 +41,7 @@ const PuzzleFeedbackModal: Component<PuzzleFeedbackModalProps> = (props) => {
         <button
           ref={closeButtonRef}
           class={styles.closeButton}
-          onClick={props.onClose}
+          onClick={() => props.onClose()}
           aria-label="Close"
         >
           <span class={styles.closeButtonIcon}>&times;</span>
@@ -73,7 +73,7 @@ const PuzzleFeedbackModal: Component<PuzzleFeedbackModalProps> = (props) => {
               [styles.feedbackButton]: true,
               [styles.feedbackButtonPrimary]: props.type === 'complete',
             }}
-            onClick={props.onNewPuzzle}
+            onClick={() => props.onNewPuzzle()}
           >
             New Puzzle
           </button>

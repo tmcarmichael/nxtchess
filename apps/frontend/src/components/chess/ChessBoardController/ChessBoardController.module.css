@@ -253,7 +253,7 @@
   font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: 600;
-  color: var(--text-primary);
+  color: #f0f0f0;
   text-align: center;
   white-space: nowrap;
 }

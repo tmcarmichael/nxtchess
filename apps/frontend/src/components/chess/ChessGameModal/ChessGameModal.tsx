@@ -41,7 +41,7 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
         [styles.modalOverlay]: true,
         [styles.modalOverlayPriority]: !!props.priority,
       }}
-      onClick={props.onClose}
+      onClick={() => props.onClose()}
     >
       <div
         classList={{
@@ -57,7 +57,7 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
         <button
           ref={closeButtonRef}
           class={styles.closeButton}
-          onClick={props.onClose}
+          onClick={() => props.onClose()}
           aria-label="Close"
         >
           <span class={styles.closeButtonIcon}>&times;</span>

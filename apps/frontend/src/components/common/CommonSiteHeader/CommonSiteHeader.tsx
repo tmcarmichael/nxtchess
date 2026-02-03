@@ -161,9 +161,9 @@ const CommonSiteHeader: ParentComponent = () => {
             setShowMobileMenu(false);
             setShowSignInModal(true);
           }}
-          onSignOut={async () => {
+          onSignOut={() => {
             setShowMobileMenu(false);
-            await handleSignOut();
+            handleSignOut();
           }}
         />
       </Show>

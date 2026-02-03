@@ -563,6 +563,7 @@ export class ResilientEngine {
 
     this._state = newState;
     if (DEBUG) {
+      // eslint-disable-next-line no-console -- debug-only engine state logging
       console.info(`[Engine] ${this.id} state: ${oldState} -> ${newState}`);
     }
     this.emit('state:changed', { oldState, newState });
