@@ -69,7 +69,16 @@ const TrainingContainerInner: ParentComponent = () => {
     <GameContainer
       layout="three-column"
       showModal={showTrainingModal()}
-      modalContent={<TrainingModal onClose={() => setShowTrainingModal(false)} />}
+      modalContent={
+        <TrainingModal
+          onClose={() => {
+            setShowTrainingModal(false);
+            if (chess.state.lifecycle === 'idle') {
+              navigate('/', { replace: true });
+            }
+          }}
+        />
+      }
       leftPanel={<TrainingNavigationPanel />}
       boardContent={
         <ChessBoardController

@@ -4,6 +4,7 @@ import {
   onCleanup,
   onMount,
   createSignal,
+  createMemo,
   createEffect,
   on,
   type JSX,
@@ -14,6 +15,7 @@ import {
   type EngineInfo,
 } from '../../services/engine/analysisEngineService';
 import { sessionManager } from '../../services/game/session/SessionManager';
+import { computeMaterialDiff } from '../../types/chess';
 import { createAnalyzeActions } from './actions/createAnalyzeActions';
 import { createCoreActions } from './actions/createCoreActions';
 import { createChessStore } from './stores/createChessStore';
@@ -40,12 +42,6 @@ export interface AnalyzeEngineState {
   isAnalyzing: () => boolean;
   toggleEngine: () => void;
 }
-
-// ============================================================================
-// Piece Values for Material Calculation
-// ============================================================================
-
-const PIECE_VALUES: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 
 // ============================================================================
 // Analysis Debounce
@@ -163,22 +159,16 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
   // Derived State
   // ============================================================================
 
+  const material = createMemo(() =>
+    computeMaterialDiff(chess.state.capturedWhite, chess.state.capturedBlack)
+  );
+
   const derived = {
     isEngineReady: () => analysisEngine.initialized,
     isEngineLoading: () => engine.state.status === 'loading',
     hasEngineError: () => engine.state.status === 'error',
     isPlaying: () => chess.state.lifecycle === 'playing',
-    material: () => {
-      const blackGained = chess.state.capturedWhite.reduce(
-        (sum, p) => sum + (PIECE_VALUES[p[1]?.toLowerCase()] ?? 0),
-        0
-      );
-      const whiteGained = chess.state.capturedBlack.reduce(
-        (sum, p) => sum + (PIECE_VALUES[p[1]?.toLowerCase()] ?? 0),
-        0
-      );
-      return { diff: whiteGained - blackGained };
-    },
+    material,
   };
 
   // ============================================================================

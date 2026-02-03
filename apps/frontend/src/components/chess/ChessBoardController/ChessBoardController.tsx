@@ -16,6 +16,8 @@ import {
   getLegalMoves,
   getPremoveLegalMoves,
   prepareMove,
+  normalizeCastlingTarget,
+  getCastlingHintSquares,
 } from '../../../services/game/chessGameService';
 import { useKeyboardNavigation } from '../../../shared/hooks/useKeyboardNavigation';
 import { useGameContext } from '../../../store/game/useGameContext';
@@ -46,6 +48,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     null
   );
   const [cursorPosition, setCursorPosition] = createSignal({ x: 0, y: 0 });
+  const [dragHoverSquare, setDragHoverSquare] = createSignal<Square | null>(null);
   const [pendingPromotion, setPendingPromotion] = createSignal<{
     from: Square;
     to: Square;
@@ -97,6 +100,20 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     if ((dx === 2 && dy === 1) || (dx === 1 && dy === 2)) return true;
     return false;
   };
+
+  const castlingHintSquares = createMemo((): Set<Square> => {
+    const moves = highlightedMoves();
+    if (moves.length === 0) return new Set();
+
+    const sq = selectedSquare() || draggedPiece()?.square;
+    if (!sq) return new Set();
+
+    const board = chess.derived.currentBoard();
+    const piece = board.find((s) => s.square === sq)?.piece;
+    if (!piece || piece[1] !== 'K') return new Set();
+
+    return getCastlingHintSquares(moves);
+  });
 
   const previewArrow = createMemo((): BoardArrow | null => {
     const start = rightClickDragStart();
@@ -670,6 +687,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     rafId = requestAnimationFrame(() => {
       rafId = null;
       setCursorPosition(latestPointerPos);
+      setDragHoverSquare(getSquareFromCoordinates(latestPointerPos.x, latestPointerPos.y));
     });
   };
 
@@ -826,8 +844,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const executeMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
+    const actualTo = normalizeCastlingTarget(from, to);
     const board = chess.derived.currentBoard();
-    const movePrep = prepareMove(from, to, board);
+    const movePrep = prepareMove(from, actualTo, board);
 
     if (movePrep.needsPromotion && !promotion) {
       setPendingPromotion(movePrep.promotionInfo);
@@ -837,9 +856,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
     // Use multiplayer move if this is a human vs human game
     if (derived.isMultiplayer() && actions.applyMultiplayerMove) {
-      actions.applyMultiplayerMove(from, to, promotion);
+      actions.applyMultiplayerMove(from, actualTo, promotion);
     } else {
-      actions.applyPlayerMove(from, to, promotion);
+      actions.applyPlayerMove(from, actualTo, promotion);
     }
     clearDraggingState();
   };
@@ -932,6 +951,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     isPointerDragging = false;
     batch(() => {
       setDraggedPiece(null);
+      setDragHoverSquare(null);
       setSelectedSquare(null);
       setHighlightedMoves([]);
     });
@@ -1064,6 +1084,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                 rightClickHighlights={rightClickHighlights}
                 rightClickArrows={rightClickArrows}
                 previewArrow={previewArrow}
+                castlingHintSquares={castlingHintSquares}
+                dragHoverSquare={dragHoverSquare}
                 onSquareRightMouseDown={handleSquareRightMouseDown}
                 onSquareRightMouseUp={handleSquareRightMouseUp}
                 onSquareMouseEnter={handleSquareMouseEnter}
