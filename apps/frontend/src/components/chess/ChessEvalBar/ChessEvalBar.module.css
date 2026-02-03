@@ -4,7 +4,11 @@
   align-items: center;
   justify-content: flex-start;
 
-  height: min(var(--board-max-size), calc(100vw - 2rem));
+  height: min(
+    var(--board-max-size),
+    calc(100vw - 2 * var(--panel-width) - 2 * var(--space-xl) - 4 * var(--space-md)),
+    calc(100vh - 19rem)
+  );
   position: relative;
 
   margin-top: var(--space-md);
@@ -59,6 +63,26 @@
 
 .evalScore.scoreMate {
   color: var(--accent);
+}
+
+@media (min-width: 1800px) {
+  .evalBarContainer {
+    height: min(
+      var(--board-max-size),
+      calc(100vw - 2 * 420px - 2 * var(--space-xl) - 4 * var(--space-md)),
+      calc(100vh - 19rem)
+    );
+  }
+}
+
+@media (max-width: 1199px) {
+  .evalBarContainer {
+    height: min(
+      var(--board-max-size),
+      calc(100vw - 2 * 320px - 2 * var(--space-lg) - 4 * var(--space-md)),
+      calc(100vh - 19rem)
+    );
+  }
 }
 
 @media (max-width: 1023px) {
