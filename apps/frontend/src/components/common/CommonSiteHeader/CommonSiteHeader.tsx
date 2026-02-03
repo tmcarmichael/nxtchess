@@ -50,13 +50,13 @@ const CommonSiteHeader: ParentComponent = () => {
   return (
     <>
       <header class={styles.headerRoot}>
-        <div class={styles.headerLeft} onClick={() => navigate('/')}>
+        <button class={styles.headerLeft} onClick={() => navigate('/')}>
           NxtChess
-        </div>
+        </button>
         <div class={styles.headerCenter}>
           <For each={NAV_ITEMS}>
             {(item) => (
-              <span
+              <button
                 classList={{
                   [styles.navItem]: true,
                   [styles.navItemPrimary]: item.variant === 'primary',
@@ -86,7 +86,7 @@ const CommonSiteHeader: ParentComponent = () => {
                 }}
               >
                 {item.label}
-              </span>
+              </button>
             )}
           </For>
         </div>
@@ -94,13 +94,13 @@ const CommonSiteHeader: ParentComponent = () => {
           <Show
             when={userState.isLoggedIn}
             fallback={
-              <span class={styles.signInButton} onClick={() => setShowSignInModal(true)}>
+              <button class={styles.signInButton} onClick={() => setShowSignInModal(true)}>
                 Sign In
-              </span>
+              </button>
             }
           >
             <Show when={userState.username}>
-              <div
+              <button
                 class={styles.userSection}
                 onClick={() => navigate(`/profile/${userState.username}`)}
               >
@@ -110,11 +110,11 @@ const CommonSiteHeader: ParentComponent = () => {
                   class={styles.headerProfileIcon}
                 />
                 <span class={styles.usernameText}>{userState.username}</span>
-              </div>
+              </button>
             </Show>
-            <span class={styles.signOutText} onClick={handleSignOut}>
+            <button class={styles.signOutText} onClick={handleSignOut}>
               Sign Out
-            </span>
+            </button>
           </Show>
           <CommonSettingsDropdown />
           <button
