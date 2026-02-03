@@ -11,8 +11,9 @@ import {
   type Accessor,
 } from 'solid-js';
 import { isPieceSide } from '../../../services/game/pieceUtils';
-import { type PieceType, type BoardSquare, type Square } from '../../../types/chess';
+import { type PieceType, type BoardSquare, type Square, type BoardArrow } from '../../../types/chess';
 import { type Side } from '../../../types/game';
+import ChessBoardArrows from '../ChessBoardArrows/ChessBoardArrows';
 import Piece from '../ChessPiece/ChessPiece';
 import styles from './ChessBoard.module.css';
 
@@ -50,6 +51,12 @@ interface ChessBoardProps {
   animatingMove: () => { from: Square; to: Square; piece: string } | null;
   flashKingSquare: () => Square | null;
   playerColor: () => Side | null;
+  rightClickHighlights: () => Set<Square>;
+  rightClickArrows: () => BoardArrow[];
+  previewArrow: () => BoardArrow | null;
+  onSquareRightMouseDown: (square: Square) => void;
+  onSquareRightMouseUp: (square: Square) => void;
+  onSquareMouseEnter: (square: Square) => void;
 }
 
 const ANIMATION_DURATION = 500; // ms
@@ -73,6 +80,12 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     'animatingMove',
     'flashKingSquare',
     'playerColor',
+    'rightClickHighlights',
+    'rightClickArrows',
+    'previewArrow',
+    'onSquareRightMouseDown',
+    'onSquareRightMouseUp',
+    'onSquareMouseEnter',
   ]);
 
   const highlightSet = createMemo(() => new Set(local.highlightedMoves()));
@@ -157,6 +170,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const premove = local.premoveSquares();
     const animPiece = animatingPiece();
     const flashSquare = local.flashKingSquare();
+    const rightClickSet = local.rightClickHighlights();
 
     // Apple accessor pattern for rendering squares
     const renderSquare = (squareAccessor: Accessor<BoardSquare>): JSX.Element => {
@@ -175,6 +189,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
         !isPieceSide(props.piece, local.activePieceColor());
       const isCheckedKing = checkedSquare === props.square;
       const isFlashingKing = flashSquare === props.square;
+      const isRightClickHighlighted = rightClickSet.has(props.square);
       const isPremove =
         premove !== null && (premove.from === props.square || premove.to === props.square);
       const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
@@ -205,9 +220,17 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
             [styles.checkedKing]: isCheckedKing,
             [styles.flashKing]: isFlashingKing,
             [styles.premoveHighlight]: isPremove,
+            [styles.rightClickHighlight]: isRightClickHighlighted,
           }}
           onClick={() => local.onSquareClick(props.square)}
-          onMouseUp={() => local.onSquareMouseUp(props.square)}
+          onMouseDown={(e) => {
+            if (e.button === 2) local.onSquareRightMouseDown(props.square);
+          }}
+          onMouseUp={(e) => {
+            if (e.button === 2) local.onSquareRightMouseUp(props.square);
+            else local.onSquareMouseUp(props.square);
+          }}
+          onMouseEnter={() => local.onSquareMouseEnter(props.square)}
         >
           {showFile && <span class={styles.fileLabel}>{file}</span>}
           {showRank && <span class={styles.rankLabel}>{rank}</span>}
@@ -287,6 +310,11 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
       <div class={styles.boardWrapper}>
         <div class={styles.board} role="grid" aria-label="Chess board">
           {renderedSquares()}
+          <ChessBoardArrows
+            arrows={local.rightClickArrows}
+            previewArrow={local.previewArrow}
+            boardView={local.boardView}
+          />
           {renderAnimatingPiece()}
           {renderDraggedPiece()}
         </div>

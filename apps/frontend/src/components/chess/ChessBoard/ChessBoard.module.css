@@ -130,6 +130,18 @@
   will-change: transform;
 }
 
+.rightClickHighlight {
+  position: relative;
+}
+
+.rightClickHighlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(168, 50, 65, 0.55);
+  pointer-events: none;
+}
+
 .lastMoveHighlight {
   position: relative;
 }

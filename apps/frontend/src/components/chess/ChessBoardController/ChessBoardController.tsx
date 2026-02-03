@@ -1,6 +1,7 @@
 import { useNavigate } from '@solidjs/router';
 import {
   createSignal,
+  createMemo,
   batch,
   Show,
   type ParentComponent,
@@ -18,7 +19,7 @@ import {
 } from '../../../services/game/chessGameService';
 import { useKeyboardNavigation } from '../../../shared/hooks/useKeyboardNavigation';
 import { useGameContext } from '../../../store/game/useGameContext';
-import { type Square, type PromotionPiece } from '../../../types/chess';
+import { type Square, type PromotionPiece, type BoardArrow } from '../../../types/chess';
 import { type Side } from '../../../types/game';
 import ChessBoard from '../../chess/ChessBoard/ChessBoard';
 import ChessClock from '../../chess/ChessClock/ChessClock';
@@ -71,6 +72,10 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   } | null>(null);
   // Flash king square when illegal move attempted
   const [flashKingSquare, setFlashKingSquare] = createSignal<Square | null>(null);
+  const [rightClickHighlights, setRightClickHighlights] = createSignal<Set<Square>>(new Set());
+  const [rightClickArrows, setRightClickArrows] = createSignal<BoardArrow[]>([]);
+  const [rightClickDragStart, setRightClickDragStart] = createSignal<Square | null>(null);
+  const [rightClickHoverSquare, setRightClickHoverSquare] = createSignal<Square | null>(null);
   const [gameEventAnnouncement, setGameEventAnnouncement] = createSignal('');
   // Focus mode game result toast
   const [gameResultToast, setGameResultToast] = createSignal<string | null>(null);
@@ -84,6 +89,24 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   // Eval debounce timer ref - prevents rapid eval calls during fast piece movement
   let evalDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   const EVAL_DEBOUNCE_MS = 300;
+
+  const isValidArrowMove = (from: Square, to: Square): boolean => {
+    const dx = Math.abs(to.charCodeAt(0) - from.charCodeAt(0));
+    const dy = Math.abs(parseInt(to[1], 10) - parseInt(from[1], 10));
+    if (dx === 0 && dy === 0) return false;
+    if (dx === 0 || dy === 0) return true;
+    if (dx === dy) return true;
+    if ((dx === 2 && dy === 1) || (dx === 1 && dy === 2)) return true;
+    return false;
+  };
+
+  const previewArrow = createMemo((): BoardArrow | null => {
+    const start = rightClickDragStart();
+    const hover = rightClickHoverSquare();
+    if (!start || !hover || start === hover) return null;
+    if (!isValidArrowMove(start, hover)) return null;
+    return { from: start, to: hover };
+  });
 
   useKeyboardNavigation({
     onPrevious: actions.jumpToPreviousMove,
@@ -859,6 +882,60 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     });
   };
 
+  const clearAnnotations = () => {
+    if (rightClickHighlights().size > 0 || rightClickArrows().length > 0) {
+      batch(() => {
+        setRightClickHighlights(new Set());
+        setRightClickArrows([]);
+      });
+    }
+  };
+
+  const toggleArrow = (arrow: BoardArrow) => {
+    setRightClickArrows((prev) => {
+      const idx = prev.findIndex((a) => a.from === arrow.from && a.to === arrow.to);
+      if (idx >= 0) {
+        return [...prev.slice(0, idx), ...prev.slice(idx + 1)];
+      }
+      return [...prev, arrow];
+    });
+  };
+
+  const handleSquareRightMouseDown = (square: Square) => {
+    setRightClickDragStart(square);
+    setRightClickHoverSquare(square);
+  };
+
+  const handleSquareRightMouseUp = (square: Square) => {
+    const start = rightClickDragStart();
+    batch(() => {
+      setRightClickDragStart(null);
+      setRightClickHoverSquare(null);
+    });
+
+    if (!start) return;
+
+    if (start === square) {
+      setRightClickHighlights((prev) => {
+        const next = new Set(prev);
+        if (next.has(square)) {
+          next.delete(square);
+        } else {
+          next.add(square);
+        }
+        return next;
+      });
+    } else if (isValidArrowMove(start, square)) {
+      toggleArrow({ from: start, to: square });
+    }
+  };
+
+  const handleSquareMouseEnter = (square: Square) => {
+    if (rightClickDragStart()) {
+      setRightClickHoverSquare(square);
+    }
+  };
+
   const handlePlayAgain = () => {
     setShowEndModal(false);
     // Use restart callback if available (training mode), otherwise open new game modal
@@ -896,6 +973,42 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
   // Ref for container to add non-passive touch listeners
   let containerRef: HTMLDivElement | undefined;
+
+  // Clear annotations on any non-right-click anywhere on the page
+  // Also clean up right-click drag if released outside board
+  createEffect(() => {
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 2) {
+        clearAnnotations();
+      }
+    };
+    const onMouseUp = (e: MouseEvent) => {
+      if (e.button === 2 && rightClickDragStart()) {
+        batch(() => {
+          setRightClickDragStart(null);
+          setRightClickHoverSquare(null);
+        });
+      }
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mouseup', onMouseUp);
+    onCleanup(() => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mouseup', onMouseUp);
+    });
+  });
+
+  // Clear annotations when a move is made (player or opponent)
+  createEffect(
+    on(
+      () => chess.state.moveHistory.length,
+      (length, prevLength) => {
+        if (prevLength !== undefined && length !== prevLength) {
+          clearAnnotations();
+        }
+      }
+    )
+  );
 
   // Add non-passive touchmove listener to allow preventDefault (stop scrolling while dragging)
   createEffect(() => {
@@ -960,6 +1073,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                 animatingMove={animatingMove}
                 flashKingSquare={flashKingSquare}
                 playerColor={() => chess.state.playerColor}
+                rightClickHighlights={rightClickHighlights}
+                rightClickArrows={rightClickArrows}
+                previewArrow={previewArrow}
+                onSquareRightMouseDown={handleSquareRightMouseDown}
+                onSquareRightMouseUp={handleSquareRightMouseUp}
+                onSquareMouseEnter={handleSquareMouseEnter}
               />
               <ChessEngineOverlay
                 isLoading={derived.isEngineLoading()}
