@@ -100,7 +100,7 @@
 }
 
 .arrowButton {
-  flex: 1;
+  flex: 4;
   font-size: var(--text-2xl);
   padding: var(--space-sm);
   background: var(--surface-2);
@@ -115,13 +115,31 @@
   min-height: var(--touch-target-min);
 }
 
-.arrowButton:hover {
+.skipButton {
+  flex: 1;
+  font-size: var(--text-lg);
+  padding: var(--space-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+  min-height: var(--touch-target-min);
+}
+
+.arrowButton:hover,
+.skipButton:hover {
   background-color: var(--surface-3);
   border-color: var(--border-default);
   color: var(--text-primary);
 }
 
-.arrowButton:active {
+.arrowButton:active,
+.skipButton:active {
   background-color: var(--surface-4);
 }
 
@@ -153,5 +171,10 @@
   .arrowButton {
     padding: var(--space-xs) var(--space-sm);
     font-size: var(--text-xl);
+  }
+
+  .skipButton {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-base);
   }
 }

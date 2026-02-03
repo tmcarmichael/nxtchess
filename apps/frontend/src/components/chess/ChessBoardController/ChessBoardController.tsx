@@ -88,6 +88,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   useKeyboardNavigation({
     onPrevious: actions.jumpToPreviousMove,
     onNext: actions.jumpToNextMove,
+    onFirst: actions.jumpToFirstMove,
+    onLast: actions.jumpToLastMove,
     onFlip: actions.flipBoard,
     enabled: () =>
       !chess.state.isGameOver ||

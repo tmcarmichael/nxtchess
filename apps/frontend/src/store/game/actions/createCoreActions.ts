@@ -40,6 +40,17 @@ export const createCoreActions = (stores: CoreStores): CoreActions => {
     }
   };
 
+  const jumpToFirstMove = () => {
+    chess.jumpToMoveIndex(-1);
+  };
+
+  const jumpToLastMove = () => {
+    const lastIndex = chess.state.moveHistory.length - 1;
+    if (lastIndex >= 0) {
+      chess.jumpToMoveIndex(lastIndex);
+    }
+  };
+
   const flipBoard = () => {
     ui.flipBoard();
   };
@@ -56,6 +67,8 @@ export const createCoreActions = (stores: CoreStores): CoreActions => {
     jumpToMove,
     jumpToPreviousMove,
     jumpToNextMove,
+    jumpToFirstMove,
+    jumpToLastMove,
     flipBoard,
     exitGame,
   };

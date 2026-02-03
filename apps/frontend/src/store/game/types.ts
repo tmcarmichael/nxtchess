@@ -21,6 +21,8 @@ export interface CoreActions {
   jumpToMove: (index: number) => void;
   jumpToPreviousMove: () => void;
   jumpToNextMove: () => void;
+  jumpToFirstMove: () => void;
+  jumpToLastMove: () => void;
   flipBoard: () => void;
 
   // Game lifecycle

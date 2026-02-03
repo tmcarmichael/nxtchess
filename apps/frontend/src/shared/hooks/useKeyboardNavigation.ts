@@ -5,6 +5,10 @@ interface KeyboardNavigationOptions {
   onPrevious: () => void;
   /** Called when right arrow is pressed */
   onNext: () => void;
+  /** Called when Home key is pressed */
+  onFirst: () => void;
+  /** Called when End key is pressed */
+  onLast: () => void;
   /** Called when 'f' key is pressed */
   onFlip: () => void;
   /** Whether keyboard navigation is enabled (accessor for reactivity) */
@@ -13,10 +17,10 @@ interface KeyboardNavigationOptions {
 
 /**
  * Hook for keyboard navigation in chess game.
- * Handles ArrowLeft (previous move), ArrowRight (next move), and 'f' (flip board).
+ * Handles ArrowLeft/Right (step), Home/End (jump to start/end), and 'f' (flip board).
  */
 export const useKeyboardNavigation = (options: KeyboardNavigationOptions): void => {
-  const { onPrevious, onNext, onFlip, enabled = () => true } = options;
+  const { onPrevious, onNext, onFirst, onLast, onFlip, enabled = () => true } = options;
 
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -28,6 +32,12 @@ export const useKeyboardNavigation = (options: KeyboardNavigationOptions): void 
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         onNext();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        onFirst();
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        onLast();
       } else if (e.key === 'f') {
         onFlip();
       }
