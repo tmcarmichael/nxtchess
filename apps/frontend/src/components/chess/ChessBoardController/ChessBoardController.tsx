@@ -611,6 +611,18 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     // Capture pointer to receive events even if pointer leaves the element
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     e.preventDefault();
+
+    // Immediate visual feedback — show selection and legal moves right away
+    // (critical for mobile where there's no hover state)
+    const fen = getMoveCalculationFen();
+    const moves =
+      derived.allowBothSides() || chess.derived.isPlayerTurn()
+        ? getLegalMoves(fen, square)
+        : getPremoveLegalMoves(chess.state.fen, square);
+    batch(() => {
+      setSelectedSquare(square);
+      setHighlightedMoves(moves);
+    });
   };
 
   // Activates drag mode after movement threshold exceeded
@@ -693,6 +705,14 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     clearDraggingState();
   };
 
+  // Detect when the browser forcibly releases pointer capture
+  // (e.g., system gesture, app switch, notification panel)
+  const handleLostCapture = (e: PointerEvent) => {
+    if (pointerTracking && e.pointerId === pointerTracking.pointerId) {
+      clearDraggingState();
+    }
+  };
+
   // Register pointer event listeners on the board element via addEventListener
   // to bypass SolidJS event delegation (which can interfere with setPointerCapture)
   createEffect(() => {
@@ -708,17 +728,20 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     const onPointerMove = (e: Event) => handlePointerMove(e as PointerEvent);
     const onPointerUp = (e: Event) => handlePointerUp(e as PointerEvent);
     const onPointerCancel = (e: Event) => handlePointerCancel(e as PointerEvent);
+    const onLostCapture = (e: Event) => handleLostCapture(e as PointerEvent);
 
     el.addEventListener('pointerdown', onPointerDown);
     el.addEventListener('pointermove', onPointerMove);
     el.addEventListener('pointerup', onPointerUp);
     el.addEventListener('pointercancel', onPointerCancel);
+    el.addEventListener('lostpointercapture', onLostCapture);
 
     onCleanup(() => {
       el.removeEventListener('pointerdown', onPointerDown);
       el.removeEventListener('pointermove', onPointerMove);
       el.removeEventListener('pointerup', onPointerUp);
       el.removeEventListener('pointercancel', onPointerCancel);
+      el.removeEventListener('lostpointercapture', onLostCapture);
     });
   });
 

@@ -20,15 +20,17 @@
   -webkit-user-drag: none;
 }
 
-.chessPiece:hover {
-  transform: scale(1.04);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35)) brightness(1.08);
-}
+@media (hover: hover) {
+  .chessPiece:hover {
+    transform: scale(1.04);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35)) brightness(1.08);
+  }
 
-.chessPiece:active {
-  cursor: grabbing;
-  transform: scale(1.12);
-  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4)) brightness(1.1);
+  .chessPiece:active {
+    cursor: grabbing;
+    transform: scale(1.12);
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4)) brightness(1.1);
+  }
 }
 
 .chessPiece[src*='w'] {
