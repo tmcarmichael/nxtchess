@@ -82,8 +82,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   const [toastFadingOut, setToastFadingOut] = createSignal(false);
   // Track if low-time warning has been played (resets each game)
   let lowTimeWarningPlayed = false;
-  // Track if a drag operation just ended to prevent click from interfering
-  let justDragged = false;
   // Toast dismiss timer ref
   let toastDismissTimer: ReturnType<typeof setTimeout> | null = null;
   // Eval debounce timer ref - prevents rapid eval calls during fast piece movement
@@ -107,6 +105,22 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     if (!isValidArrowMove(start, hover)) return null;
     return { from: start, to: hover };
   });
+
+  // Pointer event tracking state
+  let pointerTracking: {
+    pointerId: number;
+    startX: number;
+    startY: number;
+    square: Square;
+    piece: string;
+  } | null = null;
+  let isPointerDragging = false;
+  let latestPointerPos = { x: 0, y: 0 };
+  let boardRef: HTMLElement | null = null;
+  const DRAG_THRESHOLD = 8;
+
+  // Ref for container
+  let containerRef: HTMLDivElement | undefined;
 
   useKeyboardNavigation({
     onPrevious: actions.jumpToPreviousMove,
@@ -480,247 +494,269 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     return derived.allowBothSides() ? chess.state.viewFen : chess.state.fen;
   };
 
-  const handleSquareClick = (square: Square) => {
+  const getSquareFromCoordinates = (clientX: number, clientY: number): Square | null => {
+    if (!boardRef) return null;
+
+    const boardRect = boardRef.getBoundingClientRect();
+
+    if (
+      clientX < boardRect.left ||
+      clientX > boardRect.right ||
+      clientY < boardRect.top ||
+      clientY > boardRect.bottom
+    ) {
+      return null;
+    }
+
+    const squareSize = boardRect.width / 8;
+    const col = Math.max(0, Math.min(7, Math.floor((clientX - boardRect.left) / squareSize)));
+    const row = Math.max(0, Math.min(7, Math.floor((clientY - boardRect.top) / squareSize)));
+
+    const view = ui.state.boardView;
+    const file = view === 'w' ? col : 7 - col;
+    const rank = view === 'w' ? 7 - row : row;
+
+    return `${String.fromCharCode(97 + file)}${rank + 1}` as Square;
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Pointer Event Handlers
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const handlePointerDown = (e: PointerEvent) => {
+    // Only handle primary button (left click / touch)
+    if (e.button !== 0) return;
+    // Ignore if already tracking a pointer (multi-touch rejection)
+    if (pointerTracking) return;
+
+    // Clear annotations on left-click (preventDefault on pointerdown suppresses
+    // the compatibility mousedown that the document listener relies on)
+    clearAnnotations();
+
     // Initialize audio on first interaction
     audioService.init();
 
-    // If a drag operation just occurred, skip click handling
-    // (handleMouseUp already processed the drag)
-    if (justDragged) {
-      justDragged = false;
-      return;
-    }
+    const square = getSquareFromCoordinates(e.clientX, e.clientY);
+    if (!square) return;
 
     resetViewIfNeeded();
     const currentSelection = selectedSquare();
 
-    if (!currentSelection) {
-      // Clear any existing premove when selecting a new piece
-      clearPremove();
-      // Allow selecting player's pieces even during opponent's turn
-      const piece = chess.derived.currentBoard().find((sq) => sq.square === square)?.piece;
-      if (
-        piece &&
-        isPlayerPiece(square) &&
-        (!chess.state.isGameOver || isAnalyzeHistoryOverride()) &&
-        !engine.state.isThinking
-      ) {
-        selectSquare(square);
-        const fen = getMoveCalculationFen();
-        const moves =
-          derived.allowBothSides() || chess.derived.isPlayerTurn()
-            ? getLegalMoves(fen, square)
-            : getPremoveLegalMoves(chess.state.fen, square);
-        setHighlightedMoves(moves);
-      }
-      return;
-    }
-
-    // Clicked on the same square - deselect (only for pure clicks, not drag-drop)
-    if (square === currentSelection) {
-      clearDraggingState();
-      clearPremove();
-      return;
-    }
-
-    // Try to execute move if it's valid and player's turn
-    if (canMove() && highlightedMoves().includes(square)) {
-      executeMove(currentSelection, square);
-      clearDraggingState();
-    } else if (canSetPremove(currentSelection) && highlightedMoves().includes(square)) {
-      // Set premove during opponent's turn
-      setPremoveWithPromotion(currentSelection, square);
-    } else if (isPlayerPiece(square) && (!chess.state.isGameOver || isAnalyzeHistoryOverride())) {
-      clearPremove();
-      selectSquare(square);
-      const fen = getMoveCalculationFen();
-      const moves =
-        derived.allowBothSides() || chess.derived.isPlayerTurn()
-          ? getLegalMoves(fen, square)
-          : getPremoveLegalMoves(chess.state.fen, square);
-      setHighlightedMoves(moves);
-    } else if (canMove() && highlightedMoves().length > 0 && !highlightedMoves().includes(square)) {
-      // Attempted illegal move - play error sound and flash king
-      triggerIllegalMoveFeedback();
-      clearDraggingState();
-    }
-    // Keep selection if clicked elsewhere during opponent's turn
-  };
-
-  const handleDragStart = (square: Square, piece: string, event: DragEvent) => {
-    if (!isPlayerPiece(square)) return;
-    if ((chess.state.isGameOver && !isAnalyzeHistoryOverride()) || engine.state.isThinking) return;
-
-    // Clear any existing premove when starting a new drag
-    clearPremove();
-
-    // Initialize audio on first interaction
-    audioService.init();
-
-    // Mark that a drag started so handleSquareClick doesn't interfere
-    justDragged = true;
-
-    resetViewIfNeeded();
-    setDraggedPiece({ square, piece });
-    setCursorPosition({ x: event.clientX, y: event.clientY });
-    // In analysis mode, use viewFen for legal moves (allows moves from historical positions)
-    // Otherwise, use premove-aware moves when it's not player's turn
-    const fen = getMoveCalculationFen();
-    const moves =
-      derived.allowBothSides() || chess.derived.isPlayerTurn()
-        ? getLegalMoves(fen, square)
-        : getPremoveLegalMoves(chess.state.fen, square);
-    setHighlightedMoves(moves);
-    setSelectedSquare(square);
-    event.dataTransfer?.setDragImage(new Image(), 0, 0);
-  };
-
-  // Touch event handling for mobile
-  // Track touch start position to distinguish tap vs drag
-  let touchStartPos: { x: number; y: number; square: Square; piece: string } | null = null;
-  let isTouchDragging = false;
-  const DRAG_THRESHOLD = 10; // pixels - movement beyond this activates drag
-  // Track latest touch position for RAF to use (avoids stale closure capture)
-  let latestTouchPos = { x: 0, y: 0 };
-
-  const handleTouchStart = (square: Square, piece: string, event: TouchEvent) => {
-    if (!isPlayerPiece(square)) return;
-    if ((chess.state.isGameOver && !isAnalyzeHistoryOverride()) || engine.state.isThinking) return;
-
-    // Initialize audio on first interaction
-    audioService.init();
-
-    // Record touch start - don't activate drag yet (let tap-to-select work)
-    const touch = event.touches[0];
-    if (!touch) return;
-    touchStartPos = { x: touch.clientX, y: touch.clientY, square, piece };
-    isTouchDragging = false;
-  };
-
-  // Activates drag mode after movement threshold exceeded
-  // Takes current touch position to avoid using stale start position
-  const activateTouchDrag = (currentX: number, currentY: number) => {
-    if (!touchStartPos || isTouchDragging) return;
-    isTouchDragging = true;
-
-    // Clear any existing premove when starting a new drag
-    clearPremove();
-
-    // Mark that a drag started so handleSquareClick doesn't interfere
-    justDragged = true;
-
-    resetViewIfNeeded();
-    setDraggedPiece({ square: touchStartPos.square, piece: touchStartPos.piece });
-    // Use current position, not original - the finger has already moved past threshold
-    setCursorPosition({ x: currentX, y: currentY });
-    // In analysis mode, use viewFen for legal moves (allows moves from historical positions)
-    // Otherwise, use premove-aware moves when it's not player's turn
-    const fen = getMoveCalculationFen();
-    const moves =
-      derived.allowBothSides() || chess.derived.isPlayerTurn()
-        ? getLegalMoves(fen, touchStartPos.square)
-        : getPremoveLegalMoves(chess.state.fen, touchStartPos.square);
-    setHighlightedMoves(moves);
-    setSelectedSquare(touchStartPos.square);
-  };
-
-  // RAF-throttled mouse/touch move to prevent 60+ style recalcs/second
-  let rafId: number | null = null;
-  // Track latest mouse position for RAF to use (avoids stale closure capture)
-  let latestMousePos = { x: 0, y: 0 };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (draggedPiece()) {
-      latestMousePos = { x: e.clientX, y: e.clientY };
-      if (rafId !== null) return; // Skip scheduling if RAF pending (but latestMousePos is already updated)
-      rafId = requestAnimationFrame(() => {
-        // Always reset rafId first to prevent permanent blocking on errors
-        rafId = null;
-        setCursorPosition(latestMousePos);
-      });
-    }
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    const touch = e.touches[0];
-    if (!touch) {
-      // Multi-touch edge case: primary touch lifted while secondary still active
-      // Keep tracking but don't update position
-      return;
-    }
-
-    // Always track latest position - RAF will read from this to avoid stale closures
-    latestTouchPos = { x: touch.clientX, y: touch.clientY };
-
-    // Check if we should activate drag mode (movement exceeded threshold)
-    if (touchStartPos && !isTouchDragging) {
-      const dx = touch.clientX - touchStartPos.x;
-      const dy = touch.clientY - touchStartPos.y;
-      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
-        activateTouchDrag(touch.clientX, touch.clientY);
-      }
-    }
-
-    // Schedule position update if actively dragging
-    // Check isTouchDragging first (sync) before draggedPiece() (async signal)
-    if (isTouchDragging) {
-      // If draggedPiece became null unexpectedly (effect cleared it), reset touch state
-      if (!draggedPiece()) {
-        touchStartPos = null;
-        isTouchDragging = false;
+    // Second-tap logic: if there's already a selected square, handle the action
+    if (currentSelection) {
+      // Tapped same square → deselect
+      if (square === currentSelection) {
+        clearDraggingState();
+        clearPremove();
         return;
       }
 
-      if (rafId !== null) return; // Skip scheduling if RAF pending (but latestTouchPos is already updated)
-      rafId = requestAnimationFrame(() => {
-        // Always reset rafId first to prevent permanent blocking on errors
-        rafId = null;
-        // Use latestTouchPos instead of captured touch coordinates
-        // This ensures we get the most recent position even if events were skipped
-        setCursorPosition(latestTouchPos);
-      });
+      // Valid move target → execute move
+      if (canMove() && highlightedMoves().includes(square)) {
+        executeMove(currentSelection, square);
+        clearDraggingState();
+        return;
+      }
+
+      // Valid premove target
+      if (canSetPremove(currentSelection) && highlightedMoves().includes(square)) {
+        setPremoveWithPromotion(currentSelection, square);
+        return;
+      }
+
+      // Tapped own piece → fall through to start tracking (re-select)
+      if (isPlayerPiece(square) && (!chess.state.isGameOver || isAnalyzeHistoryOverride())) {
+        // Clear previous selection state before falling through
+        clearPremove();
+        // Fall through to start tracking below
+      } else if (
+        canMove() &&
+        highlightedMoves().length > 0 &&
+        !highlightedMoves().includes(square)
+      ) {
+        // Attempted illegal move
+        triggerIllegalMoveFeedback();
+        clearDraggingState();
+        return;
+      } else {
+        // Invalid target - deselect
+        clearDraggingState();
+        return;
+      }
+    } else {
+      // No selection yet - clear any existing premove
+      clearPremove();
     }
+
+    // Start tracking if this is the player's own piece
+    const piece = chess.derived.currentBoard().find((sq) => sq.square === square)?.piece;
+    if (
+      !piece ||
+      !isPlayerPiece(square) ||
+      (chess.state.isGameOver && !isAnalyzeHistoryOverride()) ||
+      engine.state.isThinking
+    ) {
+      return;
+    }
+
+    pointerTracking = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      square,
+      piece,
+    };
+    isPointerDragging = false;
+
+    // Capture pointer to receive events even if pointer leaves the element
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
   };
 
-  const handleTouchEnd = (e: TouchEvent) => {
-    // If we were dragging, handle the drop
-    if (isTouchDragging && draggedPiece()) {
-      const touch = e.changedTouches[0];
-      if (touch) {
-        const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+  // Activates drag mode after movement threshold exceeded
+  const activatePointerDrag = (currentX: number, currentY: number) => {
+    if (!pointerTracking || isPointerDragging) return;
+    isPointerDragging = true;
 
-        // Find the square element (either the target or a parent with data-square)
-        let squareElement = targetElement as HTMLElement | null;
-        while (squareElement && !squareElement.dataset?.square) {
-          squareElement = squareElement.parentElement;
-        }
+    // Clear any existing premove when starting a new drag
+    clearPremove();
 
-        if (squareElement?.dataset?.square) {
-          const targetSquare = squareElement.dataset.square as Square;
-          handleMouseUp(targetSquare);
-        } else {
-          // Dropped outside the board - clear dragging state
-          clearDraggingState();
-        }
+    resetViewIfNeeded();
+    const fen = getMoveCalculationFen();
+    const moves =
+      derived.allowBothSides() || chess.derived.isPlayerTurn()
+        ? getLegalMoves(fen, pointerTracking.square)
+        : getPremoveLegalMoves(chess.state.fen, pointerTracking.square);
+    batch(() => {
+      setDraggedPiece({ square: pointerTracking!.square, piece: pointerTracking!.piece });
+      setCursorPosition({ x: currentX, y: currentY });
+      setHighlightedMoves(moves);
+      setSelectedSquare(pointerTracking!.square);
+    });
+  };
+
+  // RAF-throttled pointer move
+  let rafId: number | null = null;
+
+  const handlePointerMove = (e: PointerEvent) => {
+    if (!pointerTracking || e.pointerId !== pointerTracking.pointerId) return;
+
+    latestPointerPos = { x: e.clientX, y: e.clientY };
+
+    // Check if we should activate drag mode (movement exceeded threshold)
+    if (!isPointerDragging) {
+      const dx = e.clientX - pointerTracking.startX;
+      const dy = e.clientY - pointerTracking.startY;
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
+        activatePointerDrag(e.clientX, e.clientY);
+      }
+      return;
+    }
+
+    // Schedule RAF-throttled position update
+    if (rafId !== null) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      setCursorPosition(latestPointerPos);
+    });
+  };
+
+  const handlePointerUp = (e: PointerEvent) => {
+    if (!pointerTracking || e.pointerId !== pointerTracking.pointerId) return;
+
+    const tracking = pointerTracking;
+
+    if (isPointerDragging) {
+      // Drag completed - handle drop
+      const targetSquare = getSquareFromCoordinates(e.clientX, e.clientY);
+      if (targetSquare) {
+        handleDrop(targetSquare);
       } else {
         clearDraggingState();
       }
+    } else {
+      // Tap (no drag occurred) - select piece and show legal moves
+      pointerTracking = null;
+      isPointerDragging = false;
+      selectSquare(tracking.square);
+      const fen = getMoveCalculationFen();
+      const moves =
+        derived.allowBothSides() || chess.derived.isPlayerTurn()
+          ? getLegalMoves(fen, tracking.square)
+          : getPremoveLegalMoves(chess.state.fen, tracking.square);
+      setHighlightedMoves(moves);
     }
-    // If not dragging (was a tap), let the click event handle selection naturally
-
-    // Reset touch tracking state
-    touchStartPos = null;
-    isTouchDragging = false;
   };
 
-  // Handle touch cancel (e.g., incoming call, palm rejection)
-  const handleTouchCancel = () => {
-    if (isTouchDragging) {
-      clearDraggingState();
-    }
-    touchStartPos = null;
-    isTouchDragging = false;
+  const handlePointerCancel = (e: PointerEvent) => {
+    if (!pointerTracking || e.pointerId !== pointerTracking.pointerId) return;
+    clearDraggingState();
   };
+
+  // Register pointer event listeners on the board element via addEventListener
+  // to bypass SolidJS event delegation (which can interfere with setPointerCapture)
+  createEffect(() => {
+    if (!containerRef) return;
+
+    // Cache the board ref for getSquareFromCoordinates
+    boardRef = containerRef.querySelector('[role="grid"]');
+    if (!boardRef) return;
+
+    const el = boardRef;
+
+    const onPointerDown = (e: Event) => handlePointerDown(e as PointerEvent);
+    const onPointerMove = (e: Event) => handlePointerMove(e as PointerEvent);
+    const onPointerUp = (e: Event) => handlePointerUp(e as PointerEvent);
+    const onPointerCancel = (e: Event) => handlePointerCancel(e as PointerEvent);
+
+    el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('pointerup', onPointerUp);
+    el.addEventListener('pointercancel', onPointerCancel);
+
+    onCleanup(() => {
+      el.removeEventListener('pointerdown', onPointerDown);
+      el.removeEventListener('pointermove', onPointerMove);
+      el.removeEventListener('pointerup', onPointerUp);
+      el.removeEventListener('pointercancel', onPointerCancel);
+    });
+  });
+
+  // Clear annotations on any non-right-click anywhere on the page
+  // Also clean up right-click drag if released outside board
+  createEffect(() => {
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 2) {
+        clearAnnotations();
+      }
+    };
+    const onMouseUp = (e: MouseEvent) => {
+      if (e.button === 2 && rightClickDragStart()) {
+        batch(() => {
+          setRightClickDragStart(null);
+          setRightClickHoverSquare(null);
+        });
+      }
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mouseup', onMouseUp);
+    onCleanup(() => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mouseup', onMouseUp);
+    });
+  });
+
+  // Clear annotations when a move is made (player or opponent)
+  createEffect(
+    on(
+      () => chess.state.moveHistory.length,
+      (length, prevLength) => {
+        if (prevLength !== undefined && length !== prevLength) {
+          clearAnnotations();
+        }
+      }
+    )
+  );
 
   onCleanup(() => {
     if (rafId !== null) cancelAnimationFrame(rafId);
@@ -728,7 +764,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     if (evalDebounceTimer) clearTimeout(evalDebounceTimer);
   });
 
-  const handleMouseUp = (targetSquare: Square) => {
+  const handleDrop = (targetSquare: Square) => {
     if (chess.state.isGameOver && !isAnalyzeHistoryOverride()) return;
     resetViewIfNeeded();
     const dragState = draggedPiece();
@@ -839,7 +875,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
         // Show promotion modal for premove
         setPendingPremovePromotion({ from, to, color: piece[0] as Side });
         clearDraggingState();
-        justDragged = false;
         return;
       }
     }
@@ -847,8 +882,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     // Regular premove (no promotion)
     setPremove({ from, to });
     clearDraggingState();
-    // Reset justDragged so next click can cancel premove
-    justDragged = false;
   };
 
   const tryExecutePremove = () => {
@@ -872,15 +905,18 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const clearDraggingState = () => {
-    // Clear touch tracking state to stay in sync with signal state
-    touchStartPos = null;
-    isTouchDragging = false;
+    pointerTracking = null;
+    isPointerDragging = false;
     batch(() => {
       setDraggedPiece(null);
       setSelectedSquare(null);
       setHighlightedMoves([]);
     });
   };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Right-click Annotation Functions
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const clearAnnotations = () => {
     if (rightClickHighlights().size > 0 || rightClickArrows().length > 0) {
@@ -971,75 +1007,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     navigate('/');
   };
 
-  // Ref for container to add non-passive touch listeners
-  let containerRef: HTMLDivElement | undefined;
-
-  // Clear annotations on any non-right-click anywhere on the page
-  // Also clean up right-click drag if released outside board
-  createEffect(() => {
-    const onMouseDown = (e: MouseEvent) => {
-      if (e.button !== 2) {
-        clearAnnotations();
-      }
-    };
-    const onMouseUp = (e: MouseEvent) => {
-      if (e.button === 2 && rightClickDragStart()) {
-        batch(() => {
-          setRightClickDragStart(null);
-          setRightClickHoverSquare(null);
-        });
-      }
-    };
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('mouseup', onMouseUp);
-    onCleanup(() => {
-      document.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('mouseup', onMouseUp);
-    });
-  });
-
-  // Clear annotations when a move is made (player or opponent)
-  createEffect(
-    on(
-      () => chess.state.moveHistory.length,
-      (length, prevLength) => {
-        if (prevLength !== undefined && length !== prevLength) {
-          clearAnnotations();
-        }
-      }
-    )
-  );
-
-  // Add non-passive touchmove listener to allow preventDefault (stop scrolling while dragging)
-  createEffect(() => {
-    if (!containerRef) return;
-
-    const onTouchMove = (e: TouchEvent) => {
-      // Prevent scrolling as soon as user touches a piece and starts moving
-      // Must prevent early - if we wait until drag activates, browser may have
-      // already started a scroll gesture and taken over the touch events
-      if (touchStartPos) {
-        e.preventDefault();
-      }
-      handleTouchMove(e);
-    };
-
-    // Must use { passive: false } to allow preventDefault
-    containerRef.addEventListener('touchmove', onTouchMove, { passive: false });
-
-    onCleanup(() => {
-      containerRef?.removeEventListener('touchmove', onTouchMove);
-    });
-  });
-
   return (
-    <div
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchCancel}
-      class={styles.chessGameContainer}
-    >
+    <div ref={containerRef} class={styles.chessGameContainer}>
       <div role="status" aria-live="assertive" class="sr-only">
         {gameEventAnnouncement()}
       </div>
@@ -1058,10 +1027,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                 selectedSquare={selectedSquare}
                 draggedPiece={draggedPiece}
                 cursorPosition={cursorPosition}
-                onSquareClick={handleSquareClick}
-                onSquareMouseUp={handleMouseUp}
-                onDragStart={handleDragStart}
-                onTouchStart={handleTouchStart}
                 lastMove={() => chess.state.lastMove}
                 checkedKingSquare={() => chess.state.checkedKingSquare}
                 boardView={() => ui.state.boardView}
