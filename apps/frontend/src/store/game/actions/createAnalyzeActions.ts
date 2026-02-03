@@ -87,10 +87,15 @@ export const createAnalyzeActions = (
   // ============================================================================
 
   const applyMove = (from: Square, to: Square, promotion?: PromotionPiece): boolean => {
+    // Allow moves after game over when viewing history (enables exploring alternative lines)
+    // truncateToViewPosition resets isGameOver at the session level
+    if (chess.state.lifecycle === 'ended' && chess.derived.isViewingHistory()) {
+      chess.truncateToViewPosition();
+      chess.setLifecycle('playing');
+    }
+
     if (chess.state.lifecycle !== 'playing') return false;
 
-    // If viewing history, truncate to current view position first
-    // This allows playing alternative lines from any point in the game
     if (chess.derived.isViewingHistory()) {
       chess.truncateToViewPosition();
     }

@@ -23,12 +23,16 @@ export interface UIStore {
 
 const FOCUS_MODE_DEBOUNCE_MS = 500;
 
-export const createUIStore = (): UIStore => {
+export interface UIStoreOptions {
+  initialFocusMode?: boolean;
+}
+
+export const createUIStore = (options?: UIStoreOptions): UIStore => {
   const [state, setState] = createStore<UIState>({
     boardView: 'w',
     showEndModal: false,
     showResignModal: false,
-    trainingFocusMode: false,
+    trainingFocusMode: options?.initialFocusMode ?? false,
   });
 
   let focusModeDebounceTimer: ReturnType<typeof setTimeout> | null = null;

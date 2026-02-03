@@ -1,0 +1,104 @@
+.puzzleControlPanel {
+  display: flex;
+  margin-top: var(--space-2xl);
+  width: 100%;
+  min-height: 380px;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  gap: var(--space-md);
+  user-select: none;
+}
+
+.modeToggle {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  margin-bottom: var(--space-sm);
+}
+
+.modeButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 500;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.modeButton:hover:not(.modeButtonActive) {
+  background: var(--surface-4);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.modeButtonActive {
+  background: var(--accent-subtle);
+  border-color: var(--accent-muted);
+  color: var(--text-primary);
+  box-shadow: 0 0 12px var(--accent-ghost);
+}
+
+.puzzleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+}
+
+.puzzleInfoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.puzzleInfoLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+}
+
+.puzzleInfoValue {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: capitalize;
+}
+
+@media (max-width: 1023px) {
+  .puzzleControlPanel {
+    margin-top: var(--space-md);
+    min-height: auto;
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 639px) {
+  .puzzleControlPanel {
+    margin-top: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+}

@@ -2,6 +2,7 @@ import {
   type JSX,
   splitProps,
   Index,
+  Show,
   type Component,
   createMemo,
   createSignal,
@@ -48,6 +49,7 @@ interface ChessBoardProps {
   premoveSquares: () => { from: Square; to: Square } | null;
   animatingMove: () => { from: Square; to: Square; piece: string } | null;
   flashKingSquare: () => Square | null;
+  playerColor: () => Side | null;
 }
 
 const ANIMATION_DURATION = 500; // ms
@@ -70,6 +72,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     'premoveSquares',
     'animatingMove',
     'flashKingSquare',
+    'playerColor',
   ]);
 
   const highlightSet = createMemo(() => new Set(local.highlightedMoves()));
@@ -281,10 +284,22 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
       <div role="status" aria-live="polite" class="sr-only">
         {lastMoveAnnouncement()}
       </div>
-      <div class={styles.board} role="grid" aria-label="Chess board">
-        {renderedSquares()}
-        {renderAnimatingPiece()}
-        {renderDraggedPiece()}
+      <div class={styles.boardWrapper}>
+        <div class={styles.board} role="grid" aria-label="Chess board">
+          {renderedSquares()}
+          {renderAnimatingPiece()}
+          {renderDraggedPiece()}
+        </div>
+        <Show when={local.playerColor()}>
+          <div
+            classList={{
+              [styles.playerColorIndicator]: true,
+              [styles.playerColorWhite]: local.playerColor() === 'w',
+              [styles.playerColorBlack]: local.playerColor() === 'b',
+            }}
+            aria-label={`Playing as ${local.playerColor() === 'w' ? 'white' : 'black'}`}
+          />
+        </Show>
       </div>
     </div>
   );

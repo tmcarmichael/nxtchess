@@ -221,6 +221,30 @@
   }
 }
 
+.boardWrapper {
+  position: relative;
+}
+
+.playerColorIndicator {
+  position: absolute;
+  bottom: 2px;
+  right: -38px;
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  border: 2.5px solid #9a9a9a;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.playerColorWhite {
+  background-color: #e8e8e8;
+}
+
+.playerColorBlack {
+  background-color: #1a1a1a;
+}
+
 .fileLabel {
   position: absolute;
   bottom: 2px;
