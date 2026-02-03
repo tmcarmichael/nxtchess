@@ -185,12 +185,12 @@ body[data-theme='light'] {
   --overlay-heavy: rgba(0, 0, 0, 0.55);
   --overlay-opaque: rgba(0, 0, 0, 0.7);
 
-  --surface-0: #f5f0e8;
-  --surface-1: #ede7dd;
-  --surface-2: #e5ded3;
-  --surface-3: #ddd5c9;
-  --surface-4: #d4cbbe;
-  --surface-chrome: rgba(245, 240, 232, 0.88);
+  --surface-0: #e8e1d6;
+  --surface-1: #dfd8cc;
+  --surface-2: #d6cfc2;
+  --surface-3: #cdc5b8;
+  --surface-4: #c4bbad;
+  --surface-chrome: rgba(232, 225, 214, 0.88);
 
   --border-subtle: rgba(0, 0, 0, 0.06);
   --border-default: rgba(0, 0, 0, 0.1);

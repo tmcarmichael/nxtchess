@@ -32,7 +32,7 @@ export const SettingsProvider = (props: { children: JSX.Element }) => {
 
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) {
-        meta.setAttribute('content', next === 'light' ? '#f5f0e8' : '#0a0a0a');
+        meta.setAttribute('content', next === 'light' ? '#e8e1d6' : '#0a0a0a');
       }
     },
     toggleSound() {
