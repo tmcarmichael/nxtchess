@@ -885,7 +885,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   const clearAnnotations = () => {
     if (rightClickHighlights().size > 0 || rightClickArrows().length > 0) {
       batch(() => {
-        setRightClickHighlights(new Set());
+        setRightClickHighlights(new Set<Square>());
         setRightClickArrows([]);
       });
     }
