@@ -41,6 +41,9 @@ jobs:
 
       - name: Unit tests
         run: yarn test
+        env:
+          VITE_BACKEND_URL: http://localhost:8080
+          VITE_DEBUG: "true"
 
   backend:
     name: Backend
