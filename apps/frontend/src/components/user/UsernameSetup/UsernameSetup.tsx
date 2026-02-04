@@ -1,6 +1,7 @@
 import { useNavigate } from '@solidjs/router';
 import { createSignal, createEffect, Show, type Component, onMount } from 'solid-js';
 import { useUserStore } from '../../../store/user/UserContext';
+import ChessGameModal from '../../chess/ChessGameModal/ChessGameModal';
 import styles from './UsernameSetup.module.css';
 
 const UsernameSetup: Component = () => {
@@ -11,24 +12,19 @@ const UsernameSetup: Component = () => {
   const [isCheckingStatus, setIsCheckingStatus] = createSignal(true);
   const [isSubmitting, setIsSubmitting] = createSignal(false);
 
-  // Check user status on mount
   onMount(async () => {
-    // Only check if header hasn't already populated the state
     if (!userState.isLoggedIn) {
       await userActions.checkUserStatus(navigate);
     }
     setIsCheckingStatus(false);
   });
 
-  // Redirect based on user state after status check completes
   createEffect(() => {
     if (isCheckingStatus()) return;
 
     if (!userState.isLoggedIn) {
-      // Not logged in - redirect to home
       navigate('/', { replace: true });
     } else if (userState.username) {
-      // Already has username - redirect to profile
       navigate(`/profile/${userState.username}`, { replace: true });
     }
   });
@@ -49,34 +45,36 @@ const UsernameSetup: Component = () => {
     }
   };
 
+  const handleCancel = async () => {
+    await userActions.logout();
+    navigate('/');
+  };
+
   return (
-    <Show
-      when={!isCheckingStatus()}
-      fallback={
-        <div class={styles.usernameSetupContainer}>
-          <p class={styles.usernameSetupLoading}>Loading...</p>
+    <Show when={!isCheckingStatus()} fallback={<div class={styles.setupLoading}>Loading...</div>}>
+      <ChessGameModal title="Set Username" onClose={handleCancel} size="sm">
+        <div class={styles.setupContent}>
+          <input
+            type="text"
+            class={styles.setupInput}
+            placeholder="Enter a username"
+            value={localName()}
+            onInput={(e) => setLocalName(e.currentTarget.value)}
+            disabled={isSubmitting()}
+          />
+          <Show when={error()}>
+            <p class={styles.setupError}>{error()}</p>
+          </Show>
+          <div class={styles.setupActions}>
+            <button class={styles.cancelButton} onClick={handleCancel}>
+              Cancel
+            </button>
+            <button class={styles.saveButton} onClick={submitUsername} disabled={isSubmitting()}>
+              {isSubmitting() ? 'Saving...' : 'Save'}
+            </button>
+          </div>
         </div>
-      }
-    >
-      <div class={styles.usernameSetupContainer}>
-        <h2 class={styles.usernameSetupTitle}>Set Your Username</h2>
-        <input
-          type="text"
-          class={styles.usernameSetupInput}
-          placeholder="Enter a username"
-          value={localName()}
-          onInput={(e) => setLocalName(e.currentTarget.value)}
-          disabled={isSubmitting()}
-        />
-        <button
-          class={styles.usernameSetupButton}
-          onClick={submitUsername}
-          disabled={isSubmitting()}
-        >
-          {isSubmitting() ? 'Saving...' : 'Save Username'}
-        </button>
-        {error() && <p class={styles.usernameSetupError}>{error()}</p>}
-      </div>
+      </ChessGameModal>
     </Show>
   );
 };

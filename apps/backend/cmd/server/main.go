@@ -90,9 +90,9 @@ func main() {
 	// WebSocket endpoint for multiplayer games (no body limit needed)
 	r.Get("/ws", wsHandler.ServeHTTP)
 
-	// OAuth routes with auth rate limiting
+	// OAuth routes with auth rate limiting (redirect on limit for browser navigation)
 	r.Group(func(ar chi.Router) {
-		ar.Use(authRateLimiter.Middleware)
+		ar.Use(authRateLimiter.RedirectMiddleware)
 		ar.Get("/auth/google/login", auth.LoginHandler("Google", cfg))
 		ar.Get("/auth/google/callback", auth.CallbackHandler("Google", cfg))
 		ar.Get("/auth/github/login", auth.LoginHandler("GitHub", cfg))

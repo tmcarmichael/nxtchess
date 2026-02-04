@@ -117,36 +117,23 @@
 }
 
 .navItemUpcoming::after {
-  display: none;
-}
-
-.navItemUpcoming::before {
   content: 'soon';
   position: absolute;
   top: -0.6rem;
   right: -0.8rem;
+  left: auto;
+  bottom: auto;
+  height: auto;
+  width: auto;
   font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--accent);
   opacity: 0.7;
-}
-
-.navItem + .navItemUpcoming {
-  box-shadow: -2px 0 0 0 var(--border-default);
-}
-
-.navItem + .navItemUpcoming::before {
-  content: 'soon';
-  position: absolute;
-  top: -0.6rem;
-  right: -0.8rem;
-  left: auto;
-  height: auto;
-  width: auto;
-  transform: none;
   background: none;
+  transform: none;
+  animation: none;
 }
 
 .navItem.active {

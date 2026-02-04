@@ -156,10 +156,10 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
                 />
                 <span class={styles.profileButtonUsername}>{userState.username}</span>
               </button>
+              <button class={styles.signOutButton} onClick={() => props.onSignOut()}>
+                Sign Out
+              </button>
             </Show>
-            <button class={styles.signOutButton} onClick={() => props.onSignOut()}>
-              Sign Out
-            </button>
           </Show>
         </div>
       </nav>

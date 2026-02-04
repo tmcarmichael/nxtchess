@@ -1,87 +1,142 @@
-.usernameSetupContainer {
-  width: 30rem;
-  height: 20rem;
-  margin: var(--space-2xl) auto;
-  padding: var(--space-xl);
-  background-color: var(--surface-2);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+.setupContent {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-family: var(--font-body);
+  gap: var(--space-md);
+  padding: var(--space-md) 0;
 }
 
-.usernameSetupTitle {
-  font-size: var(--text-4xl);
-  margin-bottom: var(--space-2xl);
-  color: var(--text-primary);
-  font-weight: 600;
-  text-align: center;
-}
-
-.usernameSetupSubtitle {
+.setupInput {
+  width: 100%;
+  max-width: 280px;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-display);
   font-size: var(--text-lg);
-  color: var(--text-secondary);
-  margin-bottom: var(--space-lg);
-  text-align: center;
-  max-width: 80%;
-}
-
-.usernameSetupInput {
-  width: 80%;
-  margin-bottom: var(--space-sm);
-  padding: 0.75rem;
-  font-size: var(--text-lg);
-  color: var(--text-primary);
-  background-color: var(--surface-4);
+  font-weight: 400;
+  background: var(--surface-1);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  transition: border-color var(--transition-base);
-}
-
-.usernameSetupInput:focus {
-  border-color: var(--success);
-}
-
-.usernameSetupButton {
-  background-color: var(--success-muted);
+  border-radius: var(--radius-md);
   color: var(--text-primary);
-  padding: 0.6rem 1.2rem;
-  border: none;
-  cursor: pointer;
-  font-size: var(--text-lg);
-  font-weight: 500;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
-  transition: background-color var(--transition-base);
-  margin-top: var(--space-md);
+  text-align: center;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
-.usernameSetupButton:hover {
-  background-color: var(--success);
+.setupInput::placeholder {
+  color: var(--text-muted);
 }
 
-.usernameSetupError {
-  color: var(--error);
-  margin-top: 0.75rem;
+.setupInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ghost);
+}
+
+.setupInput:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.setupActions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  margin-top: var(--space-sm);
+}
+
+.cancelButton {
+  min-width: 100px;
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-display);
   font-size: var(--text-md);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.cancelButton:hover {
+  background: var(--surface-4);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+  transform: translateY(-2px);
+}
+
+.cancelButton:active {
+  transform: translateY(0);
+}
+
+.saveButton {
+  min-width: 100px;
+  padding: var(--space-sm) var(--space-xl);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, var(--accent-muted), var(--accent-subtle));
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.saveButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 255, 209, 0.25);
+}
+
+.saveButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.saveButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--surface-3);
+  border-color: var(--border-subtle);
+}
+
+.setupError {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--error);
   text-align: center;
 }
 
-.usernameSetupLoading {
+.setupLoading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-family: var(--font-display);
   font-size: var(--text-lg);
   color: var(--text-secondary);
-  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.usernameSetupButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+@media (max-width: 639px) {
+  .setupActions {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
 
-.usernameSetupInput:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  .cancelButton,
+  .saveButton {
+    width: 100%;
+    padding: var(--space-md);
+  }
 }
