@@ -146,7 +146,12 @@ func GetEndgameStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get total count
-	total, _ := database.GetEndgamePositionCount(models.EndgameQueryParams{})
+	total, err := database.GetEndgamePositionCount(models.EndgameQueryParams{})
+	if err != nil {
+		logger.Error("Failed to get total endgame count", logger.F("error", err.Error()))
+		httpx.WriteJSONError(w, http.StatusInternalServerError, "Failed to get training statistics")
+		return
+	}
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"total":        total,

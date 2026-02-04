@@ -6,11 +6,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 )
 
 var (
@@ -37,17 +37,18 @@ func InitRedis() {
 	})
 
 	if err := rdb.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis at %s: %v", redisAddr, err)
+		logger.Error("Failed to connect to Redis", logger.F("addr", redisAddr, "error", err.Error()))
+		os.Exit(1)
 	}
 
-	log.Printf("[InitRedis] Connected to Redis at %s", redisAddr)
+	logger.Info("Connected to Redis", logger.F("addr", redisAddr))
 }
 
 func GenerateSessionToken() (string, error) {
 	b := make([]byte, 32)
 	_, err := io.ReadFull(rand.Reader, b)
 	if err != nil {
-		log.Println("Error generating random session token:", err)
+		logger.Error("Failed to generate session token", logger.F("error", err.Error()))
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), nil
@@ -56,7 +57,7 @@ func GenerateSessionToken() (string, error) {
 func StoreSession(token, userID string) error {
 	err := rdb.Set(ctx, token, userID, 24*time.Hour).Err()
 	if err != nil {
-		log.Printf("Error storing session in Redis: %v", err)
+		logger.Error("Failed to store session", logger.F("error", err.Error()))
 	}
 	return err
 }
@@ -66,7 +67,7 @@ func GetSessionUserID(token string) (string, bool) {
 	if err == redis.Nil {
 		return "", false
 	} else if err != nil {
-		log.Printf("Error getting session from Redis: %v", err)
+		logger.Error("Failed to get session from Redis", logger.F("error", err.Error()))
 		return "", false
 	}
 	return userID, true
@@ -75,7 +76,7 @@ func GetSessionUserID(token string) (string, bool) {
 // Close closes the Redis client connection
 func Close() error {
 	if rdb != nil {
-		log.Println("[Sessions] Closing Redis connection...")
+		logger.Info("Closing Redis connection")
 		return rdb.Close()
 	}
 	return nil

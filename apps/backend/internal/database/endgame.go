@@ -4,14 +4,17 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/lib/pq"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/metrics"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/models"
 )
 
 // GetRandomEndgamePosition retrieves a random endgame position matching the given criteria
 func GetRandomEndgamePosition(params models.EndgameQueryParams) (*models.EndgamePosition, error) {
+	defer metrics.ObserveQuery("GetRandomEndgamePosition", time.Now())
 	ctx, cancel := QueryContext()
 	defer cancel()
 
@@ -124,6 +127,7 @@ func GetRandomEndgamePosition(params models.EndgameQueryParams) (*models.Endgame
 
 // GetEndgamePositionCount returns the count of positions matching the criteria
 func GetEndgamePositionCount(params models.EndgameQueryParams) (int, error) {
+	defer metrics.ObserveQuery("GetEndgamePositionCount", time.Now())
 	ctx, cancel := QueryContext()
 	defer cancel()
 
@@ -179,6 +183,7 @@ func GetEndgamePositionCount(params models.EndgameQueryParams) (int, error) {
 // BulkInsertEndgamePositions inserts multiple positions efficiently
 // Used by import/seed scripts
 func BulkInsertEndgamePositions(positions []models.EndgamePosition) error {
+	defer metrics.ObserveQuery("BulkInsertEndgamePositions", time.Now())
 	if len(positions) == 0 {
 		return nil
 	}
@@ -234,6 +239,7 @@ func BulkInsertEndgamePositions(positions []models.EndgamePosition) error {
 
 // GetAvailableEndgameThemes returns the list of distinct themes in the database
 func GetAvailableEndgameThemes() ([]string, error) {
+	defer metrics.ObserveQuery("GetAvailableEndgameThemes", time.Now())
 	ctx, cancel := QueryContext()
 	defer cancel()
 

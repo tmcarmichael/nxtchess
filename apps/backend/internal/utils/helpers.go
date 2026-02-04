@@ -5,11 +5,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 )
 
 func GenerateRandomString(n int) (string, error) {
@@ -29,6 +29,6 @@ func AuthRedirectWithError(
 ) {
 	encodedMsg := url.QueryEscape(errMsg)
 	redirectURL := fmt.Sprintf("%s/?error=%s", cfg.FrontendURL, encodedMsg)
-	log.Printf("[AuthRedirectWithError] %s (status code %d)\n", errMsg, statusCode)
+	logger.Warn("Auth redirect with error", logger.F("error", errMsg, "statusCode", statusCode))
 	http.Redirect(w, r, redirectURL, statusCode)
 }

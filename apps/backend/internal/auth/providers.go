@@ -3,13 +3,13 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
 
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 )
 
 var discordEndpoint = oauth2.Endpoint{
@@ -26,7 +26,7 @@ func InitOAuthProviders(cfg *config.Config) {
 
 func initGoogle(cfg *config.Config) {
 	if cfg.GoogleClientID == "" || cfg.GoogleClientSecret == "" {
-		log.Println("[OAuth] Google credentials not set, skipping")
+		logger.Info("OAuth provider not configured, skipping", logger.F("provider", "Google"))
 		return
 	}
 
@@ -59,7 +59,7 @@ func initGoogle(cfg *config.Config) {
 
 func initGitHub(cfg *config.Config) {
 	if cfg.GitHubClientID == "" || cfg.GitHubClientSecret == "" {
-		log.Println("[OAuth] GitHub credentials not set, skipping")
+		logger.Info("OAuth provider not configured, skipping", logger.F("provider", "GitHub"))
 		return
 	}
 
@@ -91,7 +91,7 @@ func initGitHub(cfg *config.Config) {
 
 func initDiscord(cfg *config.Config) {
 	if cfg.DiscordClientID == "" || cfg.DiscordClientSecret == "" {
-		log.Println("[OAuth] Discord credentials not set, skipping")
+		logger.Info("OAuth provider not configured, skipping", logger.F("provider", "Discord"))
 		return
 	}
 

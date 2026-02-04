@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 )
@@ -28,7 +27,9 @@ func (c *Config) IsProd() bool {
 	return c.Environment == "production"
 }
 
-func Load() *Config {
+func Load() (*Config, []string) {
+	var warnings []string
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -76,25 +77,25 @@ func Load() *Config {
 		TrustedProxies:      trustedProxies,
 	}
 
-	// AUTH
 	if cfg.GoogleClientID == "" || cfg.GoogleClientSecret == "" {
-		log.Printf("Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET in environment.")
+		warnings = append(warnings, "Google OAuth credentials not set")
 	}
 	if cfg.DiscordClientID == "" || cfg.DiscordClientSecret == "" {
-		log.Printf("Missing DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET in environment.")
+		warnings = append(warnings, "Discord OAuth credentials not set")
 	}
 	if cfg.GitHubClientID == "" || cfg.GitHubClientSecret == "" {
-		log.Printf("Missing GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET in environment.")
+		warnings = append(warnings, "GitHub OAuth credentials not set")
 	}
 
-	// FE, BE
 	if cfg.BackendURL == "" {
 		cfg.BackendURL = fmt.Sprintf("http://localhost:%s", port)
 	}
 	if cfg.FrontendURL == "" {
 		cfg.FrontendURL = "http://localhost:5173"
 	}
-	log.Printf("[Config] Loaded: ENV=%s, FRONTEND_URL=%s, BACKEND_URL=%s, PORT=%s", cfg.Environment, cfg.FrontendURL, cfg.BackendURL, cfg.Port)
 
-	return cfg
+	warnings = append(warnings, fmt.Sprintf("Config loaded: ENV=%s, FRONTEND_URL=%s, BACKEND_URL=%s, PORT=%s",
+		cfg.Environment, cfg.FrontendURL, cfg.BackendURL, cfg.Port))
+
+	return cfg, warnings
 }

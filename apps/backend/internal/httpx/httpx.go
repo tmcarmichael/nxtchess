@@ -2,12 +2,12 @@ package httpx
 
 import (
 	"encoding/json"
-	"log"
 	"net"
 	"net/http"
 	"strings"
 
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 )
 
 // RequestIDHeader is the header name for request IDs
@@ -45,7 +45,7 @@ func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Printf("Error writing JSON response: %v", err)
+		logger.Error("Failed to encode JSON response", logger.F("error", err.Error()))
 	}
 }
 

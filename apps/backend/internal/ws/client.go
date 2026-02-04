@@ -219,12 +219,14 @@ func (c *Client) WritePump() {
 			// Send each message as a separate WebSocket frame
 			// This ensures each message is a valid JSON object that can be parsed independently
 			if err := c.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				logger.Debug("WritePump write error", logger.F("clientId", c.ID, "error", err.Error()))
 				return
 			}
 
 		case <-ticker.C:
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				logger.Debug("WritePump ping error", logger.F("clientId", c.ID, "error", err.Error()))
 				return
 			}
 		}

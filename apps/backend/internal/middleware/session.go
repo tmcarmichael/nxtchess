@@ -12,6 +12,8 @@ type contextKey string
 
 const userIDKey contextKey = "userID"
 
+var sessionLookup = sessions.GetSessionUserID
+
 func Session(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_token")
@@ -20,7 +22,7 @@ func Session(next http.Handler) http.Handler {
 			return
 		}
 
-		userID, found := sessions.GetSessionUserID(cookie.Value)
+		userID, found := sessionLookup(cookie.Value)
 		if !found {
 			httpx.WriteJSONError(w, http.StatusUnauthorized, "Invalid or expired session token")
 			return
@@ -37,7 +39,7 @@ func OptionalSession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_token")
 		if err == nil {
-			if userID, found := sessions.GetSessionUserID(cookie.Value); found {
+			if userID, found := sessionLookup(cookie.Value); found {
 				ctx := context.WithValue(r.Context(), userIDKey, userID)
 				r = r.WithContext(ctx)
 			}

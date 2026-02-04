@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 )
 
 // DefaultQueryTimeout is the default timeout for database queries
@@ -30,12 +30,14 @@ func QueryContextWithTimeout(timeout time.Duration) (context.Context, context.Ca
 func InitPostgres() {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		log.Fatal("[Database] DATABASE_URL environment variable is required")
+		logger.Error("DATABASE_URL environment variable is required")
+		os.Exit(1)
 	}
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		log.Fatalf("[Database] Failed to open: %v", err)
+		logger.Error("Failed to open database", logger.F("error", err.Error()))
+		os.Exit(1)
 	}
 
 	// Connection pool configuration
@@ -48,12 +50,12 @@ func InitPostgres() {
 	db.SetConnMaxLifetime(time.Duration(connMaxLifetimeMins) * time.Minute)
 
 	if err = db.Ping(); err != nil {
-		log.Fatalf("[Database] Failed to ping: %v", err)
+		logger.Error("Failed to ping database", logger.F("error", err.Error()))
+		os.Exit(1)
 	}
 
 	DB = db
-	log.Printf("[Database] Connected (maxOpen=%d, maxIdle=%d, maxLifetime=%dm)",
-		maxOpenConns, maxIdleConns, connMaxLifetimeMins)
+	logger.Info("Database connected", logger.F("maxOpen", maxOpenConns, "maxIdle", maxIdleConns, "maxLifetimeMins", connMaxLifetimeMins))
 }
 
 func getEnvInt(key string, defaultVal int) int {
@@ -68,7 +70,7 @@ func getEnvInt(key string, defaultVal int) int {
 // Close closes the database connection pool
 func Close() error {
 	if DB != nil {
-		log.Println("[Database] Closing connection...")
+		logger.Info("Closing database connection")
 		return DB.Close()
 	}
 	return nil
