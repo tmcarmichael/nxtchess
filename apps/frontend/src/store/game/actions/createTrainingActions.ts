@@ -12,6 +12,7 @@ import {
   type TrainingMetadata,
   type GameStateForTermination,
 } from '../../../services/training';
+import { DEBUG } from '../../../shared/utils/debug';
 import type { Square, PromotionPiece } from '../../../types/chess';
 import type { Side, StartGameOptions, GamePhase } from '../../../types/game';
 import type { ChessStore } from '../stores/createChessStore';
@@ -19,10 +20,6 @@ import type { EngineStore } from '../stores/createEngineStore';
 import type { TimerStore } from '../stores/createTimerStore';
 import type { UIStore } from '../stores/createUIStore';
 import type { TrainingActions, CoreActions } from '../types';
-
-// ============================================================================
-// AI Move Delay Configuration for Training Mode
-// ============================================================================
 
 // Training mode uses a fixed delay range for natural pacing
 // This also helps space out eval engine calls to prevent overload
@@ -138,20 +135,12 @@ const randomDelay = (min: number, max: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, delay));
 };
 
-// ============================================================================
-// Training Mode Stores Interface
-// ============================================================================
-
 export interface TrainingStores {
   chess: ChessStore;
   timer: TimerStore;
   engine: EngineStore;
   ui: UIStore;
 }
-
-// ============================================================================
-// Factory
-// ============================================================================
 
 export const createTrainingActions = (
   stores: TrainingStores,
@@ -239,7 +228,7 @@ export const createTrainingActions = (
         afterMoveChecks();
       }
     } catch (err) {
-      console.error('AI move failed:', err);
+      if (DEBUG) console.error('AI move failed:', err);
     }
   };
 
@@ -403,10 +392,12 @@ export const createTrainingActions = (
         }
 
         // Position is invalid - add to exclusion list and retry
-        console.warn(
-          `Invalid position fetched (${validationError}), retrying...`,
-          resolved.metadata.positionId
-        );
+        if (DEBUG) {
+          console.warn(
+            `Invalid position fetched (${validationError}), retrying...`,
+            resolved.metadata.positionId
+          );
+        }
         if (resolved.metadata.positionId) {
           excludeIds.push(resolved.metadata.positionId);
         }
@@ -466,7 +457,7 @@ export const createTrainingActions = (
         performAIMove();
       }
     } catch (err) {
-      console.error('Training initialization failed:', err);
+      if (DEBUG) console.error('Training initialization failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to start training';
       chess.setInitError(errorMessage);
       chess.setLifecycle(transition('initializing', 'ENGINE_ERROR'));

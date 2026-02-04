@@ -1,10 +1,7 @@
 import { createEffect, onCleanup, createSignal, type Accessor } from 'solid-js';
+import { DEBUG } from '../../shared/utils/debug';
 import { type GameSession } from '../game/session/GameSession';
 import { gamePersistence } from './GamePersistence';
-
-// ============================================================================
-// Types
-// ============================================================================
 
 export interface AutoPersistConfig {
   /** Interval for periodic saves (in ms). Default: 5000 */
@@ -28,19 +25,11 @@ export interface AutoPersistResult {
   lastError: Accessor<Error | null>;
 }
 
-// ============================================================================
-// Default Config
-// ============================================================================
-
 const DEFAULT_CONFIG: AutoPersistConfig = {
   saveInterval: 5000,
   debounceMs: 1000,
   enabled: true,
 };
-
-// ============================================================================
-// useAutoPersist Hook
-// ============================================================================
 
 export function createAutoPersist(
   getSession: () => GameSession | null,
@@ -74,7 +63,7 @@ export function createAutoPersist(
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown save error');
       setLastError(error);
-      console.error('Auto-persist save failed:', error);
+      if (DEBUG) console.error('Auto-persist save failed:', error);
     }
   };
 
@@ -130,7 +119,7 @@ export function createAutoPersist(
     const session = getSession();
     if (session && isEnabled()) {
       gamePersistence.saveSession(session).catch((err) => {
-        console.error('Failed to save session on cleanup:', err);
+        if (DEBUG) console.error('Failed to save session on cleanup:', err);
       });
     }
   });
@@ -143,10 +132,6 @@ export function createAutoPersist(
     lastError,
   };
 }
-
-// ============================================================================
-// Session Recovery Helper
-// ============================================================================
 
 export interface SessionRecoveryResult {
   session: GameSession | null;
@@ -169,7 +154,7 @@ export async function recoverActiveSession(): Promise<SessionRecoveryResult> {
       wasRecovered: session !== null,
     };
   } catch (err) {
-    console.error('Failed to recover session:', err);
+    if (DEBUG) console.error('Failed to recover session:', err);
     return { session: null, wasRecovered: false };
   }
 }
@@ -181,7 +166,7 @@ export async function loadPersistedSession(sessionId: string): Promise<GameSessi
   try {
     return await gamePersistence.loadSession(sessionId);
   } catch (err) {
-    console.error('Failed to load persisted session:', err);
+    if (DEBUG) console.error('Failed to load persisted session:', err);
     return null;
   }
 }
@@ -196,7 +181,7 @@ export async function cleanupOldSessions(
   try {
     return await gamePersistence.clearOldSessions(maxAgeMs);
   } catch (err) {
-    console.error('Failed to cleanup old sessions:', err);
+    if (DEBUG) console.error('Failed to cleanup old sessions:', err);
     return 0;
   }
 }

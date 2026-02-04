@@ -13,15 +13,7 @@ import type {
 import type { Square, PromotionPiece, BoardSquare } from '../../../types/chess';
 import type { Side, GameOverReason, GameWinner } from '../../../types/game';
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-
-// ============================================================================
-// GameSession Class
-// ============================================================================
 
 export class GameSession {
   private chess: Chess;

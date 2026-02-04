@@ -1,9 +1,5 @@
 import type { TerminationCondition, TrainingEndReason } from './types';
 
-// ============================================================================
-// Game State for Termination Check
-// ============================================================================
-
 /**
  * Current game state needed to evaluate termination conditions
  */
@@ -18,10 +14,6 @@ export interface GameStateForTermination {
   isDraw: boolean;
 }
 
-// ============================================================================
-// Termination Result
-// ============================================================================
-
 /**
  * Result of evaluating termination conditions
  */
@@ -31,10 +23,6 @@ export interface TerminationResult {
   /** Reason for ending, if shouldEnd is true */
   reason: TrainingEndReason | null;
 }
-
-// ============================================================================
-// Main Evaluator
-// ============================================================================
 
 /**
  * Evaluates whether the training session should end based on termination conditions.
@@ -66,10 +54,6 @@ export function evaluateTermination(
     }
   }
 }
-
-// ============================================================================
-// Condition Evaluators
-// ============================================================================
 
 /**
  * Check if move count threshold has been reached
@@ -125,10 +109,6 @@ function evaluateCombined(
     return { shouldEnd: false, reason: null };
   }
 }
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
 
 /**
  * Check if a game state represents a terminal position

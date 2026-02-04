@@ -2,10 +2,6 @@ import { Chess } from 'chess.js';
 import { DEBUG } from '../../shared/utils/debug';
 import { StockfishEngine, detectEngineVariant, type EngineVariant } from './StockfishEngine';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export interface EngineLine {
   /** Score in centipawns from white's perspective */
   score: number;
@@ -39,10 +35,6 @@ export interface EngineInfo {
   isMultiThreaded: boolean;
 }
 
-// ============================================================================
-// Analysis Options
-// ============================================================================
-
 export interface AnalyzeOptions {
   /** Time to analyze in milliseconds (default: 10000 = 10 seconds) */
   timeMs?: number;
@@ -50,17 +42,9 @@ export interface AnalyzeOptions {
   onProgress?: (analysis: EngineAnalysis) => void;
 }
 
-// ============================================================================
-// Configuration
-// ============================================================================
-
 const ENGINE_ANALYSIS_TIMEOUT_MS = 30000;
 const DEFAULT_MULTI_PV = 5;
 const DEFAULT_TIME_MS = 10000; // 10 seconds
-
-// ============================================================================
-// Analysis Engine Service
-// ============================================================================
 
 class AnalysisEngineService {
   private engine: StockfishEngine;
@@ -353,9 +337,5 @@ class AnalysisEngineService {
     }
   }
 }
-
-// ============================================================================
-// Singleton Export
-// ============================================================================
 
 export const analysisEngine = new AnalysisEngineService();

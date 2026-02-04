@@ -36,6 +36,10 @@
   color: var(--accent);
 }
 
+.headerLeft:focus-visible {
+  outline-width: 1px;
+}
+
 .headerCenter {
   display: flex;
   align-items: center;
@@ -55,6 +59,10 @@
   transition: color var(--transition-fast);
   background: none;
   border: none;
+}
+
+.navItem:focus-visible {
+  outline-width: 1px;
 }
 
 .navItem + .navItem {

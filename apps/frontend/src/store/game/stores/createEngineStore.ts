@@ -112,7 +112,7 @@ export const createEngineStore = (): EngineStore => {
 
   const retry = async (onSuccess?: () => void) => {
     if (!pendingRetryConfig) {
-      console.warn('No pending engine config to retry');
+      if (DEBUG) console.warn('No pending engine config to retry');
       return;
     }
 

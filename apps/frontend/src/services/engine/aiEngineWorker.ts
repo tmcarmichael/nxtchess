@@ -105,10 +105,6 @@ export const terminateAiEngine = () => {
  */
 export const isAiEngineInitialized = () => aiEngine.isInitialized;
 
-// ============================================================================
-// Multi-game API (forwards to engineService)
-// ============================================================================
-
 /**
  * Initialize AI engine for a specific game.
  */

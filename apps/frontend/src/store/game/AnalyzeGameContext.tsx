@@ -15,6 +15,7 @@ import {
   type EngineInfo,
 } from '../../services/engine/analysisEngineService';
 import { sessionManager } from '../../services/game/session/SessionManager';
+import { DEBUG } from '../../shared/utils/debug';
 import { computeMaterialDiff } from '../../types/chess';
 import { createAnalyzeActions } from './actions/createAnalyzeActions';
 import { createCoreActions } from './actions/createCoreActions';
@@ -25,15 +26,7 @@ import { createUIStore } from './stores/createUIStore';
 import { UnifiedGameContextInstance, type UnifiedGameContext } from './useGameContext';
 import type { AnalyzeGameContextValue } from './types';
 
-// ============================================================================
-// Context
-// ============================================================================
-
 const AnalyzeGameContext = createContext<AnalyzeGameContextValue>();
-
-// ============================================================================
-// Extended Context Value for Analyze Mode
-// ============================================================================
 
 export interface AnalyzeEngineState {
   enabled: () => boolean;
@@ -43,15 +36,7 @@ export interface AnalyzeEngineState {
   toggleEngine: () => void;
 }
 
-// ============================================================================
-// Analysis Debounce
-// ============================================================================
-
 const ANALYSIS_DEBOUNCE_MS = 300;
-
-// ============================================================================
-// Analyze Game Provider
-// ============================================================================
 
 export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
   // Create stores (timer created but never started, no multiplayer needed)
@@ -72,7 +57,7 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
   // Initialize analysis engine on mount
   onMount(() => {
     analysisEngine.init().catch(() => {
-      console.warn('Analysis engine init failed');
+      if (DEBUG) console.warn('Analysis engine init failed');
     });
   });
 
@@ -255,10 +240,6 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
     </AnalyzeGameContext.Provider>
   );
 };
-
-// ============================================================================
-// Hook
-// ============================================================================
 
 export const useAnalyzeGame = () => {
   const ctx = useContext(AnalyzeGameContext);

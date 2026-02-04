@@ -1,5 +1,6 @@
 import { createStore } from 'solid-js/store';
 import { BACKEND_URL } from '../../shared/config/env';
+import { DEBUG } from '../../shared/utils/debug';
 
 interface UserState {
   isLoggedIn: boolean;
@@ -59,7 +60,7 @@ export const createUserStore = () => {
         }
       }
     } catch (err) {
-      console.error('Error checking username:', err);
+      if (DEBUG) console.error('Error checking username:', err);
     }
   };
 
@@ -79,7 +80,7 @@ export const createUserStore = () => {
       setState('username', newName);
       navigateFn(`/profile/${newName}`);
     } catch (err) {
-      console.error('Error saving username:', err);
+      if (DEBUG) console.error('Error saving username:', err);
       throw err;
     }
   };
@@ -99,7 +100,7 @@ export const createUserStore = () => {
         setState('profileIcon', data.profile_icon);
       }
     } catch (err) {
-      console.error('Error fetching user profile:', err);
+      if (DEBUG) console.error('Error fetching user profile:', err);
       throw err;
     }
   };
@@ -126,7 +127,7 @@ export const createUserStore = () => {
       }
       setState('profileIcon', icon);
     } catch (err) {
-      console.error('Error setting profile icon:', err);
+      if (DEBUG) console.error('Error setting profile icon:', err);
       throw err;
     }
   };
@@ -138,7 +139,7 @@ export const createUserStore = () => {
         credentials: 'include',
       });
     } catch (err) {
-      console.error('Error during logout:', err);
+      if (DEBUG) console.error('Error during logout:', err);
     }
     // Reset all state regardless of API success
     setState('isLoggedIn', false);

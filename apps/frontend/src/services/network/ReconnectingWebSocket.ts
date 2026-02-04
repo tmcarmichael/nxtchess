@@ -1,6 +1,4 @@
-// ============================================================================
-// Reconnection Configuration
-// ============================================================================
+import { DEBUG } from '../../shared/utils/debug';
 
 export interface ReconnectConfig {
   /** Maximum number of reconnection attempts before giving up */
@@ -20,25 +18,13 @@ const DEFAULT_CONFIG: ReconnectConfig = {
   backoffMultiplier: 2,
 };
 
-// ============================================================================
-// Connection State
-// ============================================================================
-
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
-
-// ============================================================================
-// Event Callbacks
-// ============================================================================
 
 export interface ReconnectingWebSocketCallbacks {
   onStateChange?: (state: ConnectionState, previousState: ConnectionState) => void;
   onMessage?: (data: unknown) => void;
   onError?: (error: Event) => void;
 }
-
-// ============================================================================
-// ReconnectingWebSocket Class
-// ============================================================================
 
 export class ReconnectingWebSocket {
   private ws: WebSocket | null = null;
@@ -89,7 +75,7 @@ export class ReconnectingWebSocket {
     }
 
     if (!this.url) {
-      console.error('ReconnectingWebSocket: No URL configured');
+      if (DEBUG) console.error('ReconnectingWebSocket: No URL configured');
       return;
     }
 
@@ -102,7 +88,7 @@ export class ReconnectingWebSocket {
       this.ws.onerror = (event) => this.handleError(event);
       this.ws.onmessage = (event) => this.handleMessage(event);
     } catch (err) {
-      console.error('ReconnectingWebSocket: Failed to create WebSocket:', err);
+      if (DEBUG) console.error('ReconnectingWebSocket: Failed to create WebSocket:', err);
       this.scheduleReconnect();
     }
   }
@@ -141,7 +127,7 @@ export class ReconnectingWebSocket {
       this.ws.send(message);
       return true;
     } catch (err) {
-      console.error('ReconnectingWebSocket: Failed to send message:', err);
+      if (DEBUG) console.error('ReconnectingWebSocket: Failed to send message:', err);
       return false;
     }
   }
@@ -197,7 +183,7 @@ export class ReconnectingWebSocket {
   }
 
   private handleError(event: Event): void {
-    console.error('ReconnectingWebSocket: WebSocket error:', event);
+    if (DEBUG) console.error('ReconnectingWebSocket: WebSocket error:', event);
     this.callbacks.onError?.(event);
   }
 
@@ -217,9 +203,11 @@ export class ReconnectingWebSocket {
 
   private scheduleReconnect(): void {
     if (this.attemptCount >= this.config.maxAttempts) {
-      console.warn(
-        `ReconnectingWebSocket: Max reconnection attempts (${this.config.maxAttempts}) reached`
-      );
+      if (DEBUG) {
+        console.warn(
+          `ReconnectingWebSocket: Max reconnection attempts (${this.config.maxAttempts}) reached`
+        );
+      }
       this.setState('disconnected');
       return;
     }
@@ -228,9 +216,11 @@ export class ReconnectingWebSocket {
     this.attemptCount++;
 
     const delay = this.calculateBackoffDelay();
-    console.warn(
-      `ReconnectingWebSocket: Reconnecting in ${delay}ms (attempt ${this.attemptCount}/${this.config.maxAttempts})`
-    );
+    if (DEBUG) {
+      console.warn(
+        `ReconnectingWebSocket: Reconnecting in ${delay}ms (attempt ${this.attemptCount}/${this.config.maxAttempts})`
+      );
+    }
 
     this.reconnectTimeout = setTimeout(() => {
       if (this.state === 'reconnecting') {

@@ -1,11 +1,8 @@
 import { createSignal, onCleanup, type Accessor } from 'solid-js';
+import { DEBUG } from '../../shared/utils/debug';
 import { gameSyncService } from './GameSyncService';
 import type { ConnectionState, SyncEvent, TimeControl } from './types';
 import type { Square, PromotionPiece } from '../../types/chess';
-
-// ============================================================================
-// Types
-// ============================================================================
 
 export interface UseGameSyncResult {
   // Connection state
@@ -34,10 +31,6 @@ export interface UseGameSyncResult {
   // Last error
   lastError: Accessor<string | null>;
 }
-
-// ============================================================================
-// useGameSync Hook
-// ============================================================================
 
 export function useGameSync(): UseGameSyncResult {
   const [connectionState, setConnectionState] = createSignal<ConnectionState>(
@@ -129,7 +122,7 @@ export function useGameSync(): UseGameSyncResult {
     if (gameId) {
       gameSyncService.sendMove(gameId, from, to, promotion);
     } else {
-      console.warn('useGameSync: No active game');
+      if (DEBUG) console.warn('useGameSync: No active game');
     }
   };
 

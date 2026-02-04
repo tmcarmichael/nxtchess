@@ -1,5 +1,6 @@
-import { createContext, useContext, onCleanup, createMemo, type JSX } from 'solid-js';
+import { createContext, useContext, onCleanup, createMemo, batch, type JSX } from 'solid-js';
 import { sessionManager } from '../../services/game/session/SessionManager';
+import { DEBUG } from '../../shared/utils/debug';
 import { computeMaterialDiff } from '../../types/chess';
 import { createCoreActions } from './actions/createCoreActions';
 import { createPlayActions } from './actions/createPlayActions';
@@ -11,15 +12,7 @@ import { createUIStore } from './stores/createUIStore';
 import { UnifiedGameContextInstance, type UnifiedGameContext } from './useGameContext';
 import type { PlayGameContextValue } from './types';
 
-// ============================================================================
-// Context
-// ============================================================================
-
 const PlayGameContext = createContext<PlayGameContextValue>();
-
-// ============================================================================
-// Play Game Provider
-// ============================================================================
 
 export const PlayGameProvider = (props: { children: JSX.Element }) => {
   // Create all stores
@@ -33,35 +26,43 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
   multiplayer.setPlayerColorGetter(() => chess.state.playerColor);
 
   multiplayer.on('game:created', ({ playerColor }) => {
-    chess.setPlayerColor(playerColor);
-    ui.setBoardView(playerColor);
+    batch(() => {
+      chess.setPlayerColor(playerColor);
+      ui.setBoardView(playerColor);
+    });
   });
 
   multiplayer.on('game:joined', ({ playerColor }) => {
-    chess.setPlayerColor(playerColor);
-    ui.setBoardView(playerColor);
-    chess.setLifecycle('playing');
+    batch(() => {
+      chess.setPlayerColor(playerColor);
+      ui.setBoardView(playerColor);
+      chess.setLifecycle('playing');
+    });
   });
 
   multiplayer.on('game:started', ({ whiteTimeMs, blackTimeMs }) => {
-    chess.setLifecycle('playing');
-    timer.sync(whiteTimeMs, blackTimeMs);
+    batch(() => {
+      chess.setLifecycle('playing');
+      timer.sync(whiteTimeMs, blackTimeMs);
+    });
     // Don't start local timer for multiplayer - server TIME_UPDATE is authoritative
   });
 
   multiplayer.on('move:accepted', ({ fen, san, from, to, isCheck, whiteTimeMs, blackTimeMs }) => {
-    chess.confirmMove({
-      serverFen: fen,
-      san,
-      from,
-      to,
-      isCheck,
-      whiteTimeMs: whiteTimeMs ?? timer.state.whiteTime,
-      blackTimeMs: blackTimeMs ?? timer.state.blackTime,
+    batch(() => {
+      chess.confirmMove({
+        serverFen: fen,
+        san,
+        from,
+        to,
+        isCheck,
+        whiteTimeMs: whiteTimeMs ?? timer.state.whiteTime,
+        blackTimeMs: blackTimeMs ?? timer.state.blackTime,
+      });
+      if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
+        timer.sync(whiteTimeMs, blackTimeMs);
+      }
     });
-    if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
-      timer.sync(whiteTimeMs, blackTimeMs);
-    }
   });
 
   multiplayer.on('move:rejected', ({ fen, reason }) => {
@@ -69,10 +70,12 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
   });
 
   multiplayer.on('move:opponent', ({ fen, san, from, to, whiteTimeMs, blackTimeMs, isCheck }) => {
-    chess.syncFromMultiplayer({ fen, san, from, to, whiteTimeMs, blackTimeMs, isCheck });
-    if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
-      timer.sync(whiteTimeMs, blackTimeMs);
-    }
+    batch(() => {
+      chess.syncFromMultiplayer({ fen, san, from, to, whiteTimeMs, blackTimeMs, isCheck });
+      if (whiteTimeMs !== undefined && blackTimeMs !== undefined) {
+        timer.sync(whiteTimeMs, blackTimeMs);
+      }
+    });
   });
 
   multiplayer.on('time:update', ({ whiteTimeMs, blackTimeMs }) => {
@@ -80,17 +83,19 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
   });
 
   multiplayer.on('game:ended', ({ reason, winner }) => {
-    timer.stop();
-    chess.endGame(reason, winner);
-    ui.showEndModal();
+    batch(() => {
+      timer.stop();
+      chess.endGame(reason, winner);
+      ui.showEndModal();
+    });
   });
 
   multiplayer.on('game:opponent_left', () => {
-    console.warn('Opponent left the game');
+    if (DEBUG) console.warn('Opponent left the game');
   });
 
   multiplayer.on('game:error', ({ message }) => {
-    console.error('Game sync error:', message);
+    if (DEBUG) console.error('Game sync error:', message);
   });
 
   // ============================================================================
@@ -191,10 +196,6 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     </PlayGameContext.Provider>
   );
 };
-
-// ============================================================================
-// Hook
-// ============================================================================
 
 export const usePlayGame = () => {
   const ctx = useContext(PlayGameContext);

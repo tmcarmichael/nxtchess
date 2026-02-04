@@ -10,10 +10,6 @@ import {
 } from './gameLifecycle';
 import type { GameLifecycle } from '../../types/game';
 
-// ============================================================================
-// transition
-// ============================================================================
-
 describe('transition', () => {
   let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
@@ -22,7 +18,7 @@ describe('transition', () => {
   });
 
   afterEach(() => {
-    consoleWarnSpy.mockRestore();
+    consoleWarnSpy.mockClear();
   });
 
   describe('from idle state', () => {
@@ -99,10 +95,6 @@ describe('transition', () => {
   });
 });
 
-// ============================================================================
-// canTransition
-// ============================================================================
-
 describe('canTransition', () => {
   it('returns true for valid transitions', () => {
     expect(canTransition('idle', 'START_GAME')).toBe(true);
@@ -125,10 +117,6 @@ describe('canTransition', () => {
     expect(canTransition('ended', 'EXIT_GAME')).toBe(true);
   });
 });
-
-// ============================================================================
-// getValidEvents
-// ============================================================================
 
 describe('getValidEvents', () => {
   it('returns only START_GAME for idle state', () => {
@@ -165,10 +153,6 @@ describe('getValidEvents', () => {
     expect(events).toHaveLength(2);
   });
 });
-
-// ============================================================================
-// State Predicates
-// ============================================================================
 
 describe('canMakeMove', () => {
   it('returns true only for playing state', () => {
@@ -221,10 +205,6 @@ describe('canStartNewGame', () => {
     expect(canStartNewGame('error')).toBe(false);
   });
 });
-
-// ============================================================================
-// Complete Flow Tests
-// ============================================================================
 
 describe('complete game flows', () => {
   it('handles successful game flow: idle -> playing -> ended', () => {

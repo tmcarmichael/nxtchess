@@ -3,18 +3,10 @@ import { enginePool } from './EnginePool';
 import { type ResilientEngine } from './ResilientEngine';
 import { EngineError } from './StockfishEngine';
 
-// ============================================================================
-// Configuration
-// ============================================================================
-
 const ENGINE_THINK_TIME_MS = 1000;
 const ENGINE_MOVE_TIMEOUT_MS = 15000;
 const ENGINE_EVAL_TIME_MS = 1000;
 const ENGINE_EVAL_TIMEOUT_MS = 10000;
-
-// ============================================================================
-// Engine Service Types
-// ============================================================================
 
 export interface AiMoveResult {
   from: string;
@@ -26,10 +18,6 @@ export interface EngineServiceConfig {
   gameId: string;
   elo?: number;
 }
-
-// ============================================================================
-// Engine Service Class
-// ============================================================================
 
 class EngineService {
   // ============================================================================
@@ -206,9 +194,5 @@ class EngineService {
     return { from, to, promotion };
   }
 }
-
-// ============================================================================
-// Singleton Export
-// ============================================================================
 
 export const engineService = new EngineService();

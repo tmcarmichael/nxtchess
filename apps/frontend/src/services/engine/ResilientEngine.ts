@@ -1,10 +1,6 @@
 import { DEBUG } from '../../shared/utils/debug';
 import { StockfishEngine, EngineError, type EngineConfig } from './StockfishEngine';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export type EngineState =
   | 'uninitialized'
   | 'initializing'
@@ -70,10 +66,6 @@ interface QueuedCommand<T> {
   queuedAt: number;
 }
 
-// ============================================================================
-// Default Configuration
-// ============================================================================
-
 const DEFAULT_CONFIG: ResilientEngineConfig = {
   name: 'ResilientEngine',
   initTimeoutMs: 10000,
@@ -88,10 +80,6 @@ const DEFAULT_CONFIG: ResilientEngineConfig = {
   queueDuringRecovery: true,
   maxQueueSize: 10,
 };
-
-// ============================================================================
-// ResilientEngine Class
-// ============================================================================
 
 let engineIdCounter = 0;
 
@@ -562,10 +550,6 @@ export class ResilientEngine {
     if (oldState === newState) return;
 
     this._state = newState;
-    if (DEBUG) {
-      // eslint-disable-next-line no-console -- debug-only engine state logging
-      console.info(`[Engine] ${this.id} state: ${oldState} -> ${newState}`);
-    }
     this.emit('state:changed', { oldState, newState });
   }
 

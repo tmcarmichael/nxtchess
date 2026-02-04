@@ -15,10 +15,6 @@ import type {
 } from '../../../services/sync/types';
 import type { Side, GameWinner, GameOverReason } from '../../../types/game';
 
-// ============================================================================
-// Event Types
-// ============================================================================
-
 export interface MultiplayerEvents {
   'game:created': { gameId: string; playerColor: Side };
   'game:joined': { gameId: string; playerColor: Side; opponent: string | null };
@@ -53,10 +49,6 @@ export interface MultiplayerEvents {
   'game:error': { message: string };
 }
 
-// ============================================================================
-// Store Types
-// ============================================================================
-
 interface MultiplayerState {
   gameId: string | null;
   opponentUsername: string | null;
@@ -86,10 +78,6 @@ export interface MultiplayerStore {
   setWaiting: (isWaiting: boolean) => void;
   setPlayerColorGetter: (getter: () => Side) => void;
 }
-
-// ============================================================================
-// Store Factory
-// ============================================================================
 
 export const createMultiplayerStore = (): MultiplayerStore => {
   const [state, setState] = createStore<MultiplayerState>({

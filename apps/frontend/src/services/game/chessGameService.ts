@@ -4,10 +4,6 @@ import { type Side } from '../../types/game';
 import { getTurnFromFen } from './fenUtils';
 import { getPieceColor, makePiece } from './pieceUtils';
 
-// ============================================================================
-// Castling Normalization
-// ============================================================================
-
 const CASTLING_ROOK_TO_DESTINATION: Partial<Record<Square, Partial<Record<Square, Square>>>> = {
   e1: { h1: 'g1', a1: 'c1' },
   e8: { h8: 'g8', a8: 'c8' },
@@ -34,10 +30,6 @@ export const getCastlingHintSquares = (legalMoves: Square[]): Set<Square> => {
   }
   return hints;
 };
-
-// ============================================================================
-// Types
-// ============================================================================
 
 export interface MoveResult {
   success: true;
@@ -68,10 +60,6 @@ export interface CapturedPieces {
   white: string[];
   black: string[];
 }
-
-// ============================================================================
-// Board Functions
-// ============================================================================
 
 export const fenToBoard = (fen: string): BoardSquare[] => {
   const chess = new Chess(fen);
@@ -307,10 +295,6 @@ const canPieceReach = (
   }
 };
 
-// ============================================================================
-// Move Validation Functions
-// ============================================================================
-
 /** Check if a piece at the given square can be moved by the specified player */
 export const canMovePieceAt = (
   fen: string,
@@ -334,10 +318,6 @@ export const isPawnPromotion = (piece: string | null, to: Square): boolean => {
 
 // getPieceColor is now imported from pieceUtils.ts
 export { getPieceColor } from './pieceUtils';
-
-// ============================================================================
-// Capture Functions
-// ============================================================================
 
 /** Check if there's a piece to capture at the target square */
 export const getCapture = (board: BoardSquare[], targetSquare: Square): string | null => {
@@ -380,10 +360,6 @@ export const handleCapturedPiece = (
     setCapturedWhite((prev) => [...prev, piece]);
   }
 };
-
-// ============================================================================
-// Move Execution Functions
-// ============================================================================
 
 /** Find the king's square for the given color */
 const findKingSquare = (board: BoardSquare[], color: Side): Square | null => {
@@ -473,10 +449,6 @@ export const prepareMove = (
 
   return { needsPromotion: false };
 };
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
 
 export const getRandomQuickPlayConfig = (): [number, number, 'w' | 'b'] => {
   const quickPlayDifficulty = Math.floor(Math.random() * (8 - 2 + 1)) + 2;

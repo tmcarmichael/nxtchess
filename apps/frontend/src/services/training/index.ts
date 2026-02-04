@@ -1,19 +1,3 @@
-// ============================================================================
-// Training Services
-// ============================================================================
-//
-// Modular training infrastructure for opening, endgame, middlegame, and future
-// training modes. Each module handles a specific concern:
-//
-// - types.ts: Type definitions for scenarios, positions, and results
-// - scenarios.ts: Predefined training scenario configurations
-// - positionSource.ts: Resolves position sources to actual FEN strings
-// - terminationEvaluator.ts: Determines when training should end
-// - scoringCalculator.ts: Calculates training scores
-//
-// ============================================================================
-
-// Types
 export type {
   PositionSource,
   StandardPositionSource,

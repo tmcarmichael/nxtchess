@@ -21,6 +21,11 @@ window.addEventListener('beforeunload', () => {
   terminateEvalEngine();
 });
 
+// Log unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+});
+
 // Note: GameProvider is no longer global.
 // Each game mode (Play, Training) wraps itself with its own provider.
 // This ensures multiplayer code is not loaded on training pages and vice versa.

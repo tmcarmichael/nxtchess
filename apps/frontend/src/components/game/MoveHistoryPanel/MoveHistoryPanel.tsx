@@ -23,8 +23,12 @@ const MoveHistoryPanel: Component<MoveHistoryPanelProps> = (props) => {
     on(
       () => props.moveHistory.length,
       () => {
-        queueMicrotask(() => {
-          if (movesContainerRef) {
+        requestAnimationFrame(() => {
+          if (!movesContainerRef) return;
+          const lastRow = movesContainerRef.querySelector(':scope > * > :last-child');
+          if (lastRow) {
+            lastRow.scrollIntoView({ block: 'end' });
+          } else {
             movesContainerRef.scrollTop = movesContainerRef.scrollHeight;
           }
         });

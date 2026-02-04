@@ -213,10 +213,6 @@ export const terminateEvalEngine = () => {
  */
 export const isEvalEngineInitialized = () => evalEngine.isInitialized;
 
-// ============================================================================
-// Multi-game API (forwards to engineService)
-// ============================================================================
-
 /**
  * Initialize eval engine for a specific game.
  */

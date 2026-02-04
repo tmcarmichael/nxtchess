@@ -1,1 +1,1 @@
-cd apps/frontend && npx lint-staged && npx tsc -b
+cd apps/frontend && npx lint-staged && npx tsc -b && npx vitest run --changed HEAD

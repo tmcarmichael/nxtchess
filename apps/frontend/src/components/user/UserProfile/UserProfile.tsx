@@ -2,6 +2,7 @@ import { useParams } from '@solidjs/router';
 import { SolidApexCharts } from 'solid-apexcharts';
 import { createEffect, createSignal, on, Show } from 'solid-js';
 import { BACKEND_URL } from '../../../shared/config/env';
+import { DEBUG } from '../../../shared/utils/debug';
 import { useUserStore } from '../../../store/user/UserContext';
 import ProfileIconPicker, { getProfileIconAsset } from '../ProfileIconPicker/ProfileIconPicker';
 import styles from './UserProfile.module.css';
@@ -128,7 +129,7 @@ const UserProfile = () => {
             // Ignore stale responses
             if (requestVersion !== currentRequestVersion) return;
 
-            console.error('Error fetching profile:', err);
+            if (DEBUG) console.error('Error fetching profile:', err);
             setFetchError(true);
             setIsLoading(false);
           });

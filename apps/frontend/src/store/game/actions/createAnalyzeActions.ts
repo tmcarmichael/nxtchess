@@ -4,24 +4,12 @@ import type { ChessStore } from '../stores/createChessStore';
 import type { UIStore } from '../stores/createUIStore';
 import type { AnalyzeActions, CoreActions } from '../types';
 
-// ============================================================================
-// Analyze Stores Interface
-// ============================================================================
-
 export interface AnalyzeStores {
   chess: ChessStore;
   ui: UIStore;
 }
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-
-// ============================================================================
-// Factory
-// ============================================================================
 
 export const createAnalyzeActions = (
   stores: AnalyzeStores,

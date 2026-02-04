@@ -183,7 +183,7 @@ describe('createUserStore', () => {
 
         expect(consoleSpy).toHaveBeenCalled();
 
-        consoleSpy.mockRestore();
+        consoleSpy.mockClear();
         dispose();
       });
     });
@@ -215,6 +215,7 @@ describe('createUserStore', () => {
         mockFetch.mockResolvedValueOnce({
           status: 409,
           ok: false,
+          json: () => Promise.resolve({ error: 'Username already taken' }),
         });
 
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -225,7 +226,7 @@ describe('createUserStore', () => {
           'Username already taken'
         );
 
-        consoleSpy.mockRestore();
+        consoleSpy.mockClear();
         dispose();
       });
     });
@@ -235,6 +236,7 @@ describe('createUserStore', () => {
         mockFetch.mockResolvedValueOnce({
           status: 500,
           ok: false,
+          json: () => Promise.resolve({}),
         });
 
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -245,7 +247,7 @@ describe('createUserStore', () => {
           'An error occurred.'
         );
 
-        consoleSpy.mockRestore();
+        consoleSpy.mockClear();
         dispose();
       });
     });
@@ -311,7 +313,7 @@ describe('createUserStore', () => {
 
         await expect(actions.fetchUserProfile()).rejects.toThrow('Failed to fetch profile');
 
-        consoleSpy.mockRestore();
+        consoleSpy.mockClear();
         dispose();
       });
     });

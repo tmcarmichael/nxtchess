@@ -10,15 +10,7 @@ import { createUIStore } from './stores/createUIStore';
 import { UnifiedGameContextInstance, type UnifiedGameContext } from './useGameContext';
 import type { TrainingGameContextValue } from './types';
 
-// ============================================================================
-// Context
-// ============================================================================
-
 const TrainingGameContext = createContext<TrainingGameContextValue>();
-
-// ============================================================================
-// Training Game Provider
-// ============================================================================
 
 export const TrainingGameProvider = (props: { children: JSX.Element }) => {
   // Create stores (no multiplayer needed for training)
@@ -115,10 +107,6 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
     </TrainingGameContext.Provider>
   );
 };
-
-// ============================================================================
-// Hook
-// ============================================================================
 
 export const useTrainingGame = () => {
   const ctx = useContext(TrainingGameContext);

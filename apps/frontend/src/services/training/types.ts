@@ -1,9 +1,5 @@
 import type { GamePhase, Side } from '../../types/game';
 
-// ============================================================================
-// Position Source Types
-// ============================================================================
-
 /**
  * Standard starting position (normal chess game)
  */
@@ -30,10 +26,6 @@ export interface BackendPositionSource {
 
 export type PositionSource = StandardPositionSource | FenPositionSource | BackendPositionSource;
 
-// ============================================================================
-// Termination Condition Types
-// ============================================================================
-
 /**
  * End after a specific number of half-moves (ply)
  */
@@ -59,10 +51,6 @@ export interface CombinedTermination {
 }
 
 export type TerminationCondition = MoveCountTermination | GameOverTermination | CombinedTermination;
-
-// ============================================================================
-// Scoring Method Types
-// ============================================================================
 
 /**
  * Score is the final position evaluation
@@ -101,10 +89,6 @@ export type ScoringMethod =
   | AccuracyScoring
   | NoScoring;
 
-// ============================================================================
-// Training Scenario
-// ============================================================================
-
 /**
  * Complete training scenario configuration
  */
@@ -133,10 +117,6 @@ export interface TrainingMetadata {
   sideToMove?: Side;
 }
 
-// ============================================================================
-// Training Result
-// ============================================================================
-
 /** Reason why training ended */
 export type TrainingEndReason = 'move-limit' | 'checkmate' | 'stalemate' | 'draw' | 'resignation';
 
@@ -153,10 +133,6 @@ export interface TrainingResult {
   durationMs: number;
   playerSide: Side;
 }
-
-// ============================================================================
-// Resolved Position
-// ============================================================================
 
 /**
  * A resolved position ready to use (after fetching from source)
