@@ -107,13 +107,18 @@ func (l *Logger) log(level Level, msg string, fields map[string]interface{}) {
 	now := time.Now().UTC().Format(time.RFC3339)
 
 	if l.jsonMode {
+		levelStr := level.String()
 		entry := LogEntry{
 			Time:    now,
-			Level:   level.String(),
+			Level:   levelStr,
 			Message: msg,
 			Fields:  fields,
 		}
-		data, _ := json.Marshal(entry)
+		data, err := json.Marshal(entry)
+		if err != nil {
+			fmt.Fprintf(l.out, "%s [%s] %s (json_marshal_error: %v)\n", now, levelStr, msg, err)
+			return
+		}
 		fmt.Fprintln(l.out, string(data))
 	} else {
 		if len(fields) > 0 {

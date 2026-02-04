@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"net/http"
 	"time"
 
@@ -37,7 +37,7 @@ var providers = make(map[string]*OAuthProvider)
 // RegisterProvider registers an OAuth provider
 func RegisterProvider(p *OAuthProvider) {
 	providers[p.Name] = p
-	log.Printf("[OAuth] Registered provider: %s", p.Name)
+	logger.Info("OAuth provider registered", logger.F("provider", p.Name))
 }
 
 // GetProvider returns a registered provider by name
@@ -63,7 +63,7 @@ func LoginHandler(providerName string, cfg *config.Config) http.HandlerFunc {
 		http.SetCookie(w, httpx.NewSecureCookie(cfg, provider.StateCookie, state, 600))
 
 		authURL := provider.OAuthConfig.AuthCodeURL(state, provider.AuthCodeOpts...)
-		log.Printf("[%sLoginHandler] Redirecting to OAuth: %s", providerName, authURL)
+		logger.Info("Redirecting to OAuth", logger.F("provider", providerName, "url", authURL))
 
 		http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 	}
@@ -205,17 +205,7 @@ func CallbackHandler(providerName string, cfg *config.Config) http.HandlerFunc {
 
 // readBody reads the response body
 func readBody(resp *http.Response) ([]byte, error) {
-	var buf []byte
-	buf = make([]byte, 0, 1024)
-	for {
-		tmp := make([]byte, 256)
-		n, err := resp.Body.Read(tmp)
-		buf = append(buf, tmp[:n]...)
-		if err != nil {
-			break
-		}
-	}
-	return buf, nil
+	return io.ReadAll(resp.Body)
 }
 
 // Helper to extract string ID from JSON

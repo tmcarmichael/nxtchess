@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/metrics"
 )
 
 // Hub maintains the set of active clients and broadcasts messages
@@ -45,6 +46,7 @@ func (h *Hub) Run() {
 			h.mu.Lock()
 			h.clients[client.ID] = client
 			h.mu.Unlock()
+			metrics.WSConnectionsActive.Inc()
 			logger.Info("Client connected", logger.F("clientId", client.ID, "totalClients", len(h.clients)))
 
 		case client := <-h.Unregister:
@@ -52,6 +54,7 @@ func (h *Hub) Run() {
 			if _, ok := h.clients[client.ID]; ok {
 				delete(h.clients, client.ID)
 				close(client.Send)
+				metrics.WSConnectionsActive.Dec()
 
 				// Handle disconnect from any active game
 				if gameID := client.GetGameID(); gameID != "" {

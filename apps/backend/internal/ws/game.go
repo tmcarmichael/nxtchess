@@ -3,11 +3,13 @@ package ws
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/chess"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/metrics"
 )
 
 // GameState represents the state of an active game
@@ -166,6 +168,7 @@ func (gm *GameManager) runClock(game *GameState) {
 				game.Result = winner
 				game.ResultReason = "timeout"
 				game.clockRunning = false
+				metrics.WSGamesActive.Dec()
 
 				logger.Info("Game ended by timeout", logger.F("gameId", game.ID, "winner", winner))
 
@@ -221,7 +224,10 @@ func (game *GameState) stopClockGoroutine() {
 // generateGameID creates a random game ID
 func generateGameID() string {
 	bytes := make([]byte, 8)
-	rand.Read(bytes)
+	if _, err := rand.Read(bytes); err != nil {
+		logger.Error("Failed to generate game ID", logger.F("error", err.Error()))
+		return fmt.Sprintf("fallback-%d", time.Now().UnixNano())
+	}
 	return hex.EncodeToString(bytes)
 }
 
@@ -308,6 +314,7 @@ func (gm *GameManager) JoinGame(client *Client, gameID string) {
 	game.BlackPlayer = client
 	game.Status = "active"
 	game.LastMoveAt = time.Now()
+	metrics.WSGamesActive.Inc()
 
 	// Associate client with game
 	client.SetGameID(gameID)
@@ -475,6 +482,7 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 		game.Status = "ended"
 		game.Result = string(result.Result)
 		game.ResultReason = string(result.Reason)
+		metrics.WSGamesActive.Dec()
 
 		// Stop the clock
 		game.stopClockGoroutine()
@@ -529,6 +537,7 @@ func (gm *GameManager) HandleResign(client *Client, gameID string) {
 	game.Status = "ended"
 	game.Result = winner
 	game.ResultReason = "resignation"
+	metrics.WSGamesActive.Dec()
 
 	// Stop the clock
 	game.stopClockGoroutine()
@@ -584,6 +593,7 @@ func (gm *GameManager) LeaveGame(client *Client, gameID string) {
 		game.Status = "ended"
 		game.Result = winner
 		game.ResultReason = "abandonment"
+		metrics.WSGamesActive.Dec()
 
 		// Stop the clock
 		game.stopClockGoroutine()
@@ -648,6 +658,7 @@ func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
 		game.Status = "ended"
 		game.Result = winner
 		game.ResultReason = "disconnection"
+		metrics.WSGamesActive.Dec()
 
 		// Stop the clock
 		game.stopClockGoroutine()

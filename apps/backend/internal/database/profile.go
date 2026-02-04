@@ -3,13 +3,16 @@ package database
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/metrics"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/models"
 )
 
 // HasUsername checks if a user has set a username
 func HasUsername(userID string) (bool, error) {
+	defer metrics.ObserveQuery("HasUsername", time.Now())
 	ctx, cancel := QueryContext()
 	defer cancel()
 
@@ -31,6 +34,7 @@ func HasUsername(userID string) (bool, error) {
 
 // HasUsernameWithContext checks if a user has set a username using the provided context
 func HasUsernameWithContext(ctx context.Context, userID string) (bool, error) {
+	defer metrics.ObserveQuery("HasUsernameWithContext", time.Now())
 	var username sql.NullString
 	err := DB.QueryRowContext(ctx, `SELECT username FROM profiles WHERE user_id = $1`, userID).Scan(&username)
 
@@ -49,6 +53,7 @@ func HasUsernameWithContext(ctx context.Context, userID string) (bool, error) {
 
 // GetUsernameByID retrieves a username by user ID
 func GetUsernameByID(userID string) (string, error) {
+	defer metrics.ObserveQuery("GetUsernameByID", time.Now())
 	ctx, cancel := QueryContext()
 	defer cancel()
 
@@ -69,6 +74,7 @@ func GetUsernameByID(userID string) (string, error) {
 
 // GetUserProfileByUsername retrieves a user profile by username
 func GetUserProfileByUsername(username string) (*models.Profile, error) {
+	defer metrics.ObserveQuery("GetUserProfileByUsername", time.Now())
 	ctx, cancel := QueryContext()
 	defer cancel()
 
@@ -91,6 +97,7 @@ func GetUserProfileByUsername(username string) (*models.Profile, error) {
 
 // UsernameExists checks if a username is already taken
 func UsernameExists(username string) (bool, error) {
+	defer metrics.ObserveQuery("UsernameExists", time.Now())
 	ctx, cancel := QueryContext()
 	defer cancel()
 
@@ -106,6 +113,7 @@ func UsernameExists(username string) (bool, error) {
 
 // UpsertUsername creates or updates a user's username
 func UpsertUsername(userID, newUsername string) error {
+	defer metrics.ObserveQuery("UpsertUsername", time.Now())
 	ctx, cancel := QueryContext()
 	defer cancel()
 
@@ -123,6 +131,7 @@ func UpsertUsername(userID, newUsername string) error {
 
 // CreateProfileWithContext creates a new user profile using the provided context
 func CreateProfileWithContext(ctx context.Context, userID string) error {
+	defer metrics.ObserveQuery("CreateProfileWithContext", time.Now())
 	_, err := DB.ExecContext(ctx, `INSERT INTO profiles (user_id) VALUES ($1) ON CONFLICT DO NOTHING`, userID)
 	if err != nil {
 		logger.Error("Error creating profile", logger.F("userID", userID, "error", err.Error()))
@@ -132,6 +141,7 @@ func CreateProfileWithContext(ctx context.Context, userID string) error {
 
 // GetProfileIcon retrieves a user's profile icon by user ID
 func GetProfileIcon(userID string) (string, error) {
+	defer metrics.ObserveQuery("GetProfileIcon", time.Now())
 	ctx, cancel := QueryContext()
 	defer cancel()
 
@@ -152,6 +162,7 @@ func GetProfileIcon(userID string) (string, error) {
 
 // SetProfileIcon updates a user's profile icon
 func SetProfileIcon(userID, icon string) error {
+	defer metrics.ObserveQuery("SetProfileIcon", time.Now())
 	ctx, cancel := QueryContext()
 	defer cancel()
 

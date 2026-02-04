@@ -3,6 +3,7 @@ package ws
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -129,7 +130,10 @@ func NewHandler(hub *Hub, cfg *config.Config) *Handler {
 // generateClientID creates a random client ID
 func generateClientID() string {
 	bytes := make([]byte, 16)
-	rand.Read(bytes)
+	if _, err := rand.Read(bytes); err != nil {
+		logger.Error("Failed to generate client ID", logger.F("error", err.Error()))
+		return fmt.Sprintf("fallback-%d", time.Now().UnixNano())
+	}
 	return hex.EncodeToString(bytes)
 }
 

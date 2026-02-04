@@ -11,11 +11,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/auth"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/controllers"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/metrics"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/middleware"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/migrate"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/sessions"
@@ -27,10 +29,13 @@ func main() {
 		// Not an error - .env is optional
 	}
 
-	cfg := config.Load()
+	cfg, configWarnings := config.Load()
 
 	// Initialize logger
 	logger.Configure(cfg.LogLevel, cfg.LogJSON)
+	for _, w := range configWarnings {
+		logger.Info(w)
+	}
 	logger.Info("Starting server", logger.F(
 		"env", cfg.Environment,
 		"port", cfg.Port,
@@ -74,18 +79,23 @@ func main() {
 	apiRateLimiter := middleware.NewAPIRateLimiter() // 60/min for general API
 	apiRateLimiter.SetConfig(cfg)
 
+	metrics.Register()
+
 	r := chi.NewRouter()
 
 	// Global middleware (order matters - outermost to innermost)
-	r.Use(middleware.RequestID)      // Add request ID for tracing (outermost)
-	r.Use(middleware.Recovery(cfg))  // Panic recovery
-	r.Use(middleware.Security(cfg))  // Security headers
+	r.Use(middleware.RequestID)        // Add request ID for tracing (outermost)
+	r.Use(middleware.Metrics)          // Prometheus HTTP metrics
+	r.Use(middleware.RequestLogger)    // Request logging with duration
+	r.Use(middleware.Recovery(cfg))    // Panic recovery
+	r.Use(middleware.Security(cfg))    // Security headers
 	r.Use(middleware.DefaultBodyLimit) // 1MB default body limit
 
-	// Health check endpoints (no rate limiting)
+	// Health check and metrics endpoints (no rate limiting)
 	r.Get("/health", healthHandler)
 	r.Get("/health/live", livenessHandler)
 	r.Get("/health/ready", readinessHandler)
+	r.Handle("/metrics", promhttp.Handler())
 
 	// WebSocket endpoint for multiplayer games (no body limit needed)
 	r.Get("/ws", wsHandler.ServeHTTP)

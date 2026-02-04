@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 )
@@ -49,8 +51,7 @@ func RequestIDFromContext(ctx context.Context) string {
 func generateRequestID() string {
 	bytes := make([]byte, 8)
 	if _, err := rand.Read(bytes); err != nil {
-		// Fallback to timestamp-based ID if crypto/rand fails
-		return "fallback-id"
+		return fmt.Sprintf("fb-%d", time.Now().UnixNano())
 	}
 	return hex.EncodeToString(bytes)
 }
@@ -59,15 +60,14 @@ func generateRequestID() string {
 // Should be used after RequestID middleware.
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
 		requestID := RequestIDFromContext(r.Context())
 
-		// Log the incoming request
-		logger.Info("Request started",
+		logger.Debug("Request started",
 			logger.F(
 				"requestId", requestID,
 				"method", r.Method,
 				"path", r.URL.Path,
-				"remoteAddr", r.RemoteAddr,
 			),
 		)
 
@@ -76,13 +76,13 @@ func RequestLogger(next http.Handler) http.Handler {
 
 		next.ServeHTTP(wrapped, r)
 
-		// Log the response
 		logger.Info("Request completed",
 			logger.F(
 				"requestId", requestID,
 				"method", r.Method,
 				"path", r.URL.Path,
 				"status", wrapped.statusCode,
+				"durationMs", time.Since(start).Milliseconds(),
 			),
 		)
 	})

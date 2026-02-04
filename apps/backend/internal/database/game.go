@@ -2,12 +2,15 @@ package database
 
 import (
 	"database/sql"
+	"time"
 
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/metrics"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/models"
 )
 
 // @TEST/DEBUG
 func CreateGame(g *models.Game) error {
+    defer metrics.ObserveQuery("CreateGame", time.Now())
     err := DB.QueryRow(`
         INSERT INTO games (pgn, playerW_id, playerB_id, stockfish_difficulty,
                            playerW_start_rating, playerB_start_rating)
@@ -26,6 +29,7 @@ func CreateGame(g *models.Game) error {
 
 // @TEST/DEBUG
 func GetGameByID(id string) (*models.Game, error) {
+    defer metrics.ObserveQuery("GetGameByID", time.Now())
     row := DB.QueryRow(`
         SELECT game_id, pgn, playerW_id, playerB_id, stockfish_difficulty,
                playerW_start_rating, playerB_start_rating, created_at
