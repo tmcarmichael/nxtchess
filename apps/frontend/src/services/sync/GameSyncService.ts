@@ -80,10 +80,6 @@ export class GameSyncService {
     });
   }
 
-  // ============================================================================
-  // Connection Management
-  // ============================================================================
-
   connect(serverUrl?: string): void {
     if (serverUrl) {
       this.config.serverUrl = serverUrl;
@@ -116,10 +112,6 @@ export class GameSyncService {
   getCurrentGameId(): string | null {
     return this.currentGameId;
   }
-
-  // ============================================================================
-  // Game Actions
-  // ============================================================================
 
   createGame(timeControl?: TimeControl): void {
     this.send({
@@ -159,20 +151,12 @@ export class GameSyncService {
     });
   }
 
-  // ============================================================================
-  // Event Subscription
-  // ============================================================================
-
   onEvent(handler: SyncEventHandler): () => void {
     this.eventHandlers.add(handler);
     return () => {
       this.eventHandlers.delete(handler);
     };
   }
-
-  // ============================================================================
-  // Private Methods - State Change Handler
-  // ============================================================================
 
   private handleStateChange(state: ConnectionState, previousState: ConnectionState): void {
     // Emit connection state change event
@@ -189,10 +173,6 @@ export class GameSyncService {
       this.stopPing();
     }
   }
-
-  // ============================================================================
-  // Private Methods - Message Processing
-  // ============================================================================
 
   private processMessage(message: ServerMessage): void {
     const { type, data } = message;
@@ -327,10 +307,6 @@ export class GameSyncService {
     }
   }
 
-  // ============================================================================
-  // Private Methods - Message Sending
-  // ============================================================================
-
   private send(message: { type: string; data?: unknown }): void {
     const sent = this.socket.send(message);
 
@@ -353,10 +329,6 @@ export class GameSyncService {
     this.messageQueue = [];
   }
 
-  // ============================================================================
-  // Private Methods - Ping/Pong Heartbeat
-  // ============================================================================
-
   private startPing(): void {
     this.stopPing();
     this.pingInterval = setInterval(() => {
@@ -370,10 +342,6 @@ export class GameSyncService {
       this.pingInterval = null;
     }
   }
-
-  // ============================================================================
-  // Private Methods - Event Emission
-  // ============================================================================
 
   private emitEvent(event: SyncEvent): void {
     for (const handler of this.eventHandlers) {

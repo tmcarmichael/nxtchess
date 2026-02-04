@@ -17,10 +17,6 @@ export const createAnalyzeActions = (
 ): AnalyzeActions => {
   const { chess } = stores;
 
-  // ============================================================================
-  // FEN/PGN Loading
-  // ============================================================================
-
   const loadFen = (fen: string): boolean => {
     try {
       // Validate FEN with chess.js
@@ -69,10 +65,6 @@ export const createAnalyzeActions = (
   const resetToStart = () => {
     loadFen(INITIAL_FEN);
   };
-
-  // ============================================================================
-  // Move Application
-  // ============================================================================
 
   const applyMove = (from: Square, to: Square, promotion?: PromotionPiece): boolean => {
     // Allow moves after game over when viewing history (enables exploring alternative lines)

@@ -17,10 +17,6 @@ export class SessionManager {
   private activeSessionId: string | null = null;
   private eventHandlers: Set<SessionEventHandler> = new Set();
 
-  // ============================================================================
-  // Session Lifecycle Methods
-  // ============================================================================
-
   createSession(config: GameSessionConfig): GameSession {
     // Clean up existing session with same ID if present
     if (this.sessions.has(config.sessionId)) {
@@ -84,10 +80,6 @@ export class SessionManager {
     }
   }
 
-  // ============================================================================
-  // Active Session Management
-  // ============================================================================
-
   setActiveSession(sessionId: string | null): boolean {
     if (sessionId === null) {
       this.activeSessionId = null;
@@ -120,10 +112,6 @@ export class SessionManager {
   getActiveSessionId(): string | null {
     return this.activeSessionId;
   }
-
-  // ============================================================================
-  // Command Execution
-  // ============================================================================
 
   applyCommand(sessionId: string, command: GameCommand): CommandResult {
     const session = this.sessions.get(sessionId);
@@ -159,10 +147,6 @@ export class SessionManager {
     return this.applyCommand(this.activeSessionId, command);
   }
 
-  // ============================================================================
-  // Event System
-  // ============================================================================
-
   onEvent(handler: SessionEventHandler): () => void {
     this.eventHandlers.add(handler);
     return () => {
@@ -192,10 +176,6 @@ export class SessionManager {
         return 'session:updated';
     }
   }
-
-  // ============================================================================
-  // Utility Methods
-  // ============================================================================
 
   getAllSessions(): GameSession[] {
     return Array.from(this.sessions.values());

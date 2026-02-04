@@ -47,7 +47,11 @@ Routes (all lazy-loaded via `routes.tsx`):
 
 **`chess/` (13 components)** — Core chess UI:
 
-- `ChessBoardController` — Main game controller (move validation, drag/drop, AI triggers, animations)
+- `ChessBoardController` — Main game controller with extracted hooks:
+  - `hooks/useAudioFeedback.ts` — Move sounds, capture/check audio
+  - `hooks/useBoardAnnotations.ts` — Right-click drag arrows, square highlights
+  - `hooks/useEvaluation.ts` — Engine evaluation bar integration
+  - `hooks/useMoveAnimation.ts` — Piece movement animation coordination
 - `ChessBoard` — Presentational board (receives callbacks, renders squares)
 - `ChessBoardArrows` — Right-click drag arrow annotations with valid move filtering
 - `ChessPiece` — Individual piece renderer with drag support
@@ -106,7 +110,7 @@ Routes (all lazy-loaded via `routes.tsx`):
 **`home/` (2 components)** — Landing page:
 
 - `HomeContainer` — Home page layout
-- `HomeSiteHero` — Hero section with CTA
+- `HomeSiteHero` — Hero section with floating chess pieces animation (gravitational spread) and CTA
 
 **`user/` (4 components)** — Auth & profile:
 
@@ -127,7 +131,7 @@ Routes (all lazy-loaded via `routes.tsx`):
 
 ### Component Patterns
 
-**Controller/Presenter separation**: `ChessBoardController` handles all game logic (move validation, drag/drop, promotion, AI triggers). `ChessBoard` is purely presentational—receives callbacks and renders squares.
+**Controller/Presenter separation**: `ChessBoardController` handles game logic, delegating to extracted hooks (`useAudioFeedback`, `useBoardAnnotations`, `useEvaluation`, `useMoveAnimation`). Uses unified pointer events for drag/drop across desktop and mobile. `ChessBoard` is purely presentational—receives callbacks and renders squares.
 
 **Container components** (`PlayContainer`, `TrainingContainer`, `AnalyzeContainer`, `PuzzleContainer`) wrap themselves with their own provider and compose the controller with mode-specific panels and modals.
 
@@ -312,6 +316,7 @@ QUALITY_THRESHOLDS = { excellent: 20, good: 50, inaccuracy: 100, mistake: 200 };
 **Utils:**
 
 - `EventEmitter.ts` — TypedEventEmitter for decoupled communication
+- `createFocusTrap.ts` — Focus trap utility for modal accessibility (traps Tab/Shift+Tab within element)
 - `debug.ts` — Debug utilities
 - `generateId.ts` — Session ID generation
 - `stringUtils.ts` — String helpers
@@ -321,6 +326,8 @@ QUALITY_THRESHOLDS = { excellent: 20, good: 50, inaccuracy: 100, mistake: 200 };
 All components use `.module.css` files. Import as `styles` and reference as `styles.className`.
 
 **No comments in CSS.** Use expressive, readable class names and logical property grouping instead of comments. Class names should be self-documenting (e.g., `.boardActiveTurnGlow` instead of `.glow` with a `/* Active turn indicator */` comment). Group related properties with blank lines for visual separation instead of section dividers.
+
+**No section divider comments in TypeScript/TSX.** Do not use `// ====...` banner blocks to separate sections. Use blank lines instead. If a file needs section headers to be readable, split it into smaller files.
 
 ### Keyboard Shortcuts
 
@@ -337,7 +344,9 @@ Defined in `useKeyboardNavigation` hook, used by `ChessBoardController`:
 - `store/user/` — userStore
 - `services/game/` — chessGameService, fenUtils, pieceUtils, gameLifecycle
 - `services/game/session/` — GameSession, SessionManager
+- `services/engine/` — EnginePool, ResilientEngine
 - `services/network/` — ReconnectingWebSocket
+- `shared/utils/` — createFocusTrap
 
 **E2E tests** (Playwright):
 

@@ -33,10 +33,6 @@ export class GamePersistence {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
-  // ============================================================================
-  // Initialization
-  // ============================================================================
-
   private async init(): Promise<void> {
     if (this.db) return;
 
@@ -89,10 +85,6 @@ export class GamePersistence {
     const transaction = this.db.transaction(this.config.storeName, mode);
     return transaction.objectStore(this.config.storeName);
   }
-
-  // ============================================================================
-  // Session Operations
-  // ============================================================================
 
   async saveSession(session: GameSession): Promise<void> {
     const store = await this.getStore('readwrite');
@@ -199,10 +191,6 @@ export class GamePersistence {
     });
   }
 
-  // ============================================================================
-  // Query Operations
-  // ============================================================================
-
   async getActiveSessionId(): Promise<string | null> {
     const sessions = await this.getInProgressSessions();
 
@@ -269,10 +257,6 @@ export class GamePersistence {
     });
   }
 
-  // ============================================================================
-  // Cleanup Operations
-  // ============================================================================
-
   async clearOldSessions(maxAgeMs: number): Promise<number> {
     const store = await this.getStore('readwrite');
     const cutoffTime = Date.now() - maxAgeMs;
@@ -311,10 +295,6 @@ export class GamePersistence {
         reject(new Error(`Failed to clear sessions: ${request.error?.message}`));
     });
   }
-
-  // ============================================================================
-  // Database Management
-  // ============================================================================
 
   close(): void {
     if (this.db) {

@@ -119,10 +119,6 @@ export class ResilientEngine {
     });
   }
 
-  // ============================================================================
-  // Public Getters
-  // ============================================================================
-
   get engineId(): string {
     return this.id;
   }
@@ -150,10 +146,6 @@ export class ResilientEngine {
   get queueLength(): number {
     return this.commandQueue.length;
   }
-
-  // ============================================================================
-  // Initialization
-  // ============================================================================
 
   async init(): Promise<void> {
     // If already initializing, return existing promise
@@ -192,10 +184,6 @@ export class ResilientEngine {
       this.initPromise = null;
     }
   }
-
-  // ============================================================================
-  // Command Execution
-  // ============================================================================
 
   async sendCommand<T>(
     commands: string | string[],
@@ -262,10 +250,6 @@ export class ResilientEngine {
     }
   }
 
-  // ============================================================================
-  // Direct UCI Access
-  // ============================================================================
-
   postMessage(command: string): void {
     if (!this.isInitialized) {
       throw new EngineError(`${this.config.name} not initialized`, 'NOT_INITIALIZED');
@@ -279,10 +263,6 @@ export class ResilientEngine {
     }
     await this.engine.waitForReady();
   }
-
-  // ============================================================================
-  // Configuration Application
-  // ============================================================================
 
   /**
    * Apply UCI configuration commands. These will be re-applied after recovery.
@@ -308,10 +288,6 @@ export class ResilientEngine {
     await this.engine.waitForReady();
   }
 
-  // ============================================================================
-  // Termination
-  // ============================================================================
-
   terminate(): void {
     this.stopHealthChecks();
     this.rejectAllQueued(new EngineError('Engine terminated', 'NOT_INITIALIZED'));
@@ -319,10 +295,6 @@ export class ResilientEngine {
     this.setState('terminated');
     this.initPromise = null;
   }
-
-  // ============================================================================
-  // Event System
-  // ============================================================================
 
   onEvent(handler: EngineEventHandler): () => void {
     this.eventHandlers.add(handler);
@@ -349,10 +321,6 @@ export class ResilientEngine {
       }
     }
   }
-
-  // ============================================================================
-  // Health Checks
-  // ============================================================================
 
   private startHealthChecks(): void {
     if (this.config.healthCheckIntervalMs <= 0) return;
@@ -396,10 +364,6 @@ export class ResilientEngine {
       }
     }
   }
-
-  // ============================================================================
-  // Recovery
-  // ============================================================================
 
   private async handleFailure(_error: unknown): Promise<void> {
     this.lastFailureTime = Date.now();
@@ -483,10 +447,6 @@ export class ResilientEngine {
     this.emit('circuit:close');
   }
 
-  // ============================================================================
-  // Command Queue
-  // ============================================================================
-
   private queueCommand<T>(
     commands: string | string[],
     matcher: (data: string) => T | null | undefined,
@@ -541,10 +501,6 @@ export class ResilientEngine {
     }
   }
 
-  // ============================================================================
-  // State Management
-  // ============================================================================
-
   private setState(newState: EngineState): void {
     const oldState = this._state;
     if (oldState === newState) return;
@@ -552,10 +508,6 @@ export class ResilientEngine {
     this._state = newState;
     this.emit('state:changed', { oldState, newState });
   }
-
-  // ============================================================================
-  // Utilities
-  // ============================================================================
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));

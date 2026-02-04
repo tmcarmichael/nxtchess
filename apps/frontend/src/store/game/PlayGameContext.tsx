@@ -98,16 +98,8 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     if (DEBUG) console.error('Game sync error:', message);
   });
 
-  // ============================================================================
-  // Create Actions
-  // ============================================================================
-
   const coreActions = createCoreActions({ chess, ui });
   const actions = createPlayActions({ chess, timer, engine, multiplayer, ui }, coreActions);
-
-  // ============================================================================
-  // Derived State
-  // ============================================================================
 
   const material = createMemo(() =>
     computeMaterialDiff(chess.state.capturedWhite, chess.state.capturedBlack)
@@ -123,20 +115,12 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     material,
   };
 
-  // ============================================================================
-  // Cleanup
-  // ============================================================================
-
   onCleanup(() => {
     timer.stop();
     engine.terminate();
     ui.cleanup();
     sessionManager.destroyAllSessions();
   });
-
-  // ============================================================================
-  // Context Value
-  // ============================================================================
 
   const value: PlayGameContextValue = {
     chess,

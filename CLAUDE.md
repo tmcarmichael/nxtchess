@@ -46,6 +46,16 @@ yarn type:check    # Type checking only
 yarn format        # Prettier formatting
 ```
 
+### Monitoring
+
+```bash
+just mon-up                 # Start Prometheus, Loki, Grafana
+just mon-down               # Stop monitoring stack
+just mon-logs               # Follow monitoring logs
+```
+
+Grafana: http://localhost:3000 (admin/admin)
+
 ### Useful Just Commands
 
 ```bash
@@ -64,6 +74,7 @@ just prod-up                # Start production stack
 - **Backend**: Go (Chi router) + PostgreSQL + Redis + gorilla/websocket
 - **Chess**: chess.js (browser validation) + stockfish.js (Web Worker AI/eval) + notnil/chess (server validation)
 - **Infrastructure**: Docker Compose + Caddy (reverse proxy) + Nginx (static serving)
+- **Monitoring**: Prometheus (metrics) + Loki (logs) + Grafana (dashboards)
 
 ### Frontend Structure (apps/frontend/src/)
 
@@ -71,7 +82,7 @@ just prod-up                # Start production stack
 @types/              # External library types (stockfish-js.d.ts)
 
 components/
-├── chess/           # Chess UI: ChessBoard, ChessBoardController, ChessBoardArrows, ChessPiece, ChessClock, ChessEvalBar
+├── chess/           # Chess UI: ChessBoard, ChessBoardController (+ hooks/), ChessBoardArrows, ChessPiece, ChessClock, ChessEvalBar
 ├── game/            # Game layout: GameContainer, GameInfoPanel, GameNotation, MoveHistoryPanel, ButtonPanel, DifficultyDisplay
 ├── play/            # Multiplayer: PlayContainer, PlayModal, PlayControlPanel, PlayNavigationPanel
 ├── training/        # Training: TrainingContainer, TrainingModal, TrainingControlPanel, TrainingNavigationPanel
@@ -120,7 +131,7 @@ services/
 shared/
 ├── config/          # Constants (time values, difficulty, play styles)
 ├── hooks/           # useKeyboardNavigation
-└── utils/           # Debug, ID generation, strings, EventEmitter
+└── utils/           # Debug, ID generation, strings, EventEmitter, createFocusTrap
 
 types/               # chess.ts (Square, PieceType, Board), game.ts (Side, GameMode, etc.), moveQuality.ts
 ```
@@ -139,7 +150,8 @@ internal/
 │   └── endgame.go   # Training position queries
 ├── httpx/           # JSON responses, secure cookies, client IP extraction
 ├── logger/          # Structured logging: levels (DEBUG/INFO/WARN/ERROR), JSON mode
-├── middleware/      # CORS, recovery, security headers, session, rate limit, body limit, request ID
+├── metrics/         # Prometheus metrics: HTTP requests, WS connections, DB queries
+├── middleware/      # CORS, recovery, security headers, session, rate limit, body limit, request ID, metrics
 ├── migrate/         # Database migrations runner (golang-migrate)
 ├── models/          # Data structures: Profile, PublicProfile, Game, EndgamePosition
 ├── sessions/        # Redis session store (24h TTL)
@@ -176,7 +188,7 @@ Backend also runs golang-migrate on startup (idempotent).
 
 ### Controller/Presenter Pattern
 
-`ChessBoardController` handles ALL game logic (move validation, drag/drop, AI triggers, animations). `ChessBoard` is purely presentational—receives callbacks and renders squares. Same pattern for `ChessPiece`, `ChessClock`, `ChessEvalBar`.
+`ChessBoardController` handles game logic, delegating to extracted hooks: `useAudioFeedback` (move sounds), `useBoardAnnotations` (right-click arrows, highlights), `useEvaluation` (engine eval bar), `useMoveAnimation` (piece animation). `ChessBoard` is purely presentational—receives callbacks and renders squares. Same pattern for `ChessPiece`, `ChessClock`, `ChessEvalBar`.
 
 ### Modular Multi-Store Architecture
 
@@ -216,6 +228,18 @@ Detects device capabilities at runtime:
 
 **No comments in CSS files.** Use expressive, readable class names and logical property grouping to convey intent instead of comments. Class names should be self-documenting (e.g., `.boardActiveTurnGlow` not `.glow` with a comment). Use blank lines to visually separate property groups instead of section divider comments.
 
+### TypeScript Style Guidelines
+
+**No section divider comments in TypeScript/TSX files.** Do not use banner-style comment blocks like:
+
+```typescript
+// ============================================================================
+// Section Name
+// ============================================================================
+```
+
+Use blank lines to separate logical sections. Let function names, class names, and code structure convey organization. If a file needs section headers to be readable, it should be split into smaller files instead.
+
 ### SolidJS Patterns
 
 - `createStore()` with `batch()` for atomic multi-property updates
@@ -232,6 +256,7 @@ Detects device capabilities at runtime:
 - **Context propagation**: Single context for entire OAuth flow with 30s timeout
 - **Read/write pumps**: Concurrent goroutines per WebSocket client
 - **Garbage collection**: Ended games (5min), waiting games (30min)
+- **Prometheus metrics**: HTTP request count/duration, active WS connections/games, DB query duration via `internal/metrics`
 
 ### WebSocket Protocol
 
@@ -417,11 +442,13 @@ VITE_BACKEND_URL=http://localhost:8080
 - Deployment automation
 - GitHub Actions
 
-**Observability**
+**Observability** *(PLG stack implemented — Prometheus, Loki, Grafana with backend dashboard)*
 
-- ~~Grafana LGTM stack (Loki, Grafana, Tempo, Mimir)~~
-- Consider instead PGL (Prometheus, Grafana, Loki)
-- Performance monitoring
+- ~~Grafana LGTM stack (Loki, Grafana, Tempo, Mimir)~~ → implemented as PLG
+- ~~Prometheus metrics~~ (HTTP requests, WS connections, DB queries)
+- ~~Grafana dashboards~~ (backend request rate, latency, active connections)
+- ~~Loki log aggregation~~ (via Promtail, Docker log driver)
+- Performance monitoring (frontend metrics, Core Web Vitals)
 
 ## Git Conventions
 

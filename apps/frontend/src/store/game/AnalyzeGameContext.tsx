@@ -120,10 +120,6 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
     )
   );
 
-  // ============================================================================
-  // Engine Actions
-  // ============================================================================
-
   const toggleEngine = () => {
     const newEnabled = !engineEnabled();
     setEngineEnabled(newEnabled);
@@ -133,16 +129,8 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
     }
   };
 
-  // ============================================================================
-  // Create Actions
-  // ============================================================================
-
   const coreActions = createCoreActions({ chess, ui });
   const actions = createAnalyzeActions({ chess, ui }, coreActions);
-
-  // ============================================================================
-  // Derived State
-  // ============================================================================
 
   const material = createMemo(() =>
     computeMaterialDiff(chess.state.capturedWhite, chess.state.capturedBlack)
@@ -156,10 +144,6 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
     material,
   };
 
-  // ============================================================================
-  // Engine State Object
-  // ============================================================================
-
   const analyzeEngine: AnalyzeEngineState = {
     enabled: engineEnabled,
     analysis,
@@ -167,10 +151,6 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
     isAnalyzing,
     toggleEngine,
   };
-
-  // ============================================================================
-  // Cleanup
-  // ============================================================================
 
   onCleanup(() => {
     if (analysisDebounceTimer) {
@@ -182,10 +162,6 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
     ui.cleanup();
     sessionManager.destroyAllSessions();
   });
-
-  // ============================================================================
-  // Context Value
-  // ============================================================================
 
   const value: AnalyzeGameContextValue & { analyzeEngine: AnalyzeEngineState } = {
     chess,

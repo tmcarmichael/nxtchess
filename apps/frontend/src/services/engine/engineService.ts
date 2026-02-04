@@ -20,10 +20,6 @@ export interface EngineServiceConfig {
 }
 
 class EngineService {
-  // ============================================================================
-  // AI Engine Operations
-  // ============================================================================
-
   async initAiEngine(gameId: string, elo: number): Promise<void> {
     const engine = await enginePool.acquire('ai', gameId);
 
@@ -56,10 +52,6 @@ class EngineService {
 
     return this.parseMoveString(moveStr);
   }
-
-  // ============================================================================
-  // Eval Engine Operations
-  // ============================================================================
 
   async initEvalEngine(gameId: string): Promise<void> {
     const engine = await enginePool.acquire('eval', gameId);
@@ -121,10 +113,6 @@ class EngineService {
     }
   }
 
-  // ============================================================================
-  // Engine Lifecycle Management
-  // ============================================================================
-
   releaseEngines(gameId: string): void {
     enginePool.releaseGame(gameId);
   }
@@ -140,10 +128,6 @@ class EngineService {
   terminateAllEngines(): void {
     enginePool.terminateAll();
   }
-
-  // ============================================================================
-  // Status Methods
-  // ============================================================================
 
   isAiEngineInitialized(gameId: string): boolean {
     const allocation = enginePool.getAllocationInfo('ai', gameId);
@@ -162,10 +146,6 @@ class EngineService {
       total: enginePool.getTotalCount(),
     };
   }
-
-  // ============================================================================
-  // Private Helpers
-  // ============================================================================
 
   private async getOrInitAiEngine(gameId: string): Promise<ResilientEngine> {
     const engine = await enginePool.acquire('ai', gameId);

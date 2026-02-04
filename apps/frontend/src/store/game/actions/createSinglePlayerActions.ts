@@ -50,10 +50,6 @@ export const createSinglePlayerActions = (
 ): SinglePlayerActions => {
   const { chess, timer, engine, ui } = stores;
 
-  // ============================================================================
-  // Internal Helpers
-  // ============================================================================
-
   const handleTimeOut = (winner: Side) => {
     timer.stop();
     chess.endGame('time', winner);
@@ -119,10 +115,6 @@ export const createSinglePlayerActions = (
       }
     }
   };
-
-  // ============================================================================
-  // Public Actions
-  // ============================================================================
 
   const startNewGame = async (options: StartGameOptions) => {
     timer.stop();
