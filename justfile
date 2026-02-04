@@ -29,10 +29,6 @@ prod_env_file := ".env.prod"
 default:
     @just --list
 
-# ===========================================
-# Development Commands
-# ===========================================
-
 # Build + run frontend, backend, db, redis (QUICK START)
 dev: init build up
 
@@ -84,9 +80,20 @@ exec-redis: init
     @echo "Launching redis-cli in 'redis' container."
     docker compose -f {{compose_file}} --profile {{PROFILES}} exec redis redis-cli
 
-# ===========================================
-# Production Commands
-# ===========================================
+# Start monitoring stack (Prometheus, Loki, Grafana)
+mon-up: init
+    @echo "Starting monitoring stack..."
+    docker compose -f {{compose_file}} --profile monitoring up -d
+
+# Stop monitoring stack
+mon-down: init
+    @echo "Stopping monitoring stack..."
+    docker compose -f {{compose_file}} --profile monitoring down
+
+# Tail monitoring logs
+mon-logs: init
+    @echo "Following monitoring logs..."
+    docker compose -f {{compose_file}} --profile monitoring logs -f
 
 # Build production Docker images
 prod-build: _prod-check-env
@@ -115,10 +122,6 @@ prod-restart: prod-build prod-down prod-up
 # Show container status
 prod-status: _prod-check-env
     docker compose -f {{prod_compose_file}} --env-file {{prod_env_file}} ps
-
-# ===========================================
-# Private Helpers
-# ===========================================
 
 # Full environment prep (docker check + env check)
 init: _check-docker _check-docker-daemon _check-env
