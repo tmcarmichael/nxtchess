@@ -156,10 +156,6 @@ export const createTrainingActions = (
   // Incremented at the start of each startNewGame call
   let currentGameGeneration = 0;
 
-  // ============================================================================
-  // Internal Helpers
-  // ============================================================================
-
   const handleTimeOut = (winner: Side) => {
     timer.stop();
     chess.endGame('time', winner);
@@ -319,10 +315,6 @@ export const createTrainingActions = (
       }
     }
   };
-
-  // ============================================================================
-  // Public Actions
-  // ============================================================================
 
   const startNewGame = async (options: StartGameOptions) => {
     // Increment generation to invalidate any in-flight async operations from previous calls

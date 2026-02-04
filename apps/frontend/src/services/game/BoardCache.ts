@@ -72,10 +72,6 @@ export class BoardCache {
     this.syncFromChess();
   }
 
-  // ============================================================================
-  // Public Getters
-  // ============================================================================
-
   get fen(): string {
     return this._state.fen;
   }
@@ -112,10 +108,6 @@ export class BoardCache {
     return this._state;
   }
 
-  // ============================================================================
-  // Piece Access - O(1)
-  // ============================================================================
-
   getPieceAt(square: Square): CachedPiece | null {
     return this.pieces[SQUARE_TO_INDEX[square]];
   }
@@ -133,10 +125,6 @@ export class BoardCache {
     return piece !== null && piece.color === color;
   }
 
-  // ============================================================================
-  // Legal Moves - Cached
-  // ============================================================================
-
   getLegalMoves(square: Square): Square[] {
     // Check cache first
     const cached = this.legalMovesCache.get(square);
@@ -153,10 +141,6 @@ export class BoardCache {
   hasLegalMoves(square: Square): boolean {
     return this.getLegalMoves(square).length > 0;
   }
-
-  // ============================================================================
-  // Board Conversion - For UI rendering
-  // ============================================================================
 
   /**
    * Convert to BoardSquare[] format for UI compatibility.
@@ -187,10 +171,6 @@ export class BoardCache {
     }
     return map;
   }
-
-  // ============================================================================
-  // State Mutations
-  // ============================================================================
 
   /**
    * Load a new position from FEN.
@@ -244,10 +224,6 @@ export class BoardCache {
     return true;
   }
 
-  // ============================================================================
-  // Chess.js Delegation
-  // ============================================================================
-
   getHistory(): string[] {
     return this.chess.history();
   }
@@ -255,10 +231,6 @@ export class BoardCache {
   getChessInstance(): Chess {
     return this.chess;
   }
-
-  // ============================================================================
-  // King Finding - O(n) but cached via state
-  // ============================================================================
 
   findKingSquare(color: Side): Square | null {
     const kingSymbol = color === 'w' ? 'wK' : 'bK';
@@ -269,10 +241,6 @@ export class BoardCache {
     }
     return null;
   }
-
-  // ============================================================================
-  // Private Methods
-  // ============================================================================
 
   private syncFromChess(): void {
     // Clear caches

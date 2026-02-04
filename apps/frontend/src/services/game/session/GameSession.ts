@@ -53,10 +53,6 @@ export class GameSession {
     this.pushStateHistory();
   }
 
-  // ============================================================================
-  // Public Getters
-  // ============================================================================
-
   get sessionId(): string {
     return this._config.sessionId;
   }
@@ -80,10 +76,6 @@ export class GameSession {
   get isGameOver(): boolean {
     return this._state.isGameOver;
   }
-
-  // ============================================================================
-  // Command Pattern - Main Entry Point
-  // ============================================================================
 
   applyCommand(command: GameCommand): CommandResult {
     const previousState = { ...this._state };
@@ -133,10 +125,6 @@ export class GameSession {
     }
   }
 
-  // ============================================================================
-  // Snapshot Methods (for persistence/recovery)
-  // ============================================================================
-
   createSnapshot(): GameSessionSnapshot {
     return {
       config: { ...this._config },
@@ -149,10 +137,6 @@ export class GameSession {
   static fromSnapshot(snapshot: GameSessionSnapshot): GameSession {
     return new GameSession(snapshot.config, snapshot.state);
   }
-
-  // ============================================================================
-  // Chess.js Delegation Methods (using BoardCache for performance)
-  // ============================================================================
 
   /** Get legal moves for a piece at the given square. Uses cached computation. */
   getLegalMoves(square: Square): Square[] {
@@ -210,10 +194,6 @@ export class GameSession {
   getBoardCache(): BoardCache {
     return this.boardCache;
   }
-
-  // ============================================================================
-  // Private Command Handlers
-  // ============================================================================
 
   private handleApplyMove(payload: {
     from: Square;
@@ -600,10 +580,6 @@ export class GameSession {
 
     return { success: true, newState: this._state };
   }
-
-  // ============================================================================
-  // Private Helper Methods
-  // ============================================================================
 
   private createInitialState(config: GameSessionConfig): GameSessionState {
     const initialTime = config.timeControl?.initialTime ?? 300;

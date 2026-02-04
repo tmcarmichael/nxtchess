@@ -19,16 +19,8 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
   const engine = createEngineStore();
   const ui = createUIStore();
 
-  // ============================================================================
-  // Create Actions
-  // ============================================================================
-
   const coreActions = createCoreActions({ chess, ui });
   const actions = createTrainingActions({ chess, timer, engine, ui }, coreActions);
-
-  // ============================================================================
-  // Derived State
-  // ============================================================================
 
   const material = createMemo(() =>
     computeMaterialDiff(chess.state.capturedWhite, chess.state.capturedBlack)
@@ -42,20 +34,12 @@ export const TrainingGameProvider = (props: { children: JSX.Element }) => {
     material,
   };
 
-  // ============================================================================
-  // Cleanup
-  // ============================================================================
-
   onCleanup(() => {
     timer.stop();
     engine.terminate();
     ui.cleanup();
     sessionManager.destroyAllSessions();
   });
-
-  // ============================================================================
-  // Context Value
-  // ============================================================================
 
   const value: TrainingGameContextValue = {
     chess,

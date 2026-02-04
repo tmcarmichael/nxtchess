@@ -44,10 +44,6 @@ describe('SessionManager', () => {
     manager = new SessionManager();
   });
 
-  // ============================================================================
-  // Session Lifecycle Tests
-  // ============================================================================
-
   describe('createSession', () => {
     it('creates a new session', () => {
       const config = createTestConfig();
@@ -192,10 +188,6 @@ describe('SessionManager', () => {
     });
   });
 
-  // ============================================================================
-  // Active Session Management Tests
-  // ============================================================================
-
   describe('setActiveSession', () => {
     it('sets active session when session exists', () => {
       manager.createSession(createTestConfig());
@@ -271,10 +263,6 @@ describe('SessionManager', () => {
       expect(manager.getActiveSessionId()).toBeNull();
     });
   });
-
-  // ============================================================================
-  // Command Execution Tests
-  // ============================================================================
 
   describe('applyCommand', () => {
     it('applies command to specified session', () => {
@@ -411,10 +399,6 @@ describe('SessionManager', () => {
     });
   });
 
-  // ============================================================================
-  // Event System Tests
-  // ============================================================================
-
   describe('onEvent', () => {
     it('registers event handler', () => {
       const handler = vi.fn();
@@ -472,10 +456,6 @@ describe('SessionManager', () => {
       expect(event.timestamp).toBeGreaterThan(0);
     });
   });
-
-  // ============================================================================
-  // Utility Methods Tests
-  // ============================================================================
 
   describe('getAllSessions', () => {
     it('returns empty array when no sessions', () => {

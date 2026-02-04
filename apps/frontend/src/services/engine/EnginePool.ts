@@ -62,10 +62,6 @@ export class EnginePool {
     this.config = { ...DEFAULT_POOL_CONFIG, ...config };
   }
 
-  // ============================================================================
-  // Event Subscription
-  // ============================================================================
-
   onEvent(handler: EngineEventHandler): () => void {
     this.eventHandlers.add(handler);
     return () => {
@@ -73,17 +69,9 @@ export class EnginePool {
     };
   }
 
-  // ============================================================================
-  // Allocation Key Helper
-  // ============================================================================
-
   private getAllocationKey(purpose: EnginePurpose, gameId: string): string {
     return `${purpose}:${gameId}`;
   }
-
-  // ============================================================================
-  // Engine Acquisition
-  // ============================================================================
 
   async acquire(purpose: EnginePurpose, gameId: string): Promise<ResilientEngine> {
     const key = this.getAllocationKey(purpose, gameId);
@@ -155,10 +143,6 @@ export class EnginePool {
     return engine;
   }
 
-  // ============================================================================
-  // Engine Release
-  // ============================================================================
-
   async release(purpose: EnginePurpose, gameId: string, terminate: boolean = false): Promise<void> {
     const key = this.getAllocationKey(purpose, gameId);
     const allocation = this.allocations.get(key);
@@ -204,10 +188,6 @@ export class EnginePool {
     }
   }
 
-  // ============================================================================
-  // Termination
-  // ============================================================================
-
   terminateAll(): void {
     // Clear all idle timeouts
     for (const timeout of this.idleTimeouts.values()) {
@@ -227,10 +207,6 @@ export class EnginePool {
     }
     this.allocations.clear();
   }
-
-  // ============================================================================
-  // Pool Information
-  // ============================================================================
 
   getAllocatedCount(): number {
     return this.allocations.size;
@@ -291,10 +267,6 @@ export class EnginePool {
 
     return { healthy, recovering, failed };
   }
-
-  // ============================================================================
-  // Private Helpers
-  // ============================================================================
 
   private async getIdleEngine(): Promise<ResilientEngine | null> {
     while (this.idleEngines.length > 0) {

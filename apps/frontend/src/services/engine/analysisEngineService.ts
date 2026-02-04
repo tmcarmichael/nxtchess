@@ -60,10 +60,6 @@ class AnalysisEngineService {
     });
   }
 
-  // ============================================================================
-  // Initialization
-  // ============================================================================
-
   async init(): Promise<void> {
     if (this.isInitialized) return;
 
@@ -75,10 +71,6 @@ class AnalysisEngineService {
 
     this.isInitialized = true;
   }
-
-  // ============================================================================
-  // Analysis
-  // ============================================================================
 
   /**
    * Start position analysis. Returns analysis result when complete.
@@ -188,10 +180,6 @@ class AnalysisEngineService {
     this.engine.postMessage('stop');
   }
 
-  // ============================================================================
-  // Engine Info
-  // ============================================================================
-
   getEngineInfo(): EngineInfo {
     const variant = detectEngineVariant();
     return {
@@ -212,20 +200,12 @@ class AnalysisEngineService {
     }
   }
 
-  // ============================================================================
-  // Configuration
-  // ============================================================================
-
   setMultiPV(count: number): void {
     this.multiPV = Math.max(1, Math.min(5, count));
     if (this.isInitialized) {
       this.engine.postMessage(`setoption name MultiPV value ${this.multiPV}`);
     }
   }
-
-  // ============================================================================
-  // Lifecycle
-  // ============================================================================
 
   terminate(): void {
     this.stopAnalysis();
@@ -236,10 +216,6 @@ class AnalysisEngineService {
   get initialized(): boolean {
     return this.isInitialized;
   }
-
-  // ============================================================================
-  // Private Helpers
-  // ============================================================================
 
   private getSideToMove(fen: string): 'w' | 'b' {
     const parts = fen.split(' ');

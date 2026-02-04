@@ -49,10 +49,6 @@ export interface PlayStores {
 export const createPlayActions = (stores: PlayStores, coreActions: CoreActions): PlayActions => {
   const { chess, timer, engine, multiplayer, ui } = stores;
 
-  // ============================================================================
-  // Internal Helpers
-  // ============================================================================
-
   const handleTimeOut = (winner: Side) => {
     timer.stop();
     chess.endGame('time', winner);
@@ -116,10 +112,6 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       }
     }
   };
-
-  // ============================================================================
-  // Single Player Actions
-  // ============================================================================
 
   const startNewGame = async (options: StartGameOptions) => {
     timer.stop();
@@ -225,10 +217,6 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
     chess.takeBack();
   };
 
-  // ============================================================================
-  // Multiplayer Actions
-  // ============================================================================
-
   const startMultiplayerGame = async (options: MultiplayerGameOptions) => {
     timer.stop();
     ui.hideEndModal();
@@ -265,10 +253,6 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       multiplayer.resign();
     }
   };
-
-  // ============================================================================
-  // Lifecycle
-  // ============================================================================
 
   const exitGame = () => {
     timer.stop();

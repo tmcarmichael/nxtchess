@@ -10,10 +10,6 @@ export interface CoreStores {
 export const createCoreActions = (stores: CoreStores): CoreActions => {
   const { chess, ui } = stores;
 
-  // ============================================================================
-  // Navigation & UI Actions
-  // ============================================================================
-
   const jumpToMove = (index: number) => {
     chess.jumpToMoveIndex(index);
   };
@@ -46,10 +42,6 @@ export const createCoreActions = (stores: CoreStores): CoreActions => {
   const flipBoard = () => {
     ui.flipBoard();
   };
-
-  // ============================================================================
-  // Game Lifecycle
-  // ============================================================================
 
   const exitGame = () => {
     chess.exitGame();

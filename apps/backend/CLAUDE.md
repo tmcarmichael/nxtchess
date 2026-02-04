@@ -74,6 +74,8 @@ internal/
 │   └── httpx.go                 # JSON responses, cookies, IP extraction
 ├── logger/                      # Structured logging
 │   └── logger.go                # Levels, JSON mode, thread-safe
+├── metrics/                    # Prometheus instrumentation
+│   └── metrics.go               # HTTP, WS, DB metric collectors (CounterVec, HistogramVec, Gauge)
 ├── middleware/                  # HTTP middleware
 │   ├── cors.go                  # CORS headers
 │   ├── security.go              # Security headers
@@ -81,7 +83,8 @@ internal/
 │   ├── bodylimit.go             # Request size limits
 │   ├── session.go               # Redis session auth
 │   ├── ratelimit.go             # Token bucket per-IP
-│   └── requestid.go             # Request ID tracing
+│   ├── requestid.go             # Request ID tracing
+│   └── metrics.go               # Prometheus HTTP request instrumentation
 ├── models/                      # Data structures
 │   ├── profile.go               # Profile, PublicProfile
 │   ├── game.go                  # Game model
@@ -104,6 +107,25 @@ internal/
 test_ws.html                     # Browser-based WS testing tool
 ```
 
+### Test Coverage
+
+```
+internal/chess/chess_test.go              # Move validation, check/checkmate/stalemate detection
+internal/httpx/httpx_test.go              # JSON response helpers, cookie creation, IP extraction
+internal/middleware/bodylimit_test.go      # Request size enforcement
+internal/middleware/cors_test.go           # CORS header validation
+internal/middleware/ratelimit_test.go      # Token bucket rate limiting
+internal/middleware/recovery_test.go       # Panic recovery behavior
+internal/middleware/requestid_test.go      # Request ID generation and propagation
+internal/middleware/security_test.go       # Security header injection
+internal/middleware/session_test.go        # Session cookie auth, context injection
+internal/models/endgame_position_test.go   # Endgame model serialization
+internal/validation/validation_test.go     # Username/icon validation rules
+internal/ws/message_test.go               # WebSocket message serialization
+```
+
+Run tests: `go test ./...` from `apps/backend/`.
+
 ### Key Patterns
 
 **Structured Logging**: Use `logger.Info()`, `logger.Error()`, etc. with `logger.F()` for fields:
@@ -124,6 +146,8 @@ if err := validation.ValidateUsername(username); err != nil {
 - `NewAPIRateLimiter()` - 60/min, burst 20 (general API)
 - `NewStrictRateLimiter()` - 5/min, burst 3 (sensitive operations)
 
+**Prometheus Metrics**: `internal/metrics` defines counters, histograms, and gauges. `middleware/metrics.go` instruments all HTTP routes. WebSocket hub tracks active connections/games. Exposed at `/metrics` for Prometheus scraping.
+
 **OAuth Provider System**: Generic handlers in `auth/oauth.go` with provider-specific configs in `auth/providers.go`. Providers missing credentials are skipped.
 
 **Session Authentication**: Cookie-based sessions in Redis (24h TTL). Session middleware extracts `session_token` cookie, validates against Redis, attaches userID to context via `middleware.UserIDFromContext()`.
@@ -136,12 +160,13 @@ if err := validation.ValidateUsername(username); err != nil {
 
 Applied outermost to innermost:
 1. **CORS** - Cross-origin from `FRONTEND_URL` only, credentials enabled
-2. **RequestID** - 16-char hex ID per request, X-Request-ID header
-3. **Recovery** - Panic handling, hides details in production
-4. **Security** - Headers (CSP, HSTS, X-Frame-Options, etc.)
-5. **BodyLimit** - 1MB default, 64KB for JSON APIs
-6. **RateLimiter** - Per route group, token bucket algorithm
-7. **Session** - Authentication for protected routes
+2. **Metrics** - Prometheus HTTP request count and duration per route/method/status
+3. **RequestID** - 16-char hex ID per request, X-Request-ID header
+4. **Recovery** - Panic handling, hides details in production
+5. **Security** - Headers (CSP, HSTS, X-Frame-Options, etc.)
+6. **BodyLimit** - 1MB default, 64KB for JSON APIs
+7. **RateLimiter** - Per route group, token bucket algorithm
+8. **Session** - Authentication for protected routes
 
 ### Health Checks
 - `GET /health` - Full health with DB/Redis status (JSON)
@@ -426,6 +451,7 @@ lib/pq                  v1.10.9     # PostgreSQL driver
 notnil/chess            v1.10.0     # Chess logic
 redis/go-redis/v9       v9.7.0      # Redis client
 golang.org/x/oauth2     v0.30.0     # OAuth2
+prometheus/client_golang v1.23.2    # Prometheus metrics
 ```
 
 ## Adding New Endpoints

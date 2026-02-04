@@ -78,10 +78,6 @@ describe('GameSession', () => {
     });
   });
 
-  // ============================================================================
-  // Getter Tests
-  // ============================================================================
-
   describe('getters', () => {
     let session: GameSession;
 
@@ -117,10 +113,6 @@ describe('GameSession', () => {
       expect(session.isGameOver).toBe(false);
     });
   });
-
-  // ============================================================================
-  // APPLY_MOVE Command Tests
-  // ============================================================================
 
   describe('APPLY_MOVE command', () => {
     let session: GameSession;
@@ -235,10 +227,6 @@ describe('GameSession', () => {
     });
   });
 
-  // ============================================================================
-  // SYNC_STATE Command Tests
-  // ============================================================================
-
   describe('SYNC_STATE command', () => {
     let session: GameSession;
 
@@ -279,10 +267,6 @@ describe('GameSession', () => {
       expect(session.fen).toBe(newFen);
     });
   });
-
-  // ============================================================================
-  // ROLLBACK Command Tests
-  // ============================================================================
 
   describe('ROLLBACK command', () => {
     let session: GameSession;
@@ -354,10 +338,6 @@ describe('GameSession', () => {
     });
   });
 
-  // ============================================================================
-  // RESIGN Command Tests
-  // ============================================================================
-
   describe('RESIGN command', () => {
     let session: GameSession;
 
@@ -406,10 +386,6 @@ describe('GameSession', () => {
     });
   });
 
-  // ============================================================================
-  // TIMEOUT Command Tests
-  // ============================================================================
-
   describe('TIMEOUT command', () => {
     let session: GameSession;
 
@@ -443,10 +419,6 @@ describe('GameSession', () => {
       expect(session.currentState.gameWinner).toBe('w');
     });
   });
-
-  // ============================================================================
-  // TAKE_BACK Command Tests
-  // ============================================================================
 
   describe('TAKE_BACK command', () => {
     it('undoes last move when it is players turn', () => {
@@ -500,10 +472,6 @@ describe('GameSession', () => {
     });
   });
 
-  // ============================================================================
-  // END_GAME Command Tests
-  // ============================================================================
-
   describe('END_GAME command', () => {
     let session: GameSession;
 
@@ -550,10 +518,6 @@ describe('GameSession', () => {
     });
   });
 
-  // ============================================================================
-  // UPDATE_TIMES Command Tests
-  // ============================================================================
-
   describe('UPDATE_TIMES command', () => {
     let session: GameSession;
 
@@ -573,10 +537,6 @@ describe('GameSession', () => {
       expect(session.currentState.times).toEqual({ white: 150, black: 200 });
     });
   });
-
-  // ============================================================================
-  // NAVIGATE_HISTORY Command Tests
-  // ============================================================================
 
   describe('NAVIGATE_HISTORY command', () => {
     let session: GameSession;
@@ -640,10 +600,6 @@ describe('GameSession', () => {
     });
   });
 
-  // ============================================================================
-  // OPTIMISTIC_MOVE Command Tests
-  // ============================================================================
-
   describe('OPTIMISTIC_MOVE command', () => {
     let session: GameSession;
 
@@ -682,10 +638,6 @@ describe('GameSession', () => {
     });
   });
 
-  // ============================================================================
-  // CONFIRM_MOVE Command Tests
-  // ============================================================================
-
   describe('CONFIRM_MOVE command', () => {
     let session: GameSession;
 
@@ -713,10 +665,6 @@ describe('GameSession', () => {
     });
   });
 
-  // ============================================================================
-  // REJECT_MOVE Command Tests
-  // ============================================================================
-
   describe('REJECT_MOVE command', () => {
     let session: GameSession;
 
@@ -742,10 +690,6 @@ describe('GameSession', () => {
     });
   });
 
-  // ============================================================================
-  // Unknown Command Tests
-  // ============================================================================
-
   describe('unknown command', () => {
     it('returns error for unknown command type', () => {
       const session = new GameSession(createTestConfig());
@@ -761,10 +705,6 @@ describe('GameSession', () => {
       }
     });
   });
-
-  // ============================================================================
-  // Snapshot Tests
-  // ============================================================================
 
   describe('snapshot', () => {
     it('creates snapshot with config and state', () => {
@@ -792,10 +732,6 @@ describe('GameSession', () => {
       expect(restored.fen).toBe(original.fen);
     });
   });
-
-  // ============================================================================
-  // Chess Delegation Tests
-  // ============================================================================
 
   describe('chess delegation methods', () => {
     let session: GameSession;
@@ -871,10 +807,6 @@ describe('GameSession', () => {
       expect(cache).toBeDefined();
     });
   });
-
-  // ============================================================================
-  // Error Handling Tests
-  // ============================================================================
 
   describe('error handling', () => {
     it('catches and returns errors thrown during command execution', () => {

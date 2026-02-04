@@ -92,10 +92,6 @@ export const createMultiplayerStore = (): MultiplayerStore => {
   let unsubscribe: (() => void) | null = null;
   let playerColorGetter: (() => Side) | null = null;
 
-  // ============================================================================
-  // Internal Event Handler
-  // ============================================================================
-
   const handleSyncEvent = (event: SyncEvent) => {
     switch (event.type) {
       case 'game:created': {
@@ -214,10 +210,6 @@ export const createMultiplayerStore = (): MultiplayerStore => {
       }
     }
   };
-
-  // ============================================================================
-  // Public Methods
-  // ============================================================================
 
   const connect = () => {
     gameSyncService.connect();

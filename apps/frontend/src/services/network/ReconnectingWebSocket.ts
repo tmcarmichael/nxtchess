@@ -40,10 +40,6 @@ export class ReconnectingWebSocket {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
-  // ============================================================================
-  // Public API
-  // ============================================================================
-
   /**
    * Set the WebSocket URL. Useful when URL is determined after construction.
    */
@@ -161,10 +157,6 @@ export class ReconnectingWebSocket {
     this.attemptCount = 0;
   }
 
-  // ============================================================================
-  // Private Methods - Connection Handlers
-  // ============================================================================
-
   private handleOpen(): void {
     this.attemptCount = 0;
     this.setState('connected');
@@ -196,10 +188,6 @@ export class ReconnectingWebSocket {
       this.callbacks.onMessage?.(event.data);
     }
   }
-
-  // ============================================================================
-  // Private Methods - Reconnection Logic
-  // ============================================================================
 
   private scheduleReconnect(): void {
     if (this.attemptCount >= this.config.maxAttempts) {
@@ -241,10 +229,6 @@ export class ReconnectingWebSocket {
       this.reconnectTimeout = null;
     }
   }
-
-  // ============================================================================
-  // Private Methods - State Management
-  // ============================================================================
 
   private setState(newState: ConnectionState): void {
     const previousState = this.state;

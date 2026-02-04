@@ -20,10 +20,6 @@ export const createMultiplayerActions = (
 ): MultiplayerActions => {
   const { chess, timer, multiplayer, ui } = stores;
 
-  // ============================================================================
-  // Public Actions
-  // ============================================================================
-
   const handleTimeOut = (winner: Side) => {
     timer.stop();
     chess.endGame('time', winner);
