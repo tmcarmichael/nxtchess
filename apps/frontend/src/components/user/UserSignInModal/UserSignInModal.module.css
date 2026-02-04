@@ -2,15 +2,28 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  margin-top: var(--space-lg);
+  width: fit-content;
+  margin: var(--space-lg) auto 0;
+}
+
+.signInRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.signInIcon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
 }
 
 .signInButton {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-lg);
+  padding: var(--space-sm) 18px;
   font-family: var(--font-body);
   font-size: var(--text-lg);
   font-weight: 600;
@@ -82,11 +95,5 @@
 @media (max-width: 639px) {
   .signInOptions {
     gap: var(--space-sm);
-  }
-
-  .signInButton {
-    width: 100%;
-    padding: var(--space-md);
-    justify-content: center;
   }
 }

@@ -111,10 +111,10 @@ const CommonSiteHeader: ParentComponent = () => {
                 />
                 <span class={styles.usernameText}>{userState.username}</span>
               </button>
+              <button class={styles.signOutText} onClick={handleSignOut}>
+                Sign Out
+              </button>
             </Show>
-            <button class={styles.signOutText} onClick={handleSignOut}>
-              Sign Out
-            </button>
           </Show>
           <CommonSettingsDropdown />
           <button

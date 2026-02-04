@@ -71,10 +71,9 @@ export const createUserStore = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: newName }),
       });
-      if (res.status === 409) {
-        throw new Error('Username already taken');
-      } else if (!res.ok) {
-        throw new Error('An error occurred.');
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(body.error || 'An error occurred.');
       }
       setState('isLoggedIn', true);
       setState('username', newName);

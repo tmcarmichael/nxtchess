@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -100,6 +102,25 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 		if !rl.Allow(key) {
 			w.Header().Set("Retry-After", "60")
 			httpx.WriteJSONError(w, http.StatusTooManyRequests, "Rate limit exceeded. Please try again later.")
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// RedirectMiddleware returns an HTTP middleware that rate limits requests
+// and redirects to the frontend with an error query parameter on limit exceeded.
+// Use this for browser-navigated routes (e.g. OAuth) where a JSON response
+// would be displayed as raw text.
+func (rl *RateLimiter) RedirectMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		key := httpx.GetClientIP(r, rl.cfg)
+
+		if !rl.Allow(key) {
+			errMsg := "Rate limit exceeded. Please try again later."
+			redirectURL := fmt.Sprintf("%s/?error=%s", rl.cfg.FrontendURL, url.QueryEscape(errMsg))
+			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 			return
 		}
 
