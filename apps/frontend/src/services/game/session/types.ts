@@ -2,10 +2,6 @@ import type { Square, PromotionPiece } from '../../../types/chess';
 import type { Side, GameMode, GameOverReason, GameWinner, GamePhase } from '../../../types/game';
 import type { GameLifecycle } from '../gameLifecycle';
 
-// ============================================================================
-// Session Configuration Types
-// ============================================================================
-
 export type OpponentType = 'ai' | 'human';
 
 export interface TimeControl {
@@ -25,10 +21,6 @@ export interface GameSessionConfig {
   /** Custom starting position FEN. If not provided, uses standard starting position. */
   startingFen?: string;
 }
-
-// ============================================================================
-// Session State Types
-// ============================================================================
 
 export interface PlayerTimes {
   white: number;
@@ -75,20 +67,12 @@ export interface GameSessionState {
   moveError: string | null;
 }
 
-// ============================================================================
-// Session Snapshot (for persistence/recovery)
-// ============================================================================
-
 export interface GameSessionSnapshot {
   config: GameSessionConfig;
   state: GameSessionState;
   createdAt: number;
   updatedAt: number;
 }
-
-// ============================================================================
-// Command Types (for state mutations)
-// ============================================================================
 
 export interface ApplyMoveCommand {
   type: 'APPLY_MOVE';
@@ -203,10 +187,6 @@ export type GameCommand =
   | RejectMoveCommand
   | TruncateToViewCommand;
 
-// ============================================================================
-// Command Result Types
-// ============================================================================
-
 export interface CommandSuccess {
   success: true;
   newState: GameSessionState;
@@ -219,10 +199,6 @@ export interface CommandError {
 }
 
 export type CommandResult = CommandSuccess | CommandError;
-
-// ============================================================================
-// Session Events (for external subscriptions)
-// ============================================================================
 
 export type SessionEventType =
   | 'session:created'

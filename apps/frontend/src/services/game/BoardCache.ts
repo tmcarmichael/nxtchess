@@ -2,10 +2,6 @@ import { Chess, type Square as ChessSquare, type PieceSymbol, type Color } from 
 import type { Square, BoardSquare } from '../../types/chess';
 import type { Side } from '../../types/game';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export interface CachedPiece {
   type: PieceSymbol;
   color: Color;
@@ -29,10 +25,6 @@ export interface BoardCacheState {
   checkedKingSquare: Square | null;
   material: MaterialCount;
 }
-
-// ============================================================================
-// Constants
-// ============================================================================
 
 const PIECE_VALUES: Record<PieceSymbol, number> = {
   p: 1,
@@ -58,10 +50,6 @@ for (let rank = 7; rank >= 0; rank--) {
     INDEX_TO_SQUARE[index] = square;
   }
 }
-
-// ============================================================================
-// BoardCache Class
-// ============================================================================
 
 /**
  * Efficient cached board representation.
@@ -354,10 +342,6 @@ export class BoardCache {
     };
   }
 }
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
 
 /**
  * Convert square string to array index.

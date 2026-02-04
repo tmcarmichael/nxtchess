@@ -1,3 +1,5 @@
+import { DEBUG } from '../../shared/utils/debug';
+
 // Audio service for chess move sounds
 // Uses Web Audio API with real-time sound generation
 
@@ -50,7 +52,7 @@ class AudioService {
     try {
       this.audioContext = new AudioContext();
     } catch (error) {
-      console.warn('Failed to initialize audio:', error);
+      if (DEBUG) console.warn('Failed to initialize audio:', error);
     }
   }
 
@@ -118,7 +120,7 @@ class AudioService {
       thump.stop(now + 0.08);
       attack.stop(now + 0.03);
     } catch (error) {
-      console.warn('Failed to play move sound:', error);
+      if (DEBUG) console.warn('Failed to play move sound:', error);
     }
   }
 
@@ -168,7 +170,7 @@ class AudioService {
       click.stop(now + 0.04);
       body.stop(now + 0.05);
     } catch (error) {
-      console.warn('Failed to play capture sound:', error);
+      if (DEBUG) console.warn('Failed to play capture sound:', error);
     }
   }
 
@@ -225,7 +227,7 @@ class AudioService {
       note2.stop(now + 0.3);
       shimmer.stop(now + 0.35);
     } catch (error) {
-      console.warn('Failed to play game start sound:', error);
+      if (DEBUG) console.warn('Failed to play game start sound:', error);
     }
   }
 
@@ -274,7 +276,7 @@ class AudioService {
       thud.stop(now + 0.1);
       click.stop(now + 0.06);
     } catch (error) {
-      console.warn('Failed to play check sound:', error);
+      if (DEBUG) console.warn('Failed to play check sound:', error);
     }
   }
 
@@ -323,7 +325,7 @@ class AudioService {
       knock.stop(now + 0.12);
       tap.stop(now + 0.06);
     } catch (error) {
-      console.warn('Failed to play illegal move sound:', error);
+      if (DEBUG) console.warn('Failed to play illegal move sound:', error);
     }
   }
 
@@ -380,7 +382,7 @@ class AudioService {
       note2.stop(now + 0.35);
       weight.stop(now + 0.4);
     } catch (error) {
-      console.warn('Failed to play low time sound:', error);
+      if (DEBUG) console.warn('Failed to play low time sound:', error);
     }
   }
 
@@ -438,7 +440,7 @@ class AudioService {
       attack.stop(now + 0.05);
       resonance.stop(now + 0.15);
     } catch (error) {
-      console.warn('Failed to play game end sound:', error);
+      if (DEBUG) console.warn('Failed to play game end sound:', error);
     }
   }
 

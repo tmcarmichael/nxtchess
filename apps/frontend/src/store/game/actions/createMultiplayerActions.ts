@@ -7,20 +7,12 @@ import type { TimerStore } from '../stores/createTimerStore';
 import type { UIStore } from '../stores/createUIStore';
 import type { MultiplayerActions, CoreActions } from '../types';
 
-// ============================================================================
-// Multiplayer Stores Interface
-// ============================================================================
-
 export interface MultiplayerStores {
   chess: ChessStore;
   timer: TimerStore;
   multiplayer: MultiplayerStore;
   ui: UIStore;
 }
-
-// ============================================================================
-// Factory
-// ============================================================================
 
 export const createMultiplayerActions = (
   stores: MultiplayerStores,

@@ -1,3 +1,4 @@
+import { DEBUG } from '../../../shared/utils/debug';
 import { GameSession } from './GameSession';
 import type {
   GameSessionConfig,
@@ -10,10 +11,6 @@ import type {
 } from './types';
 
 export { GameSession };
-
-// ============================================================================
-// SessionManager Class
-// ============================================================================
 
 export class SessionManager {
   private sessions: Map<string, GameSession> = new Map();
@@ -98,7 +95,9 @@ export class SessionManager {
     }
 
     if (!this.sessions.has(sessionId)) {
-      console.warn(`SessionManager: Cannot set active session - session ${sessionId} not found`);
+      if (DEBUG) {
+        console.warn(`SessionManager: Cannot set active session - session ${sessionId} not found`);
+      }
       return false;
     }
 
@@ -176,7 +175,7 @@ export class SessionManager {
       try {
         handler(event);
       } catch (err) {
-        console.error('SessionManager: Event handler error:', err);
+        if (DEBUG) console.error('SessionManager: Event handler error:', err);
       }
     }
   }
@@ -219,9 +218,5 @@ export class SessionManager {
     return this.getAllSessions().map((session) => session.createSnapshot());
   }
 }
-
-// ============================================================================
-// Singleton Export
-// ============================================================================
 
 export const sessionManager = new SessionManager();

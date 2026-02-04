@@ -6,15 +6,7 @@ import type { UIStore } from './stores/createUIStore';
 import type { Square, PromotionPiece } from '../../types/chess';
 import type { Side, StartGameOptions, MultiplayerGameOptions } from '../../types/game';
 
-// ============================================================================
-// Store Types (re-exported for convenience)
-// ============================================================================
-
 export type { ChessStore, TimerStore, UIStore, EngineStore, MultiplayerStore };
-
-// ============================================================================
-// Core Actions (available in all game modes)
-// ============================================================================
 
 export interface CoreActions {
   // Navigation & UI
@@ -29,10 +21,6 @@ export interface CoreActions {
   exitGame: () => void;
 }
 
-// ============================================================================
-// Single Player Actions (Play vs AI, Training)
-// ============================================================================
-
 export interface SinglePlayerActions extends CoreActions {
   startNewGame: (options: StartGameOptions) => Promise<void>;
   applyPlayerMove: (from: Square, to: Square, promotion?: PromotionPiece) => void;
@@ -42,10 +30,6 @@ export interface SinglePlayerActions extends CoreActions {
   takeBack: () => void;
 }
 
-// ============================================================================
-// Multiplayer Actions
-// ============================================================================
-
 export interface MultiplayerActions extends CoreActions {
   startMultiplayerGame: (options: MultiplayerGameOptions) => Promise<void>;
   joinMultiplayerGame: (gameId: string) => void;
@@ -54,32 +38,16 @@ export interface MultiplayerActions extends CoreActions {
   handleTimeOut: (winner: Side) => void;
 }
 
-// ============================================================================
-// Play Mode Actions (combines single player + multiplayer)
-// ============================================================================
-
 export type PlayActions = SinglePlayerActions & MultiplayerActions;
-
-// ============================================================================
-// Training Mode Actions
-// ============================================================================
 
 export interface TrainingActions extends SinglePlayerActions {
   restartGame: () => Promise<void>;
 }
 
-// ============================================================================
-// Core Derived State
-// ============================================================================
-
 export interface CoreDerived {
   isPlaying: () => boolean;
   material: () => { diff: number };
 }
-
-// ============================================================================
-// Engine Derived State
-// ============================================================================
 
 export interface EngineDerived {
   isEngineReady: () => boolean;
@@ -87,30 +55,14 @@ export interface EngineDerived {
   hasEngineError: () => boolean;
 }
 
-// ============================================================================
-// Multiplayer Derived State
-// ============================================================================
-
 export interface MultiplayerDerived {
   isMultiplayer: () => boolean;
   isWaitingForOpponent: () => boolean;
 }
 
-// ============================================================================
-// Play Mode Derived (all derived state)
-// ============================================================================
-
 export type PlayDerived = CoreDerived & EngineDerived & MultiplayerDerived;
 
-// ============================================================================
-// Training Mode Derived
-// ============================================================================
-
 export type TrainingDerived = CoreDerived & EngineDerived;
-
-// ============================================================================
-// Analyze Mode Actions
-// ============================================================================
 
 export interface AnalyzeActions extends CoreActions {
   loadFen: (fen: string) => boolean;
@@ -119,15 +71,7 @@ export interface AnalyzeActions extends CoreActions {
   applyMove: (from: Square, to: Square, promotion?: PromotionPiece) => boolean;
 }
 
-// ============================================================================
-// Analyze Mode Derived
-// ============================================================================
-
 export type AnalyzeDerived = CoreDerived & EngineDerived;
-
-// ============================================================================
-// Puzzle Mode Actions
-// ============================================================================
 
 export interface PuzzleActions extends CoreActions {
   startNewGame: (options: StartGameOptions) => Promise<void>;
@@ -137,15 +81,7 @@ export interface PuzzleActions extends CoreActions {
   dismissFeedback: () => void;
 }
 
-// ============================================================================
-// Puzzle Mode Derived
-// ============================================================================
-
 export type PuzzleDerived = CoreDerived & EngineDerived;
-
-// ============================================================================
-// Context Value Types
-// ============================================================================
 
 export interface CoreGameContextValue {
   chess: ChessStore;

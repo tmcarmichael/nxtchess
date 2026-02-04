@@ -2,26 +2,14 @@ import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../shared/config/constants';
 import type { TrainingScenario, PositionSource } from './types';
 import type { GamePhase } from '../../types/game';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 /** Non-null game phase for use as record keys */
 type ValidGamePhase = Exclude<GamePhase, null>;
-
-// ============================================================================
-// Training Move Thresholds
-// ============================================================================
 
 /** Number of half-moves for endgame training (25 full moves) */
 export const TRAINING_ENDGAME_MOVE_THRESHOLD = 50;
 
 /** Number of half-moves for middlegame training (20 full moves) */
 export const TRAINING_MIDDLEGAME_MOVE_THRESHOLD = 40;
-
-// ============================================================================
-// Predefined Training Scenarios
-// ============================================================================
 
 /**
  * Training scenarios indexed by game phase.
@@ -74,10 +62,6 @@ export const TRAINING_SCENARIOS: Record<ValidGamePhase, TrainingScenario> = {
     },
   },
 };
-
-// ============================================================================
-// Scenario Builder
-// ============================================================================
 
 export interface ScenarioOverrides {
   /** Override theme filter (added to backend params) */

@@ -1,7 +1,4 @@
-// ============================================================================
-// Game Lifecycle State Machine
-// ============================================================================
-
+import { DEBUG } from '../../shared/utils/debug';
 import type { GameLifecycle } from '../../types/game';
 
 // Re-export for backward compatibility
@@ -56,9 +53,11 @@ export const transition = (
 ): GameLifecycle => {
   const nextState = TRANSITIONS[currentState][event];
   if (nextState === undefined) {
-    console.warn(
-      `Invalid game lifecycle transition: ${currentState} + ${event}. Staying in ${currentState}.`
-    );
+    if (DEBUG) {
+      console.warn(
+        `Invalid game lifecycle transition: ${currentState} + ${event}. Staying in ${currentState}.`
+      );
+    }
     return currentState;
   }
   return nextState;
@@ -77,10 +76,6 @@ export const canTransition = (currentState: GameLifecycle, event: GameLifecycleE
 export const getValidEvents = (currentState: GameLifecycle): GameLifecycleEvent[] => {
   return Object.keys(TRANSITIONS[currentState]) as GameLifecycleEvent[];
 };
-
-// ============================================================================
-// State Predicates
-// ============================================================================
 
 /**
  * Check if the game is in a state where moves can be made.

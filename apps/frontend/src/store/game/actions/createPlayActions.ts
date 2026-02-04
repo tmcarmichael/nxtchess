@@ -1,6 +1,7 @@
 import { getOpponentSide } from '../../../services/game/chessGameService';
 import { transition, canMakeMove } from '../../../services/game/gameLifecycle';
 import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../../shared/config/constants';
+import { DEBUG } from '../../../shared/utils/debug';
 import type { Square, PromotionPiece } from '../../../types/chess';
 import type { Side, StartGameOptions, MultiplayerGameOptions } from '../../../types/game';
 import type { ChessStore } from '../stores/createChessStore';
@@ -9,10 +10,6 @@ import type { MultiplayerStore } from '../stores/createMultiplayerStore';
 import type { TimerStore } from '../stores/createTimerStore';
 import type { UIStore } from '../stores/createUIStore';
 import type { PlayActions, CoreActions } from '../types';
-
-// ============================================================================
-// AI Move Delay Configuration
-// ============================================================================
 
 // Returns random delay in ms based on time control (in minutes)
 // Shorter games = faster responses, longer games = more natural "thinking" time
@@ -41,10 +38,6 @@ const randomDelay = (min: number, max: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, delay));
 };
 
-// ============================================================================
-// Play Mode Stores Interface
-// ============================================================================
-
 export interface PlayStores {
   chess: ChessStore;
   timer: TimerStore;
@@ -52,10 +45,6 @@ export interface PlayStores {
   multiplayer: MultiplayerStore;
   ui: UIStore;
 }
-
-// ============================================================================
-// Factory
-// ============================================================================
 
 export const createPlayActions = (stores: PlayStores, coreActions: CoreActions): PlayActions => {
   const { chess, timer, engine, multiplayer, ui } = stores;
@@ -107,7 +96,7 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
         afterMoveChecks();
       }
     } catch (err) {
-      console.error('AI move failed:', err);
+      if (DEBUG) console.error('AI move failed:', err);
     }
   };
 
@@ -162,7 +151,7 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
 
     if (mode !== 'play') {
       engine.initEval().catch((err) => {
-        console.warn('Eval engine init failed (non-critical):', err);
+        if (DEBUG) console.warn('Eval engine init failed (non-critical):', err);
       });
     }
 
@@ -182,7 +171,7 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
         performAIMove();
       }
     } catch (err) {
-      console.error('Engine initialization failed:', err);
+      if (DEBUG) console.error('Engine initialization failed:', err);
       chess.setLifecycle(transition('initializing', 'ENGINE_ERROR'));
     }
   };

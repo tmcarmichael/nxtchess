@@ -1,4 +1,5 @@
 import { type ParentComponent, type JSX, onMount, onCleanup, Show, createUniqueId } from 'solid-js';
+import { createFocusTrap } from '../../../shared/utils/createFocusTrap';
 import styles from './ChessGameModal.module.css';
 
 interface ChessGameModalProps {
@@ -11,8 +12,11 @@ interface ChessGameModalProps {
 
 const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
   const modalTitleId = createUniqueId();
+  const focusTrap = createFocusTrap();
   // eslint-disable-next-line no-undef
   let closeButtonRef: HTMLButtonElement | undefined;
+
+  let modalRef: HTMLDivElement | undefined;
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
@@ -29,9 +33,13 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
 
   onMount(() => {
     document.addEventListener('keydown', handleKeyDown);
+    if (modalRef) {
+      focusTrap.activate(modalRef);
+    }
   });
 
   onCleanup(() => {
+    focusTrap.deactivate();
     document.removeEventListener('keydown', handleKeyDown);
   });
 
@@ -44,6 +52,7 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
       onClick={() => props.onClose()}
     >
       <div
+        ref={modalRef}
         classList={{
           [styles.modalContent]: true,
           [styles.modalContentSm]: props.size === 'sm',

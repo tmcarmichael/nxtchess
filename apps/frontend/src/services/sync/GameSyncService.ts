@@ -1,4 +1,5 @@
 import { BACKEND_URL } from '../../shared/config/env';
+import { DEBUG } from '../../shared/utils/debug';
 import { ReconnectingWebSocket, type ConnectionState } from '../network/ReconnectingWebSocket';
 import { MsgType as MT } from './types';
 import type {
@@ -22,20 +23,12 @@ import type {
 // Re-export ConnectionState for backward compatibility
 export type { ConnectionState } from '../network/ReconnectingWebSocket';
 
-// ============================================================================
-// Default Configuration
-// ============================================================================
-
 const DEFAULT_CONFIG: SyncServiceConfig = {
   serverUrl: '',
   reconnectAttempts: 5,
   reconnectDelayMs: 1000,
   pingIntervalMs: 30000,
 };
-
-// ============================================================================
-// Build WebSocket URL from backend URL
-// ============================================================================
 
 function buildWsUrl(backendUrl: string): string {
   if (!backendUrl) return '';
@@ -44,10 +37,6 @@ function buildWsUrl(backendUrl: string): string {
   url.pathname = '/ws';
   return url.toString();
 }
-
-// ============================================================================
-// GameSyncService Class
-// ============================================================================
 
 export class GameSyncService {
   private config: SyncServiceConfig;
@@ -102,7 +91,7 @@ export class GameSyncService {
     }
 
     if (!this.config.serverUrl) {
-      console.error('GameSyncService: No server URL configured');
+      if (DEBUG) console.error('GameSyncService: No server URL configured');
       return;
     }
 
@@ -334,7 +323,7 @@ export class GameSyncService {
       }
 
       default:
-        console.warn('GameSyncService: Unknown message type:', type);
+        if (DEBUG) console.warn('GameSyncService: Unknown message type:', type);
     }
   }
 
@@ -391,14 +380,10 @@ export class GameSyncService {
       try {
         handler(event);
       } catch (err) {
-        console.error('GameSyncService: Event handler error:', err);
+        if (DEBUG) console.error('GameSyncService: Event handler error:', err);
       }
     }
   }
 }
-
-// ============================================================================
-// Singleton Export
-// ============================================================================
 
 export const gameSyncService = new GameSyncService();

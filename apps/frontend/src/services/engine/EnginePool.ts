@@ -5,10 +5,6 @@ import {
   type EngineEventHandler,
 } from './ResilientEngine';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export type EnginePurpose = 'ai' | 'eval';
 
 export interface EngineAllocation {
@@ -38,10 +34,6 @@ export interface PoolStats {
   totalRecovered: number;
   totalFailed: number;
 }
-
-// ============================================================================
-// EnginePool Class
-// ============================================================================
 
 const DEFAULT_POOL_CONFIG: PoolConfig = {
   maxEngines: 4,
@@ -402,9 +394,5 @@ export class EnginePool {
     }
   }
 }
-
-// ============================================================================
-// Singleton Export
-// ============================================================================
 
 export const enginePool = new EnginePool();

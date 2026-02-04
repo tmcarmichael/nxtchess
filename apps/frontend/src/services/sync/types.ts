@@ -1,12 +1,4 @@
-// ============================================================================
-// Connection State (re-exported from network module)
-// ============================================================================
-
 export type { ConnectionState } from '../network/ReconnectingWebSocket';
-
-// ============================================================================
-// Player Info
-// ============================================================================
 
 export interface PlayerInfo {
   id: string;
@@ -14,19 +6,10 @@ export interface PlayerInfo {
   rating?: number;
 }
 
-// ============================================================================
-// Time Control
-// ============================================================================
-
 export interface TimeControl {
   initialTime: number; // seconds
   increment: number; // seconds per move
 }
-
-// ============================================================================
-// Outbound Messages (Client → Server)
-// Matches backend internal/ws/message.go
-// ============================================================================
 
 export interface ClientMessage {
   type: string;
@@ -51,11 +34,6 @@ export interface MoveData {
 export interface ResignData {
   gameId: string;
 }
-
-// ============================================================================
-// Inbound Messages (Server → Client)
-// Matches backend internal/ws/message.go
-// ============================================================================
 
 export interface GameCreatedData {
   gameId: string;
@@ -162,10 +140,6 @@ export const MsgType = {
   TIME_UPDATE: 'TIME_UPDATE',
 } as const;
 
-// ============================================================================
-// Sync Service Events
-// ============================================================================
-
 export type SyncEventType =
   | 'connection:state_changed'
   | 'game:created'
@@ -188,10 +162,6 @@ export interface SyncEvent {
 }
 
 export type SyncEventHandler = (event: SyncEvent) => void;
-
-// ============================================================================
-// Sync Service Configuration
-// ============================================================================
 
 export interface SyncServiceConfig {
   serverUrl: string;

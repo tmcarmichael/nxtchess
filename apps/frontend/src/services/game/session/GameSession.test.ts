@@ -2,10 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { GameSession } from './GameSession';
 import type { GameSessionConfig, GameSessionState, GameCommand } from './types';
 
-// ============================================================================
-// Test Fixtures
-// ============================================================================
-
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 const createTestConfig = (overrides?: Partial<GameSessionConfig>): GameSessionConfig => ({
@@ -38,10 +34,6 @@ const createTestState = (overrides?: Partial<GameSessionState>): GameSessionStat
   moveError: null,
   ...overrides,
 });
-
-// ============================================================================
-// Constructor Tests
-// ============================================================================
 
 describe('GameSession', () => {
   describe('constructor', () => {

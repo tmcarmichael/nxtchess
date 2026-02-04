@@ -1,16 +1,8 @@
 import type { ScoringMethod, TrainingMetadata, TrainingEndReason } from './types';
 import type { Side } from '../../types/game';
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 /** Centipawn value representing checkmate */
 const MATE_SCORE = 10000;
-
-// ============================================================================
-// Scoring Input
-// ============================================================================
 
 /**
  * Input data needed to calculate the training score
@@ -30,10 +22,6 @@ export interface ScoringInput {
   playerWon: boolean | null;
 }
 
-// ============================================================================
-// Score Result
-// ============================================================================
-
 /**
  * Result of score calculation with formatted display values
  */
@@ -47,10 +35,6 @@ export interface ScoreResult {
   /** Description of the scoring (e.g., "Improved position by 150 centipawns") */
   description: string;
 }
-
-// ============================================================================
-// Main Calculator
-// ============================================================================
 
 /**
  * Calculates the training score based on the scoring method.
@@ -91,10 +75,6 @@ export function calculateScore(input: ScoringInput): ScoreResult {
     }
   }
 }
-
-// ============================================================================
-// Scoring Implementations
-// ============================================================================
 
 /**
  * Score is simply the final position evaluation
@@ -221,10 +201,6 @@ function calculateEvalDifferentialScore(
       : `Lost ${Math.abs(diff)} centipawns`,
   };
 }
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
 
 /**
  * Normalizes evaluation to be from the specified player's perspective.

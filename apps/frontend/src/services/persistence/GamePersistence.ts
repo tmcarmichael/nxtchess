@@ -5,10 +5,6 @@ import type {
   GameSessionState,
 } from '../game/session/types';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export interface PersistedSession {
   sessionId: string;
   config: GameSessionConfig;
@@ -22,19 +18,11 @@ export interface PersistenceConfig {
   version: number;
 }
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 const DEFAULT_CONFIG: PersistenceConfig = {
   dbName: 'nxtchess',
   storeName: 'game_sessions',
   version: 1,
 };
-
-// ============================================================================
-// GamePersistence Class
-// ============================================================================
 
 export class GamePersistence {
   private config: PersistenceConfig;
@@ -347,9 +335,5 @@ export class GamePersistence {
     });
   }
 }
-
-// ============================================================================
-// Singleton Export
-// ============================================================================
 
 export const gamePersistence = new GamePersistence();

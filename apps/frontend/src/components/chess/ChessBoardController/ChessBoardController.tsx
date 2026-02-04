@@ -11,7 +11,6 @@ import {
   onCleanup,
 } from 'solid-js';
 import { audioService } from '../../../services/audio/AudioService';
-import { getEvaluation, isEvalEngineInitialized } from '../../../services/engine/evalEngineWorker';
 import {
   getLegalMoves,
   getPremoveLegalMoves,
@@ -21,7 +20,7 @@ import {
 } from '../../../services/game/chessGameService';
 import { useKeyboardNavigation } from '../../../shared/hooks/useKeyboardNavigation';
 import { useGameContext } from '../../../store/game/useGameContext';
-import { type Square, type PromotionPiece, type BoardArrow } from '../../../types/chess';
+import { type Square, type PromotionPiece } from '../../../types/chess';
 import { type Side } from '../../../types/game';
 import ChessBoard from '../../chess/ChessBoard/ChessBoard';
 import ChessClock from '../../chess/ChessClock/ChessClock';
@@ -30,6 +29,10 @@ import ChessEndModal from '../ChessEndModal/ChessEndModal';
 import ChessEngineOverlay from '../ChessEngineOverlay/ChessEngineOverlay';
 import ChessEvalBar from '../ChessEvalBar/ChessEvalBar';
 import styles from './ChessBoardController.module.css';
+import { useAudioFeedback } from './hooks/useAudioFeedback';
+import { useBoardAnnotations } from './hooks/useBoardAnnotations';
+import { useEvaluation } from './hooks/useEvaluation';
+import { useMoveAnimation } from './hooks/useMoveAnimation';
 
 interface ChessBoardControllerProps {
   onRequestNewGame?: () => void;
@@ -54,7 +57,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     to: Square;
     color: Side;
   } | null>(null);
-  const [evalScore, setEvalScore] = createSignal<number | null>(null);
   const [showEndModal, setShowEndModal] = createSignal(false);
   // Premove state
   const [premove, setPremove] = createSignal<{
@@ -67,39 +69,49 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     to: Square;
     color: Side;
   } | null>(null);
-  // Track animating piece for smooth move transitions
-  const [animatingMove, setAnimatingMove] = createSignal<{
-    from: Square;
-    to: Square;
-    piece: string;
-  } | null>(null);
   // Flash king square when illegal move attempted
   const [flashKingSquare, setFlashKingSquare] = createSignal<Square | null>(null);
-  const [rightClickHighlights, setRightClickHighlights] = createSignal<Set<Square>>(new Set());
-  const [rightClickArrows, setRightClickArrows] = createSignal<BoardArrow[]>([]);
-  const [rightClickDragStart, setRightClickDragStart] = createSignal<Square | null>(null);
-  const [rightClickHoverSquare, setRightClickHoverSquare] = createSignal<Square | null>(null);
   const [gameEventAnnouncement, setGameEventAnnouncement] = createSignal('');
   // Focus mode game result toast
   const [gameResultToast, setGameResultToast] = createSignal<string | null>(null);
   const [toastFadingOut, setToastFadingOut] = createSignal(false);
-  // Track if low-time warning has been played (resets each game)
-  let lowTimeWarningPlayed = false;
   // Toast dismiss timer ref
   let toastDismissTimer: ReturnType<typeof setTimeout> | null = null;
-  // Eval debounce timer ref - prevents rapid eval calls during fast piece movement
-  let evalDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-  const EVAL_DEBOUNCE_MS = 300;
 
-  const isValidArrowMove = (from: Square, to: Square): boolean => {
-    const dx = Math.abs(to.charCodeAt(0) - from.charCodeAt(0));
-    const dy = Math.abs(parseInt(to[1], 10) - parseInt(from[1], 10));
-    if (dx === 0 && dy === 0) return false;
-    if (dx === 0 || dy === 0) return true;
-    if (dx === dy) return true;
-    if ((dx === 2 && dy === 1) || (dx === 1 && dy === 2)) return true;
-    return false;
-  };
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Extracted Hooks
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const annotations = useBoardAnnotations(() => chess.state.moveHistory.length);
+
+  const { animatingMove } = useMoveAnimation({
+    moveHistoryLength: () => chess.state.moveHistory.length,
+    isViewingHistory: chess.derived.isViewingHistory,
+    timeControl: timer.timeControl,
+    lastMove: () => chess.state.lastMove,
+    currentBoard: chess.derived.currentBoard,
+  });
+
+  const { evalScore } = useEvaluation({
+    fen: () => chess.state.fen,
+    showEvalBar: derived.showEvalBar,
+    lifecycle: () => chess.state.lifecycle,
+    getEvalScore: derived.getEvalScore,
+  });
+
+  useAudioFeedback({
+    moveHistoryLength: () => chess.state.moveHistory.length,
+    moveHistory: () => chess.state.moveHistory,
+    checkedKingSquare: () => chess.state.checkedKingSquare,
+    lifecycle: () => chess.state.lifecycle,
+    mode: () => chess.state.mode,
+    playerColor: () => chess.state.playerColor,
+    whiteTime: () => timer.whiteTime,
+    blackTime: () => timer.blackTime,
+    setGameEventAnnouncement,
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const castlingHintSquares = createMemo((): Set<Square> => {
     const moves = highlightedMoves();
@@ -113,14 +125,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     if (!piece || piece[1] !== 'K') return new Set();
 
     return getCastlingHintSquares(moves);
-  });
-
-  const previewArrow = createMemo((): BoardArrow | null => {
-    const start = rightClickDragStart();
-    const hover = rightClickHoverSquare();
-    if (!start || !hover || start === hover) return null;
-    if (!isValidArrowMove(start, hover)) return null;
-    return { from: start, to: hover };
   });
 
   // Pointer event tracking state
@@ -150,43 +154,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       chess.state.mode === 'puzzle' ||
       chess.state.mode === 'analysis',
   });
-
-  // Only re-evaluate when FEN changes and eval bar is shown (not on every state update)
-  // Skip evaluation during idle/ended states to avoid timeouts during exit
-  // Debounce to prevent rapid eval calls during fast piece movement
-  // Note: When derived.getEvalScore is available (Analyze mode), we use that directly
-  // instead of running the evalEngineWorker
-  createEffect(
-    on(
-      () => [chess.state.fen, derived.showEvalBar(), chess.state.lifecycle] as const,
-      ([currentFen, showEval, lifecycle]) => {
-        // If context provides eval score (e.g., Analyze mode), skip this effect
-        // The eval bar will read from derived.getEvalScore() instead
-        if (derived.getEvalScore) {
-          return;
-        }
-
-        // Clear any pending eval
-        if (evalDebounceTimer) {
-          clearTimeout(evalDebounceTimer);
-          evalDebounceTimer = null;
-        }
-
-        if (showEval && isEvalEngineInitialized() && lifecycle === 'playing') {
-          evalDebounceTimer = setTimeout(() => {
-            getEvaluation(currentFen)
-              .then((score: number) => {
-                setEvalScore(score ?? null);
-              })
-              .catch(() => {
-                // Evaluation was cancelled by a newer request - ignore
-                // The next position change will trigger a new evaluation
-              });
-          }, EVAL_DEBOUNCE_MS);
-        }
-      }
-    )
-  );
 
   // Helper to generate game result message for toast
   const getGameResultMessage = (): string => {
@@ -300,124 +267,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
           const fen = getMoveCalculationFen();
           const newMoves = getLegalMoves(fen, dragState.square);
           setHighlightedMoves(newMoves);
-        }
-      }
-    )
-  );
-
-  // Play sound when a move is made (track by move history length)
-  createEffect(
-    on(
-      () => chess.state.moveHistory.length,
-      (length, prevLength) => {
-        // Play sound when a new move is added
-        if (length > 0 && prevLength !== undefined && length > prevLength) {
-          const lastMove = chess.state.moveHistory[length - 1];
-          const isCapture = lastMove?.includes('x') ?? false;
-          const isCheck = chess.state.checkedKingSquare !== null;
-
-          if (isCapture && isCheck) {
-            audioService.playMoveSound(true);
-            setTimeout(() => audioService.playCheck(), 80);
-          } else if (isCheck) {
-            audioService.playCheck();
-          } else {
-            audioService.playMoveSound(isCapture);
-          }
-
-          if (isCheck) {
-            setGameEventAnnouncement('Check');
-            setTimeout(() => setGameEventAnnouncement(''), 1000);
-          }
-        }
-      }
-    )
-  );
-
-  // Animate piece movement when a move is made
-  const ANIMATION_DURATION = 500;
-  createEffect(
-    on(
-      () => chess.state.moveHistory.length,
-      (length, prevLength) => {
-        // Only animate when a NEW move is added (not initial load or navigation)
-        if (prevLength === undefined || length <= prevLength) return;
-        // Don't animate during history navigation
-        if (chess.derived.isViewingHistory()) return;
-        // Skip animation in bullet mode (1 min) - every ms counts
-        if (timer.timeControl === 1) return;
-
-        const lastMove = chess.state.lastMove;
-        if (!lastMove) return;
-
-        // Get the piece at the destination (it's already moved there)
-        const board = chess.derived.currentBoard();
-        const piece = board.find((sq) => sq.square === lastMove.to)?.piece;
-        if (!piece) return;
-
-        setAnimatingMove({ from: lastMove.from, to: lastMove.to, piece });
-
-        // Clear animation after duration
-        setTimeout(() => setAnimatingMove(null), ANIMATION_DURATION);
-      }
-    )
-  );
-
-  // Play sound when game starts (not in analysis mode)
-  createEffect(
-    on(
-      () => chess.state.lifecycle,
-      (lifecycle, prevLifecycle) => {
-        if (chess.state.mode === 'analysis') return;
-        // Play game start sound when transitioning to 'playing' state
-        if (lifecycle === 'playing' && prevLifecycle !== 'playing') {
-          audioService.playGameStart();
-        }
-        // Play game end sound when game ends
-        if (lifecycle === 'ended' && prevLifecycle === 'playing') {
-          audioService.playGameEnd();
-        }
-      }
-    )
-  );
-
-  // Low time warning (10 seconds remaining)
-  const LOW_TIME_THRESHOLD = 10000; // 10 seconds in ms
-  createEffect(
-    on(
-      () => chess.state.lifecycle,
-      (lifecycle) => {
-        // Reset warning flag when new game starts
-        if (lifecycle === 'playing') {
-          lowTimeWarningPlayed = false;
-        }
-      }
-    )
-  );
-
-  createEffect(
-    on(
-      () => {
-        const playerColor = chess.state.playerColor;
-        const playerTime = playerColor === 'w' ? timer.whiteTime : timer.blackTime;
-        return playerTime;
-      },
-      (playerTime, prevTime) => {
-        // Only trigger if:
-        // - Timer values are available (timed game)
-        // - Game is playing
-        // - Warning hasn't been played yet
-        // - Time crossed below threshold (was above, now at or below)
-        if (
-          playerTime !== undefined &&
-          prevTime !== undefined &&
-          chess.state.lifecycle === 'playing' &&
-          !lowTimeWarningPlayed &&
-          prevTime > LOW_TIME_THRESHOLD &&
-          playerTime <= LOW_TIME_THRESHOLD
-        ) {
-          audioService.playLowTime();
-          lowTimeWarningPlayed = true;
         }
       }
     )
@@ -547,7 +396,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
 
     // Clear annotations on left-click (preventDefault on pointerdown suppresses
     // the compatibility mousedown that the document listener relies on)
-    clearAnnotations();
+    annotations.clearAnnotations();
 
     // Initialize audio on first interaction
     audioService.init();
@@ -729,46 +578,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     });
   });
 
-  // Clear annotations on any non-right-click anywhere on the page
-  // Also clean up right-click drag if released outside board
-  createEffect(() => {
-    const onMouseDown = (e: MouseEvent) => {
-      if (e.button !== 2) {
-        clearAnnotations();
-      }
-    };
-    const onMouseUp = (e: MouseEvent) => {
-      if (e.button === 2 && rightClickDragStart()) {
-        batch(() => {
-          setRightClickDragStart(null);
-          setRightClickHoverSquare(null);
-        });
-      }
-    };
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('mouseup', onMouseUp);
-    onCleanup(() => {
-      document.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('mouseup', onMouseUp);
-    });
-  });
-
-  // Clear annotations when a move is made (player or opponent)
-  createEffect(
-    on(
-      () => chess.state.moveHistory.length,
-      (length, prevLength) => {
-        if (prevLength !== undefined && length !== prevLength) {
-          clearAnnotations();
-        }
-      }
-    )
-  );
-
   onCleanup(() => {
     if (rafId !== null) cancelAnimationFrame(rafId);
     if (toastDismissTimer) clearTimeout(toastDismissTimer);
-    if (evalDebounceTimer) clearTimeout(evalDebounceTimer);
   });
 
   const handleDrop = (targetSquare: Square) => {
@@ -929,64 +741,6 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     });
   };
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Right-click Annotation Functions
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  const clearAnnotations = () => {
-    if (rightClickHighlights().size > 0 || rightClickArrows().length > 0) {
-      batch(() => {
-        setRightClickHighlights(new Set<Square>());
-        setRightClickArrows([]);
-      });
-    }
-  };
-
-  const toggleArrow = (arrow: BoardArrow) => {
-    setRightClickArrows((prev) => {
-      const idx = prev.findIndex((a) => a.from === arrow.from && a.to === arrow.to);
-      if (idx >= 0) {
-        return [...prev.slice(0, idx), ...prev.slice(idx + 1)];
-      }
-      return [...prev, arrow];
-    });
-  };
-
-  const handleSquareRightMouseDown = (square: Square) => {
-    setRightClickDragStart(square);
-    setRightClickHoverSquare(square);
-  };
-
-  const handleSquareRightMouseUp = (square: Square) => {
-    const start = rightClickDragStart();
-    batch(() => {
-      setRightClickDragStart(null);
-      setRightClickHoverSquare(null);
-    });
-
-    if (!start) return;
-
-    if (start === square) {
-      setRightClickHighlights((prev) => {
-        const next = new Set(prev);
-        if (next.has(square)) {
-          next.delete(square);
-        } else {
-          next.add(square);
-        }
-        return next;
-      });
-    } else if (isValidArrowMove(start, square)) {
-      toggleArrow({ from: start, to: square });
-    }
-  };
-
-  const handleSquareMouseEnter = (square: Square) => {
-    if (rightClickDragStart()) {
-      setRightClickHoverSquare(square);
-    }
-  };
-
   const handlePlayAgain = () => {
     setShowEndModal(false);
     // Use restart callback if available (training mode), otherwise open new game modal
@@ -1053,14 +807,14 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                 animatingMove={animatingMove}
                 flashKingSquare={flashKingSquare}
                 playerColor={() => chess.state.playerColor}
-                rightClickHighlights={rightClickHighlights}
-                rightClickArrows={rightClickArrows}
-                previewArrow={previewArrow}
+                rightClickHighlights={annotations.rightClickHighlights}
+                rightClickArrows={annotations.rightClickArrows}
+                previewArrow={annotations.previewArrow}
                 castlingHintSquares={castlingHintSquares}
                 dragHoverSquare={dragHoverSquare}
-                onSquareRightMouseDown={handleSquareRightMouseDown}
-                onSquareRightMouseUp={handleSquareRightMouseUp}
-                onSquareMouseEnter={handleSquareMouseEnter}
+                onSquareRightMouseDown={annotations.handleSquareRightMouseDown}
+                onSquareRightMouseUp={annotations.handleSquareRightMouseUp}
+                onSquareMouseEnter={annotations.handleSquareMouseEnter}
               />
               <ChessEngineOverlay
                 isLoading={derived.isEngineLoading()}

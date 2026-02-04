@@ -1,15 +1,7 @@
 import { BACKEND_URL } from '../../shared/config/env';
 import type { PositionSource, ResolvedPosition } from './types';
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-
-// ============================================================================
-// Position Resolution
-// ============================================================================
 
 /**
  * Resolves a position source to an actual FEN string and metadata.
@@ -37,10 +29,6 @@ export async function resolvePositionSource(source: PositionSource): Promise<Res
     }
   }
 }
-
-// ============================================================================
-// Position Resolvers
-// ============================================================================
 
 /**
  * Returns the standard chess starting position
@@ -96,10 +84,6 @@ async function resolveBackendPosition(
 
   return parseBackendResponse(data);
 }
-
-// ============================================================================
-// Helpers
-// ============================================================================
 
 /**
  * Builds the full backend URL with query parameters

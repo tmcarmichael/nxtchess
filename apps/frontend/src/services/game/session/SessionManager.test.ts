@@ -3,10 +3,6 @@ import { GameSession } from './GameSession';
 import { SessionManager } from './SessionManager';
 import type { GameSessionConfig, SessionEvent, GameSessionSnapshot } from './types';
 
-// ============================================================================
-// Test Fixtures
-// ============================================================================
-
 const createTestConfig = (id: string = 'test-session-1'): GameSessionConfig => ({
   sessionId: id,
   mode: 'play',
@@ -40,10 +36,6 @@ const createTestSnapshot = (id: string = 'test-session-1'): GameSessionSnapshot 
   createdAt: Date.now() - 60000,
   updatedAt: Date.now(),
 });
-
-// ============================================================================
-// Tests
-// ============================================================================
 
 describe('SessionManager', () => {
   let manager: SessionManager;
@@ -221,8 +213,6 @@ describe('SessionManager', () => {
 
       expect(result).toBe(false);
       expect(warnSpy).toHaveBeenCalled();
-
-      warnSpy.mockRestore();
     });
 
     it('can clear active session with null', () => {
@@ -470,8 +460,6 @@ describe('SessionManager', () => {
 
       expect(errorSpy).toHaveBeenCalled();
       expect(normalHandler).toHaveBeenCalled();
-
-      errorSpy.mockRestore();
     });
 
     it('provides event with timestamp', () => {

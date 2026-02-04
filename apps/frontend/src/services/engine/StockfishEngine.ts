@@ -1,6 +1,4 @@
-// ============================================================================
-// Types
-// ============================================================================
+import { DEBUG } from '../../shared/utils/debug';
 
 export type EngineErrorCode =
   | 'INIT_TIMEOUT'
@@ -27,19 +25,11 @@ export interface EngineConfig {
   name?: string;
 }
 
-// ============================================================================
-// StockfishEngine Class
-// ============================================================================
-
 const DEFAULT_CONFIG: Required<EngineConfig> = {
   initTimeoutMs: 15000,
   operationTimeoutMs: 15000,
   name: 'StockfishEngine',
 };
-
-// ============================================================================
-// Browser & Device Detection
-// ============================================================================
 
 /**
  * Available Stockfish engine variants, ordered by capability.
@@ -203,7 +193,7 @@ export class StockfishEngine {
       this.worker = new Worker(enginePath);
 
       this.worker.onerror = (e) => {
-        console.error(`${this.config.name} worker error:`, e);
+        if (DEBUG) console.error(`${this.config.name} worker error:`, e);
         this._isInitialized = false;
       };
 

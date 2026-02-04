@@ -1,6 +1,7 @@
 import { getOpponentSide } from '../../../services/game/chessGameService';
 import { transition, canMakeMove } from '../../../services/game/gameLifecycle';
 import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../../shared/config/constants';
+import { DEBUG } from '../../../shared/utils/debug';
 import type { Square, PromotionPiece } from '../../../types/chess';
 import type { Side, StartGameOptions } from '../../../types/game';
 import type { ChessStore } from '../stores/createChessStore';
@@ -8,10 +9,6 @@ import type { EngineStore } from '../stores/createEngineStore';
 import type { TimerStore } from '../stores/createTimerStore';
 import type { UIStore } from '../stores/createUIStore';
 import type { SinglePlayerActions, CoreActions } from '../types';
-
-// ============================================================================
-// AI Move Delay Configuration
-// ============================================================================
 
 // Returns random delay in ms based on time control (in minutes)
 // Shorter games = faster responses, longer games = more natural "thinking" time
@@ -40,20 +37,12 @@ const randomDelay = (min: number, max: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, delay));
 };
 
-// ============================================================================
-// Single Player Stores Interface
-// ============================================================================
-
 export interface SinglePlayerStores {
   chess: ChessStore;
   timer: TimerStore;
   engine: EngineStore;
   ui: UIStore;
 }
-
-// ============================================================================
-// Factory
-// ============================================================================
 
 export const createSinglePlayerActions = (
   stores: SinglePlayerStores,
@@ -109,7 +98,7 @@ export const createSinglePlayerActions = (
         afterMoveChecks();
       }
     } catch (err) {
-      console.error('AI move failed:', err);
+      if (DEBUG) console.error('AI move failed:', err);
     }
   };
 
@@ -169,7 +158,7 @@ export const createSinglePlayerActions = (
     // Initialize eval engine for training mode (non-blocking)
     if (mode !== 'play') {
       engine.initEval().catch((err) => {
-        console.warn('Eval engine init failed (non-critical):', err);
+        if (DEBUG) console.warn('Eval engine init failed (non-critical):', err);
       });
     }
 
@@ -193,7 +182,7 @@ export const createSinglePlayerActions = (
         performAIMove();
       }
     } catch (err) {
-      console.error('Engine initialization failed:', err);
+      if (DEBUG) console.error('Engine initialization failed:', err);
       chess.setLifecycle(transition('initializing', 'ENGINE_ERROR'));
     }
   };

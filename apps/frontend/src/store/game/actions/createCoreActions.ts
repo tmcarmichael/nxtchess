@@ -2,18 +2,10 @@ import type { ChessStore } from '../stores/createChessStore';
 import type { UIStore } from '../stores/createUIStore';
 import type { CoreActions } from '../types';
 
-// ============================================================================
-// Core Stores Interface
-// ============================================================================
-
 export interface CoreStores {
   chess: ChessStore;
   ui: UIStore;
 }
-
-// ============================================================================
-// Factory
-// ============================================================================
 
 export const createCoreActions = (stores: CoreStores): CoreActions => {
   const { chess, ui } = stores;

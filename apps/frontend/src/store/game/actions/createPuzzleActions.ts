@@ -8,6 +8,7 @@ import {
   computeSetupMove,
   type PuzzleDefinition,
 } from '../../../services/puzzle';
+import { DEBUG } from '../../../shared/utils/debug';
 import type { Square, PromotionPiece } from '../../../types/chess';
 import type { Side, StartGameOptions, PuzzleCategory } from '../../../types/game';
 import type { ChessStore } from '../stores/createChessStore';
@@ -161,7 +162,7 @@ export const createPuzzleActions = (
         }
       }
     } catch (err) {
-      console.error('Puzzle initialization failed:', err);
+      if (DEBUG) console.error('Puzzle initialization failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to start puzzle';
       chess.setInitError(errorMessage);
       chess.setLifecycle(transition('initializing', 'ENGINE_ERROR'));

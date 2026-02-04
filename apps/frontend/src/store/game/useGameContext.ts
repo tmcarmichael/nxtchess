@@ -4,10 +4,6 @@ import type { MultiplayerStore } from './stores/createMultiplayerStore';
 import type { UIStore } from './stores/createUIStore';
 import type { Square, PromotionPiece } from '../../types/chess';
 
-// ============================================================================
-// Unified Game Context Interface
-// ============================================================================
-
 /**
  * This interface provides a unified view for components that need to work
  * across both Play and Training modes. Components like ChessBoardController
@@ -62,15 +58,7 @@ export interface UnifiedGameContext {
   };
 }
 
-// ============================================================================
-// Context for Unified Access
-// ============================================================================
-
 export const UnifiedGameContextInstance = createContext<UnifiedGameContext>();
-
-// ============================================================================
-// Hook
-// ============================================================================
 
 export const useGameContext = (): UnifiedGameContext => {
   const ctx = useContext(UnifiedGameContextInstance);

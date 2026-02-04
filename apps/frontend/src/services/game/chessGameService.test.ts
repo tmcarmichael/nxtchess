@@ -13,19 +13,11 @@ import {
   getRandomQuickPlayConfig,
 } from './chessGameService';
 
-// ============================================================================
-// Test Fixtures
-// ============================================================================
-
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 const AFTER_E4_FEN = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
 const PROMOTION_FEN = '8/P7/8/8/8/8/8/4K2k w - - 0 1'; // White pawn on a7 ready to promote
 const BLACK_PROMOTION_FEN = '4K2k/8/8/8/8/8/p7/8 b - - 0 1'; // Black pawn on a2 ready to promote
 const CAPTURE_FEN = 'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2'; // e4 can capture d5
-
-// ============================================================================
-// getOpponentSide
-// ============================================================================
 
 describe('getOpponentSide', () => {
   it('returns black when given white', () => {
@@ -36,10 +28,6 @@ describe('getOpponentSide', () => {
     expect(getOpponentSide('b')).toBe('w');
   });
 });
-
-// ============================================================================
-// fenToBoard
-// ============================================================================
 
 describe('fenToBoard', () => {
   it('parses initial position correctly', () => {
@@ -102,10 +90,6 @@ describe('fenToBoard', () => {
   });
 });
 
-// ============================================================================
-// getLegalMoves
-// ============================================================================
-
 describe('getLegalMoves', () => {
   it('returns correct moves for e2 pawn at start', () => {
     const moves = getLegalMoves(INITIAL_FEN, 'e2');
@@ -151,10 +135,6 @@ describe('getLegalMoves', () => {
   });
 });
 
-// ============================================================================
-// canMovePieceAt
-// ============================================================================
-
 describe('canMovePieceAt', () => {
   it('returns true when player can move their piece', () => {
     const board = fenToBoard(INITIAL_FEN);
@@ -186,10 +166,6 @@ describe('canMovePieceAt', () => {
     expect(canMovePieceAt(AFTER_E4_FEN, 'e7', 'b', board)).toBe(true);
   });
 });
-
-// ============================================================================
-// isPawnPromotion
-// ============================================================================
 
 describe('isPawnPromotion', () => {
   it('returns true for white pawn moving to 8th rank', () => {
@@ -223,10 +199,6 @@ describe('isPawnPromotion', () => {
   });
 });
 
-// ============================================================================
-// getCapture
-// ============================================================================
-
 describe('getCapture', () => {
   it('returns piece when square is occupied', () => {
     const board = fenToBoard(INITIAL_FEN);
@@ -243,10 +215,6 @@ describe('getCapture', () => {
     expect(getCapture(board, 'd5')).toBeNull();
   });
 });
-
-// ============================================================================
-// processCapturedPiece
-// ============================================================================
 
 describe('processCapturedPiece', () => {
   const emptyCaptures = { white: [], black: [] };
@@ -281,10 +249,6 @@ describe('processCapturedPiece', () => {
     expect(original.black).toEqual([]);
   });
 });
-
-// ============================================================================
-// executeMove
-// ============================================================================
 
 describe('executeMove', () => {
   it('executes valid move and returns success', () => {
@@ -374,10 +338,6 @@ describe('executeMove', () => {
   });
 });
 
-// ============================================================================
-// prepareMove
-// ============================================================================
-
 describe('prepareMove', () => {
   it('detects white pawn promotion', () => {
     const board = fenToBoard(PROMOTION_FEN);
@@ -429,10 +389,6 @@ describe('prepareMove', () => {
     expect(result.needsPromotion).toBe(false);
   });
 });
-
-// ============================================================================
-// getRandomQuickPlayConfig
-// ============================================================================
 
 describe('getRandomQuickPlayConfig', () => {
   it('returns array of [time, difficulty, side]', () => {
