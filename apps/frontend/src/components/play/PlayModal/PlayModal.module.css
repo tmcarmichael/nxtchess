@@ -53,19 +53,31 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: linear-gradient(135deg, var(--accent-muted), var(--accent-subtle));
+  background: linear-gradient(135deg, var(--accent-muted), var(--accent));
   border: 1px solid var(--accent);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   cursor: pointer;
+  box-shadow: 0 0 20px var(--accent-glow);
+  animation: pulseGlow 3s ease-in-out infinite;
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast);
 }
 
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 255, 209, 0.35);
+  }
+}
+
 .startButton:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 255, 209, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 255, 209, 0.3);
 }
 
 .startButtonDisabled {
@@ -73,6 +85,8 @@
   cursor: not-allowed;
   background: var(--surface-3);
   border-color: var(--border-subtle);
+  box-shadow: none;
+  animation: none;
 }
 
 .offlineHint {
@@ -111,6 +125,7 @@
   background: var(--accent-subtle);
   border-color: var(--accent-muted);
   color: var(--text-primary);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
 .modeSelector {
@@ -143,6 +158,7 @@
   background: var(--accent-subtle);
   border-color: var(--accent-muted);
   color: var(--text-primary);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
 .settingOptionGrid {
@@ -176,6 +192,7 @@
   background: var(--accent-subtle);
   border-color: var(--accent-muted);
   color: var(--text-primary);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
 .gameIdInput {

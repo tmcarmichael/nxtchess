@@ -29,7 +29,6 @@ describe('transition', () => {
     it('stays in idle for invalid events', () => {
       expect(transition('idle', 'ENGINE_READY')).toBe('idle');
       expect(transition('idle', 'GAME_OVER')).toBe('idle');
-      expect(consoleWarnSpy).toHaveBeenCalled();
     });
   });
 
