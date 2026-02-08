@@ -16,6 +16,7 @@ const RequestIDHeader = "X-Request-ID"
 // WriteJSONError writes a JSON error response
 func WriteJSONError(w http.ResponseWriter, status int, msg string) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(map[string]string{
 		"error": msg,
@@ -43,6 +44,7 @@ func WriteJSONErrorWithRequest(w http.ResponseWriter, r *http.Request, status in
 // WriteJSON writes a JSON response
 func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		logger.Error("Failed to encode JSON response", logger.F("error", err.Error()))

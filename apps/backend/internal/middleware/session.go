@@ -24,6 +24,7 @@ func Session(next http.Handler) http.Handler {
 
 		userID, found := sessionLookup(cookie.Value)
 		if !found {
+			clearStaleCookie(w)
 			httpx.WriteJSONError(w, http.StatusUnauthorized, "Invalid or expired session token")
 			return
 		}
@@ -42,9 +43,21 @@ func OptionalSession(next http.Handler) http.Handler {
 			if userID, found := sessionLookup(cookie.Value); found {
 				ctx := context.WithValue(r.Context(), userIDKey, userID)
 				r = r.WithContext(ctx)
+			} else {
+				clearStaleCookie(w)
 			}
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+func clearStaleCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
 	})
 }
 
