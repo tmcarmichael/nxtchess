@@ -30,5 +30,5 @@ func AuthRedirectWithError(
 	encodedMsg := url.QueryEscape(errMsg)
 	redirectURL := fmt.Sprintf("%s/?error=%s", cfg.FrontendURL, encodedMsg)
 	logger.Warn("Auth redirect with error", logger.F("error", errMsg, "statusCode", statusCode))
-	http.Redirect(w, r, redirectURL, statusCode)
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }

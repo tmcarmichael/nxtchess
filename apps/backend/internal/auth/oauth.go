@@ -62,6 +62,8 @@ func LoginHandler(providerName string, cfg *config.Config) http.HandlerFunc {
 
 		http.SetCookie(w, httpx.NewSecureCookie(cfg, provider.StateCookie, state, 600))
 
+		w.Header().Set("Cache-Control", "no-store")
+
 		authURL := provider.OAuthConfig.AuthCodeURL(state, provider.AuthCodeOpts...)
 		logger.Info("Redirecting to OAuth", logger.F("provider", providerName, "url", authURL))
 
@@ -72,6 +74,8 @@ func LoginHandler(providerName string, cfg *config.Config) http.HandlerFunc {
 // CallbackHandler creates a callback handler for any OAuth provider
 func CallbackHandler(providerName string, cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+
 		provider := GetProvider(providerName)
 		if provider == nil || provider.OAuthConfig == nil {
 			logger.Error("OAuth provider not configured", logger.F("provider", providerName))

@@ -10,13 +10,12 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 RUN corepack enable && yarn install --frozen-lockfile
 
-# Copy source and build
-COPY . .
-
 # Build args for environment variables at build time
 ARG VITE_BACKEND_URL
 ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
 
+# Copy source and build
+COPY . .
 RUN yarn build
 
 # Runtime stage
