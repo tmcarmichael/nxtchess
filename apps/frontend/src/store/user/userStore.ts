@@ -4,6 +4,7 @@ import { DEBUG } from '../../shared/utils/debug';
 
 interface UserState {
   isLoggedIn: boolean;
+  isCheckingAuth: boolean;
   username: string;
   rating: number | null;
   puzzleRating: number | null;
@@ -29,6 +30,7 @@ interface UserActions {
 export const createUserStore = () => {
   const [state, setState] = createStore<UserState>({
     isLoggedIn: false,
+    isCheckingAuth: true,
     username: '',
     rating: null,
     puzzleRating: null,
@@ -41,7 +43,6 @@ export const createUserStore = () => {
         credentials: 'include',
       });
       if (!res.ok) {
-        // Unexpected error
         setState('isLoggedIn', false);
         setState('username', '');
         setState('rating', null);
@@ -51,18 +52,15 @@ export const createUserStore = () => {
       }
       const data = await res.json();
       if (!data.authenticated) {
-        // Not logged in
         setState('isLoggedIn', false);
         setState('username', '');
         setState('rating', null);
         setState('puzzleRating', null);
         setState('profileIcon', 'white-pawn');
       } else if (!data.username_set) {
-        // Logged in but no username
         setState('isLoggedIn', true);
         navigateFn('/username-setup');
       } else {
-        // Fully logged in
         setState('isLoggedIn', true);
         setState('username', data.username);
         if (data.rating !== undefined) {
@@ -77,6 +75,8 @@ export const createUserStore = () => {
       }
     } catch (err) {
       if (DEBUG) console.error('Error checking username:', err);
+    } finally {
+      setState('isCheckingAuth', false);
     }
   };
 

@@ -142,9 +142,11 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
           <Show
             when={userState.isLoggedIn}
             fallback={
-              <button class={styles.signInButton} onClick={props.onShowSignInModal}>
-                Sign In
-              </button>
+              <Show when={!userState.isCheckingAuth}>
+                <button class={styles.signInButton} onClick={props.onShowSignInModal}>
+                  Sign In
+                </button>
+              </Show>
             }
           >
             <Show when={userState.username}>
