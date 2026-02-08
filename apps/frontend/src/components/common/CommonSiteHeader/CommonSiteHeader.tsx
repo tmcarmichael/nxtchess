@@ -100,23 +100,23 @@ const CommonSiteHeader: ParentComponent = () => {
             }
           >
             <Show when={userState.username}>
-              <div
-                class={styles.userSectionTooltip}
-                data-tooltip={`Game: ${userState.rating ?? '—'} | Puzzle: ${userState.puzzleRating ?? '—'}`}
+              <button
+                class={styles.userSection}
+                onClick={() => navigate(`/profile/${userState.username}`)}
               >
-                <button
-                  class={styles.userSection}
-                  onClick={() => navigate(`/profile/${userState.username}`)}
+                <div
+                  class={styles.profileIconTooltip}
+                  data-tooltip={`Game: ${userState.rating ?? '—'} | Puzzle: ${userState.puzzleRating ?? '—'}`}
                 >
                   <img
                     src={getRatingIcon(userState.rating, userState.puzzleRating)}
                     alt="Profile icon"
                     class={styles.headerProfileIcon}
                   />
-                  <span class={styles.usernameText}>{userState.username}</span>
-                </button>
-              </div>
-              <button class={styles.signOutText} onClick={handleSignOut}>
+                </div>
+                <span class={styles.usernameText}>{userState.username}</span>
+              </button>
+              <button class={styles.signOutButton} onClick={handleSignOut}>
                 Sign Out
               </button>
             </Show>
