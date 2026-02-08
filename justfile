@@ -30,7 +30,9 @@ default:
     @just --list
 
 # Build + run frontend, backend, db, redis (QUICK START)
-dev: init build up
+dev: init
+    @echo "Starting containers (profile={{PROFILES}}) with {{compose_file}}..."
+    docker compose -f {{compose_file}} --profile {{PROFILES}} up --build
 
 # Build or rebuild Docker images
 build: init
