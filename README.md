@@ -97,6 +97,13 @@ SolidJS PWA with Stockfish WASM for client-side analysis and AI play. Go backend
 - Mobile app
 - CI/CD
 
+## Deployment
+
+Production deploys are triggered from the `deploy` branch. Maintainers can merge to and push to `deploy`.
+
+- `main`: development + CI (tests/lint/build)
+- `deploy`: production branch watched by Railway (protected)
+
 ## Third-Party Licenses
 
 NxtChess's original source code is licensed under [Apache 2.0](LICENSE).
