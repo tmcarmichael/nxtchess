@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-beta-green)](#)
 
-Real-time multiplayer chess with training, analysis, and tactics puzzles. Play via shareable links or sign in to track progress.
+Real-time multiplayer chess with tactics, analysis, and training. Built for fast, low-latency play in SolidJS + Go. Play instantly via shareable links or sign in to track progress.
 
 [**Live Demo**](https://nxtchess.up.railway.app/) · [Report Bug](https://github.com/tmcarmichael/nxtchess/issues) · [Request Feature](https://github.com/tmcarmichael/nxtchess/issues)
 
@@ -11,15 +11,12 @@ Real-time multiplayer chess with training, analysis, and tactics puzzles. Play v
 
 ## Features
 
-- **Multiplayer** — WebSocket-based real-time games with shareable links and server-managed clocks
-- **Training** — Endgame practice with Stockfish evaluation, hints, and scoring
-- **Analysis** — Multi-line engine evaluation with FEN/PGN import
-- **Puzzles** — Mate-in-1/2/3 tactics with feedback
-- **Board Annotations** — Right-click drag arrows with valid move filtering
-- **Themes** — Dark/light mode with sound controls
-- **PWA** — Installable, works offline with IndexedDB game persistence
-- **Server Validation** — All moves validated server-side to prevent cheating
-- **Observability** — Prometheus metrics, Loki logs, Grafana dashboards
+- **Multiplayer** - Real-time WebSocket games, shareable links, lobby, server-managed clocks
+- **Puzzles** — Mate-in-1/2/3 tactics with Elo-based difficulty and history
+- **Analysis** — Multi-line Stockfish analysis, plus FEN/PGN import
+- **Training** — Endgame drills with evaluation, hints, and scoring
+- **Profiles** — Ratings, charts, stats, and recent games
+- **Achievements** — Badge system with streaks and notifications
 
 ## Quick Start
 
@@ -67,18 +64,17 @@ SolidJS frontend with Stockfish WASM for client-side analysis and AI play. Go ba
 - Syzygy tablebases integration (perfect endgame play)
 - Opening explorer with master game statistics
 - Post-game analysis with move classification
-- Tactics puzzles with spaced repetition (basic puzzle mode done — mate-in-1/2/3)
+- Themed puzzles (forks, pins, back rank mates) with spaced repetition
 - Middlegame training mode
 
 **Multiplayer & Competitive**
 
-- Multiplayer lobby
-- Tournaments
-- Rated play
+- Tournaments (Swiss and arena formats)
+- ELO range filtering for lobby
 
 **Platform**
 
-- Profile features (game history, statistics)
+- Opening repertoire tracking
 - Mobile app
 - CI/CD
 

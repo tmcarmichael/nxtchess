@@ -43,9 +43,9 @@ go build -o server cmd/server/main.go  # Build binary
 | WebSocket | None | `GET /ws` |
 | OAuth | AuthRateLimiter (10/min) | `GET /auth/{google,github,discord}/{login,callback}` |
 | Logout | AuthRateLimiter, SmallBodyLimit | `POST /auth/logout` |
-| Public API | APIRateLimiter (60/min), SmallBodyLimit | `GET /profile/{username}`, `GET /api/training/endgame/{random,themes,stats}` |
+| Public API | APIRateLimiter (60/min), SmallBodyLimit | `GET /api/profile/{username}`, `GET /api/profile/{username}/rating-history`, `GET /api/profile/{username}/recent-games`, `GET /api/profile/{username}/achievements`, `GET /api/achievements`, `GET /api/training/endgame/{random,themes,stats}` |
 | Optional Session | APIRateLimiter, SmallBodyLimit, OptionalSession | `GET /check-username` |
-| Protected | APIRateLimiter (60/min), SmallBodyLimit, Session | `POST /set-username`, `POST /set-profile-icon` |
+| Protected | APIRateLimiter (60/min), SmallBodyLimit, Session | `POST /set-username`, `POST /set-profile-icon`, `POST /api/puzzle/result` |
 
 ### Package Structure
 
@@ -53,6 +53,10 @@ go build -o server cmd/server/main.go  # Build binary
 cmd/server/main.go               # Entry point, route registration, graceful shutdown
 
 internal/
+├── achievements/                # Achievement system
+│   ├── definitions.go           # 51 achievements across 6 categories with 5 rarity levels
+│   ├── checker.go               # Achievement eligibility checking
+│   └── analysis.go              # Game analysis for chess moment achievements
 ├── auth/                        # OAuth 2.0 system
 │   ├── oauth.go                 # Generic login/callback handlers
 │   └── providers.go             # Google, GitHub, Discord configs
@@ -63,13 +67,20 @@ internal/
 │   └── config.go                # Load(), IsProd()
 ├── controllers/                 # HTTP handlers
 │   ├── auth.go                  # Logout handler
-│   ├── profile.go               # Profile endpoints
-│   └── training.go              # Training API (endgame positions)
+│   ├── profile.go               # Profile endpoints (profile, rating history, recent games, achievements)
+│   ├── training.go              # Training API (endgame positions)
+│   └── puzzle.go                # Puzzle result submission with ELO rating
 ├── database/                    # PostgreSQL operations
 │   ├── db.go                    # Connection pool setup
 │   ├── profile.go               # User queries
 │   ├── game.go                  # Game queries (debug)
-│   └── endgame.go               # Training position queries
+│   ├── endgame.go               # Training position queries
+│   ├── puzzle.go                # Puzzle rating operations (rate limiting, finalize results)
+│   ├── rating.go                # ELO calculation and game finalization (transactional)
+│   └── achievements.go          # Achievement grant/unlock tracking, streak management
+├── elo/                         # ELO rating calculation
+│   ├── elo.go                   # Calculate() for multiplayer, CalculatePuzzle() for puzzles
+│   └── elo_test.go              # Rating calculation tests
 ├── httpx/                       # HTTP utilities
 │   └── httpx.go                 # JSON responses, cookies, IP extraction
 ├── logger/                      # Structured logging
@@ -111,6 +122,7 @@ test_ws.html                     # Browser-based WS testing tool
 
 ```
 internal/chess/chess_test.go              # Move validation, check/checkmate/stalemate detection
+internal/elo/elo_test.go                  # ELO rating calculation (multiplayer + puzzle)
 internal/httpx/httpx_test.go              # JSON response helpers, cookie creation, IP extraction
 internal/middleware/bodylimit_test.go      # Request size enforcement
 internal/middleware/cors_test.go           # CORS header validation
@@ -180,14 +192,35 @@ type Profile struct {
     UserID      string    `json:"user_id"`
     Username    string    `json:"username"`
     Rating      int       `json:"rating"`
+    PuzzleRating int      `json:"puzzle_rating"`
     ProfileIcon string    `json:"profile_icon"`
     CreatedAt   time.Time `json:"created_at"`
 }
 
 type PublicProfile struct {
-    Username    string `json:"username"`
-    Rating      int    `json:"rating"`
-    ProfileIcon string `json:"profile_icon"`
+    Username          string    `json:"username"`
+    Rating            int       `json:"rating"`
+    PuzzleRating      int       `json:"puzzle_rating"`
+    ProfileIcon       string    `json:"profile_icon"`
+    CreatedAt         time.Time `json:"created_at"`
+    GamesPlayed       int       `json:"games_played"`
+    Wins              int       `json:"wins"`
+    Losses            int       `json:"losses"`
+    Draws             int       `json:"draws"`
+    AchievementPoints int       `json:"achievement_points"`
+}
+
+type RatingPoint struct {
+    Rating    int       `json:"rating"`
+    CreatedAt time.Time `json:"created_at"`
+}
+
+type RecentGame struct {
+    GameID      string    `json:"game_id"`
+    Opponent    string    `json:"opponent"`
+    Result      string    `json:"result"`
+    PlayerColor string    `json:"player_color"`
+    CreatedAt   time.Time `json:"created_at"`
 }
 
 type Game struct {
@@ -244,7 +277,11 @@ profiles (
     user_id VARCHAR PRIMARY KEY,
     username VARCHAR UNIQUE,
     rating INTEGER DEFAULT 1200,
+    puzzle_rating INTEGER DEFAULT 1200 CHECK (puzzle_rating >= 0 AND puzzle_rating <= 4000),
     profile_icon VARCHAR DEFAULT 'white-pawn',
+    achievement_points INTEGER DEFAULT 0,
+    win_streak INTEGER DEFAULT 0,
+    puzzle_streak INTEGER DEFAULT 0,
     created_at TIMESTAMP
 )
 
@@ -267,6 +304,13 @@ rating_history (
     created_at TIMESTAMP
 )
 
+puzzle_rating_history (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR REFERENCES profiles(user_id),
+    rating INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+)
+
 endgame_positions (
     position_id TEXT PRIMARY KEY,
     fen TEXT NOT NULL,
@@ -278,9 +322,16 @@ endgame_positions (
     source TEXT,                 -- Attribution
     created_at TIMESTAMP
 )
+
+user_achievements (
+    user_id VARCHAR REFERENCES profiles(user_id),
+    achievement_id VARCHAR NOT NULL,
+    unlocked_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(user_id, achievement_id)
+)
 ```
 
-Migrations managed via golang-migrate in `db/migrations/`. Endgame positions seeded from `db/seeds/`.
+Migrations managed via golang-migrate in `db/migrations/` (000001–000005). Endgame positions seeded from `db/seeds/`.
 
 ## Environment Variables
 
@@ -340,11 +391,13 @@ Connect to `ws://localhost:8080/ws` for multiplayer games. Session cookie is opt
 | Type | Data | Description |
 |------|------|-------------|
 | `PING` | none | Heartbeat |
-| `GAME_CREATE` | `{timeControl?}` | Create game (play as white) |
-| `GAME_JOIN` | `{gameId}` | Join game (play as black) |
+| `GAME_CREATE` | `{timeControl?, rated?}` | Create game |
+| `GAME_JOIN` | `{gameId}` | Join game |
 | `MOVE` | `{gameId, from, to, promotion?}` | Make a move (e.g., "e2" → "e4") |
 | `RESIGN` | `{gameId}` | Resign from game |
 | `GAME_LEAVE` | `{gameId}` | Leave/cancel waiting game |
+| `LOBBY_SUBSCRIBE` | none | Subscribe to lobby updates |
+| `LOBBY_UNSUBSCRIBE` | none | Unsubscribe from lobby updates |
 
 ### Server → Client Messages
 
@@ -358,9 +411,11 @@ Connect to `ws://localhost:8080/ws` for multiplayer games. Session cookie is opt
 | `MOVE_ACCEPTED` | `{gameId, from, to, san, fen, moveNum, isCheck?, times}` | Move valid |
 | `MOVE_REJECTED` | `{gameId, reason, fen, moveNum}` | Move invalid |
 | `OPPONENT_MOVE` | `{gameId, from, to, san, fen, moveNum, isCheck?, times}` | Opponent moved |
-| `GAME_ENDED` | `{gameId, result, reason}` | Game over |
+| `GAME_ENDED` | `{gameId, result, reason, whiteRating?, blackRating?, whiteRatingDelta?, blackRatingDelta?, whiteNewAchievements?, blackNewAchievements?}` | Game over with rating changes and achievement unlocks |
 | `OPPONENT_LEFT` | `{gameId}` | Opponent disconnected |
 | `TIME_UPDATE` | `{gameId, whiteTime, blackTime}` | Clock state (every 1s) |
+| `LOBBY_LIST` | `{games: LobbyGameInfo[]}` | Current list of waiting games |
+| `LOBBY_UPDATE` | `{action, game?, gameId?}` | Game added/removed from lobby |
 
 ### Game States
 - **waiting**: First player joined, waiting for second
@@ -392,13 +447,18 @@ Uses `internal/chess` package (wraps `github.com/notnil/chess`):
 - SAN notation generation (e.g., "e4", "Nxf3+", "O-O")
 - Promotion handling ("q", "r", "b", "n")
 
+### Lobby Flow
+1. Client: `LOBBY_SUBSCRIBE` → receives `LOBBY_LIST` with all waiting games
+2. As games are created/joined: receives `LOBBY_UPDATE` with `action: "added"` or `"removed"`
+3. Client: `LOBBY_UNSUBSCRIBE` to stop receiving updates
+
 ### Game Flow
-1. Player A: `GAME_CREATE` → receives `GAME_CREATED` with gameId
-2. Player A shares gameId URL with Player B
-3. Player B: `GAME_JOIN` → both receive `GAME_STARTED` (clock starts)
+1. Player A: `GAME_CREATE` → receives `GAME_CREATED` with gameId (lobby subscribers notified)
+2. Player A shares gameId URL or Player B finds game in lobby
+3. Player B: `GAME_JOIN` → both receive `GAME_STARTED` (clock starts, lobby subscribers notified)
 4. Players alternate: `MOVE` → sender gets `MOVE_ACCEPTED`, opponent gets `OPPONENT_MOVE`
 5. Both receive `TIME_UPDATE` every second
-6. Game ends: both receive `GAME_ENDED` with result and reason
+6. Game ends: both receive `GAME_ENDED` with result, reason, rating deltas, and achievement unlocks
 
 ## Training API
 
@@ -440,6 +500,63 @@ Returns list of available endgame themes with counts.
 ### GET /api/training/endgame/stats
 
 Returns position counts by difficulty level.
+
+## Puzzle API
+
+### POST /api/puzzle/result
+
+Submit puzzle solve/fail result with ELO rating update. Requires authentication.
+
+**Rate Limiting:** 3-second minimum between submissions.
+
+**Request Body:**
+```json
+{
+  "puzzle_id": "mate2_001",
+  "category": "mate-in-2",
+  "solved": true
+}
+```
+
+**Category → Puzzle Rating Mapping:**
+- `mate-in-2` → 1200
+- `mate-in-3` → 1600
+
+**Response:**
+```json
+{
+  "new_rating": 1215,
+  "rating_delta": 15,
+  "old_rating": 1200,
+  "new_achievements": [{"id": "first_puzzle", "name": "First Steps", ...}]
+}
+```
+
+## ELO Rating System
+
+The `internal/elo` package handles rating calculations:
+
+- **Multiplayer:** K-factor 40 for players with <10 games, 32 after. Standard ELO formula with 0-4000 clamping.
+- **Puzzles:** Separate puzzle rating with own K-factor and history tracking.
+- `Calculate(whiteRating, blackRating, whiteGames, blackGames, result)` → `RatingChange`
+- `CalculatePuzzle(playerRating, puzzleRating, playerGames, solved)` → `PuzzleRatingChange`
+
+## Achievements System
+
+The `internal/achievements` package defines 51 achievements across 6 categories:
+
+| Category | Count | Examples |
+|----------|-------|---------|
+| Loyalty | 4 | Account age milestones (1yr-5yr) |
+| Streaks | 8 | Win streaks (3, 5, 10, 20), Puzzle streaks (3, 5, 10, 20) |
+| Rating | 14 | Rating milestones (1600-3000), Puzzle rating milestones (1400-3000) |
+| Chess Moments | 6 | Back Rank Mate, En Passant, Scholar's Mate |
+| Volume | 11 | Games played (10-1000), Puzzles solved (10-500) |
+| Fun | 8 | Stalemate, Win on Time, Marathon (100+ moves) |
+
+**Rarity levels:** Common, Uncommon, Rare, Epic, Legendary (1-10 points each)
+
+Achievement checking runs automatically on game end and puzzle completion.
 
 ## Dependencies
 
