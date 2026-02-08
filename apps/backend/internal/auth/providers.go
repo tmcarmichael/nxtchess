@@ -35,7 +35,7 @@ func initGoogle(cfg *config.Config) {
 		StateCookie: "oauth_state_google",
 		UserInfoURL: "https://www.googleapis.com/oauth2/v2/userinfo",
 		OAuthConfig: &oauth2.Config{
-			RedirectURL:  cfg.BackendURL + "/auth/google/callback",
+			RedirectURL:  cfg.FrontendURL + "/auth/google/callback",
 			ClientID:     cfg.GoogleClientID,
 			ClientSecret: cfg.GoogleClientSecret,
 			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.profile"},
@@ -68,7 +68,7 @@ func initGitHub(cfg *config.Config) {
 		StateCookie: "oauth_state_github",
 		UserInfoURL: "https://api.github.com/user",
 		OAuthConfig: &oauth2.Config{
-			RedirectURL:  cfg.BackendURL + "/auth/github/callback",
+			RedirectURL:  cfg.FrontendURL + "/auth/github/callback",
 			ClientID:     cfg.GitHubClientID,
 			ClientSecret: cfg.GitHubClientSecret,
 			Scopes:       []string{"read:user"},
@@ -100,7 +100,7 @@ func initDiscord(cfg *config.Config) {
 		StateCookie: "oauth_state_discord",
 		UserInfoURL: "https://discord.com/api/users/@me",
 		OAuthConfig: &oauth2.Config{
-			RedirectURL:  cfg.BackendURL + "/auth/discord/callback",
+			RedirectURL:  cfg.FrontendURL + "/auth/discord/callback",
 			ClientID:     cfg.DiscordClientID,
 			ClientSecret: cfg.DiscordClientSecret,
 			Scopes:       []string{"identify"},
