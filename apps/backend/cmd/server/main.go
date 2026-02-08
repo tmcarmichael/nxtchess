@@ -147,13 +147,10 @@ func main() {
 		pr.Post("/set-profile-icon", controllers.SetProfileIconHandler)
 	})
 
-	// Apply CORS middleware (outermost layer)
-	handler := middleware.CORS(cfg)(r)
-
 	addr := ":" + cfg.Port
 	server := &http.Server{
 		Addr:         addr,
-		Handler:      handler,
+		Handler:      r,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
