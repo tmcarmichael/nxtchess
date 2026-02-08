@@ -173,17 +173,16 @@ describe('createUserStore', () => {
           value: 'session_token=abc123',
         });
 
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
         mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-        const [, actions] = createUserStore();
+        const [state, actions] = createUserStore();
         const navigateFn = vi.fn();
 
         await actions.checkUserStatus(navigateFn);
 
-        expect(consoleSpy).toHaveBeenCalled();
+        expect(state.isLoggedIn).toBe(false);
 
-        consoleSpy.mockClear();
         dispose();
       });
     });
