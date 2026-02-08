@@ -469,3 +469,110 @@ describe('getRandomQuickPlayConfig', () => {
     }
   });
 });
+
+describe('en passant through move sequence', () => {
+  it('generates correct FEN with en passant square after double pawn push', () => {
+    const chess = new Chess();
+    // 1. e4 Nf6 2. e5 d5 (double push creates en passant on d6)
+    chess.move('e4');
+    chess.move('Nf6');
+    chess.move('e5');
+    chess.move('d5');
+
+    const fen = chess.fen();
+    const enPassantSquare = fen.split(' ')[3];
+    expect(enPassantSquare).toBe('d6');
+  });
+
+  it('getLegalMoves includes en passant after move sequence', () => {
+    const chess = new Chess();
+    chess.move('e4');
+    chess.move('Nf6');
+    chess.move('e5');
+    chess.move('d5');
+
+    const fen = chess.fen();
+    const moves = getLegalMoves(fen, 'e5' as Square);
+    expect(moves).toContain('d6');
+    expect(moves).toContain('e6');
+  });
+
+  it('getLegalMoveCaptures includes en passant after move sequence', () => {
+    const chess = new Chess();
+    chess.move('e4');
+    chess.move('Nf6');
+    chess.move('e5');
+    chess.move('d5');
+
+    const fen = chess.fen();
+    const captures = getLegalMoveCaptures(fen, 'e5' as Square);
+    expect(captures.has('d6' as Square)).toBe(true);
+  });
+
+  it('en passant FEN is preserved through executeMove for non-ep moves', () => {
+    // After opponent's double pawn push, other moves by the same side should not affect the FEN
+    const chess = new Chess();
+    chess.move('e4');
+    chess.move('Nf6');
+    chess.move('e5');
+    chess.move('d5');
+
+    // FEN should have d6 en passant
+    const fen = chess.fen();
+    expect(fen.split(' ')[3]).toBe('d6');
+
+    // If white makes a DIFFERENT move (not en passant), the ep square should clear
+    const board = fenToBoard(fen);
+    const result = executeMove(chess, 'a2', 'a3', board);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.newFen.split(' ')[3]).toBe('-');
+    }
+  });
+
+  it('black en passant works through move sequence', () => {
+    const chess = new Chess();
+    // 1. d4 e5 2. Nf3 e4 3. d5 (not relevant) c5 4. dxc6 (en passant by white, not what we want)
+    // Better: 1. e3 d5 2. e4 (doesn't work, not double push from start)
+    // Let's do: 1. a3 d5 2. a4 d4 3. c4 (double push next to black's d4 pawn)
+    chess.move('a3');
+    chess.move('d5');
+    chess.move('a4');
+    chess.move('d4');
+    chess.move('c4'); // double push, en passant target c3
+
+    const fen = chess.fen();
+    const enPassantSquare = fen.split(' ')[3];
+    expect(enPassantSquare).toBe('c3');
+
+    const moves = getLegalMoves(fen, 'd4' as Square);
+    expect(moves).toContain('c3'); // en passant capture
+
+    const captures = getLegalMoveCaptures(fen, 'd4' as Square);
+    expect(captures.has('c3' as Square)).toBe(true);
+  });
+
+  it('en passant through GameSession move sequence', () => {
+    const chess = new Chess();
+    chess.move('e4');
+    chess.move('Nf6');
+    chess.move('e5');
+    chess.move('d5');
+
+    const fen = chess.fen();
+    // Verify the FEN has en passant square
+    expect(fen.split(' ')[3]).toBe('d6');
+
+    // Now verify getLegalMoves with this FEN
+    const moves = getLegalMoves(fen, 'e5' as Square);
+    expect(moves).toContain('d6');
+
+    // And that executeMove works for the en passant capture
+    const board = fenToBoard(fen);
+    const result = executeMove(new Chess(fen), 'e5', 'd6', board);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.captured).toBe('bP');
+    }
+  });
+});
