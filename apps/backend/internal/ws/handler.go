@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/httpx"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/sessions"
@@ -151,9 +152,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Try to get user ID from session cookie (optional - allows anonymous play)
 	var userID string
+	var username string
 	if cookie, err := r.Cookie("session_token"); err == nil {
 		if id, ok := sessions.GetSessionUserID(cookie.Value); ok {
 			userID = id
+			if uname, err := database.GetUsernameByID(id); err == nil {
+				username = uname
+			}
 		}
 	}
 
@@ -168,6 +173,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Create client
 	clientID := generateClientID()
 	client := NewClient(clientID, userID, h.hub, conn)
+	client.Username = username
 	client.IP = clientIP // Store IP for disconnection tracking
 
 	// Register client with hub

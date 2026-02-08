@@ -20,6 +20,10 @@ const (
 	MsgTypeMove   = "MOVE"
 	MsgTypeResign = "RESIGN"
 
+	// Lobby
+	MsgTypeLobbySubscribe   = "LOBBY_SUBSCRIBE"
+	MsgTypeLobbyUnsubscribe = "LOBBY_UNSUBSCRIBE"
+
 	// Matchmaking (future)
 	MsgTypeMatchmakingJoin   = "MATCHMAKING_JOIN"
 	MsgTypeMatchmakingCancel = "MATCHMAKING_CANCEL"
@@ -45,6 +49,10 @@ const (
 	MsgTypeOpponentLeft = "OPPONENT_LEFT"
 	MsgTypeTimeUpdate   = "TIME_UPDATE"
 
+	// Lobby responses
+	MsgTypeLobbyList   = "LOBBY_LIST"
+	MsgTypeLobbyUpdate = "LOBBY_UPDATE"
+
 	// Matchmaking responses (future)
 	MsgTypeMatchmakingWaiting = "MATCHMAKING_WAITING"
 	MsgTypeMatchmakingMatched = "MATCHMAKING_MATCHED"
@@ -67,6 +75,7 @@ type ServerMessage struct {
 // GameCreateData is sent by client to create a new game
 type GameCreateData struct {
 	TimeControl *TimeControl `json:"timeControl,omitempty"`
+	Rated       bool         `json:"rated,omitempty"`
 }
 
 // TimeControl represents time settings for a game
@@ -204,4 +213,28 @@ func NewErrorMessage(code, message string) *ServerMessage {
 			Message: message,
 		},
 	}
+}
+
+// Lobby payloads
+
+// LobbyGameInfo represents a waiting game in the lobby
+type LobbyGameInfo struct {
+	GameID        string       `json:"gameId"`
+	Creator       string       `json:"creator"`
+	CreatorRating int          `json:"creatorRating,omitempty"`
+	TimeControl   *TimeControl `json:"timeControl,omitempty"`
+	Rated         bool         `json:"rated"`
+	CreatedAt     int64        `json:"createdAt"`
+}
+
+// LobbyListData is sent to client with all waiting games
+type LobbyListData struct {
+	Games []LobbyGameInfo `json:"games"`
+}
+
+// LobbyUpdateData is sent to lobby subscribers when games change
+type LobbyUpdateData struct {
+	Action string         `json:"action"`
+	Game   *LobbyGameInfo `json:"game,omitempty"`
+	GameID string         `json:"gameId,omitempty"`
 }

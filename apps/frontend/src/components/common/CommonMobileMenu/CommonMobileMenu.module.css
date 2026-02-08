@@ -119,6 +119,12 @@
   color: var(--accent);
 }
 
+.navItemActive {
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+  color: var(--accent);
+}
+
 .navItem:disabled {
   color: var(--text-muted);
   cursor: not-allowed;

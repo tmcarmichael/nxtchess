@@ -1,0 +1,55 @@
+.floatingPiece {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 500px;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.03;
+  z-index: 0;
+  will-change: translate, scale, rotate;
+  animation:
+    pieceTraverse var(--duration) linear var(--delay) forwards,
+    pieceWobble var(--duration) linear var(--delay) forwards;
+}
+
+:global(body[data-theme='light']) .floatingPiece {
+  opacity: 0.06;
+}
+
+@keyframes pieceTraverse {
+  0% {
+    translate: calc(-10vw - 50%) calc(-50% + var(--y-offset) * 0.15);
+    scale: 0.05;
+    animation-timing-function: cubic-bezier(0.3, 0.3, 0.7, 0.82);
+  }
+
+  50% {
+    translate: calc(50vw - 50%) calc(-50% + var(--y-offset));
+    scale: 0.18;
+    animation-timing-function: cubic-bezier(0.3, 0.18, 0.7, 0.7);
+  }
+
+  100% {
+    translate: calc(110vw - 50%) calc(-50% + var(--y-offset) * 0.15);
+    scale: 0.05;
+  }
+}
+
+@keyframes pieceWobble {
+  0% {
+    rotate: var(--rot-a);
+  }
+  25% {
+    rotate: var(--rot-b);
+  }
+  50% {
+    rotate: var(--rot-c);
+  }
+  75% {
+    rotate: var(--rot-d);
+  }
+  100% {
+    rotate: var(--rot-e);
+  }
+}

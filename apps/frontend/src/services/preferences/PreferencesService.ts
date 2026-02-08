@@ -4,6 +4,7 @@ const STORAGE_KEY = 'nxtchess:prefs';
 
 export interface GamePreferences {
   lastTimeMinutes: number;
+  lastTimeIncrement: number;
   lastDifficultyLevel: number;
   lastPlayerColor: SideSelection;
   boardFlipped: boolean;
@@ -11,6 +12,7 @@ export interface GamePreferences {
 
 const DEFAULT_PREFERENCES: GamePreferences = {
   lastTimeMinutes: 5,
+  lastTimeIncrement: 3,
   lastDifficultyLevel: 4, // Medium
   lastPlayerColor: 'random',
   boardFlipped: false,

@@ -18,6 +18,8 @@ import type {
   OpponentLeftData,
   ErrorData,
   TimeControl,
+  LobbyListData,
+  LobbyUpdateData,
 } from './types';
 
 // Re-export ConnectionState for backward compatibility
@@ -117,11 +119,22 @@ export class GameSyncService {
     return this.currentGameId;
   }
 
-  createGame(timeControl?: TimeControl): void {
+  createGame(timeControl?: TimeControl, rated?: boolean): void {
     this.send({
       type: MT.GAME_CREATE,
-      data: timeControl ? { timeControl } : undefined,
+      data: {
+        ...(timeControl ? { timeControl } : {}),
+        ...(rated !== undefined ? { rated } : {}),
+      },
     });
+  }
+
+  subscribeLobby(): void {
+    this.send({ type: MT.LOBBY_SUBSCRIBE });
+  }
+
+  unsubscribeLobby(): void {
+    this.send({ type: MT.LOBBY_UNSUBSCRIBE });
   }
 
   joinGame(gameId: string): void {
@@ -300,6 +313,26 @@ export class GameSyncService {
         const payload = data as ErrorData;
         this.emitEvent({
           type: 'error',
+          data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.LOBBY_LIST: {
+        const payload = data as LobbyListData;
+        this.emitEvent({
+          type: 'lobby:list',
+          data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.LOBBY_UPDATE: {
+        const payload = data as LobbyUpdateData;
+        this.emitEvent({
+          type: 'lobby:update',
           data: payload,
           timestamp: Date.now(),
         });

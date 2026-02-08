@@ -101,10 +101,10 @@ describe('createMultiplayerStore', () => {
         store.createGame(5, 0);
 
         expect(gameSyncService.connect).toHaveBeenCalled();
-        expect(gameSyncService.createGame).toHaveBeenCalledWith({
-          initialTime: 300, // 5 * 60
-          increment: 0,
-        });
+        expect(gameSyncService.createGame).toHaveBeenCalledWith(
+          { initialTime: 300, increment: 0 },
+          false
+        );
         expect(store.state.isWaiting).toBe(true);
 
         dispose();
@@ -117,10 +117,10 @@ describe('createMultiplayerStore', () => {
 
         store.createGame(10);
 
-        expect(gameSyncService.createGame).toHaveBeenCalledWith({
-          initialTime: 600,
-          increment: 0,
-        });
+        expect(gameSyncService.createGame).toHaveBeenCalledWith(
+          { initialTime: 600, increment: 0 },
+          false
+        );
 
         dispose();
       });

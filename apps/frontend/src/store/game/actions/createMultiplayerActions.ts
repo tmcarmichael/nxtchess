@@ -30,7 +30,7 @@ export const createMultiplayerActions = (
     timer.stop();
     ui.hideEndModal();
 
-    const { side, mode = 'play', newTimeControl = 5, increment = 0 } = options;
+    const { side, mode = 'play', newTimeControl = 5, increment = 0, rated = false } = options;
 
     chess.resetForMultiplayer(mode);
     chess.setPlayerColor(side);
@@ -38,7 +38,7 @@ export const createMultiplayerActions = (
     timer.reset(newTimeControl);
 
     // Connect and create game
-    multiplayer.createGame(newTimeControl, increment);
+    multiplayer.createGame(newTimeControl, increment, rated);
   };
 
   const joinMultiplayerGame = (gameId: string) => {

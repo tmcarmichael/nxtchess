@@ -74,7 +74,18 @@ const getGameOverInfoTraining = (
 
 const getGameOverInfoPlay = (reason: ExtendedGameOverReason, winner: GameWinner): GameOverInfo => {
   if (winner === 'draw') {
-    return { heading: 'Draw', message: '' };
+    switch (reason) {
+      case 'stalemate':
+        return { heading: 'Stalemate', message: 'Game drawn by stalemate.' };
+      case 'insufficient_material':
+        return { heading: 'Draw', message: 'Insufficient material.' };
+      case 'threefold_repetition':
+        return { heading: 'Draw', message: 'Threefold repetition.' };
+      case 'fifty_move_rule':
+        return { heading: 'Draw', message: 'Fifty-move rule.' };
+      default:
+        return { heading: 'Draw', message: '' };
+    }
   }
   const winnerName = winner === 'w' ? 'White' : 'Black';
   switch (reason) {
@@ -82,11 +93,6 @@ const getGameOverInfoPlay = (reason: ExtendedGameOverReason, winner: GameWinner)
       return {
         heading: 'Checkmate',
         message: `${winnerName} wins by checkmate.`,
-      };
-    case 'stalemate':
-      return {
-        heading: 'Stalemate',
-        message: '',
       };
     case 'time':
       return {
@@ -97,6 +103,16 @@ const getGameOverInfoPlay = (reason: ExtendedGameOverReason, winner: GameWinner)
       return {
         heading: 'Resignation',
         message: `${winnerName} wins by resignation.`,
+      };
+    case 'disconnection':
+      return {
+        heading: 'Disconnected',
+        message: `${winnerName} wins by disconnection.`,
+      };
+    case 'abandonment':
+      return {
+        heading: 'Abandoned',
+        message: `${winnerName} wins by abandonment.`,
       };
     default:
       return {

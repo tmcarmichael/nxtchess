@@ -1,7 +1,6 @@
 import { useNavigate, useLocation } from '@solidjs/router';
 import { createSignal, Show, For, createEffect, type ParentComponent } from 'solid-js';
 import { useUserStore } from '../../../store/user/UserContext';
-import PlayModal from '../../play/PlayModal/PlayModal';
 import PuzzleModal from '../../puzzle/PuzzleModal/PuzzleModal';
 import TrainingModal from '../../training/TrainingModal/TrainingModal';
 import { getRatingIcon } from '../../user/ProfileIconPicker/ProfileIconPicker';
@@ -13,17 +12,17 @@ import styles from './CommonSiteHeader.module.css';
 export type NavItem = {
   label: string;
   route?: string;
-  showPlayModal?: boolean;
+  activeRoute?: string;
   showTrainingModal?: boolean;
   showPuzzleModal?: boolean;
   variant?: 'primary' | 'upcoming';
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Play', showPlayModal: true, variant: 'primary' },
-  { label: 'Train', showTrainingModal: true, variant: 'primary' },
+  { label: 'Play', route: '/play', variant: 'primary' },
+  { label: 'Train', showTrainingModal: true, variant: 'primary', activeRoute: '/training' },
   { label: 'Analyze', route: '/analyze', variant: 'primary' },
-  { label: 'Puzzles', showPuzzleModal: true, variant: 'primary' },
+  { label: 'Puzzles', showPuzzleModal: true, variant: 'primary', activeRoute: '/puzzles' },
   { label: 'Tools', variant: 'upcoming' },
 ];
 
@@ -31,7 +30,6 @@ const CommonSiteHeader: ParentComponent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [userState, userActions] = useUserStore();
-  const [showPlayModal, setShowPlayModal] = createSignal(false);
   const [showSignInModal, setShowSignInModal] = createSignal(false);
   const [showTrainingModal, setShowTrainingModal] = createSignal(false);
   const [showPuzzleModal, setShowPuzzleModal] = createSignal(false);
@@ -60,19 +58,19 @@ const CommonSiteHeader: ParentComponent = () => {
                   [styles.navItem]: true,
                   [styles.navItemPrimary]: item.variant === 'primary',
                   [styles.navItemUpcoming]: item.variant === 'upcoming',
+                  [styles.active]:
+                    !!(item.route || item.activeRoute) &&
+                    location.pathname.startsWith((item.route || item.activeRoute)!),
                 }}
                 onClick={() => {
                   if (item.route) {
                     navigate(
                       item.route,
-                      location.pathname === item.route
+                      location.pathname.startsWith(item.route)
                         ? { state: { reset: Date.now() } }
                         : undefined
                     );
                     return;
-                  }
-                  if (item.showPlayModal) {
-                    setShowPlayModal(true);
                   }
                   if (item.showTrainingModal) {
                     setShowTrainingModal(true);
@@ -134,9 +132,6 @@ const CommonSiteHeader: ParentComponent = () => {
           </button>
         </div>
       </header>
-      <Show when={showPlayModal()}>
-        <PlayModal onClose={() => setShowPlayModal(false)} />
-      </Show>
       <Show when={showSignInModal()}>
         <SignInModal onClose={() => setShowSignInModal(false)} />
       </Show>
@@ -149,10 +144,6 @@ const CommonSiteHeader: ParentComponent = () => {
       <Show when={showMobileMenu()}>
         <CommonMobileMenu
           onClose={() => setShowMobileMenu(false)}
-          onShowPlayModal={() => {
-            setShowMobileMenu(false);
-            setShowPlayModal(true);
-          }}
           onShowTrainingModal={() => {
             setShowMobileMenu(false);
             setShowTrainingModal(true);

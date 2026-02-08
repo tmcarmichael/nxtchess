@@ -18,24 +18,27 @@ import (
 
 // GameState represents the state of an active game
 type GameState struct {
-	ID           string
-	WhitePlayer  *Client
-	BlackPlayer  *Client
-	FEN          string
-	MoveHistory  []string
-	MoveNum      int
-	Status       string // "waiting", "active", "ended"
-	Result       string // "", "white", "black", "draw"
-	ResultReason string // "checkmate", "resignation", "timeout", "stalemate", etc.
-	TimeControl  *TimeControl
-	WhiteTimeMs  int64     // remaining milliseconds for white
-	BlackTimeMs  int64     // remaining milliseconds for black
-	LastMoveAt   time.Time // when the clock started for current player
-	CreatedAt    time.Time
-	chessGame    *chess.Game   // Server-side chess validation
-	stopClock    chan struct{} // signal to stop the clock goroutine
-	clockRunning bool          // whether the clock is currently ticking
-	mu           sync.RWMutex
+	ID              string
+	WhitePlayer     *Client
+	BlackPlayer     *Client
+	FEN             string
+	MoveHistory     []string
+	MoveNum         int
+	Status          string // "waiting", "active", "ended"
+	Result          string // "", "white", "black", "draw"
+	ResultReason    string // "checkmate", "resignation", "timeout", "stalemate", etc.
+	TimeControl     *TimeControl
+	WhiteTimeMs     int64     // remaining milliseconds for white
+	BlackTimeMs     int64     // remaining milliseconds for black
+	LastMoveAt      time.Time // when the clock started for current player
+	CreatedAt       time.Time
+	Rated           bool
+	CreatorUsername  string
+	CreatorRating   int
+	chessGame       *chess.Game   // Server-side chess validation
+	stopClock       chan struct{} // signal to stop the clock goroutine
+	clockRunning    bool          // whether the clock is currently ticking
+	mu              sync.RWMutex
 }
 
 // Initial FEN for standard chess
@@ -86,20 +89,33 @@ func (gm *GameManager) garbageCollect() {
 
 		// Phase 2: Delete with write lock only if needed
 		if len(toDelete) > 0 {
+			var lobbyRemovals []string
 			gm.mu.Lock()
 			for _, id := range toDelete {
 				if game, exists := gm.games[id]; exists {
 					game.mu.RLock()
+					wasWaiting := game.Status == "waiting"
 					stillExpired := (game.Status == "ended" && now.Sub(game.LastMoveAt) > 5*time.Minute) ||
-						(game.Status == "waiting" && now.Sub(game.CreatedAt) > 30*time.Minute)
+						(wasWaiting && now.Sub(game.CreatedAt) > 30*time.Minute)
 					game.mu.RUnlock()
 					if stillExpired {
 						delete(gm.games, id)
+						if wasWaiting {
+							lobbyRemovals = append(lobbyRemovals, id)
+						}
 					}
 				}
 			}
 			remaining := len(gm.games)
 			gm.mu.Unlock()
+
+			// Broadcast lobby removals for expired waiting games
+			for _, id := range lobbyRemovals {
+				gm.hub.BroadcastLobbyUpdate(LobbyUpdateData{
+					Action: "removed",
+					GameID: id,
+				})
+			}
 
 			logger.Info("Game garbage collection", logger.F("removed", len(toDelete), "remaining", remaining))
 		}
@@ -246,7 +262,7 @@ func (gm *GameManager) finalizeGame(game *GameState) GameEndedData {
 		blackUID = game.BlackPlayer.UserID
 	}
 
-	if whiteUID == "" || blackUID == "" {
+	if whiteUID == "" || blackUID == "" || !game.Rated {
 		return endedData
 	}
 
@@ -324,22 +340,47 @@ func (gm *GameManager) CreateGame(client *Client, data *GameCreateData) {
 	// Initialize server-side chess game for validation
 	chessGame := chess.NewGame()
 
+	creatorUsername := client.Username
+	if creatorUsername == "" {
+		creatorUsername = "Anonymous"
+	}
+
+	var creatorRating int
+	if client.UserID != "" {
+		if r, err := database.GetRatingByID(client.UserID); err == nil {
+			creatorRating = r
+		}
+	}
+
+	rated := false
+	if data != nil && data.Rated && client.UserID != "" {
+		rated = true
+	}
+
 	game := &GameState{
-		ID:          gameID,
-		WhitePlayer: client,
-		FEN:         initialFEN,
-		MoveHistory: make([]string, 0),
-		MoveNum:     1,
-		Status:      "waiting",
-		CreatedAt:   time.Now(),
-		chessGame:   chessGame,
+		ID:             gameID,
+		WhitePlayer:    client,
+		FEN:            initialFEN,
+		MoveHistory:    make([]string, 0),
+		MoveNum:        1,
+		Status:         "waiting",
+		CreatedAt:      time.Now(),
+		Rated:          rated,
+		CreatorUsername: creatorUsername,
+		CreatorRating:  creatorRating,
+		chessGame:      chessGame,
 	}
 
 	// Set time control if provided (convert seconds to milliseconds)
 	if data != nil && data.TimeControl != nil {
-		game.TimeControl = data.TimeControl
-		game.WhiteTimeMs = int64(data.TimeControl.InitialTime) * 1000
-		game.BlackTimeMs = int64(data.TimeControl.InitialTime) * 1000
+		tc := data.TimeControl
+		if tc.InitialTime < 60 || tc.InitialTime > 10800 || tc.Increment < 0 || tc.Increment > 300 {
+			client.SendMessage(NewErrorMessage("INVALID_TIME_CONTROL", "Time control out of valid range"))
+			return
+		}
+		game.TimeControl = tc
+		game.WhiteTimeMs = int64(tc.InitialTime) * 1000
+		game.BlackTimeMs = int64(tc.InitialTime) * 1000
 	}
 
 	gm.mu.Lock()
@@ -349,13 +390,26 @@ func (gm *GameManager) CreateGame(client *Client, data *GameCreateData) {
 	// Associate client with game
 	client.SetGameID(gameID)
 
-	logger.Info("Game created", logger.F("gameId", gameID, "clientId", client.ID))
+	logger.Info("Game created", logger.F("gameId", gameID, "clientId", client.ID, "rated", rated))
 
 	// Send confirmation to creator
 	client.SendMessage(NewServerMessage(MsgTypeGameCreated, GameCreatedData{
 		GameID: gameID,
 		Color:  "white",
 	}))
+
+	// Broadcast to lobby subscribers
+	gm.hub.BroadcastLobbyUpdate(LobbyUpdateData{
+		Action: "added",
+		Game: &LobbyGameInfo{
+			GameID:        gameID,
+			Creator:       creatorUsername,
+			CreatorRating: creatorRating,
+			TimeControl:   game.TimeControl,
+			Rated:         rated,
+			CreatedAt:     game.CreatedAt.UnixMilli(),
+		},
+	})
 }
 
 // JoinGame adds a player to an existing game
@@ -407,13 +461,29 @@ func (gm *GameManager) JoinGame(client *Client, gameID string) {
 
 	logger.Info("Player joined game", logger.F("gameId", gameID, "clientId", client.ID))
 
+	// Remove from lobby
+	gm.hub.BroadcastLobbyUpdate(LobbyUpdateData{
+		Action: "removed",
+		GameID: gameID,
+	})
+
 	// Build player info
-	whiteInfo := PlayerInfo{ID: game.WhitePlayer.ID}
+	whiteInfo := PlayerInfo{ID: game.WhitePlayer.ID, Username: game.CreatorUsername, Rating: game.CreatorRating}
 	if game.WhitePlayer.UserID != "" {
 		whiteInfo.ID = game.WhitePlayer.UserID
 	}
 
-	blackInfo := PlayerInfo{ID: client.ID}
+	joinerUsername := client.Username
+	if joinerUsername == "" {
+		joinerUsername = "Anonymous"
+	}
+	var joinerRating int
+	if client.UserID != "" {
+		if r, err := database.GetRatingByID(client.UserID); err == nil {
+			joinerRating = r
+		}
+	}
+	blackInfo := PlayerInfo{ID: client.ID, Username: joinerUsername, Rating: joinerRating}
 	if client.UserID != "" {
 		blackInfo.ID = client.UserID
 	}
@@ -653,6 +723,12 @@ func (gm *GameManager) LeaveGame(client *Client, gameID string) {
 		gm.mu.Unlock()
 		client.SetGameID("")
 		logger.Info("Game cancelled", logger.F("gameId", gameID))
+
+		// Remove from lobby
+		gm.hub.BroadcastLobbyUpdate(LobbyUpdateData{
+			Action: "removed",
+			GameID: gameID,
+		})
 		return
 	}
 	gm.mu.Unlock()
@@ -693,16 +769,29 @@ func (gm *GameManager) LeaveGame(client *Client, gameID string) {
 
 // HandleDisconnect handles a client disconnecting
 func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
-	gm.mu.RLock()
+	gm.mu.Lock()
 	game, exists := gm.games[gameID]
-	gm.mu.RUnlock()
-
 	if !exists {
+		gm.mu.Unlock()
 		return
 	}
 
 	game.mu.Lock()
 	defer game.mu.Unlock()
+
+	// If game is waiting (creator disconnected before anyone joined), clean it up
+	if game.Status == "waiting" {
+		delete(gm.games, gameID)
+		gm.mu.Unlock()
+		logger.Info("Waiting game removed on disconnect", logger.F("gameId", gameID))
+
+		gm.hub.BroadcastLobbyUpdate(LobbyUpdateData{
+			Action: "removed",
+			GameID: gameID,
+		})
+		return
+	}
+	gm.mu.Unlock()
 
 	// Notify opponent of disconnect
 	var opponent *Client
@@ -742,6 +831,29 @@ func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
 			opponent.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 		}
 	}
+}
+
+// GetWaitingGames returns info about all games in "waiting" status for the lobby
+func (gm *GameManager) GetWaitingGames() []LobbyGameInfo {
+	gm.mu.RLock()
+	defer gm.mu.RUnlock()
+
+	games := make([]LobbyGameInfo, 0)
+	for _, game := range gm.games {
+		game.mu.RLock()
+		if game.Status == "waiting" {
+			games = append(games, LobbyGameInfo{
+				GameID:        game.ID,
+				Creator:       game.CreatorUsername,
+				CreatorRating: game.CreatorRating,
+				TimeControl:   game.TimeControl,
+				Rated:         game.Rated,
+				CreatedAt:     game.CreatedAt.UnixMilli(),
+			})
+		}
+		game.mu.RUnlock()
+	}
+	return games
 }
 
 // GetGame returns a game by ID
