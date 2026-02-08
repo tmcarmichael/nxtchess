@@ -12,15 +12,16 @@ type Profile struct {
 }
 
 type PublicProfile struct {
-    Username     string    `json:"username"`
-    Rating       int       `json:"rating"`
-    PuzzleRating int       `json:"puzzle_rating"`
-    ProfileIcon  string    `json:"profile_icon"`
-    CreatedAt    time.Time `json:"created_at"`
-    GamesPlayed  int       `json:"games_played"`
-    Wins         int       `json:"wins"`
-    Losses       int       `json:"losses"`
-    Draws        int       `json:"draws"`
+    Username          string    `json:"username"`
+    Rating            int       `json:"rating"`
+    PuzzleRating      int       `json:"puzzle_rating"`
+    ProfileIcon       string    `json:"profile_icon"`
+    CreatedAt         time.Time `json:"created_at"`
+    GamesPlayed       int       `json:"games_played"`
+    Wins              int       `json:"wins"`
+    Losses            int       `json:"losses"`
+    Draws             int       `json:"draws"`
+    AchievementPoints int       `json:"achievement_points"`
 }
 
 type RatingPoint struct {

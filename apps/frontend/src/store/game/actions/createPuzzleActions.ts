@@ -1,4 +1,5 @@
 import { Chess } from 'chess.js';
+import { pushAchievementToasts } from '../../../components/common/AchievementToast/AchievementToast';
 import { moveEvalService } from '../../../services/engine/moveEvalService';
 import { getOpponentSide } from '../../../services/game/chessGameService';
 import { transition } from '../../../services/game/gameLifecycle';
@@ -62,7 +63,13 @@ export const createPuzzleActions = (
           solved,
         }),
       });
-      if (res.ok) return res.json();
+      if (res.ok) {
+        const data = await res.json();
+        if (data.new_achievements && data.new_achievements.length > 0) {
+          pushAchievementToasts(data.new_achievements);
+        }
+        return data;
+      }
       return null;
     } catch {
       return null;

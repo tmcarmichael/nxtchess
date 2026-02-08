@@ -105,6 +105,12 @@
   --board-check: rgba(248, 113, 113, 0.5);
   --board-premove: rgba(235, 100, 120, 0.65);
 
+  --achievement-common: #888888;
+  --achievement-uncommon: #4ade80;
+  --achievement-rare: #60a5fa;
+  --achievement-epic: #a78bfa;
+  --achievement-legendary: #fbbf24;
+
   --shadow-xs: 1px 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-sm: 2px 2px 4px rgba(0, 0, 0, 0.35), -1px -1px 2px rgba(255, 255, 255, 0.02);
   --shadow-md: 4px 4px 12px rgba(0, 0, 0, 0.45), -2px -2px 4px rgba(255, 255, 255, 0.02);
@@ -220,6 +226,12 @@ body[data-theme='light'] {
   --shadow-xl: 12px 12px 40px rgba(0, 0, 0, 0.15);
   --shadow-glow: 0 0 30px rgba(0, 155, 125, 0.1);
   --shadow-board: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
+
+  --achievement-common: #6b6b6b;
+  --achievement-uncommon: #16a34a;
+  --achievement-rare: #2563eb;
+  --achievement-epic: #7c3aed;
+  --achievement-legendary: #d97706;
 }
 
 body[data-theme='light']::before {

@@ -5,6 +5,7 @@ import { BACKEND_URL } from '../../../shared/config/env';
 import { DEBUG } from '../../../shared/utils/debug';
 import { useSettings } from '../../../store/settings/SettingsContext';
 import { getRatingIcon } from '../ProfileIconPicker/ProfileIconPicker';
+import UserAchievements from '../UserAchievements/UserAchievements';
 import styles from './UserProfile.module.css';
 
 interface ViewedProfile {
@@ -16,6 +17,7 @@ interface ViewedProfile {
   wins: number;
   losses: number;
   draws: number;
+  achievementPoints: number;
 }
 
 interface RatingPoint {
@@ -132,6 +134,7 @@ const UserProfile = () => {
                 wins: data.wins ?? 0,
                 losses: data.losses ?? 0,
                 draws: data.draws ?? 0,
+                achievementPoints: data.achievement_points ?? 0,
               });
             }
             setIsLoading(false);
@@ -330,6 +333,8 @@ const UserProfile = () => {
                 </span>
               </div>
             </div>
+
+            <UserAchievements username={params.username!} />
 
             <div class={styles.userProfileGraph}>
               <div class={styles.userProfileGraphHeader}>

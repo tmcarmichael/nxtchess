@@ -11,6 +11,7 @@ import type {
   MoveRejectedData,
   OpponentMoveData,
   GameEndedData,
+  GameEndedAchievement,
   TimeUpdateData,
 } from '../../../services/sync/types';
 import type { Side, GameWinner, GameOverReason } from '../../../types/game';
@@ -51,6 +52,8 @@ export interface MultiplayerEvents {
     blackRating?: number;
     whiteRatingDelta?: number;
     blackRatingDelta?: number;
+    whiteNewAchievements?: GameEndedAchievement[];
+    blackNewAchievements?: GameEndedAchievement[];
   };
   'game:opponent_left': void;
   'game:error': { message: string };
@@ -208,6 +211,8 @@ export const createMultiplayerStore = (): MultiplayerStore => {
           blackRating: data.blackRating,
           whiteRatingDelta: data.whiteRatingDelta,
           blackRatingDelta: data.blackRatingDelta,
+          whiteNewAchievements: data.whiteNewAchievements,
+          blackNewAchievements: data.blackNewAchievements,
         });
         break;
       }

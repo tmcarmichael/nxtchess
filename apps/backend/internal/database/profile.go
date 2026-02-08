@@ -247,6 +247,23 @@ func SetProfileIcon(userID, icon string) error {
 	return err
 }
 
+func GetProfileCreatedAt(userID string) (time.Time, error) {
+	defer metrics.ObserveQuery("GetProfileCreatedAt", time.Now())
+	ctx, cancel := QueryContext()
+	defer cancel()
+
+	var createdAt time.Time
+	err := DB.QueryRowContext(ctx, `SELECT created_at FROM profiles WHERE user_id = $1`, userID).Scan(&createdAt)
+	if err == sql.ErrNoRows {
+		return time.Time{}, nil
+	}
+	if err != nil {
+		logger.Error("Error getting profile created_at", logger.F("userID", userID, "error", err.Error()))
+		return time.Time{}, err
+	}
+	return createdAt, nil
+}
+
 func GetGameStatsByUserID(userID string) (gamesPlayed, wins, losses, draws int, err error) {
 	defer metrics.ObserveQuery("GetGameStatsByUserID", time.Now())
 	ctx, cancel := QueryContext()

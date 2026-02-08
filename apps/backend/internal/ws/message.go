@@ -1,6 +1,10 @@
 package ws
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/achievements"
+)
 
 // Message types for client -> server
 const (
@@ -109,13 +113,15 @@ type PlayerInfo struct {
 
 // GameEndedData is sent when game ends
 type GameEndedData struct {
-	GameID           string `json:"gameId"`
-	Result           string `json:"result"` // "white", "black", "draw"
-	Reason           string `json:"reason"` // "checkmate", "resignation", "timeout", "stalemate", "agreement"
-	WhiteRating      *int   `json:"whiteRating,omitempty"`
-	BlackRating      *int   `json:"blackRating,omitempty"`
-	WhiteRatingDelta *int   `json:"whiteRatingDelta,omitempty"`
-	BlackRatingDelta *int   `json:"blackRatingDelta,omitempty"`
+	GameID                string                        `json:"gameId"`
+	Result                string                        `json:"result"`
+	Reason                string                        `json:"reason"`
+	WhiteRating           *int                          `json:"whiteRating,omitempty"`
+	BlackRating           *int                          `json:"blackRating,omitempty"`
+	WhiteRatingDelta      *int                          `json:"whiteRatingDelta,omitempty"`
+	BlackRatingDelta      *int                          `json:"blackRatingDelta,omitempty"`
+	WhiteNewAchievements  []achievements.AchievementUnlock `json:"whiteNewAchievements,omitempty"`
+	BlackNewAchievements  []achievements.AchievementUnlock `json:"blackNewAchievements,omitempty"`
 }
 
 // Gameplay payloads

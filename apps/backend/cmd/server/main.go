@@ -115,6 +115,8 @@ func main() {
 		pub.Get("/api/profile/{username}", controllers.UserProfileHandler)
 		pub.Get("/api/profile/{username}/rating-history", controllers.UserRatingHistoryHandler)
 		pub.Get("/api/profile/{username}/recent-games", controllers.UserRecentGamesHandler)
+		pub.Get("/api/profile/{username}/achievements", controllers.UserAchievementsHandler)
+		pub.Get("/api/achievements", controllers.AchievementCatalogHandler)
 
 		// Training API routes
 		pub.Get("/api/training/endgame/random", controllers.GetRandomEndgamePosition)
