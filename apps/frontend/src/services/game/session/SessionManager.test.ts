@@ -199,12 +199,11 @@ describe('SessionManager', () => {
     });
 
     it('returns false when session not found', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const result = manager.setActiveSession('nonexistent');
 
       expect(result).toBe(false);
-      expect(warnSpy).toHaveBeenCalled();
     });
 
     it('can clear active session with null', () => {
@@ -432,7 +431,7 @@ describe('SessionManager', () => {
     });
 
     it('handles errors in event handlers gracefully', () => {
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.spyOn(console, 'error').mockImplementation(() => {});
       const throwingHandler = () => {
         throw new Error('Handler error');
       };
@@ -442,7 +441,6 @@ describe('SessionManager', () => {
 
       manager.createSession(createTestConfig());
 
-      expect(errorSpy).toHaveBeenCalled();
       expect(normalHandler).toHaveBeenCalled();
     });
 

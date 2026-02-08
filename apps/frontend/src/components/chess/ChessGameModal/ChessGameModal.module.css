@@ -17,6 +17,14 @@
   background-color: var(--overlay-heavy);
 }
 
+.modalOverlayClosing {
+  animation: fadeOut 0.2s ease-in forwards;
+}
+
+.modalContentClosing {
+  animation: slideDownOut 0.2s ease-in forwards;
+}
+
 .modalContent {
   position: relative;
   width: 90%;
@@ -58,14 +66,12 @@
 
 .modalContent h2 {
   margin: var(--space-sm) 0 var(--space-lg);
-  padding-bottom: var(--space-md);
   font-family: var(--font-display);
   font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
   text-transform: uppercase;
-  border-bottom: 1px solid var(--border-subtle);
 }
 
 .closeButton {
@@ -101,6 +107,46 @@
 .closeButtonIcon {
   font-size: var(--text-xl);
   line-height: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideDownOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
 }
 
 @media (max-width: 639px) {
