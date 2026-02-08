@@ -214,6 +214,105 @@ describe('GameSession', () => {
       expect(session.currentState.capturedPieces.black).toHaveLength(1);
     });
 
+    it('generates correct en passant FEN after move sequence', () => {
+      const config = createTestConfig();
+      const session = new GameSession(config);
+
+      // Play: 1. e4 Nf6 2. e5 d5 (creates en passant on d6)
+      const moves = [
+        { from: 'e2', to: 'e4' },
+        { from: 'g8', to: 'f6' },
+        { from: 'e4', to: 'e5' },
+        { from: 'd7', to: 'd5' },
+      ];
+
+      for (const move of moves) {
+        const result = session.applyCommand({
+          type: 'APPLY_MOVE',
+          payload: { from: move.from, to: move.to },
+        });
+        expect(result.success).toBe(true);
+      }
+
+      // After d7-d5, the FEN should have d6 as en passant square
+      const fen = session.currentState.fen;
+      const enPassantSquare = fen.split(' ')[3];
+      expect(enPassantSquare).toBe('d6');
+
+      // viewFen should also have the en passant square
+      expect(session.currentState.viewFen.split(' ')[3]).toBe('d6');
+
+      // The en passant capture should be a legal move for e5 pawn
+      const legalMoves = session.getLegalMoves('e5');
+      expect(legalMoves).toContain('d6');
+    });
+
+    it('en passant capture works through move sequence', () => {
+      const config = createTestConfig();
+      const session = new GameSession(config);
+
+      // Play: 1. e4 Nf6 2. e5 d5 3. exd6 (en passant)
+      const moves = [
+        { from: 'e2', to: 'e4' },
+        { from: 'g8', to: 'f6' },
+        { from: 'e4', to: 'e5' },
+        { from: 'd7', to: 'd5' },
+        { from: 'e5', to: 'd6' }, // en passant
+      ];
+
+      for (const move of moves) {
+        const result = session.applyCommand({
+          type: 'APPLY_MOVE',
+          payload: { from: move.from, to: move.to },
+        });
+        expect(result.success).toBe(true);
+      }
+
+      // Should have captured the black pawn via en passant
+      expect(session.currentState.capturedPieces.black).toContain('bP');
+
+      // The white pawn should now be on d6 (rank 6: ...Pd6...Nf6...)
+      expect(session.currentState.fen).toContain('3P1n2');
+    });
+
+    it('black en passant works through move sequence', () => {
+      const config = createTestConfig({ playerColor: 'b' });
+      const session = new GameSession(config);
+
+      // Play: 1. a3 d5 2. a4 d4 3. c4 (double push, en passant target c3)
+      const moves = [
+        { from: 'a2', to: 'a3' },
+        { from: 'd7', to: 'd5' },
+        { from: 'a3', to: 'a4' },
+        { from: 'd5', to: 'd4' },
+        { from: 'c2', to: 'c4' },
+      ];
+
+      for (const move of moves) {
+        const result = session.applyCommand({
+          type: 'APPLY_MOVE',
+          payload: { from: move.from, to: move.to },
+        });
+        expect(result.success).toBe(true);
+      }
+
+      // FEN should have c3 as en passant square
+      const fen = session.currentState.fen;
+      expect(fen.split(' ')[3]).toBe('c3');
+
+      // Black's d4 pawn should have c3 as a legal move
+      const legalMoves = session.getLegalMoves('d4');
+      expect(legalMoves).toContain('c3');
+
+      // Execute en passant
+      const epResult = session.applyCommand({
+        type: 'APPLY_MOVE',
+        payload: { from: 'd4', to: 'c3' },
+      });
+      expect(epResult.success).toBe(true);
+      expect(session.currentState.capturedPieces.white).toContain('wP');
+    });
+
     it('detects checkmate and ends game', () => {
       const config = createTestConfig();
       // Scholar's mate position - one move from checkmate
