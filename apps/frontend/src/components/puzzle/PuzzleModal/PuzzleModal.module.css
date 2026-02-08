@@ -18,6 +18,11 @@
   display: flex;
   justify-content: center;
   gap: var(--space-sm);
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-md);
+  width: fit-content;
+  align-self: center;
 }
 
 .modeButton {
@@ -54,14 +59,15 @@
 
 .categoryGrid {
   display: grid;
-  grid-template-columns: repeat(2, auto);
-  justify-content: center;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-sm);
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-md);
 }
 
 .categoryButton {
-  min-width: 106px;
-  padding: var(--space-sm) calc(var(--space-md) + 3px);
+  padding: var(--space-sm) var(--space-xs);
   font-family: var(--font-display);
   font-size: var(--text-base);
   font-weight: 700;
@@ -161,9 +167,8 @@
   }
 
   .categoryButton {
-    min-width: 80px;
     font-size: var(--text-sm);
-    padding: var(--space-xs) var(--space-sm);
+    padding: var(--space-xs);
   }
 
   .modalActions {
