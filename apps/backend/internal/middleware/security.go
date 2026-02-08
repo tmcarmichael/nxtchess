@@ -38,7 +38,7 @@ func Security(cfg *config.Config) func(http.Handler) http.Handler {
 				"style-src 'self' 'unsafe-inline'; " +
 				"img-src 'self' data: https:; " +
 				"font-src 'self'; " +
-				"connect-src 'self' " + cfg.FrontendURL + "; " +
+				"connect-src 'self'; " +
 				"frame-ancestors 'none'; " +
 				"form-action 'self'"
 			w.Header().Set("Content-Security-Policy", csp)

@@ -18,7 +18,6 @@ type Config struct {
 	DiscordClientID     string
 	DiscordClientSecret string
 	FrontendURL         string
-	BackendURL          string
 	TrustedProxies      []string // CIDRs or IPs of trusted reverse proxies
 }
 
@@ -73,7 +72,6 @@ func Load() (*Config, []string) {
 		DiscordClientID:     os.Getenv("DISCORD_CLIENT_ID"),
 		DiscordClientSecret: os.Getenv("DISCORD_CLIENT_SECRET"),
 		FrontendURL:         os.Getenv("FRONTEND_URL"),
-		BackendURL:          os.Getenv("BACKEND_URL"),
 		TrustedProxies:      trustedProxies,
 	}
 
@@ -87,15 +85,12 @@ func Load() (*Config, []string) {
 		warnings = append(warnings, "GitHub OAuth credentials not set")
 	}
 
-	if cfg.BackendURL == "" {
-		cfg.BackendURL = fmt.Sprintf("http://localhost:%s", port)
-	}
 	if cfg.FrontendURL == "" {
 		cfg.FrontendURL = "http://localhost:5173"
 	}
 
-	warnings = append(warnings, fmt.Sprintf("Config loaded: ENV=%s, FRONTEND_URL=%s, BACKEND_URL=%s, PORT=%s",
-		cfg.Environment, cfg.FrontendURL, cfg.BackendURL, cfg.Port))
+	warnings = append(warnings, fmt.Sprintf("Config loaded: ENV=%s, FRONTEND_URL=%s, PORT=%s",
+		cfg.Environment, cfg.FrontendURL, cfg.Port))
 
 	return cfg, warnings
 }
