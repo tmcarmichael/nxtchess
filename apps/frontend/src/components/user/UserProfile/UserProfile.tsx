@@ -47,6 +47,15 @@ const RATING_CATEGORIES: RatingCategoryOption[] = [
   },
 ];
 
+type TimeRange = 'W' | 'M' | 'Y' | 'ALL';
+
+const TIME_RANGES: { value: TimeRange; label: string }[] = [
+  { value: 'W', label: 'W' },
+  { value: 'M', label: 'M' },
+  { value: 'Y', label: 'Y' },
+  { value: 'ALL', label: 'All' },
+];
+
 interface RecentGame {
   game_id: string;
   opponent: string;
@@ -71,6 +80,7 @@ const UserProfile = () => {
   const [fetchError, setFetchError] = createSignal(false);
   const [isMobile, setIsMobile] = createSignal(false);
   const [activeCategory, setActiveCategory] = createSignal<RatingCategory>('play');
+  const [timeRange, setTimeRange] = createSignal<TimeRange>('ALL');
 
   let currentRequestVersion = 0;
 
@@ -171,8 +181,21 @@ const UserProfile = () => {
     const category = RATING_CATEGORIES.find((c) => c.value === activeCategory());
     if (!category) return null;
 
-    const data = history[category.historyKey];
+    let data = history[category.historyKey];
     if (!data || data.length === 0) return null;
+
+    const range = timeRange();
+    if (range !== 'ALL') {
+      const now = Date.now();
+      const cutoffs: Record<Exclude<TimeRange, 'ALL'>, number> = {
+        W: 7 * 24 * 60 * 60 * 1000,
+        M: 30 * 24 * 60 * 60 * 1000,
+        Y: 365 * 24 * 60 * 60 * 1000,
+      };
+      const cutoff = now - cutoffs[range];
+      data = data.filter((p) => new Date(p.created_at).getTime() >= cutoff);
+      if (data.length === 0) return null;
+    }
 
     return { category, data };
   };
@@ -201,9 +224,12 @@ const UserProfile = () => {
         labels: { style: { colors: textColor, fontSize: '11px' } },
       },
       yaxis: {
-        min: min - padding,
-        max: max + padding,
-        labels: { style: { colors: textColor, fontSize: '11px' } },
+        min: Math.floor((min - padding) / 25) * 25,
+        max: Math.ceil((max + padding) / 25) * 25,
+        labels: {
+          style: { colors: textColor, fontSize: '11px' },
+          formatter: (val: number) => Math.round(val).toString(),
+        },
       },
       stroke: { width: 2, curve: 'smooth' as const },
       markers: { size: ratings.length < 20 ? 3 : 0 },
@@ -306,7 +332,24 @@ const UserProfile = () => {
             </div>
 
             <div class={styles.userProfileGraph}>
-              <h3 class={styles.userProfileSectionTitle}>Rating History</h3>
+              <div class={styles.userProfileGraphHeader}>
+                <h3 class={styles.userProfileSectionTitle}>Rating History</h3>
+                <div class={styles.userProfileTimeRange}>
+                  <For each={TIME_RANGES}>
+                    {(range) => (
+                      <button
+                        class={styles.userProfileTimeRangeButton}
+                        classList={{
+                          [styles.userProfileTimeRangeButtonActive]: timeRange() === range.value,
+                        }}
+                        onClick={() => setTimeRange(range.value)}
+                      >
+                        {range.label}
+                      </button>
+                    )}
+                  </For>
+                </div>
+              </div>
               <div class={styles.userProfileCategorySelector}>
                 <For each={RATING_CATEGORIES}>
                   {(category) => (
