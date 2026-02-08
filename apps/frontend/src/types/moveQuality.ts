@@ -17,6 +17,7 @@ export interface MoveEvaluation {
   quality: MoveQuality | null;
   isPlayerMove: boolean;
   side: Side;
+  moveTimeMs?: number;
 }
 
 /**

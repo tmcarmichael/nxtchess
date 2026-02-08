@@ -3,6 +3,7 @@ import styles from './ChessEvalBar.module.css';
 
 interface EvalBarProps {
   evalScore: number | null;
+  flipped?: boolean;
 }
 
 // Threshold above which we consider it a "mate" score
@@ -69,7 +70,7 @@ const ChessEvalBar: Component<EvalBarProps> = (props) => {
 
   return (
     <div class={styles.evalBarContainer} role="img" aria-label={evalDescription()}>
-      <div class={styles.evalBarTrack}>
+      <div class={styles.evalBarTrack} classList={{ [styles.trackFlipped]: props.flipped }}>
         <div class={styles.evalBarFill} style={{ '--fill-percent': `${whitePortion()}%` }} />
       </div>
       <div class={styles.evalScore}>

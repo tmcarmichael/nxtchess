@@ -36,6 +36,21 @@ const MoveHistoryPanel: Component<MoveHistoryPanelProps> = (props) => {
     )
   );
 
+  createEffect(
+    on(
+      () => props.viewMoveIndex,
+      () => {
+        requestAnimationFrame(() => {
+          if (!movesContainerRef) return;
+          const activeButton = movesContainerRef.querySelector('[aria-current="step"]');
+          if (activeButton) {
+            activeButton.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        });
+      }
+    )
+  );
+
   const whiteMoves = createMemo(() => props.moveHistory.filter((_, i) => i % 2 === 0));
   const blackMoves = createMemo(() => props.moveHistory.filter((_, i) => i % 2 === 1));
 

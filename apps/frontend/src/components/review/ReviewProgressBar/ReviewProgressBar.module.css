@@ -1,0 +1,50 @@
+.progressContainer {
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.progressText {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.progressPercent {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--accent);
+  font-size: var(--text-sm);
+}
+
+.progressTrack {
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease-out;
+}
+
+.progressFillIndeterminate {
+  width: 40%;
+  animation: indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}

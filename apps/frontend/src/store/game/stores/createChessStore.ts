@@ -1,3 +1,4 @@
+import { Chess } from 'chess.js';
 import { batch } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { fenToBoard, getOpponentSide } from '../../../services/game/chessGameService';
@@ -427,12 +428,29 @@ export const createChessStore = (): ChessStore => {
   };
 
   const jumpToMoveIndex = (targetIndex: number) => {
-    if (!currentSession) return;
+    if (!currentSession) {
+      const clamped = Math.min(Math.max(-1, targetIndex), state.moveHistory.length - 1);
+      const chess = new Chess();
+      for (let i = 0; i <= clamped; i++) {
+        chess.move(state.moveHistory[i]);
+      }
+      batch(() => {
+        setState('viewMoveIndex', clamped);
+        setState('viewFen', chess.fen());
+        setState('lastMove', null);
+        setState('checkedKingSquare', null);
+      });
+      return;
+    }
     sessionManager.applyCommand(currentSession.sessionId, {
       type: 'NAVIGATE_HISTORY',
       payload: { targetIndex },
     });
     syncFromSession();
+    batch(() => {
+      setState('lastMove', null);
+      setState('checkedKingSquare', null);
+    });
   };
 
   const truncateToViewPosition = () => {

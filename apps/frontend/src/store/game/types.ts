@@ -5,6 +5,8 @@ import type { TimerStore } from './stores/createTimerStore';
 import type { UIStore } from './stores/createUIStore';
 import type { Square, PromotionPiece } from '../../types/chess';
 import type { Side, StartGameOptions, MultiplayerGameOptions } from '../../types/game';
+import type { MoveEvaluation } from '../../types/moveQuality';
+import type { EvalPoint, ReviewPhase, ReviewProgress, ReviewSummary } from '../../types/review';
 
 export type { ChessStore, TimerStore, UIStore, EngineStore, MultiplayerStore };
 
@@ -91,6 +93,16 @@ export interface CoreGameContextValue {
   derived: CoreDerived;
 }
 
+export interface PlayReviewState {
+  phase: () => ReviewPhase;
+  progress: () => ReviewProgress | null;
+  summary: () => ReviewSummary | null;
+  evaluations: () => MoveEvaluation[];
+  evalHistory: () => EvalPoint[];
+  startReview: () => void;
+  exitReview: () => void;
+}
+
 export interface PlayGameContextValue {
   chess: ChessStore;
   timer: TimerStore;
@@ -99,6 +111,7 @@ export interface PlayGameContextValue {
   multiplayer: MultiplayerStore;
   actions: PlayActions;
   derived: PlayDerived;
+  review: PlayReviewState;
 }
 
 export interface TrainingGameContextValue {

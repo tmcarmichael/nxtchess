@@ -49,6 +49,7 @@ export interface UnifiedGameContext {
     allowBothSides: () => boolean;
     /** Optional eval score getter - when provided, ChessBoardController uses this instead of evalEngineWorker */
     getEvalScore?: () => number | null;
+    isReviewing?: () => boolean;
     getPuzzleFeedback?: () => {
       type: 'incorrect' | 'complete';
       message: string;

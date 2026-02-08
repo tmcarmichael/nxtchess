@@ -1,0 +1,75 @@
+.controlPanelRoot {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.controlPanelHeader {
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.controlPanelContent {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+}
+
+.controlPanelFooter {
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.exitButton {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.exitButton:hover {
+  background: var(--surface-4);
+  color: var(--text-primary);
+}
+
+.exitButton:active {
+  background: var(--surface-4);
+  transform: scale(0.97);
+}
+
+@media (max-width: 639px) {
+  .controlPanelHeader {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .controlPanelContent {
+    padding: var(--space-xs);
+  }
+
+  .controlPanelFooter {
+    padding: var(--space-xs) var(--space-sm);
+  }
+}

@@ -1,0 +1,92 @@
+.evalGraphContainer {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.evalGraphHeader {
+  padding: var(--space-sm) var(--space-md) 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.graphArea {
+  position: relative;
+  padding: 0 var(--space-sm);
+}
+
+.midLine {
+  position: absolute;
+  top: 50%;
+  left: var(--space-sm);
+  right: var(--space-sm);
+  height: 1px;
+  background: var(--text-muted);
+  opacity: 0.3;
+}
+
+.barContainer {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  gap: 1px;
+}
+
+.barWrapper {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.barWrapper:hover .bar,
+.barWrapper:hover .timingBar {
+  opacity: 1 !important;
+  filter: brightness(1.2);
+}
+
+.barWrapperCurrent {
+  background: var(--surface-4);
+  border-radius: var(--radius-sm);
+}
+
+.bar {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  border-radius: 1px;
+  transition: opacity 0.15s ease;
+}
+
+.timingGraphArea {
+  position: relative;
+  padding: 0 var(--space-sm) var(--space-sm);
+}
+
+.timingBar {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  border-radius: 1px;
+  transition: opacity 0.15s ease;
+}
+
+@media (max-width: 639px) {
+  .graphArea {
+    padding: 0 var(--space-xs);
+  }
+
+  .midLine {
+    left: var(--space-xs);
+    right: var(--space-xs);
+  }
+
+  .timingGraphArea {
+    padding: 0 var(--space-xs) var(--space-xs);
+  }
+}
