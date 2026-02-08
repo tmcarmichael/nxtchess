@@ -6,6 +6,7 @@ import {
   getRandomPuzzle,
   uciToFromTo,
   computeSetupMove,
+  puzzleHistory,
   type PuzzleDefinition,
 } from '../../../services/puzzle';
 import { DEBUG } from '../../../shared/utils/debug';
@@ -42,6 +43,7 @@ export const createPuzzleActions = (
 
   let currentPuzzle: PuzzleDefinition | null = null;
   let currentGameGeneration = 0;
+  let hasRecordedResult = false;
 
   const performOpponentMove = async (generation: number) => {
     if (!currentPuzzle) return;
@@ -88,6 +90,7 @@ export const createPuzzleActions = (
   const startNewGame = async (options: StartGameOptions) => {
     currentGameGeneration++;
     const thisGeneration = currentGameGeneration;
+    hasRecordedResult = false;
 
     timer.stop();
     ui.hideEndModal();
@@ -197,6 +200,17 @@ export const createPuzzleActions = (
         message: `${incorrectSan} is not the correct move. Try again!`,
         incorrectMoveSan: incorrectSan,
       });
+
+      if (!hasRecordedResult && currentPuzzle) {
+        hasRecordedResult = true;
+        puzzleHistory.record({
+          puzzleId: currentPuzzle.id,
+          category: currentPuzzle.category,
+          fen: currentPuzzle.fen,
+          result: 'fail',
+          timestamp: Date.now(),
+        });
+      }
       return;
     }
 
@@ -237,6 +251,17 @@ export const createPuzzleActions = (
         type: 'complete',
         message: `${winnerName} wins by checkmate.`,
       });
+
+      if (!hasRecordedResult && currentPuzzle) {
+        hasRecordedResult = true;
+        puzzleHistory.record({
+          puzzleId: currentPuzzle.id,
+          category: currentPuzzle.category,
+          fen: currentPuzzle.fen,
+          result: 'pass',
+          timestamp: Date.now(),
+        });
+      }
       return;
     }
 
