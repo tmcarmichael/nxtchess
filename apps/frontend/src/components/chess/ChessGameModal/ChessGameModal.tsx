@@ -1,4 +1,12 @@
-import { type ParentComponent, type JSX, onMount, onCleanup, Show, createUniqueId } from 'solid-js';
+import {
+  type ParentComponent,
+  type JSX,
+  onMount,
+  onCleanup,
+  Show,
+  createUniqueId,
+  createSignal,
+} from 'solid-js';
 import { createFocusTrap } from '../../../shared/utils/createFocusTrap';
 import styles from './ChessGameModal.module.css';
 
@@ -18,16 +26,20 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
 
   let modalRef: HTMLDivElement | undefined;
 
+  const [closing, setClosing] = createSignal(false);
+
+  const handleClose = () => {
+    if (closing()) return;
+    setClosing(true);
+    setTimeout(() => props.onClose(), 200);
+  };
+
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       if (closeButtonRef) {
         closeButtonRef.classList.add(styles.closeButtonEscapeActive);
-        setTimeout(() => {
-          props.onClose();
-        }, 150);
-      } else {
-        props.onClose();
       }
+      handleClose();
     }
   };
 
@@ -48,8 +60,9 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
       classList={{
         [styles.modalOverlay]: true,
         [styles.modalOverlayPriority]: !!props.priority,
+        [styles.modalOverlayClosing]: closing(),
       }}
-      onClick={() => props.onClose()}
+      onClick={() => handleClose()}
     >
       <div
         ref={modalRef}
@@ -57,6 +70,7 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
           [styles.modalContent]: true,
           [styles.modalContentSm]: props.size === 'sm',
           [styles.modalContentMd]: props.size === 'md',
+          [styles.modalContentClosing]: closing(),
         }}
         role="dialog"
         aria-modal="true"
@@ -66,7 +80,7 @@ const ChessGameModal: ParentComponent<ChessGameModalProps> = (props) => {
         <button
           ref={closeButtonRef}
           class={styles.closeButton}
-          onClick={() => props.onClose()}
+          onClick={() => handleClose()}
           aria-label="Close"
         >
           <span class={styles.closeButtonIcon}>&times;</span>
