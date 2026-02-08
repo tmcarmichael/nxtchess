@@ -1,6 +1,7 @@
 # NxtChess
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Stockfish](https://img.shields.io/badge/Stockfish-GPLv3-orange.svg)](LICENSES/GPL-3.0.txt)
 [![Status](https://img.shields.io/badge/status-beta-green)](#)
 
 Real-time multiplayer chess with tactics, analysis, and training. Built for fast, low-latency play in SolidJS + Go. Play instantly via shareable links or sign in to track progress.
@@ -77,6 +78,14 @@ SolidJS frontend with Stockfish WASM for client-side analysis and AI play. Go ba
 - Opening repertoire tracking
 - Mobile app
 - CI/CD
+
+## Third-Party Licenses
+
+NxtChess's original source code is licensed under [Apache 2.0](LICENSE).
+
+This project uses the [Stockfish](https://github.com/official-stockfish/Stockfish) chess engine, which is licensed under the **GNU General Public License v3 (GPLv3)**. Stockfish is distributed unmodified as a WASM binary (via [stockfish.js](https://github.com/nmrugg/stockfish.js) 16.1.0) and runs in a dedicated WebWorker, communicating with the UI via UCI messages.
+
+The Stockfish WASM binary served by this project remains GPLv3 licensed. See [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt) and [LICENSES/Stockfish-NOTICE.txt](LICENSES/Stockfish-NOTICE.txt) for the full license text, attribution, and corresponding source details.
 
 ## Contributing
 
