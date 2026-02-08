@@ -16,6 +16,7 @@ services:
       - ./db/migrations/000001_add_constraints_and_indexes.up.sql:/docker-entrypoint-initdb.d/01_migration.sql:ro
       - ./db/migrations/000002_add_profile_icon.up.sql:/docker-entrypoint-initdb.d/02_migration.sql:ro
       - ./db/migrations/000003_add_endgame_positions.up.sql:/docker-entrypoint-initdb.d/03_migration.sql:ro
+      - ./db/migrations/000004_add_puzzle_rating.up.sql:/docker-entrypoint-initdb.d/04_migration.sql:ro
       # Seeds (run after migrations)
       - ./db/seeds/001_endgame_positions.sql:/docker-entrypoint-initdb.d/90_seed_endgames.sql:ro
       - ./db/seeds/endgame_positions_curated.sql:/docker-entrypoint-initdb.d/91_seed_endgames_curated.sql:ro
@@ -34,14 +35,11 @@ services:
     container_name: nxtchess_backend
     profiles: ["backend", "full"]
     env_file: ./apps/backend/.env
-    environment:
-      MIGRATIONS_PATH: /migrations
     depends_on:
       - db
       - redis
     volumes:
       - ./apps/backend:/app
-      - ./db/migrations:/migrations:ro
     ports:
       - "8080:8080"
     command: ["go", "run", "cmd/server/main.go"]

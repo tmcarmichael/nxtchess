@@ -44,20 +44,10 @@ func main() {
 
 	database.InitPostgres()
 
-	// Run database migrations (skip if SKIP_MIGRATIONS=true or path not found)
 	if os.Getenv("SKIP_MIGRATIONS") != "true" {
-		migrationsPath := os.Getenv("MIGRATIONS_PATH")
-		if migrationsPath == "" {
-			migrationsPath = "db/migrations" // Default for local development
-		}
-		// Check if migrations directory exists
-		if _, err := os.Stat(migrationsPath); err == nil {
-			if err := migrate.Run(database.DB, migrationsPath); err != nil {
-				logger.Error("Migration failed", logger.F("error", err.Error()))
-				os.Exit(1)
-			}
-		} else {
-			logger.Info("Migrations directory not found, skipping", logger.F("path", migrationsPath))
+		if err := migrate.Run(database.DB); err != nil {
+			logger.Error("Migration failed", logger.F("error", err.Error()))
+			os.Exit(1)
 		}
 	} else {
 		logger.Info("Skipping migrations (SKIP_MIGRATIONS=true)")

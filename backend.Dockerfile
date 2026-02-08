@@ -26,14 +26,8 @@ WORKDIR /app
 # Install CA certificates for HTTPS calls (OAuth)
 RUN apk --no-cache add ca-certificates tzdata
 
-# Copy binary from builder
+# Copy binary from builder (migrations are embedded via go:embed)
 COPY --from=builder /app/server .
-
-# Copy migrations from project root
-COPY db/migrations/ /app/db/migrations/
-
-# Set default migrations path
-ENV MIGRATIONS_PATH=/app/db/migrations
 
 # Run as non-root user
 RUN adduser -D -g '' appuser
