@@ -72,7 +72,10 @@ const PuzzleControlPanel: ParentComponent = () => {
           </Show>
         </div>
       </Show>
-      <PuzzleHistoryStrip refreshTrigger={chess.state.puzzleFeedback} />
+      <PuzzleHistoryStrip
+        refreshTrigger={chess.state.puzzleFeedback}
+        rated={chess.state.puzzleRated}
+      />
     </div>
   );
 };

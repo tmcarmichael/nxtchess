@@ -7,6 +7,7 @@ import {
   uciToFromTo,
   computeSetupMove,
   puzzleHistory,
+  solvedPuzzleTracker,
   type PuzzleDefinition,
 } from '../../../services/puzzle';
 import { BACKEND_URL } from '../../../shared/config/env';
@@ -123,7 +124,11 @@ export const createPuzzleActions = (
     const { puzzleCategory = 'mate-in-1' } = options;
     const category = puzzleCategory as PuzzleCategory;
 
-    const puzzle = getRandomPuzzle(category, chess.state.puzzleId ?? undefined);
+    const puzzle = getRandomPuzzle(
+      category,
+      chess.state.puzzleId ?? undefined,
+      options.puzzleRated
+    );
     currentPuzzle = puzzle;
 
     chess.setLifecycle(transition('idle', 'START_GAME'));
@@ -239,13 +244,16 @@ export const createPuzzleActions = (
 
       if (!hasRecordedResult && currentPuzzle) {
         hasRecordedResult = true;
+        const isRated = chess.state.puzzleRated;
         puzzleHistory.record({
           puzzleId: currentPuzzle.id,
           category: currentPuzzle.category,
           fen: currentPuzzle.fen,
           result: 'fail',
+          rated: isRated,
           timestamp: Date.now(),
         });
+        solvedPuzzleTracker.markSolved(currentPuzzle.id, isRated);
       }
       return;
     }
@@ -301,13 +309,16 @@ export const createPuzzleActions = (
 
       if (!hasRecordedResult && currentPuzzle) {
         hasRecordedResult = true;
+        const isRated = chess.state.puzzleRated;
         puzzleHistory.record({
           puzzleId: currentPuzzle.id,
           category: currentPuzzle.category,
           fen: currentPuzzle.fen,
           result: 'pass',
+          rated: isRated,
           timestamp: Date.now(),
         });
+        solvedPuzzleTracker.markSolved(currentPuzzle.id, isRated);
       }
       return;
     }

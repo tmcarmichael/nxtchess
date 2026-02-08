@@ -5,6 +5,7 @@ import styles from './PuzzleHistoryStrip.module.css';
 
 interface PuzzleHistoryStripProps {
   refreshTrigger?: unknown;
+  rated?: boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -78,7 +79,7 @@ const PuzzleHistoryStrip: Component<PuzzleHistoryStripProps> = (props) => {
 
   createEffect(() => {
     void props.refreshTrigger;
-    setAttempts(puzzleHistory.get());
+    setAttempts(puzzleHistory.get(props.rated));
   });
 
   const handleClick = (attempt: PuzzleAttempt) => {
