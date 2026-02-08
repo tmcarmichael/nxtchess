@@ -13,6 +13,7 @@
     box-shadow var(--transition-fast);
   min-width: 5.5rem;
   max-width: 6.5rem;
+  position: relative;
 }
 
 .achievementBadge:hover {
@@ -111,6 +112,120 @@
   }
 }
 
+.achievementBadgeTooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14rem;
+  padding: var(--space-sm);
+  background: var(--surface-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  text-align: left;
+  pointer-events: none;
+}
+
+.achievementBadgeTooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--surface-4);
+}
+
+.achievementBadge:hover .achievementBadgeTooltip {
+  display: block;
+}
+
+.achievementBadgeTooltipHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-2xs);
+}
+
+.achievementBadgeTooltipName {
+  font-size: var(--text-sm);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.achievementBadgeTooltipRarity {
+  font-size: var(--text-2xs);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px var(--space-2xs);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.achievementBadgeTooltipRarityCommon {
+  color: var(--achievement-common);
+}
+
+.achievementBadgeTooltipRarityUncommon {
+  color: var(--achievement-uncommon);
+}
+
+.achievementBadgeTooltipRarityRare {
+  color: var(--achievement-rare);
+}
+
+.achievementBadgeTooltipRarityEpic {
+  color: var(--achievement-epic);
+}
+
+.achievementBadgeTooltipRarityLegendary {
+  color: var(--achievement-legendary);
+}
+
+.achievementBadgeTooltipDescription {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0 0 var(--space-xs) 0;
+}
+
+.achievementBadgeTooltipFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-2xs);
+}
+
+.achievementBadgeTooltipPoints {
+  font-size: var(--text-2xs);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--achievement-legendary);
+}
+
+.achievementBadgeTooltipDate {
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+}
+
+.achievementBadgeTooltipLocked {
+  font-size: var(--text-2xs);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
 @media (max-width: 639px) {
   .achievementBadge {
     min-width: 4.5rem;
@@ -120,5 +235,9 @@
 
   .achievementBadgeIcon {
     font-size: 1.3rem;
+  }
+
+  .achievementBadgeTooltip {
+    width: 12rem;
   }
 }
