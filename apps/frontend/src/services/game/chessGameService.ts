@@ -9,7 +9,7 @@ const CASTLING_ROOK_TO_DESTINATION: Partial<Record<Square, Partial<Record<Square
   e8: { h8: 'g8', a8: 'c8' },
 };
 
-const CASTLING_DESTINATION_TO_ROOK: Partial<Record<Square, Square>> = {
+export const CASTLING_DESTINATION_TO_ROOK: Partial<Record<Square, Square>> = {
   g1: 'h1',
   c1: 'a1',
   g8: 'h8',
@@ -62,25 +62,31 @@ export interface CapturedPieces {
 }
 
 export const fenToBoard = (fen: string): BoardSquare[] => {
-  const chess = new Chess(fen);
-  const rawBoard = chess.board();
+  const placement = fen.split(' ')[0];
+  const ranks = placement.split('/');
   const squares: BoardSquare[] = [];
+
   for (let row = 0; row < 8; row++) {
     const rankNumber = 8 - row;
-    for (let col = 0; col < 8; col++) {
-      const file = String.fromCharCode('a'.charCodeAt(0) + col);
-      const cell = rawBoard[row][col];
-      let piece: string | null = null;
-      if (cell) {
-        piece = cell.color + cell.type.toUpperCase();
+    let col = 0;
+    for (const ch of ranks[row]) {
+      if (ch >= '1' && ch <= '8') {
+        const empty = ch.charCodeAt(0) - 48;
+        for (let e = 0; e < empty; e++) {
+          const file = String.fromCharCode(97 + col);
+          squares.push({ square: (file + rankNumber) as Square, piece: null });
+          col++;
+        }
+      } else {
+        const file = String.fromCharCode(97 + col);
+        const isWhite = ch >= 'A' && ch <= 'Z';
+        const piece = (isWhite ? 'w' : 'b') + ch.toUpperCase();
+        squares.push({ square: (file + rankNumber) as Square, piece });
+        col++;
       }
-      const squareId = (file + rankNumber) as Square;
-      squares.push({
-        square: squareId,
-        piece,
-      });
     }
   }
+
   return squares;
 };
 

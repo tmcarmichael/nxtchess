@@ -16,36 +16,33 @@ import type { Side, GameOverReason, GameWinner } from '../../../types/game';
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 export class GameSession {
-  private chess: Chess;
-  private historyChess: Chess; // For navigating through move history
-  private boardCache: BoardCache; // Efficient board representation
+  private historyChess: Chess;
+  private boardCache: BoardCache;
   private _config: GameSessionConfig;
   private _state: GameSessionState;
   private stateHistory: GameSessionState[] = [];
   private maxHistorySize = 50;
 
+  private get chess(): Chess {
+    return this.boardCache.getChessInstance();
+  }
+
   constructor(config: GameSessionConfig, initialState?: GameSessionState) {
     this._config = config;
-    this.chess = new Chess();
     this.historyChess = new Chess();
     this.boardCache = new BoardCache();
 
     if (initialState) {
-      // Restore from snapshot
       this._state = { ...initialState };
-      this.chess.load(initialState.fen);
       this.boardCache.load(initialState.fen);
-      // Replay moves to sync chess instance
+      // Replay moves to sync chess history
       this.historyChess.reset();
       for (const move of initialState.moveHistory) {
         this.historyChess.move(move);
       }
     } else {
-      // Initialize fresh game (may use custom starting FEN from config)
       this._state = this.createInitialState(config);
-      // Load the starting position into chess instances
       const startFen = this._state.fen;
-      this.chess.load(startFen);
       this.boardCache.load(startFen);
       this.historyChess.load(startFen);
     }
@@ -143,6 +140,11 @@ export class GameSession {
     return this.boardCache.getLegalMoves(square);
   }
 
+  /** Get capture squares for a piece at the given square. Uses cached computation. */
+  getLegalMoveCaptures(square: Square): Set<Square> {
+    return this.boardCache.getLegalMoveCaptures(square);
+  }
+
   /** Check if a square is occupied. O(1) lookup. */
   isSquareOccupied(square: Square): boolean {
     return this.boardCache.isSquareOccupied(square);
@@ -202,7 +204,6 @@ export class GameSession {
   }): CommandResult {
     const { from, to, promotion } = payload;
 
-    // Attempt the move
     const move = this.chess.move({ from, to, promotion });
     if (!move) {
       return {
@@ -211,13 +212,11 @@ export class GameSession {
       };
     }
 
-    const newFen = this.chess.fen();
+    this.boardCache.refresh();
+
+    const newFen = this.boardCache.fen;
     const history = this.chess.history();
 
-    // Sync BoardCache with new position
-    this.boardCache.load(newFen);
-
-    // Update captured pieces using chess.js move data (handles en passant correctly)
     let newCapturedPieces = { ...this._state.capturedPieces };
     if (move.captured) {
       const capturedColor = move.color === 'w' ? 'b' : 'w';
@@ -225,13 +224,9 @@ export class GameSession {
       newCapturedPieces = processCapturedPiece(capturedPieceSymbol, newCapturedPieces);
     }
 
-    // Determine checked king square using cached board
     const checkedKingSquare = this.boardCache.checkedKingSquare;
-
-    // Check for game end using cached state
     const { isGameOver, gameOverReason, gameWinner } = this.checkTerminalState();
 
-    // Update state
     this._state = {
       ...this._state,
       fen: newFen,
@@ -261,7 +256,7 @@ export class GameSession {
     // If FEN is being synced, update chess instance and BoardCache
     if (partialState.fen && partialState.fen !== this._state.fen) {
       this.chess.load(partialState.fen);
-      this.boardCache.load(partialState.fen);
+      this.boardCache.refresh();
     }
 
     this._state = { ...this._state, ...partialState };
@@ -280,18 +275,15 @@ export class GameSession {
       };
     }
 
-    // Reset chess instance to starting position (may be custom FEN) and replay moves
     const startingFen = this._config.startingFen ?? INITIAL_FEN;
     this.chess.load(startingFen);
     for (let i = 0; i <= toMoveIndex; i++) {
       this.chess.move(this._state.moveHistory[i]);
     }
+    this.boardCache.refresh();
 
-    const newFen = this.chess.fen();
+    const newFen = this.boardCache.fen;
     const newHistory = this.chess.history();
-
-    // Sync BoardCache with new position
-    this.boardCache.load(newFen);
 
     this._state = {
       ...this._state,
@@ -375,11 +367,10 @@ export class GameSession {
       }
     }
 
-    const newFen = this.chess.fen();
-    const history = this.chess.history();
+    this.boardCache.refresh();
 
-    // Sync BoardCache with new position
-    this.boardCache.load(newFen);
+    const newFen = this.boardCache.fen;
+    const history = this.chess.history();
 
     this._state = {
       ...this._state,
@@ -498,21 +489,8 @@ export class GameSession {
   }
 
   private handleRejectMove(payload: { serverFen: string; reason: string }): CommandResult {
-    // Rollback to last confirmed state
-    const rollbackIndex = this._state.lastConfirmedMoveIndex;
-
-    // Reset chess instance to starting position (may be custom FEN) and replay moves up to confirmed point
-    const startingFen = this._config.startingFen ?? INITIAL_FEN;
-    this.chess.load(startingFen);
-    for (let i = 0; i <= rollbackIndex; i++) {
-      if (i >= 0 && i < this._state.moveHistory.length) {
-        this.chess.move(this._state.moveHistory[i]);
-      }
-    }
-
-    // Sync to authoritative server state
     this.chess.load(payload.serverFen);
-    this.boardCache.load(payload.serverFen);
+    this.boardCache.refresh();
 
     const newHistory = this.chess.history();
 
@@ -555,12 +533,9 @@ export class GameSession {
       }
     }
 
-    // Truncate history
     const newHistory = viewIndex >= 0 ? this._state.moveHistory.slice(0, viewIndex + 1) : [];
-    const newFen = this.chess.fen();
-
-    // Sync BoardCache with new position
-    this.boardCache.load(newFen);
+    this.boardCache.refresh();
+    const newFen = this.boardCache.fen;
 
     this._state = {
       ...this._state,

@@ -930,6 +930,123 @@ describe('GameSession', () => {
     });
   });
 
+  describe('TRUNCATE_TO_VIEW command', () => {
+    it('truncates history to viewed position', () => {
+      const session = new GameSession(createTestConfig());
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'e2', to: 'e4' } });
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'e7', to: 'e5' } });
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'd2', to: 'd4' } });
+
+      // Navigate to move index 0 (after e4)
+      session.applyCommand({ type: 'NAVIGATE_HISTORY', payload: { targetIndex: 0 } });
+
+      const result = session.applyCommand({ type: 'TRUNCATE_TO_VIEW', payload: {} });
+
+      expect(result.success).toBe(true);
+      expect(session.moveHistory).toEqual(['e4']);
+      expect(session.currentState.viewMoveIndex).toBe(0);
+    });
+
+    it('does nothing when already at the end', () => {
+      const session = new GameSession(createTestConfig());
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'e2', to: 'e4' } });
+
+      const result = session.applyCommand({ type: 'TRUNCATE_TO_VIEW', payload: {} });
+
+      expect(result.success).toBe(true);
+      expect(session.moveHistory).toEqual(['e4']);
+    });
+
+    it('truncates to empty when viewing before any moves', () => {
+      const session = new GameSession(createTestConfig());
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'e2', to: 'e4' } });
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'e7', to: 'e5' } });
+
+      // Navigate to index -1 (before any moves)
+      session.applyCommand({ type: 'NAVIGATE_HISTORY', payload: { targetIndex: -1 } });
+
+      const result = session.applyCommand({ type: 'TRUNCATE_TO_VIEW', payload: {} });
+
+      expect(result.success).toBe(true);
+      expect(session.moveHistory).toEqual([]);
+      expect(session.fen).toBe(INITIAL_FEN);
+    });
+
+    it('recalculates captured pieces after truncation', () => {
+      const session = new GameSession(createTestConfig());
+      // Play moves that include a capture
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'e2', to: 'e4' } });
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'd7', to: 'd5' } });
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'e4', to: 'd5' } }); // capture
+
+      expect(session.currentState.capturedPieces.black.length).toBe(1);
+
+      // Navigate before the capture
+      session.applyCommand({ type: 'NAVIGATE_HISTORY', payload: { targetIndex: 1 } });
+
+      // Truncate - should recalculate captures (no capture in first 2 moves)
+      session.applyCommand({ type: 'TRUNCATE_TO_VIEW', payload: {} });
+
+      expect(session.currentState.capturedPieces.black).toEqual([]);
+      expect(session.currentState.capturedPieces.white).toEqual([]);
+    });
+
+    it('allows new move after truncation', () => {
+      const session = new GameSession(createTestConfig());
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'e2', to: 'e4' } });
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'e7', to: 'e5' } });
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'd2', to: 'd4' } });
+
+      // Navigate to after e4, truncate, play a different move
+      session.applyCommand({ type: 'NAVIGATE_HISTORY', payload: { targetIndex: 0 } });
+      session.applyCommand({ type: 'TRUNCATE_TO_VIEW', payload: {} });
+
+      const result = session.applyCommand({
+        type: 'APPLY_MOVE',
+        payload: { from: 'e7', to: 'e6' },
+      });
+
+      expect(result.success).toBe(true);
+      expect(session.moveHistory).toEqual(['e4', 'e6']);
+    });
+  });
+
+  describe('getLegalMoveCaptures', () => {
+    it('returns capture squares for a piece with captures available', () => {
+      const session = new GameSession(createTestConfig());
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'e2', to: 'e4' } });
+      session.applyCommand({ type: 'APPLY_MOVE', payload: { from: 'd7', to: 'd5' } });
+
+      const captures = session.getLegalMoveCaptures('e4');
+      expect(captures.has('d5')).toBe(true);
+      expect(captures.size).toBe(1);
+    });
+
+    it('returns empty set when no captures available', () => {
+      const session = new GameSession(createTestConfig());
+
+      const captures = session.getLegalMoveCaptures('e2');
+      expect(captures.size).toBe(0);
+    });
+
+    it('returns empty set for empty square', () => {
+      const session = new GameSession(createTestConfig());
+
+      const captures = session.getLegalMoveCaptures('e4');
+      expect(captures.size).toBe(0);
+    });
+
+    it('detects en passant capture', () => {
+      const config = createTestConfig({
+        startingFen: 'rnbqkbnr/pppp1ppp/8/4pP2/8/8/PPPPP1PP/RNBQKBNR w KQkq e6 0 3',
+      });
+      const session = new GameSession(config);
+
+      const captures = session.getLegalMoveCaptures('f5');
+      expect(captures.has('e6')).toBe(true);
+    });
+  });
+
   describe('error handling', () => {
     it('catches and returns errors thrown during command execution', () => {
       const session = new GameSession(createTestConfig());
