@@ -94,9 +94,11 @@ const CommonSiteHeader: ParentComponent = () => {
           <Show
             when={userState.isLoggedIn}
             fallback={
-              <button class={styles.signInButton} onClick={() => setShowSignInModal(true)}>
-                Sign In
-              </button>
+              <Show when={!userState.isCheckingAuth}>
+                <button class={styles.signInButton} onClick={() => setShowSignInModal(true)}>
+                  Sign In
+                </button>
+              </Show>
             }
           >
             <Show when={userState.username}>
