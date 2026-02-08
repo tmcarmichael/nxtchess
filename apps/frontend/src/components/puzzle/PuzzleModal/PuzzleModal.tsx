@@ -73,7 +73,7 @@ const PuzzleModal: ParentComponent<PuzzleModalProps> = (props) => {
   };
 
   return (
-    <ChessGameModal title="Puzzles" onClose={local.onClose} size="sm">
+    <ChessGameModal title="Puzzles" onClose={local.onClose}>
       <div class={styles.puzzleSettingRow}>
         <label class={styles.settingLabel}>Mode:</label>
         <div class={styles.modeSelector}>
