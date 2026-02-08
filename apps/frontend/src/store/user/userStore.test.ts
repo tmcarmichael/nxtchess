@@ -12,6 +12,7 @@ const originalCookie = Object.getOwnPropertyDescriptor(document, 'cookie');
 describe('createUserStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.removeItem('nxtchess:auth');
     // Reset cookie
     Object.defineProperty(document, 'cookie', {
       writable: true,
