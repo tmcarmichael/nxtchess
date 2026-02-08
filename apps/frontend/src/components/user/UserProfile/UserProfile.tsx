@@ -216,16 +216,51 @@ const UserProfile = () => {
     const isDark = settingsState.theme !== 'light';
     const textColor = isDark ? '#666' : '#7a7a7a';
 
+    const currentRange = timeRange();
+    const now = Date.now();
+
+    const xaxisLabels: Record<string, unknown> = {
+      style: { colors: textColor, fontSize: '11px' },
+      datetimeUTC: false,
+    };
+    const xaxis: Record<string, unknown> = {
+      type: 'datetime' as const,
+      labels: xaxisLabels,
+    };
+
+    switch (currentRange) {
+      case 'W':
+        xaxis.min = now - 7 * 24 * 60 * 60 * 1000;
+        xaxis.max = now;
+        xaxis.tickAmount = 7;
+        xaxisLabels.formatter = (_value: string, timestamp?: number) => {
+          if (!timestamp) return '';
+          return new Date(timestamp).toLocaleDateString(undefined, { weekday: 'short' });
+        };
+        break;
+      case 'M':
+        xaxis.min = now - 30 * 24 * 60 * 60 * 1000;
+        xaxis.max = now;
+        xaxisLabels.format = 'dd MMM';
+        break;
+      case 'Y':
+        xaxis.min = now - 365 * 24 * 60 * 60 * 1000;
+        xaxis.max = now;
+        xaxis.tickAmount = 12;
+        xaxisLabels.format = 'MMM';
+        break;
+      default:
+        xaxisLabels.format = "MMM ''yy";
+        break;
+    }
+
     return {
       chart: {
         toolbar: { show: false },
         animations: { enabled: true },
         background: 'transparent',
       },
-      xaxis: {
-        type: 'datetime' as const,
-        labels: { style: { colors: textColor, fontSize: '11px' } },
-      },
+      xaxis,
       yaxis: {
         min: Math.floor((min - padding) / 25) * 25,
         max: Math.ceil((max + padding) / 25) * 25,

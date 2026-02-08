@@ -2,6 +2,42 @@ import { createStore } from 'solid-js/store';
 import { BACKEND_URL } from '../../shared/config/env';
 import { DEBUG } from '../../shared/utils/debug';
 
+const AUTH_CACHE_KEY = 'nxtchess:auth';
+
+interface CachedAuth {
+  username: string;
+  rating: number | null;
+  puzzleRating: number | null;
+  profileIcon: string;
+  achievementPoints: number | null;
+}
+
+const loadCachedAuth = (): CachedAuth | null => {
+  try {
+    const raw = localStorage.getItem(AUTH_CACHE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  return null;
+};
+
+const saveCachedAuth = (data: CachedAuth) => {
+  try {
+    localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(data));
+  } catch {
+    // noop
+  }
+};
+
+const clearCachedAuth = () => {
+  try {
+    localStorage.removeItem(AUTH_CACHE_KEY);
+  } catch {
+    // noop
+  }
+};
+
 interface UserState {
   isLoggedIn: boolean;
   isCheckingAuth: boolean;
@@ -29,14 +65,15 @@ interface UserActions {
 }
 
 export const createUserStore = () => {
+  const cached = loadCachedAuth();
   const [state, setState] = createStore<UserState>({
-    isLoggedIn: false,
+    isLoggedIn: !!cached,
     isCheckingAuth: true,
-    username: '',
-    rating: null,
-    puzzleRating: null,
-    profileIcon: 'white-pawn',
-    achievementPoints: null,
+    username: cached?.username ?? '',
+    rating: cached?.rating ?? null,
+    puzzleRating: cached?.puzzleRating ?? null,
+    profileIcon: cached?.profileIcon ?? 'white-pawn',
+    achievementPoints: cached?.achievementPoints ?? null,
   });
 
   const checkUserStatus = async (navigateFn: (path: string) => void) => {
@@ -51,6 +88,7 @@ export const createUserStore = () => {
         setState('puzzleRating', null);
         setState('profileIcon', 'white-pawn');
         setState('achievementPoints', null);
+        clearCachedAuth();
         return;
       }
       const data = await res.json();
@@ -61,8 +99,10 @@ export const createUserStore = () => {
         setState('puzzleRating', null);
         setState('profileIcon', 'white-pawn');
         setState('achievementPoints', null);
+        clearCachedAuth();
       } else if (!data.username_set) {
         setState('isLoggedIn', true);
+        clearCachedAuth();
         navigateFn('/username-setup');
       } else {
         setState('isLoggedIn', true);
@@ -79,6 +119,13 @@ export const createUserStore = () => {
         if (data.achievement_points !== undefined) {
           setState('achievementPoints', data.achievement_points);
         }
+        saveCachedAuth({
+          username: data.username,
+          rating: data.rating ?? null,
+          puzzleRating: data.puzzle_rating ?? null,
+          profileIcon: data.profile_icon || 'white-pawn',
+          achievementPoints: data.achievement_points ?? null,
+        });
       }
     } catch (err) {
       if (DEBUG) console.error('Error checking username:', err);
@@ -191,6 +238,7 @@ export const createUserStore = () => {
     setState('puzzleRating', null);
     setState('profileIcon', 'white-pawn');
     setState('achievementPoints', null);
+    clearCachedAuth();
   };
 
   const actions: UserActions = {
