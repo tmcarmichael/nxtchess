@@ -62,7 +62,6 @@
   border-radius: var(--radius-md);
   background: var(--surface-3);
   border: 1px solid var(--border-subtle);
-  overflow: hidden;
 }
 
 .userAchievementsCategoryHeader {
@@ -73,6 +72,7 @@
   padding: var(--space-sm) var(--space-md);
   background: none;
   border: none;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-family: inherit;
   color: inherit;
@@ -87,6 +87,7 @@
 
 .userAchievementsCategoryHeaderExpanded {
   border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .userAchievementsCategoryHeaderComplete {
