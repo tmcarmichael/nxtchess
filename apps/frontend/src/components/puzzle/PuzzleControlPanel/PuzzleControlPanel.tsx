@@ -2,6 +2,7 @@ import { Show, type ParentComponent } from 'solid-js';
 import { usePuzzleGame } from '../../../store/game/PuzzleGameContext';
 import ButtonPanel from '../../game/ButtonPanel/ButtonPanel';
 import GamePanelButton from '../../game/GamePanelButton/GamePanelButton';
+import PuzzleHistoryStrip from '../PuzzleHistoryStrip/PuzzleHistoryStrip';
 import styles from './PuzzleControlPanel.module.css';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -63,6 +64,7 @@ const PuzzleControlPanel: ParentComponent = () => {
           </Show>
         </div>
       </Show>
+      <PuzzleHistoryStrip refreshTrigger={chess.state.puzzleFeedback} />
     </div>
   );
 };
