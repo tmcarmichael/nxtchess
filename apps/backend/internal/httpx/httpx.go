@@ -68,17 +68,17 @@ func NewSecureCookie(cfg *config.Config, name, value string, maxAge int) *http.C
 // Only trusts X-Forwarded-For and X-Real-IP headers when the request
 // originates from a configured trusted proxy. Falls back to RemoteAddr.
 func GetClientIP(r *http.Request, cfg *config.Config) string {
-	remoteIP := extractIP(r.RemoteAddr)
+	remoteIP := ExtractIP(r.RemoteAddr)
 
 	// Only trust forwarded headers if request comes from a trusted proxy
-	if cfg != nil && isTrustedProxy(remoteIP, cfg.TrustedProxies) {
+	if cfg != nil && IsTrustedProxy(remoteIP, cfg.TrustedProxies) {
 		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 			// X-Forwarded-For can contain multiple IPs: client, proxy1, proxy2
 			// The first untrusted IP (reading right-to-left) is the real client
 			ips := strings.Split(xff, ",")
 			for i := len(ips) - 1; i >= 0; i-- {
 				ip := strings.TrimSpace(ips[i])
-				if ip != "" && !isTrustedProxy(ip, cfg.TrustedProxies) {
+				if ip != "" && !IsTrustedProxy(ip, cfg.TrustedProxies) {
 					return ip
 				}
 			}
@@ -110,11 +110,11 @@ func GetClientIPSimple(r *http.Request) string {
 		return strings.TrimSpace(xri)
 	}
 
-	return extractIP(r.RemoteAddr)
+	return ExtractIP(r.RemoteAddr)
 }
 
-// extractIP removes the port from an address string
-func extractIP(addr string) string {
+// ExtractIP removes the port from an address string
+func ExtractIP(addr string) string {
 	// Handle IPv6 addresses like [::1]:8080
 	if host, _, err := net.SplitHostPort(addr); err == nil {
 		return host
@@ -122,8 +122,42 @@ func extractIP(addr string) string {
 	return addr
 }
 
-// isTrustedProxy checks if an IP is in the trusted proxy list
-func isTrustedProxy(ip string, trustedProxies []string) bool {
+var privateNetworks []*net.IPNet
+
+func init() {
+	cidrs := []string{
+		"127.0.0.0/8",
+		"10.0.0.0/8",
+		"172.16.0.0/12",
+		"192.168.0.0/16",
+		"::1/128",
+		"fd00::/8",
+	}
+	for _, cidr := range cidrs {
+		_, network, err := net.ParseCIDR(cidr)
+		if err == nil {
+			privateNetworks = append(privateNetworks, network)
+		}
+	}
+}
+
+// IsPrivateIP checks if a remote address (host:port or bare IP) belongs to a private network.
+func IsPrivateIP(addr string) bool {
+	remoteIP := ExtractIP(addr)
+	ip := net.ParseIP(remoteIP)
+	if ip == nil {
+		return false
+	}
+	for _, network := range privateNetworks {
+		if network.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+// IsTrustedProxy checks if an IP is in the trusted proxy list
+func IsTrustedProxy(ip string, trustedProxies []string) bool {
 	if len(trustedProxies) == 0 {
 		return false
 	}

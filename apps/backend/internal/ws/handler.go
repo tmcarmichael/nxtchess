@@ -95,14 +95,15 @@ type Handler struct {
 	connLimit *ConnectionLimiter
 }
 
+// NewConnectionLimiterForHub creates a ConnectionLimiter and returns both the limiter
+// and a disconnect callback suitable for passing to NewHub.
+func NewConnectionLimiterForHub() (*ConnectionLimiter, func(ip string)) {
+	cl := NewConnectionLimiter(5, 200*time.Millisecond)
+	return cl, cl.Disconnect
+}
+
 // NewHandler creates a new WebSocket handler
-func NewHandler(hub *Hub, cfg *config.Config) *Handler {
-	// Allow max 5 connections per IP, with 200ms between connection attempts
-	connLimit := NewConnectionLimiter(5, 200*time.Millisecond)
-
-	// Set up disconnect callback for connection limiting
-	hub.SetOnDisconnect(connLimit.Disconnect)
-
+func NewHandler(hub *Hub, cfg *config.Config, connLimit *ConnectionLimiter) *Handler {
 	return &Handler{
 		hub:       hub,
 		cfg:       cfg,

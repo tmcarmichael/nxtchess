@@ -16,6 +16,7 @@ import (
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/config"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/controllers"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/httpx"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/metrics"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/middleware"
@@ -56,18 +57,17 @@ func main() {
 	sessions.InitRedis()
 	auth.InitOAuthProviders(cfg)
 
-	// Initialize WebSocket hub
-	wsHub := ws.NewHub()
-	globalWsHub = wsHub // Store for health check
+	// Initialize WebSocket hub with connection limiter
+	connLimit, onDisconnect := ws.NewConnectionLimiterForHub()
+	wsHub := ws.NewHub(onDisconnect)
+	globalWsHub = wsHub // Store for health check (set before server starts)
 	go wsHub.Run()
-	wsHandler := ws.NewHandler(wsHub, cfg)
+	wsHandler := ws.NewHandler(wsHub, cfg, connLimit)
 	logger.Info("WebSocket hub started")
 
 	// Create rate limiters with config for trusted proxy validation
-	authRateLimiter := middleware.NewAuthRateLimiter() // 10/min for auth endpoints
-	authRateLimiter.SetConfig(cfg)
-	apiRateLimiter := middleware.NewAPIRateLimiter() // 60/min for general API
-	apiRateLimiter.SetConfig(cfg)
+	authRateLimiter := middleware.NewAuthRateLimiter(cfg)
+	apiRateLimiter := middleware.NewAPIRateLimiter(cfg)
 
 	metrics.Register()
 
@@ -85,7 +85,10 @@ func main() {
 	r.Get("/health", healthHandler)
 	r.Get("/health/live", livenessHandler)
 	r.Get("/health/ready", readinessHandler)
-	r.Handle("/metrics", promhttp.Handler())
+	r.Group(func(internal chi.Router) {
+		internal.Use(middleware.InternalOnly(cfg))
+		internal.Handle("/metrics", promhttp.Handler())
+	})
 
 	// WebSocket endpoint for multiplayer games (no body limit needed)
 	r.Get("/ws", wsHandler.ServeHTTP)
@@ -192,7 +195,8 @@ func main() {
 // wsHub is stored here so healthHandler can access it
 var globalWsHub *ws.Hub
 
-// healthHandler returns overall service health
+// healthHandler returns overall service health.
+// Internal/private requests get full details; external requests get minimal status only.
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	dbOK := database.Ping() == nil
 	redisOK := sessions.Ping() == nil
@@ -204,19 +208,22 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		httpStatus = http.StatusServiceUnavailable
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(httpStatus)
+
+	if !httpx.IsPrivateIP(r.RemoteAddr) {
+		json.NewEncoder(w).Encode(map[string]string{"status": status})
+		return
+	}
+
 	response := map[string]interface{}{
 		"status":   status,
 		"database": dbOK,
 		"redis":    redisOK,
 	}
-
-	// Add WebSocket stats if hub is available
 	if globalWsHub != nil {
 		response["wsClients"] = globalWsHub.GetClientCount()
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(httpStatus)
 	json.NewEncoder(w).Encode(response)
 }
 

@@ -31,13 +31,15 @@ type bucket struct {
 // rate: requests allowed per interval
 // interval: time period for rate (e.g., time.Minute)
 // burst: maximum burst capacity
-func NewRateLimiter(rate int, interval time.Duration, burst int) *RateLimiter {
+// cfg: config for trusted proxy validation (may be nil)
+func NewRateLimiter(rate int, interval time.Duration, burst int, cfg *config.Config) *RateLimiter {
 	rl := &RateLimiter{
 		clients:  make(map[string]*bucket),
 		rate:     rate,
 		interval: interval,
 		burst:    burst,
 		cleanup:  5 * time.Minute,
+		cfg:      cfg,
 	}
 
 	// Start cleanup goroutine
@@ -128,27 +130,22 @@ func (rl *RateLimiter) RedirectMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// SetConfig sets the config for trusted proxy validation
-func (rl *RateLimiter) SetConfig(cfg *config.Config) {
-	rl.cfg = cfg
-}
-
 // Common rate limiter presets
 
 // NewAuthRateLimiter creates a rate limiter suitable for auth endpoints
 // 15 requests per minute with burst of 10
-func NewAuthRateLimiter() *RateLimiter {
-	return NewRateLimiter(15, time.Minute, 10)
+func NewAuthRateLimiter(cfg *config.Config) *RateLimiter {
+	return NewRateLimiter(15, time.Minute, 10, cfg)
 }
 
 // NewAPIRateLimiter creates a rate limiter for general API endpoints
 // 60 requests per minute with burst of 20
-func NewAPIRateLimiter() *RateLimiter {
-	return NewRateLimiter(60, time.Minute, 20)
+func NewAPIRateLimiter(cfg *config.Config) *RateLimiter {
+	return NewRateLimiter(60, time.Minute, 20, cfg)
 }
 
 // NewStrictRateLimiter creates a stricter rate limiter for sensitive endpoints
 // 5 requests per minute with burst of 3
-func NewStrictRateLimiter() *RateLimiter {
-	return NewRateLimiter(5, time.Minute, 3)
+func NewStrictRateLimiter(cfg *config.Config) *RateLimiter {
+	return NewRateLimiter(5, time.Minute, 3, cfg)
 }

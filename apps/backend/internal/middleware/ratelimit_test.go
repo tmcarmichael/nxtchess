@@ -11,7 +11,7 @@ import (
 )
 
 func TestRateLimiter_Allow(t *testing.T) {
-	rl := NewRateLimiter(10, time.Minute, 3)
+	rl := NewRateLimiter(10, time.Minute, 3, nil)
 
 	t.Run("burst permits initial requests", func(t *testing.T) {
 		for i := 0; i < 3; i++ {
@@ -35,7 +35,7 @@ func TestRateLimiter_Allow(t *testing.T) {
 }
 
 func TestRateLimiter_Middleware(t *testing.T) {
-	rl := NewRateLimiter(10, time.Minute, 2)
+	rl := NewRateLimiter(10, time.Minute, 2, nil)
 
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -78,8 +78,7 @@ func TestRateLimiter_Middleware(t *testing.T) {
 }
 
 func TestRateLimiter_RedirectMiddleware(t *testing.T) {
-	rl := NewRateLimiter(10, time.Minute, 1)
-	rl.SetConfig(&config.Config{FrontendURL: "http://localhost:5173"})
+	rl := NewRateLimiter(10, time.Minute, 1, &config.Config{FrontendURL: "http://localhost:5173"})
 
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -110,14 +109,14 @@ func TestRateLimiter_RedirectMiddleware(t *testing.T) {
 }
 
 func TestNewAuthRateLimiter(t *testing.T) {
-	rl := NewAuthRateLimiter()
+	rl := NewAuthRateLimiter(nil)
 	if rl == nil {
 		t.Fatal("expected non-nil auth rate limiter")
 	}
 }
 
 func TestNewAPIRateLimiter(t *testing.T) {
-	rl := NewAPIRateLimiter()
+	rl := NewAPIRateLimiter(nil)
 	if rl == nil {
 		t.Fatal("expected non-nil API rate limiter")
 	}

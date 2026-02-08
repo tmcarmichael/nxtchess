@@ -122,6 +122,9 @@ type Client struct {
 
 	// Rate limiting for incoming messages
 	rateLimiter *MessageRateLimiter
+
+	// Game creation cooldown tracking
+	lastGameCreatedAt time.Time
 }
 
 // NewClient creates a new client
@@ -148,6 +151,20 @@ func (c *Client) SetGameID(gameID string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.GameID = gameID
+}
+
+// GetLastGameCreatedAt returns the timestamp of the last game creation (thread-safe)
+func (c *Client) GetLastGameCreatedAt() time.Time {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.lastGameCreatedAt
+}
+
+// SetLastGameCreatedAt records the timestamp of a game creation (thread-safe)
+func (c *Client) SetLastGameCreatedAt(t time.Time) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.lastGameCreatedAt = t
 }
 
 // ReadPump pumps messages from the WebSocket connection to the hub

@@ -224,9 +224,9 @@ func TestExtractIP(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := extractIP(tt.input)
+			got := ExtractIP(tt.input)
 			if got != tt.want {
-				t.Errorf("extractIP(%q) = %q, want %q", tt.input, got, tt.want)
+				t.Errorf("ExtractIP(%q) = %q, want %q", tt.input, got, tt.want)
 			}
 		})
 	}
@@ -234,28 +234,28 @@ func TestExtractIP(t *testing.T) {
 
 func TestIsTrustedProxy(t *testing.T) {
 	t.Run("CIDR match", func(t *testing.T) {
-		if !isTrustedProxy("10.0.0.5", []string{"10.0.0.0/8"}) {
+		if !IsTrustedProxy("10.0.0.5", []string{"10.0.0.0/8"}) {
 			t.Error("expected 10.0.0.5 to be trusted in 10.0.0.0/8")
 		}
 	})
 
 	t.Run("exact IP match", func(t *testing.T) {
-		if !isTrustedProxy("192.168.1.1", []string{"192.168.1.1"}) {
+		if !IsTrustedProxy("192.168.1.1", []string{"192.168.1.1"}) {
 			t.Error("expected 192.168.1.1 to match exactly")
 		}
 	})
 
 	t.Run("no match", func(t *testing.T) {
-		if isTrustedProxy("172.16.0.1", []string{"10.0.0.0/8", "192.168.1.1"}) {
+		if IsTrustedProxy("172.16.0.1", []string{"10.0.0.0/8", "192.168.1.1"}) {
 			t.Error("expected 172.16.0.1 to not be trusted")
 		}
 	})
 
 	t.Run("empty list", func(t *testing.T) {
-		if isTrustedProxy("10.0.0.1", nil) {
+		if IsTrustedProxy("10.0.0.1", nil) {
 			t.Error("expected false for empty trusted proxy list")
 		}
-		if isTrustedProxy("10.0.0.1", []string{}) {
+		if IsTrustedProxy("10.0.0.1", []string{}) {
 			t.Error("expected false for empty trusted proxy slice")
 		}
 	})
