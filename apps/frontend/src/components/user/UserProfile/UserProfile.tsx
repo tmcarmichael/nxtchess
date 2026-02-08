@@ -238,22 +238,44 @@ const UserProfile = () => {
         xaxis.tickAmount = 7;
         xaxisLabels.formatter = (_value: string, timestamp?: number) => {
           if (!timestamp) return '';
-          return new Date(timestamp).toLocaleDateString(undefined, { weekday: 'short' });
+          const d = new Date(timestamp);
+          const weekday = d.toLocaleDateString(undefined, { weekday: 'short' });
+          return `${weekday} ${d.getDate()}`;
         };
         break;
       case 'M':
         xaxis.min = now - 30 * 24 * 60 * 60 * 1000;
         xaxis.max = now;
-        xaxisLabels.format = 'dd MMM';
+        xaxis.tickAmount = 10;
+        xaxisLabels.formatter = (_value: string, timestamp?: number) => {
+          if (!timestamp) return '';
+          return new Date(timestamp).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+          });
+        };
         break;
       case 'Y':
         xaxis.min = now - 365 * 24 * 60 * 60 * 1000;
         xaxis.max = now;
         xaxis.tickAmount = 12;
-        xaxisLabels.format = 'MMM';
+        xaxisLabels.formatter = (_value: string, timestamp?: number) => {
+          if (!timestamp) return '';
+          const d = new Date(timestamp);
+          const month = d.toLocaleDateString(undefined, { month: 'short' });
+          if (d.getMonth() === 0) {
+            return `${month} '${d.getFullYear().toString().slice(-2)}`;
+          }
+          return month;
+        };
         break;
       default:
-        xaxisLabels.format = "MMM ''yy";
+        xaxisLabels.formatter = (_value: string, timestamp?: number) => {
+          if (!timestamp) return '';
+          const d = new Date(timestamp);
+          const month = d.toLocaleDateString(undefined, { month: 'short' });
+          return `${month} '${d.getFullYear().toString().slice(-2)}`;
+        };
         break;
     }
 
