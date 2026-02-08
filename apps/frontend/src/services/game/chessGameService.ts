@@ -103,6 +103,20 @@ export const getLegalMoves = (fen: string, square: Square): Square[] => {
   return targets;
 };
 
+export const getLegalMoveCaptures = (fen: string, square: Square): Set<Square> => {
+  const chess = new Chess(fen);
+  const legalMoves = chess.moves({ square, verbose: true });
+  const captures = new Set<Square>();
+
+  for (const move of legalMoves) {
+    if (move.captured) {
+      captures.add(move.to as Square);
+    }
+  }
+
+  return captures;
+};
+
 /**
  * Get legal moves for a piece as if it were that piece's turn.
  * Used for premove calculation when it's the opponent's turn.
@@ -376,12 +390,9 @@ export const executeMove = (
   chess: Chess,
   from: Square,
   to: Square,
-  board: BoardSquare[],
+  _board: BoardSquare[],
   promotion?: PromotionPiece
 ): MoveOutcome => {
-  // Check for capture before making the move
-  const captured = getCapture(board, to);
-
   // Attempt the move
   const move = chess.move({ from, to, promotion });
   if (!move) {
@@ -389,6 +400,13 @@ export const executeMove = (
       success: false,
       error: `Invalid move from ${from} to ${to}${promotion ? ` (promotion=${promotion})` : ''}`,
     };
+  }
+
+  // Determine captured piece: use chess.js move data for en passant correctness
+  let captured: string | null = null;
+  if (move.captured) {
+    const capturedColor = move.color === 'w' ? 'b' : 'w';
+    captured = capturedColor + move.captured.toUpperCase();
   }
 
   const newFen = chess.fen();
