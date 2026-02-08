@@ -31,14 +31,74 @@ func UserProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	gamesPlayed, wins, losses, draws, err := database.GetGameStatsByUserID(user.UserID)
+	if err != nil {
+		logger.Error("Failed to get game stats", logger.F("username", searchedUsername, "error", err.Error()))
+	}
+
 	resp := models.PublicProfile{
 		Username:     user.Username,
 		Rating:       user.Rating,
 		PuzzleRating: user.PuzzleRating,
 		ProfileIcon:  user.ProfileIcon,
+		CreatedAt:    user.CreatedAt,
+		GamesPlayed:  gamesPlayed,
+		Wins:         wins,
+		Losses:       losses,
+		Draws:        draws,
 	}
 
 	httpx.WriteJSON(w, http.StatusOK, resp)
+}
+
+func UserRatingHistoryHandler(w http.ResponseWriter, r *http.Request) {
+	username := chi.URLParam(r, "username")
+	if username == "" {
+		httpx.WriteJSONError(w, http.StatusBadRequest, "username parameter is required")
+		return
+	}
+
+	gameHistory, puzzleHistory, err := database.GetRatingHistoryByUsername(username)
+	if err != nil {
+		logger.Error("Failed to get rating history", logger.F("username", username, "error", err.Error()))
+		httpx.WriteJSONError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	if gameHistory == nil {
+		gameHistory = []models.RatingPoint{}
+	}
+	if puzzleHistory == nil {
+		puzzleHistory = []models.RatingPoint{}
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"game_history":   gameHistory,
+		"puzzle_history": puzzleHistory,
+	})
+}
+
+func UserRecentGamesHandler(w http.ResponseWriter, r *http.Request) {
+	username := chi.URLParam(r, "username")
+	if username == "" {
+		httpx.WriteJSONError(w, http.StatusBadRequest, "username parameter is required")
+		return
+	}
+
+	games, err := database.GetRecentGamesByUsername(username)
+	if err != nil {
+		logger.Error("Failed to get recent games", logger.F("username", username, "error", err.Error()))
+		httpx.WriteJSONError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	if games == nil {
+		games = []models.RecentGame{}
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"games": games,
+	})
 }
 
 func CheckUsernameHandler(w http.ResponseWriter, r *http.Request) {

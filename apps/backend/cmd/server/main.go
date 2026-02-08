@@ -113,6 +113,8 @@ func main() {
 		pub.Use(apiRateLimiter.Middleware)
 		pub.Use(middleware.SmallBodyLimit) // 64KB limit for JSON API
 		pub.Get("/api/profile/{username}", controllers.UserProfileHandler)
+		pub.Get("/api/profile/{username}/rating-history", controllers.UserRatingHistoryHandler)
+		pub.Get("/api/profile/{username}/recent-games", controllers.UserRecentGamesHandler)
 
 		// Training API routes
 		pub.Get("/api/training/endgame/random", controllers.GetRandomEndgamePosition)
