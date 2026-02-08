@@ -133,10 +133,31 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
     return 'You Lost';
   };
 
+  const playerRatingInfo = () => {
+    const rc = chess.state.ratingChange;
+    if (!rc || !isMultiplayer()) return null;
+    const isWhite = chess.state.playerColor === 'w';
+    return {
+      newRating: isWhite ? rc.whiteRating : rc.blackRating,
+      delta: isWhite ? rc.whiteRatingDelta : rc.blackRatingDelta,
+    };
+  };
+
   return (
     <ChessGameModal onClose={local.onClose} size="md">
       <Show when={getPlayerResult()}>
         <h1 class={styles.playerResult}>{getPlayerResult()}</h1>
+      </Show>
+      <Show when={playerRatingInfo()}>
+        {(info) => (
+          <div class={styles.ratingChangeContainer}>
+            <span class={styles.ratingValue}>{info().newRating}</span>
+            <span class={info().delta >= 0 ? styles.ratingGain : styles.ratingLoss}>
+              {info().delta >= 0 ? '+' : ''}
+              {info().delta}
+            </span>
+          </div>
+        )}
       </Show>
       <h2 class={styles.endHeading}>{getGameOverInfo().heading}</h2>
       <p class={styles.endMessage}>{getGameOverInfo().message}</p>

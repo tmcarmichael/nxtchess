@@ -3,14 +3,13 @@ import { SolidApexCharts } from 'solid-apexcharts';
 import { createEffect, createSignal, on, Show } from 'solid-js';
 import { BACKEND_URL } from '../../../shared/config/env';
 import { DEBUG } from '../../../shared/utils/debug';
-import { useUserStore } from '../../../store/user/UserContext';
-import ProfileIconPicker, { getProfileIconAsset } from '../ProfileIconPicker/ProfileIconPicker';
+import { getRatingIcon } from '../ProfileIconPicker/ProfileIconPicker';
 import styles from './UserProfile.module.css';
 
 interface ViewedProfile {
   username: string;
   rating: number;
-  profileIcon: string;
+  puzzleRating: number;
 }
 
 // DEV/TEST user profile rating graph
@@ -68,19 +67,13 @@ const devChartOptions = {
 
 const UserProfile = () => {
   const params = useParams();
-  const [userState] = useUserStore();
-
   const [viewedProfile, setViewedProfile] = createSignal<ViewedProfile | null>(null);
   const [isLoading, setIsLoading] = createSignal(true);
   const [notFound, setNotFound] = createSignal(false);
   const [fetchError, setFetchError] = createSignal(false);
 
-  // Track request version to handle race conditions
   let currentRequestVersion = 0;
 
-  const isOwnProfile = () => userState.username === params.username;
-
-  // Fetch profile when username param changes
   createEffect(
     on(
       () => params.username,
@@ -120,7 +113,7 @@ const UserProfile = () => {
               setViewedProfile({
                 username: data.username,
                 rating: data.rating,
-                profileIcon: data.profile_icon || 'white-pawn',
+                puzzleRating: data.puzzle_rating ?? 1200,
               });
             }
             setIsLoading(false);
@@ -136,14 +129,6 @@ const UserProfile = () => {
       }
     )
   );
-
-  // Callback for when profile icon is changed via picker
-  const handleIconChange = (newIcon: string) => {
-    const profile = viewedProfile();
-    if (profile) {
-      setViewedProfile({ ...profile, profileIcon: newIcon });
-    }
-  };
 
   return (
     <Show
@@ -171,16 +156,22 @@ const UserProfile = () => {
           >
             <div class={styles.userProfileHeader}>
               <img
-                src={getProfileIconAsset(viewedProfile()!.profileIcon)}
+                src={getRatingIcon(viewedProfile()!.rating, viewedProfile()!.puzzleRating)}
                 alt="Profile icon"
                 class={styles.userProfileIcon}
               />
               <h2 class={styles.userProfileTitle}>{viewedProfile()!.username}</h2>
             </div>
-            <p class={styles.userProfileRating}>Rating: {viewedProfile()!.rating}</p>
-            <Show when={isOwnProfile()}>
-              <ProfileIconPicker onIconChange={handleIconChange} />
-            </Show>
+            <div class={styles.userProfileRatings}>
+              <div class={styles.userProfileRatingItem}>
+                <span class={styles.userProfileRatingLabel}>Game Rating</span>
+                <span class={styles.userProfileRatingValue}>{viewedProfile()!.rating}</span>
+              </div>
+              <div class={styles.userProfileRatingItem}>
+                <span class={styles.userProfileRatingLabel}>Puzzle Rating</span>
+                <span class={styles.userProfileRatingValue}>{viewedProfile()!.puzzleRating}</span>
+              </div>
+            </div>
             <div class={styles.userProfileGraph}>
               <SolidApexCharts
                 type="line"

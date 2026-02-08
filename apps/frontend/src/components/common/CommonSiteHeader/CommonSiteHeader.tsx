@@ -4,7 +4,7 @@ import { useUserStore } from '../../../store/user/UserContext';
 import PlayModal from '../../play/PlayModal/PlayModal';
 import PuzzleModal from '../../puzzle/PuzzleModal/PuzzleModal';
 import TrainingModal from '../../training/TrainingModal/TrainingModal';
-import { getProfileIconAsset } from '../../user/ProfileIconPicker/ProfileIconPicker';
+import { getRatingIcon } from '../../user/ProfileIconPicker/ProfileIconPicker';
 import SignInModal from '../../user/UserSignInModal/UserSignInModal';
 import CommonMobileMenu from '../CommonMobileMenu/CommonMobileMenu';
 import CommonSettingsDropdown from '../CommonSettingsDropdown/CommonSettingsDropdown';
@@ -100,17 +100,22 @@ const CommonSiteHeader: ParentComponent = () => {
             }
           >
             <Show when={userState.username}>
-              <button
-                class={styles.userSection}
-                onClick={() => navigate(`/profile/${userState.username}`)}
+              <div
+                class={styles.userSectionTooltip}
+                data-tooltip={`Game: ${userState.rating ?? '—'} | Puzzle: ${userState.puzzleRating ?? '—'}`}
               >
-                <img
-                  src={getProfileIconAsset(userState.profileIcon)}
-                  alt="Profile icon"
-                  class={styles.headerProfileIcon}
-                />
-                <span class={styles.usernameText}>{userState.username}</span>
-              </button>
+                <button
+                  class={styles.userSection}
+                  onClick={() => navigate(`/profile/${userState.username}`)}
+                >
+                  <img
+                    src={getRatingIcon(userState.rating, userState.puzzleRating)}
+                    alt="Profile icon"
+                    class={styles.headerProfileIcon}
+                  />
+                  <span class={styles.usernameText}>{userState.username}</span>
+                </button>
+              </div>
               <button class={styles.signOutText} onClick={handleSignOut}>
                 Sign Out
               </button>

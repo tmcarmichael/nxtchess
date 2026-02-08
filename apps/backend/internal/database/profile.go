@@ -79,13 +79,13 @@ func GetUserProfileByUsername(username string) (*models.Profile, error) {
 	defer cancel()
 
 	row := DB.QueryRowContext(ctx, `
-        SELECT user_id, username, rating, COALESCE(profile_icon, 'white-pawn')
+        SELECT user_id, username, rating, puzzle_rating, COALESCE(profile_icon, 'white-pawn')
         FROM profiles
         WHERE username = $1
     `, username)
 
 	u := &models.Profile{}
-	err := row.Scan(&u.UserID, &u.Username, &u.Rating, &u.ProfileIcon)
+	err := row.Scan(&u.UserID, &u.Username, &u.Rating, &u.PuzzleRating, &u.ProfileIcon)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	} else if err != nil {
@@ -179,6 +179,34 @@ func CreateProfileWithContext(ctx context.Context, userID string) error {
 		logger.Error("Error creating profile", logger.F("userID", userID, "error", err.Error()))
 	}
 	return err
+}
+
+func GetRatingByID(userID string) (int, error) {
+	defer metrics.ObserveQuery("GetRatingByID", time.Now())
+	ctx, cancel := QueryContext()
+	defer cancel()
+
+	var rating int
+	err := DB.QueryRowContext(ctx, `SELECT rating FROM profiles WHERE user_id = $1`, userID).Scan(&rating)
+	if err != nil {
+		logger.Error("Error getting rating", logger.F("userID", userID, "error", err.Error()))
+		return 0, err
+	}
+	return rating, nil
+}
+
+func GetPuzzleRatingByID(userID string) (int, error) {
+	defer metrics.ObserveQuery("GetPuzzleRatingByID", time.Now())
+	ctx, cancel := QueryContext()
+	defer cancel()
+
+	var rating int
+	err := DB.QueryRowContext(ctx, `SELECT puzzle_rating FROM profiles WHERE user_id = $1`, userID).Scan(&rating)
+	if err != nil {
+		logger.Error("Error getting puzzle rating", logger.F("userID", userID, "error", err.Error()))
+		return 0, err
+	}
+	return rating, nil
 }
 
 // GetProfileIcon retrieves a user's profile icon by user ID

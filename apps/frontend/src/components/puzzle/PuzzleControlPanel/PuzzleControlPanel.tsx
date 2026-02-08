@@ -1,5 +1,6 @@
 import { Show, type ParentComponent } from 'solid-js';
 import { usePuzzleGame } from '../../../store/game/PuzzleGameContext';
+import { useUserStore } from '../../../store/user/UserContext';
 import ButtonPanel from '../../game/ButtonPanel/ButtonPanel';
 import GamePanelButton from '../../game/GamePanelButton/GamePanelButton';
 import PuzzleHistoryStrip from '../PuzzleHistoryStrip/PuzzleHistoryStrip';
@@ -13,6 +14,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const PuzzleControlPanel: ParentComponent = () => {
   const { chess, ui, actions } = usePuzzleGame();
+  const [userState] = useUserStore();
 
   const getCategoryLabel = (): string => {
     const cat = chess.state.puzzleCategory;
@@ -60,6 +62,12 @@ const PuzzleControlPanel: ParentComponent = () => {
             <div class={styles.puzzleInfoRow}>
               <span class={styles.puzzleInfoLabel}>Category:</span>
               <span class={styles.puzzleInfoValue}>{getCategoryLabel()}</span>
+            </div>
+          </Show>
+          <Show when={chess.state.puzzleRated}>
+            <div class={styles.puzzleInfoRow}>
+              <span class={styles.puzzleInfoLabel}>Current Rating:</span>
+              <span class={styles.puzzleInfoValue}>{userState.puzzleRating ?? '---'}</span>
             </div>
           </Show>
         </div>

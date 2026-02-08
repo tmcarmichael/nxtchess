@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from '@solidjs/router';
 import { type ParentComponent, createSignal, createEffect, on, onMount, Show } from 'solid-js';
 import { PuzzleGameProvider, usePuzzleGame } from '../../../store/game/PuzzleGameContext';
+import { useUserStore } from '../../../store/user/UserContext';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
 import GameContainer from '../../game/GameContainer/GameContainer';
 import PuzzleControlPanel from '../PuzzleControlPanel/PuzzleControlPanel';
@@ -17,6 +18,7 @@ const PuzzleContainerInner: ParentComponent = () => {
   const navigate = useNavigate();
   const location = useLocation<LocationState>();
   const { chess, ui, actions } = usePuzzleGame();
+  const [, userActions] = useUserStore();
   const [showPuzzleModal, setShowPuzzleModal] = createSignal(false);
   const [showFeedbackModal, setShowFeedbackModal] = createSignal(false);
 
@@ -59,15 +61,20 @@ const PuzzleContainerInner: ParentComponent = () => {
           return;
         }
 
+        if (feedback.newRating !== undefined) {
+          userActions.setPuzzleRating(feedback.newRating);
+        }
+
         if (ui.state.trainingFocusMode) {
-          // Focus mode: toasts are handled by ChessBoardController via getPuzzleFeedback
-          // For 'complete', ChessBoardController's autoRestartOnEnd handles loading next puzzle
           if (feedback.type === 'complete') {
             setTimeout(() => {
               actions.dismissFeedback();
             }, 1500);
+          } else if (chess.state.puzzleRated) {
+            setTimeout(() => {
+              actions.dismissFeedback();
+            }, 2000);
           } else {
-            // Incorrect in focus mode: auto-dismiss after 2 seconds
             setTimeout(() => {
               actions.dismissFeedback();
             }, 2000);
@@ -141,10 +148,15 @@ const PuzzleContainerInner: ParentComponent = () => {
           message={chess.state.puzzleFeedback!.message}
           onClose={handleFeedbackEvaluate}
           onTryAgain={
-            chess.state.puzzleFeedback!.type === 'incorrect' ? handleFeedbackTryAgain : undefined
+            chess.state.puzzleFeedback!.type === 'incorrect' && !chess.state.puzzleRated
+              ? handleFeedbackTryAgain
+              : undefined
           }
           onNewPuzzle={handleFeedbackNewPuzzle}
           onEvaluatePuzzle={handleFeedbackEvaluate}
+          isRated={chess.state.puzzleRated}
+          ratingDelta={chess.state.puzzleFeedback!.ratingDelta}
+          newRating={chess.state.puzzleFeedback!.newRating}
         />
       </Show>
     </>

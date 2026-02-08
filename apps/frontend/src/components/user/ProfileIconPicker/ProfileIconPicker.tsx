@@ -26,6 +26,16 @@ export const getProfileIconAsset = (iconId: string): string => {
   return icon?.asset ?? '/assets/wP.svg';
 };
 
+export const getRatingIcon = (gameRating: number | null, puzzleRating: number | null): string => {
+  const rating = Math.max(gameRating ?? 0, puzzleRating ?? 0);
+  if (rating >= 2501) return '/assets/wK.svg';
+  if (rating >= 2001) return '/assets/wQ.svg';
+  if (rating >= 1501) return '/assets/wR.svg';
+  if (rating >= 1001) return '/assets/wB.svg';
+  if (rating >= 501) return '/assets/wN.svg';
+  return '/assets/wP.svg';
+};
+
 const ProfileIconPicker: Component<ProfileIconPickerProps> = (props) => {
   const [userState, userActions] = useUserStore();
   const [isLoading, setIsLoading] = createSignal(false);

@@ -2,6 +2,7 @@ import { createContext, useContext, onCleanup, createMemo, batch, type JSX } fro
 import { sessionManager } from '../../services/game/session/SessionManager';
 import { DEBUG } from '../../shared/utils/debug';
 import { computeMaterialDiff } from '../../types/chess';
+import { useUserStore } from '../user/UserContext';
 import { createCoreActions } from './actions/createCoreActions';
 import { createPlayActions } from './actions/createPlayActions';
 import { createChessStore } from './stores/createChessStore';
@@ -82,13 +83,33 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     timer.sync(whiteTimeMs, blackTimeMs);
   });
 
-  multiplayer.on('game:ended', ({ reason, winner }) => {
-    batch(() => {
-      timer.stop();
-      chess.endGame(reason, winner);
-      ui.showEndModal();
-    });
-  });
+  const [userState, userActions] = useUserStore();
+
+  multiplayer.on(
+    'game:ended',
+    ({ reason, winner, whiteRating, blackRating, whiteRatingDelta, blackRatingDelta }) => {
+      batch(() => {
+        timer.stop();
+        chess.endGame(reason, winner);
+
+        if (
+          whiteRating !== undefined &&
+          blackRating !== undefined &&
+          whiteRatingDelta !== undefined &&
+          blackRatingDelta !== undefined
+        ) {
+          chess.setRatingChange({ whiteRating, blackRating, whiteRatingDelta, blackRatingDelta });
+
+          if (userState.isLoggedIn) {
+            const playerRating = chess.state.playerColor === 'w' ? whiteRating : blackRating;
+            userActions.setRating(playerRating);
+          }
+        }
+
+        ui.showEndModal();
+      });
+    }
+  );
 
   multiplayer.on('game:opponent_left', () => {
     if (DEBUG) console.warn('Opponent left the game');

@@ -29,6 +29,7 @@ export interface StartGameOptions {
   /** Exclude a specific position ID to avoid repeats on restart */
   trainingExcludePositionId?: string;
   puzzleCategory?: PuzzleCategory;
+  puzzleRated?: boolean;
 }
 
 export interface MultiplayerGameOptions {

@@ -92,6 +92,10 @@ export interface GameEndedData {
   gameId: string;
   result: 'white' | 'black' | 'draw';
   reason: 'checkmate' | 'resignation' | 'timeout' | 'stalemate' | 'agreement';
+  whiteRating?: number;
+  blackRating?: number;
+  whiteRatingDelta?: number;
+  blackRatingDelta?: number;
 }
 
 export interface TimeUpdateData {

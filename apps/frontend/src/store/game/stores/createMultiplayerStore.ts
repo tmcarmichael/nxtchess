@@ -44,7 +44,14 @@ export interface MultiplayerEvents {
     isCheck: boolean | undefined;
   };
   'time:update': { whiteTimeMs: number; blackTimeMs: number };
-  'game:ended': { reason: GameOverReason; winner: GameWinner };
+  'game:ended': {
+    reason: GameOverReason;
+    winner: GameWinner;
+    whiteRating?: number;
+    blackRating?: number;
+    whiteRatingDelta?: number;
+    blackRatingDelta?: number;
+  };
   'game:opponent_left': void;
   'game:error': { message: string };
 }
@@ -194,7 +201,14 @@ export const createMultiplayerStore = (): MultiplayerStore => {
         else if (data.reason === 'resignation') reason = 'resignation';
 
         setState('gameId', null);
-        events.emit('game:ended', { reason, winner });
+        events.emit('game:ended', {
+          reason,
+          winner,
+          whiteRating: data.whiteRating,
+          blackRating: data.blackRating,
+          whiteRatingDelta: data.whiteRatingDelta,
+          blackRatingDelta: data.blackRatingDelta,
+        });
         break;
       }
 

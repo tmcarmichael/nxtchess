@@ -6,6 +6,7 @@ interface UserState {
   isLoggedIn: boolean;
   username: string;
   rating: number | null;
+  puzzleRating: number | null;
   profileIcon: string;
 }
 
@@ -18,6 +19,8 @@ interface UserActions {
   ) => Promise<void>;
   setIsLoggedIn: (val: boolean) => void;
   setUsername: (val: string) => void;
+  setRating: (val: number) => void;
+  setPuzzleRating: (val: number) => void;
   fetchUserProfile: () => Promise<void>;
   setProfileIcon: (icon: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -28,6 +31,7 @@ export const createUserStore = () => {
     isLoggedIn: false,
     username: '',
     rating: null,
+    puzzleRating: null,
     profileIcon: 'white-pawn',
   });
 
@@ -41,6 +45,7 @@ export const createUserStore = () => {
         setState('isLoggedIn', false);
         setState('username', '');
         setState('rating', null);
+        setState('puzzleRating', null);
         setState('profileIcon', 'white-pawn');
         return;
       }
@@ -50,6 +55,7 @@ export const createUserStore = () => {
         setState('isLoggedIn', false);
         setState('username', '');
         setState('rating', null);
+        setState('puzzleRating', null);
         setState('profileIcon', 'white-pawn');
       } else if (!data.username_set) {
         // Logged in but no username
@@ -59,8 +65,14 @@ export const createUserStore = () => {
         // Fully logged in
         setState('isLoggedIn', true);
         setState('username', data.username);
+        if (data.rating !== undefined) {
+          setState('rating', data.rating);
+        }
         if (data.profile_icon) {
           setState('profileIcon', data.profile_icon);
+        }
+        if (data.puzzle_rating !== undefined) {
+          setState('puzzleRating', data.puzzle_rating);
         }
       }
     } catch (err) {
@@ -109,6 +121,9 @@ export const createUserStore = () => {
       }
       const data = await res.json();
       setState('rating', data.rating);
+      if (data.puzzle_rating !== undefined) {
+        setState('puzzleRating', data.puzzle_rating);
+      }
       if (data.profile_icon) {
         setState('profileIcon', data.profile_icon);
       }
@@ -124,6 +139,14 @@ export const createUserStore = () => {
 
   const setUsername = (val: string) => {
     setState('username', val);
+  };
+
+  const setRating = (val: number) => {
+    setState('rating', val);
+  };
+
+  const setPuzzleRating = (val: number) => {
+    setState('puzzleRating', val);
   };
 
   const setProfileIcon = async (icon: string) => {
@@ -158,6 +181,7 @@ export const createUserStore = () => {
     setState('isLoggedIn', false);
     setState('username', '');
     setState('rating', null);
+    setState('puzzleRating', null);
     setState('profileIcon', 'white-pawn');
   };
 
@@ -166,6 +190,8 @@ export const createUserStore = () => {
     saveUsername,
     setIsLoggedIn,
     setUsername,
+    setRating,
+    setPuzzleRating,
     fetchUserProfile,
     setProfileIcon,
     logout,

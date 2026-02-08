@@ -4,10 +4,13 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/chess"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/elo"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/metrics"
 )
@@ -172,12 +175,7 @@ func (gm *GameManager) runClock(game *GameState) {
 
 				logger.Info("Game ended by timeout", logger.F("gameId", game.ID, "winner", winner))
 
-				// Notify both players
-				endedData := GameEndedData{
-					GameID: game.ID,
-					Result: winner,
-					Reason: "timeout",
-				}
+				endedData := gm.finalizeGame(game)
 
 				if game.WhitePlayer != nil {
 					game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
@@ -229,6 +227,63 @@ func generateGameID() string {
 		return fmt.Sprintf("fallback-%d", time.Now().UnixNano())
 	}
 	return hex.EncodeToString(bytes)
+}
+
+func (gm *GameManager) finalizeGame(game *GameState) GameEndedData {
+	endedData := GameEndedData{
+		GameID: game.ID,
+		Result: game.Result,
+		Reason: game.ResultReason,
+	}
+
+	whiteUID := ""
+	blackUID := ""
+	if game.WhitePlayer != nil {
+		whiteUID = game.WhitePlayer.UserID
+	}
+	if game.BlackPlayer != nil {
+		blackUID = game.BlackPlayer.UserID
+	}
+
+	if whiteUID == "" || blackUID == "" {
+		return endedData
+	}
+
+	whiteRating, whiteGames, err := database.GetPlayerRatingInfo(whiteUID)
+	if err != nil {
+		logger.Error("Failed to get white player rating", logger.F("userID", whiteUID, "error", err.Error()))
+		return endedData
+	}
+
+	blackRating, blackGames, err := database.GetPlayerRatingInfo(blackUID)
+	if err != nil {
+		logger.Error("Failed to get black player rating", logger.F("userID", blackUID, "error", err.Error()))
+		return endedData
+	}
+
+	result := elo.ResultFromWinner(game.Result)
+	rc := elo.Calculate(whiteRating, blackRating, result, whiteGames, blackGames)
+
+	pgn := strings.Join(game.MoveHistory, " ")
+	resultPGN := elo.ResultToPGN(game.Result)
+
+	if err := database.FinalizeGameResult(whiteUID, blackUID, pgn, resultPGN, rc.WhiteOld, rc.BlackOld, rc.WhiteNew, rc.BlackNew); err != nil {
+		logger.Error("Failed to finalize game result", logger.F("gameId", game.ID, "error", err.Error()))
+		return endedData
+	}
+
+	endedData.WhiteRating = &rc.WhiteNew
+	endedData.BlackRating = &rc.BlackNew
+	endedData.WhiteRatingDelta = &rc.WhiteDelta
+	endedData.BlackRatingDelta = &rc.BlackDelta
+
+	logger.Info("Game finalized with ratings", logger.F(
+		"gameId", game.ID,
+		"whiteOld", rc.WhiteOld, "whiteNew", rc.WhiteNew,
+		"blackOld", rc.BlackOld, "blackNew", rc.BlackNew,
+	))
+
+	return endedData
 }
 
 // CreateGame creates a new game and adds the creator as white
@@ -493,13 +548,8 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 			"reason", game.ResultReason,
 		))
 
-		endedData := GameEndedData{
-			GameID: data.GameID,
-			Result: game.Result,
-			Reason: game.ResultReason,
-		}
+		endedData := gm.finalizeGame(game)
 
-		// Notify both players
 		if game.WhitePlayer != nil {
 			game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 		}
@@ -544,12 +594,7 @@ func (gm *GameManager) HandleResign(client *Client, gameID string) {
 
 	logger.Info("Game ended by resignation", logger.F("gameId", gameID, "winner", winner))
 
-	// Notify both players
-	endedData := GameEndedData{
-		GameID: gameID,
-		Result: winner,
-		Reason: "resignation",
-	}
+	endedData := gm.finalizeGame(game)
 
 	if game.WhitePlayer != nil {
 		game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
@@ -598,7 +643,8 @@ func (gm *GameManager) LeaveGame(client *Client, gameID string) {
 		// Stop the clock
 		game.stopClockGoroutine()
 
-		// Notify opponent
+		endedData := gm.finalizeGame(game)
+
 		var opponent *Client
 		if isWhitePlayer {
 			opponent = game.BlackPlayer
@@ -607,11 +653,7 @@ func (gm *GameManager) LeaveGame(client *Client, gameID string) {
 		}
 
 		if opponent != nil {
-			opponent.SendMessage(NewServerMessage(MsgTypeGameEnded, GameEndedData{
-				GameID: gameID,
-				Result: winner,
-				Reason: "abandonment",
-			}))
+			opponent.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 		}
 	}
 
@@ -663,12 +705,10 @@ func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
 		// Stop the clock
 		game.stopClockGoroutine()
 
+		endedData := gm.finalizeGame(game)
+
 		if opponent != nil {
-			opponent.SendMessage(NewServerMessage(MsgTypeGameEnded, GameEndedData{
-				GameID: gameID,
-				Result: winner,
-				Reason: "disconnection",
-			}))
+			opponent.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 		}
 	}
 }
