@@ -95,7 +95,7 @@ const UserProfile = () => {
         setFetchError(false);
         setViewedProfile(null);
 
-        fetch(`${BACKEND_URL}/profile/${username}`, {
+        fetch(`${BACKEND_URL}/api/profile/${username}`, {
           credentials: 'include',
         })
           .then((res) => {

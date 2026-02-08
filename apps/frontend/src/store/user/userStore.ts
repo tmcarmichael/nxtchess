@@ -87,7 +87,7 @@ export const createUserStore = () => {
 
   const fetchUserProfile = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/profile/${state.username}`, {
+      const res = await fetch(`${BACKEND_URL}/api/profile/${state.username}`, {
         credentials: 'include',
       });
       if (!res.ok) {

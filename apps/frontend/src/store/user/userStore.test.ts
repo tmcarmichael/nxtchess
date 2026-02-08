@@ -332,7 +332,7 @@ describe('createUserStore', () => {
         await actions.fetchUserProfile();
 
         expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining('/profile/myprofile'),
+          expect.stringContaining('/api/profile/myprofile'),
           expect.objectContaining({
             credentials: 'include',
           })

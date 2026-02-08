@@ -26,9 +26,11 @@ services:
       context: ./apps/frontend
       dockerfile: Dockerfile
       args:
-        VITE_BACKEND_URL: ${BACKEND_URL}
+        VITE_BACKEND_URL: ""
     container_name: nxtchess_frontend
     restart: unless-stopped
+    environment:
+      PROXY_BACKEND_URL: ${PROXY_BACKEND_URL:-http://backend:8080}
     expose:
       - "80"
     networks:
