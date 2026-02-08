@@ -116,12 +116,8 @@
 .navItemUpcoming {
   opacity: 0.45;
   cursor: default;
+  pointer-events: none;
   font-size: var(--text-md);
-}
-
-.navItemUpcoming:hover {
-  opacity: 0.6;
-  color: var(--text-secondary);
 }
 
 .navItemUpcoming::after {
@@ -245,30 +241,6 @@
   background: var(--text-secondary);
   border-radius: var(--radius-full);
   transition: transform var(--transition-fast);
-}
-
-.navItemTooltip {
-  position: relative;
-}
-
-.navItemTooltip:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  background: var(--surface-3);
-  color: var(--text-secondary);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-  bottom: -36px;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  pointer-events: none;
-  z-index: var(--z-tooltip);
-  box-shadow: var(--shadow-md);
-  animation: fadeIn var(--transition-fast) ease-out;
 }
 
 .profileIconTooltip {
