@@ -83,6 +83,9 @@ const UserProfile = () => {
   const [isMobile, setIsMobile] = createSignal(false);
   const [activeCategory, setActiveCategory] = createSignal<RatingCategory>('play');
   const [timeRange, setTimeRange] = createSignal<TimeRange>('ALL');
+  const [ratingExpanded, setRatingExpanded] = createSignal(true);
+  const [gamesExpanded, setGamesExpanded] = createSignal(true);
+  const [achievementsExpanded, setAchievementsExpanded] = createSignal(true);
 
   let currentRequestVersion = 0;
 
@@ -369,12 +372,16 @@ const UserProfile = () => {
               </div>
             </div>
 
-            <UserAchievements username={params.username!} />
-
-            <div class={styles.userProfileGraph}>
-              <div class={styles.userProfileGraphHeader}>
+            <div class={styles.userProfileSection}>
+              <div
+                class={styles.userProfileSectionHeader}
+                onClick={() => setRatingExpanded((v) => !v)}
+              >
                 <h3 class={styles.userProfileSectionTitle}>Rating History</h3>
-                <div class={styles.userProfileTimeRange}>
+                <div
+                  class={styles.userProfileTimeRange}
+                  onClick={(e: MouseEvent) => e.stopPropagation()}
+                >
                   <For each={TIME_RANGES}>
                     {(range) => (
                       <button
@@ -389,78 +396,155 @@ const UserProfile = () => {
                     )}
                   </For>
                 </div>
+                <svg
+                  class={styles.userProfileCollapseArrow}
+                  classList={{
+                    [styles.userProfileCollapseArrowCollapsed]: !ratingExpanded(),
+                  }}
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </div>
-              <div class={styles.userProfileCategorySelector}>
-                <For each={RATING_CATEGORIES}>
-                  {(category) => (
-                    <button
-                      class={styles.userProfileCategoryButton}
-                      classList={{
-                        [styles.userProfileCategoryButtonActive]:
-                          activeCategory() === category.value,
-                      }}
-                      onClick={() => setActiveCategory(category.value)}
-                    >
-                      <span class={styles.userProfileCategoryLabel}>{category.label}</span>
-                      <span class={styles.userProfileCategoryRating}>
-                        {category.ratingAccessor(viewedProfile()!)}
-                      </span>
-                    </button>
-                  )}
-                </For>
-              </div>
-              <Show
-                when={chartSeries().length > 0}
-                fallback={
-                  <p class={styles.userProfileEmptyState}>
-                    No rating history yet. Play some games or solve puzzles to start tracking
-                    progress.
-                  </p>
-                }
-              >
-                <SolidApexCharts
-                  type="line"
-                  width="100%"
-                  height={isMobile() ? '250' : '350'}
-                  options={chartOptions()!}
-                  series={chartSeries()}
-                />
+              <Show when={ratingExpanded()}>
+                <div class={styles.userProfileGraph}>
+                  <div class={styles.userProfileCategorySelector}>
+                    <For each={RATING_CATEGORIES}>
+                      {(category) => (
+                        <button
+                          class={styles.userProfileCategoryButton}
+                          classList={{
+                            [styles.userProfileCategoryButtonActive]:
+                              activeCategory() === category.value,
+                          }}
+                          onClick={() => setActiveCategory(category.value)}
+                        >
+                          <span class={styles.userProfileCategoryLabel}>{category.label}</span>
+                          <span class={styles.userProfileCategoryRating}>
+                            {category.ratingAccessor(viewedProfile()!)}
+                          </span>
+                        </button>
+                      )}
+                    </For>
+                  </div>
+                  <Show
+                    when={chartSeries().length > 0}
+                    fallback={
+                      <p class={styles.userProfileEmptyState}>
+                        No rating history yet. Play some games or solve puzzles to start tracking
+                        progress.
+                      </p>
+                    }
+                  >
+                    <SolidApexCharts
+                      type="line"
+                      width="100%"
+                      height={isMobile() ? '250' : '350'}
+                      options={chartOptions()!}
+                      series={chartSeries()}
+                    />
+                  </Show>
+                </div>
               </Show>
             </div>
 
-            <div class={styles.userProfileRecentGames}>
-              <h3 class={styles.userProfileSectionTitle}>Recent Games</h3>
-              <Show
-                when={recentGames().length > 0}
-                fallback={<p class={styles.userProfileEmptyState}>No games played yet.</p>}
+            <div class={styles.userProfileSection}>
+              <div
+                class={styles.userProfileSectionHeader}
+                onClick={() => setGamesExpanded((v) => !v)}
               >
-                <div class={styles.userProfileGameList}>
-                  <For each={recentGames()}>
-                    {(game) => (
-                      <div class={styles.userProfileGameRow}>
-                        <div
-                          class={`${styles.userProfileGameColor} ${game.player_color === 'white' ? styles.userProfileGameColorWhite : styles.userProfileGameColorBlack}`}
-                        />
-                        <span class={`${styles.userProfileGameResult} ${resultClass(game.result)}`}>
-                          {game.result}
-                        </span>
-                        <span class={styles.userProfileGameOpponent}>
-                          vs{' '}
-                          <A
-                            href={`/profile/${game.opponent}`}
-                            class={styles.userProfileGameOpponentLink}
+                <h3 class={styles.userProfileSectionTitle}>Recent Games</h3>
+                <svg
+                  class={styles.userProfileCollapseArrow}
+                  classList={{
+                    [styles.userProfileCollapseArrowCollapsed]: !gamesExpanded(),
+                  }}
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+              <Show when={gamesExpanded()}>
+                <Show
+                  when={recentGames().length > 0}
+                  fallback={<p class={styles.userProfileEmptyState}>No games played yet.</p>}
+                >
+                  <div class={styles.userProfileGameList}>
+                    <For each={recentGames()}>
+                      {(game) => (
+                        <div class={styles.userProfileGameRow}>
+                          <div
+                            class={`${styles.userProfileGameColor} ${game.player_color === 'white' ? styles.userProfileGameColorWhite : styles.userProfileGameColorBlack}`}
+                          />
+                          <span
+                            class={`${styles.userProfileGameResult} ${resultClass(game.result)}`}
                           >
-                            {game.opponent}
-                          </A>
-                        </span>
-                        <span class={styles.userProfileGameDate}>
-                          {formatDate(game.created_at)}
-                        </span>
-                      </div>
-                    )}
-                  </For>
-                </div>
+                            {game.result}
+                          </span>
+                          <span class={styles.userProfileGameOpponent}>
+                            vs{' '}
+                            <A
+                              href={`/profile/${game.opponent}`}
+                              class={styles.userProfileGameOpponentLink}
+                            >
+                              {game.opponent}
+                            </A>
+                          </span>
+                          <span class={styles.userProfileGameDate}>
+                            {formatDate(game.created_at)}
+                          </span>
+                        </div>
+                      )}
+                    </For>
+                  </div>
+                </Show>
               </Show>
+            </div>
+
+            <div class={styles.userProfileSection}>
+              <div
+                class={styles.userProfileSectionHeader}
+                onClick={() => setAchievementsExpanded((v) => !v)}
+              >
+                <h3 class={styles.userProfileSectionTitle}>Achievements</h3>
+                <svg
+                  class={styles.userProfileCollapseArrow}
+                  classList={{
+                    [styles.userProfileCollapseArrowCollapsed]: !achievementsExpanded(),
+                  }}
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+              <div
+                classList={{
+                  [styles.userProfileSectionContentHidden]: !achievementsExpanded(),
+                }}
+              >
+                <UserAchievements username={params.username!} hideTitle />
+              </div>
             </div>
           </Show>
         </div>
