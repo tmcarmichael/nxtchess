@@ -129,6 +129,48 @@ func UpsertUsername(userID, newUsername string) error {
 	return err
 }
 
+// UpsertUsernameWithRating creates or updates a user's username and sets their starting rating.
+// It also inserts the first rating_history row as an origin point for the rating graph.
+func UpsertUsernameWithRating(userID, newUsername string, rating int) error {
+	defer metrics.ObserveQuery("UpsertUsernameWithRating", time.Now())
+	ctx, cancel := QueryContext()
+	defer cancel()
+
+	tx, err := DB.BeginTx(ctx, nil)
+	if err != nil {
+		logger.Error("Error starting transaction", logger.F("userID", userID, "error", err.Error()))
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO profiles (user_id, username, rating)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id) DO UPDATE
+		SET username = EXCLUDED.username, rating = EXCLUDED.rating
+	`, userID, newUsername, rating)
+	if err != nil {
+		logger.Error("Error upserting username with rating", logger.F("userID", userID, "username", newUsername, "rating", rating, "error", err.Error()))
+		return err
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO rating_history (user_id, rating)
+		VALUES ($1, $2)
+	`, userID, rating)
+	if err != nil {
+		logger.Error("Error inserting initial rating history", logger.F("userID", userID, "rating", rating, "error", err.Error()))
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		logger.Error("Error committing transaction", logger.F("userID", userID, "error", err.Error()))
+		return err
+	}
+
+	return nil
+}
+
 // CreateProfileWithContext creates a new user profile using the provided context
 func CreateProfileWithContext(ctx context.Context, userID string) error {
 	defer metrics.ObserveQuery("CreateProfileWithContext", time.Now())

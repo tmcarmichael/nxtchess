@@ -37,6 +37,79 @@
   cursor: not-allowed;
 }
 
+.skillLevelSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.skillLevelLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.skillLevelGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.skillLevelButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-xs);
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.skillLevelButton:hover:not(.skillLevelButtonActive):not(:disabled) {
+  background: var(--surface-4);
+  border-color: var(--border-default);
+}
+
+.skillLevelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.skillLevelButtonActive {
+  background: var(--accent-subtle);
+  border-color: var(--accent-muted);
+}
+
+.skillLevelName {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.skillLevelButtonActive .skillLevelName {
+  color: var(--text-primary);
+}
+
+.skillLevelElo {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.skillLevelButtonActive .skillLevelElo {
+  opacity: 1;
+}
+
 .setupActions {
   display: flex;
   gap: var(--space-sm);
@@ -138,5 +211,13 @@
   .saveButton {
     width: 100%;
     padding: var(--space-md);
+  }
+
+  .skillLevelButton {
+    padding: var(--space-xs);
+  }
+
+  .skillLevelName {
+    font-size: var(--text-sm);
   }
 }

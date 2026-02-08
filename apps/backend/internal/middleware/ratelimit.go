@@ -136,9 +136,9 @@ func (rl *RateLimiter) SetConfig(cfg *config.Config) {
 // Common rate limiter presets
 
 // NewAuthRateLimiter creates a rate limiter suitable for auth endpoints
-// 10 requests per minute with burst of 5
+// 15 requests per minute with burst of 10
 func NewAuthRateLimiter() *RateLimiter {
-	return NewRateLimiter(10, time.Minute, 5)
+	return NewRateLimiter(15, time.Minute, 10)
 }
 
 // NewAPIRateLimiter creates a rate limiter for general API endpoints

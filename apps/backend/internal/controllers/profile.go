@@ -89,7 +89,8 @@ func SetUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Username string `json:"username"`
+		Username       string `json:"username"`
+		StartingRating *int   `json:"starting_rating"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httpx.WriteJSONError(w, http.StatusBadRequest, "Invalid request body")
@@ -100,6 +101,15 @@ func SetUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	if err := validation.ValidateUsername(req.Username); err != nil {
 		httpx.WriteJSONError(w, http.StatusBadRequest, err.Message)
 		return
+	}
+
+	// Validate starting rating if provided
+	if req.StartingRating != nil {
+		r := *req.StartingRating
+		if r != 500 && r != 1000 && r != 1500 {
+			httpx.WriteJSONError(w, http.StatusBadRequest, "Starting rating must be 500, 1000, or 1500")
+			return
+		}
 	}
 
 	// Sanitize username
@@ -117,14 +127,23 @@ func SetUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set the username
-	if err := database.UpsertUsername(userID, username); err != nil {
-		logger.Error("Failed to set username", logger.F("userId", userID, "username", username, "error", err.Error()))
-		httpx.WriteJSONError(w, http.StatusInternalServerError, "Failed to set username")
-		return
+	// Set the username (with optional starting rating)
+	if req.StartingRating != nil {
+		if err := database.UpsertUsernameWithRating(userID, username, *req.StartingRating); err != nil {
+			logger.Error("Failed to set username with rating", logger.F("userId", userID, "username", username, "rating", *req.StartingRating, "error", err.Error()))
+			httpx.WriteJSONError(w, http.StatusInternalServerError, "Failed to set username")
+			return
+		}
+		logger.Info("Username set with starting rating", logger.F("userId", userID, "username", username, "rating", *req.StartingRating))
+	} else {
+		if err := database.UpsertUsername(userID, username); err != nil {
+			logger.Error("Failed to set username", logger.F("userId", userID, "username", username, "error", err.Error()))
+			httpx.WriteJSONError(w, http.StatusInternalServerError, "Failed to set username")
+			return
+		}
+		logger.Info("Username set", logger.F("userId", userID, "username", username))
 	}
 
-	logger.Info("Username set", logger.F("userId", userID, "username", username))
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{
 		"message":  "Username set successfully",
 		"username": username,
