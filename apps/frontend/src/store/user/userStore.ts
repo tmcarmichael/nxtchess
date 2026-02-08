@@ -68,7 +68,7 @@ export const createUserStore = () => {
   const cached = loadCachedAuth();
   const [state, setState] = createStore<UserState>({
     isLoggedIn: !!cached,
-    isCheckingAuth: true,
+    isCheckingAuth: !!cached,
     username: cached?.username ?? '',
     rating: cached?.rating ?? null,
     puzzleRating: cached?.puzzleRating ?? null,

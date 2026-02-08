@@ -112,10 +112,10 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
               <button
                 class={styles.navItem}
                 onClick={() => handleNavClick(item)}
-                disabled={!!item.tooltip}
+                disabled={item.variant === 'upcoming'}
               >
                 <span class={styles.navLabel}>{item.label}</span>
-                <Show when={item.tooltip}>
+                <Show when={item.variant === 'upcoming'}>
                   <span class={styles.navBadge}>Soon</span>
                 </Show>
               </button>

@@ -16,7 +16,6 @@ export type NavItem = {
   showPlayModal?: boolean;
   showTrainingModal?: boolean;
   showPuzzleModal?: boolean;
-  tooltip?: string;
   variant?: 'primary' | 'upcoming';
 };
 
@@ -25,7 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Train', showTrainingModal: true, variant: 'primary' },
   { label: 'Analyze', route: '/analyze', variant: 'primary' },
   { label: 'Puzzles', showPuzzleModal: true, variant: 'primary' },
-  { label: 'Tools', tooltip: 'Coming soon', variant: 'upcoming' },
+  { label: 'Tools', variant: 'upcoming' },
 ];
 
 const CommonSiteHeader: ParentComponent = () => {
@@ -61,9 +60,7 @@ const CommonSiteHeader: ParentComponent = () => {
                   [styles.navItem]: true,
                   [styles.navItemPrimary]: item.variant === 'primary',
                   [styles.navItemUpcoming]: item.variant === 'upcoming',
-                  [styles.navItemTooltip]: !!item.tooltip,
                 }}
-                data-tooltip={item.tooltip ?? undefined}
                 onClick={() => {
                   if (item.route) {
                     navigate(
