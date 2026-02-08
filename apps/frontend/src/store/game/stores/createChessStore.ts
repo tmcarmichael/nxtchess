@@ -50,16 +50,26 @@ interface ChessState {
   puzzleCategory: PuzzleCategory | null;
   puzzleId: string | null;
   puzzleSolutionIndex: number;
+  puzzleRated: boolean;
   puzzleFeedback: {
     type: 'incorrect' | 'complete';
     message: string;
     incorrectMoveSan?: string;
+    ratingDelta?: number;
+    newRating?: number;
   } | null;
   puzzleStartFen: string | null;
   // Multiplayer optimistic state
   moveError: string | null;
   // Initialization error (position fetch, etc.)
   initError: string | null;
+  // Rating change after multiplayer game
+  ratingChange: {
+    whiteRating: number;
+    blackRating: number;
+    whiteRatingDelta: number;
+    blackRatingDelta: number;
+  } | null;
 }
 
 export interface ChessStore {
@@ -78,6 +88,7 @@ export interface ChessStore {
     fen?: string;
     puzzleCategory?: PuzzleCategory;
     puzzleId?: string;
+    puzzleRated?: boolean;
     puzzleStartFen?: string;
   }) => string;
   applyMove: (from: Square, to: Square, promotion?: PromotionPiece) => boolean;
@@ -119,6 +130,7 @@ export interface ChessStore {
   // Puzzle mode
   setPuzzleSolutionIndex: (index: number) => void;
   setPuzzleFeedback: (feedback: ChessState['puzzleFeedback']) => void;
+  setRatingChange: (ratingChange: ChessState['ratingChange']) => void;
   derived: {
     currentBoard: () => BoardSquare[];
     isPlayerTurn: () => boolean;
@@ -158,11 +170,13 @@ export const createChessStore = (): ChessStore => {
     trainingMoveEvaluations: [],
     puzzleCategory: null,
     puzzleId: null,
+    puzzleRated: false,
     puzzleSolutionIndex: 0,
     puzzleFeedback: null,
     puzzleStartFen: null,
     moveError: null,
     initError: null,
+    ratingChange: null,
   });
 
   let currentSession: GameSession | null = null;
@@ -215,6 +229,7 @@ export const createChessStore = (): ChessStore => {
     fen?: string;
     puzzleCategory?: PuzzleCategory;
     puzzleId?: string;
+    puzzleRated?: boolean;
     puzzleStartFen?: string;
   }): string => {
     const sessionId = generateSessionId();
@@ -251,6 +266,7 @@ export const createChessStore = (): ChessStore => {
       setState('trainingMoveEvaluations', []);
       setState('puzzleCategory', config.puzzleCategory ?? null);
       setState('puzzleId', config.puzzleId ?? null);
+      setState('puzzleRated', config.puzzleRated ?? false);
       setState('puzzleSolutionIndex', 0);
       setState('puzzleFeedback', null);
       setState('puzzleStartFen', config.puzzleStartFen ?? null);
@@ -385,6 +401,8 @@ export const createChessStore = (): ChessStore => {
       setState('lastMove', null);
       setState('checkedKingSquare', null);
       setState('moveError', null);
+      setState('ratingChange', null);
+      setState('puzzleRated', false);
     });
   };
 
@@ -528,6 +546,10 @@ export const createChessStore = (): ChessStore => {
     setState('puzzleFeedback', feedback);
   };
 
+  const setRatingChange = (ratingChange: ChessState['ratingChange']) => {
+    setState('ratingChange', ratingChange);
+  };
+
   // Derived state
   const derived = {
     currentBoard: () => fenToBoard(state.viewFen),
@@ -562,6 +584,7 @@ export const createChessStore = (): ChessStore => {
     removeMoveEvaluationsFromIndex,
     setPuzzleSolutionIndex,
     setPuzzleFeedback,
+    setRatingChange,
     derived,
     getSession,
   };

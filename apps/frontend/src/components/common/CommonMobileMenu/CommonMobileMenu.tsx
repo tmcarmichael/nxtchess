@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from '@solidjs/router';
 import { Show, For, createSignal, onMount, onCleanup, type Component } from 'solid-js';
 import { useUserStore } from '../../../store/user/UserContext';
-import { getProfileIconAsset } from '../../user/ProfileIconPicker/ProfileIconPicker';
+import { getRatingIcon } from '../../user/ProfileIconPicker/ProfileIconPicker';
 import { NAV_ITEMS } from '../CommonSiteHeader/CommonSiteHeader';
 import styles from './CommonMobileMenu.module.css';
 
@@ -150,7 +150,7 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
             <Show when={userState.username}>
               <button class={styles.profileButton} onClick={handleProfileClick}>
                 <img
-                  src={getProfileIconAsset(userState.profileIcon)}
+                  src={getRatingIcon(userState.rating, userState.puzzleRating)}
                   alt="Profile icon"
                   class={styles.profileButtonIcon}
                 />

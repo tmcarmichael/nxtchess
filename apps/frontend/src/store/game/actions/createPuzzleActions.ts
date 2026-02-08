@@ -9,6 +9,7 @@ import {
   puzzleHistory,
   type PuzzleDefinition,
 } from '../../../services/puzzle';
+import { BACKEND_URL } from '../../../shared/config/env';
 import { DEBUG } from '../../../shared/utils/debug';
 import type { Square, PromotionPiece } from '../../../types/chess';
 import type { Side, StartGameOptions, PuzzleCategory } from '../../../types/game';
@@ -44,6 +45,28 @@ export const createPuzzleActions = (
   let currentPuzzle: PuzzleDefinition | null = null;
   let currentGameGeneration = 0;
   let hasRecordedResult = false;
+
+  const submitPuzzleResult = async (
+    solved: boolean
+  ): Promise<{ new_rating: number; rating_delta: number; old_rating: number } | null> => {
+    if (!currentPuzzle || !chess.state.puzzleRated) return null;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/puzzle/result`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          puzzle_id: currentPuzzle.id,
+          category: currentPuzzle.category,
+          solved,
+        }),
+      });
+      if (res.ok) return res.json();
+      return null;
+    } catch {
+      return null;
+    }
+  };
 
   const performOpponentMove = async (generation: number) => {
     if (!currentPuzzle) return;
@@ -134,6 +157,7 @@ export const createPuzzleActions = (
         timeControl: 0,
         puzzleCategory: puzzle.category,
         puzzleId: puzzle.id,
+        puzzleRated: options.puzzleRated,
         puzzleStartFen: puzzle.fen,
         fen: gameFen,
       });
@@ -183,7 +207,6 @@ export const createPuzzleActions = (
     const playerUci = `${from}${to}${promotion ?? ''}`;
 
     if (playerUci !== expectedUci) {
-      // Incorrect move - get SAN for feedback message
       let incorrectSan = `${from}${to}`;
       try {
         const tempChess = new Chess(chess.state.fen);
@@ -195,11 +218,24 @@ export const createPuzzleActions = (
         // Use UCI notation as fallback
       }
 
-      chess.setPuzzleFeedback({
-        type: 'incorrect',
-        message: `${incorrectSan} is not the correct move. Try again!`,
-        incorrectMoveSan: incorrectSan,
-      });
+      if (chess.state.puzzleRated) {
+        chess.endGame('checkmate', getOpponentSide(chess.state.playerColor));
+        submitPuzzleResult(false).then((data) => {
+          chess.setPuzzleFeedback({
+            type: 'incorrect',
+            message: `${incorrectSan} is not the correct move.`,
+            incorrectMoveSan: incorrectSan,
+            ratingDelta: data?.rating_delta,
+            newRating: data?.new_rating,
+          });
+        });
+      } else {
+        chess.setPuzzleFeedback({
+          type: 'incorrect',
+          message: `${incorrectSan} is not the correct move. Try again!`,
+          incorrectMoveSan: incorrectSan,
+        });
+      }
 
       if (!hasRecordedResult && currentPuzzle) {
         hasRecordedResult = true;
@@ -241,16 +277,27 @@ export const createPuzzleActions = (
       }
     );
 
-    // Check if puzzle is complete
     const newSolIdx = solIdx + 1;
     if (newSolIdx >= currentPuzzle.solutionUci.length) {
       const winnerSide = chess.state.playerColor;
       const winnerName = winnerSide === 'w' ? 'White' : 'Black';
       chess.endGame('checkmate', winnerSide);
-      chess.setPuzzleFeedback({
-        type: 'complete',
-        message: `${winnerName} wins by checkmate.`,
-      });
+
+      if (chess.state.puzzleRated) {
+        submitPuzzleResult(true).then((data) => {
+          chess.setPuzzleFeedback({
+            type: 'complete',
+            message: `${winnerName} wins by checkmate.`,
+            ratingDelta: data?.rating_delta,
+            newRating: data?.new_rating,
+          });
+        });
+      } else {
+        chess.setPuzzleFeedback({
+          type: 'complete',
+          message: `${winnerName} wins by checkmate.`,
+        });
+      }
 
       if (!hasRecordedResult && currentPuzzle) {
         hasRecordedResult = true;
@@ -272,10 +319,12 @@ export const createPuzzleActions = (
 
   const loadNextPuzzle = async () => {
     const category = (chess.state.puzzleCategory as PuzzleCategory) ?? 'mate-in-1';
+    const isRated = chess.state.puzzleRated;
     await startNewGame({
-      side: 'w', // Will be overridden by puzzle.playerSide
+      side: 'w',
       mode: 'puzzle',
       puzzleCategory: category,
+      puzzleRated: isRated,
     });
   };
 

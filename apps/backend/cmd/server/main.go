@@ -145,6 +145,7 @@ func main() {
 		pr.Use(middleware.Session)
 		pr.Post("/set-username", controllers.SetUsernameHandler)
 		pr.Post("/set-profile-icon", controllers.SetProfileIconHandler)
+		pr.Post("/api/puzzle/result", controllers.SubmitPuzzleResultHandler)
 	})
 
 	addr := ":" + cfg.Port

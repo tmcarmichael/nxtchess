@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup } from 'solid-js';
+import { type Component, onMount, onCleanup, Show } from 'solid-js';
 import styles from './PuzzleFeedbackModal.module.css';
 
 interface PuzzleFeedbackModalProps {
@@ -8,6 +8,9 @@ interface PuzzleFeedbackModalProps {
   onTryAgain?: () => void;
   onNewPuzzle: () => void;
   onEvaluatePuzzle?: () => void;
+  isRated?: boolean;
+  ratingDelta?: number;
+  newRating?: number;
 }
 
 const PuzzleFeedbackModal: Component<PuzzleFeedbackModalProps> = (props) => {
@@ -56,6 +59,17 @@ const PuzzleFeedbackModal: Component<PuzzleFeedbackModalProps> = (props) => {
           {props.type === 'incorrect' ? 'Incorrect Move' : 'Puzzle Complete!'}
         </h3>
         <p class={styles.feedbackMessage}>{props.message}</p>
+        <Show
+          when={props.isRated && props.ratingDelta !== undefined && props.newRating !== undefined}
+        >
+          <div class={styles.ratingChange}>
+            <span class={styles.ratingValue}>{props.newRating}</span>
+            <span class={props.ratingDelta! >= 0 ? styles.ratingGain : styles.ratingLoss}>
+              {props.ratingDelta! >= 0 ? '+' : ''}
+              {props.ratingDelta}
+            </span>
+          </div>
+        </Show>
         <div class={styles.feedbackButtons}>
           {props.type === 'incorrect' && props.onTryAgain && (
             <button

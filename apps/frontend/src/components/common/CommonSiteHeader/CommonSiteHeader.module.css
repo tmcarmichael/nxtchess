@@ -272,6 +272,30 @@
   animation: fadeIn var(--transition-fast) ease-out;
 }
 
+.userSectionTooltip {
+  position: relative;
+}
+
+.userSectionTooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  background: var(--surface-3);
+  color: var(--text-secondary);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  pointer-events: none;
+  z-index: var(--z-tooltip);
+  box-shadow: var(--shadow-md);
+  animation: fadeIn var(--transition-fast) ease-out;
+}
+
 .signInButton {
   font-family: var(--font-display);
   font-size: var(--text-sm);

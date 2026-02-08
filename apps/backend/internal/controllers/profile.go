@@ -32,9 +32,10 @@ func UserProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := models.PublicProfile{
-		Username:    user.Username,
-		Rating:      user.Rating,
-		ProfileIcon: user.ProfileIcon,
+		Username:     user.Username,
+		Rating:       user.Rating,
+		PuzzleRating: user.PuzzleRating,
+		ProfileIcon:  user.ProfileIcon,
 	}
 
 	httpx.WriteJSON(w, http.StatusOK, resp)
@@ -73,11 +74,27 @@ func CheckUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rating, err := database.GetRatingByID(userID)
+	if err != nil {
+		logger.Error("Failed to get rating", logger.F("userId", userID, "error", err.Error()))
+		httpx.WriteJSONError(w, http.StatusInternalServerError, "Database error")
+		return
+	}
+
+	puzzleRating, err := database.GetPuzzleRatingByID(userID)
+	if err != nil {
+		logger.Error("Failed to get puzzle rating", logger.F("userId", userID, "error", err.Error()))
+		httpx.WriteJSONError(w, http.StatusInternalServerError, "Database error")
+		return
+	}
+
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"authenticated": true,
 		"username_set":  true,
 		"username":      username,
 		"profile_icon":  profileIcon,
+		"rating":        rating,
+		"puzzle_rating": puzzleRating,
 	})
 }
 

@@ -84,6 +84,34 @@
   color: var(--text-secondary);
 }
 
+.ratingChange {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.ratingValue {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ratingGain {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--success);
+}
+
+.ratingLoss {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--error);
+}
+
 .feedbackButtons {
   display: flex;
   gap: var(--space-sm);

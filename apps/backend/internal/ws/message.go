@@ -109,9 +109,13 @@ type PlayerInfo struct {
 
 // GameEndedData is sent when game ends
 type GameEndedData struct {
-	GameID string `json:"gameId"`
-	Result string `json:"result"` // "white", "black", "draw"
-	Reason string `json:"reason"` // "checkmate", "resignation", "timeout", "stalemate", "agreement"
+	GameID           string `json:"gameId"`
+	Result           string `json:"result"` // "white", "black", "draw"
+	Reason           string `json:"reason"` // "checkmate", "resignation", "timeout", "stalemate", "agreement"
+	WhiteRating      *int   `json:"whiteRating,omitempty"`
+	BlackRating      *int   `json:"blackRating,omitempty"`
+	WhiteRatingDelta *int   `json:"whiteRatingDelta,omitempty"`
+	BlackRatingDelta *int   `json:"blackRatingDelta,omitempty"`
 }
 
 // Gameplay payloads

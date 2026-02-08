@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     user_id      TEXT PRIMARY KEY,
     username     TEXT UNIQUE,
     rating       INT NOT NULL DEFAULT 1500 CHECK (rating >= 0 AND rating <= 4000),
+    puzzle_rating INT NOT NULL DEFAULT 1200 CHECK (puzzle_rating >= 0 AND puzzle_rating <= 4000),
     profile_icon TEXT DEFAULT 'white-pawn',
     created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
@@ -41,6 +42,20 @@ CREATE TABLE IF NOT EXISTS rating_history (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 GRANT SELECT, INSERT, UPDATE ON rating_history TO anon;
+GRANT USAGE, SELECT ON SEQUENCE rating_history_id_seq TO anon;
 
 CREATE INDEX IF NOT EXISTS rating_history_user_id_idx ON rating_history(user_id);
 CREATE INDEX IF NOT EXISTS rating_history_created_at_idx ON rating_history(created_at DESC);
+
+-- Puzzle rating history
+CREATE TABLE IF NOT EXISTS puzzle_rating_history (
+    id         SERIAL PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
+    rating     INT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+GRANT SELECT, INSERT, UPDATE ON puzzle_rating_history TO anon;
+GRANT USAGE, SELECT ON SEQUENCE puzzle_rating_history_id_seq TO anon;
+
+CREATE INDEX IF NOT EXISTS puzzle_rating_history_user_id_idx ON puzzle_rating_history(user_id);
+CREATE INDEX IF NOT EXISTS puzzle_rating_history_created_at_idx ON puzzle_rating_history(created_at DESC);
