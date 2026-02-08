@@ -44,6 +44,14 @@ type GameState struct {
 // Initial FEN for standard chess
 const initialFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
+const (
+	endedGameTimeout      = 5 * time.Minute
+	waitingGameTimeout    = 5 * time.Minute
+	maxGames              = 1000
+	gameCreateCooldown    = 10 * time.Second
+	maxActiveGamesPerUser = 2
+)
+
 // GameManager manages all active games
 type GameManager struct {
 	games map[string]*GameState
@@ -74,9 +82,9 @@ func (gm *GameManager) garbageCollect() {
 		for id, game := range gm.games {
 			game.mu.RLock()
 			shouldDelete := false
-			if game.Status == "ended" && now.Sub(game.LastMoveAt) > 5*time.Minute {
+			if game.Status == "ended" && now.Sub(game.LastMoveAt) > endedGameTimeout {
 				shouldDelete = true
-			} else if game.Status == "waiting" && now.Sub(game.CreatedAt) > 30*time.Minute {
+			} else if game.Status == "waiting" && now.Sub(game.CreatedAt) > waitingGameTimeout {
 				shouldDelete = true
 			}
 			game.mu.RUnlock()
@@ -95,8 +103,8 @@ func (gm *GameManager) garbageCollect() {
 				if game, exists := gm.games[id]; exists {
 					game.mu.RLock()
 					wasWaiting := game.Status == "waiting"
-					stillExpired := (game.Status == "ended" && now.Sub(game.LastMoveAt) > 5*time.Minute) ||
-						(wasWaiting && now.Sub(game.CreatedAt) > 30*time.Minute)
+					stillExpired := (game.Status == "ended" && now.Sub(game.LastMoveAt) > endedGameTimeout) ||
+						(wasWaiting && now.Sub(game.CreatedAt) > waitingGameTimeout)
 					game.mu.RUnlock()
 					if stillExpired {
 						delete(gm.games, id)
@@ -333,8 +341,75 @@ func (gm *GameManager) finalizeGame(game *GameState) GameEndedData {
 	return endedData
 }
 
+// countActiveGamesByIdentity counts waiting/active games for a given user identity.
+// For authenticated users, identity is the UserID; for anonymous users, it's the IP.
+func (gm *GameManager) countActiveGamesByIdentity(identity string, byUserID bool) int {
+	gm.mu.RLock()
+	defer gm.mu.RUnlock()
+	return gm.countActiveGamesLocked(identity, byUserID)
+}
+
+// countActiveGamesLocked counts waiting/active games. Caller must hold gm.mu (read or write).
+func (gm *GameManager) countActiveGamesLocked(identity string, byUserID bool) int {
+	count := 0
+	for _, game := range gm.games {
+		game.mu.RLock()
+		if game.Status == "waiting" || game.Status == "active" {
+			if byUserID {
+				if (game.WhitePlayer != nil && game.WhitePlayer.UserID == identity) ||
+					(game.BlackPlayer != nil && game.BlackPlayer.UserID == identity) {
+					count++
+				}
+			} else {
+				if (game.WhitePlayer != nil && game.WhitePlayer.IP == identity) ||
+					(game.BlackPlayer != nil && game.BlackPlayer.IP == identity) {
+					count++
+				}
+			}
+		}
+		game.mu.RUnlock()
+	}
+	return count
+}
+
 // CreateGame creates a new game and adds the creator as white
 func (gm *GameManager) CreateGame(client *Client, data *GameCreateData) {
+	// Per-client cooldown: max 1 game creation per 10 seconds
+	if time.Since(client.GetLastGameCreatedAt()) < gameCreateCooldown {
+		client.SendMessage(NewErrorMessage("GAME_CREATE_COOLDOWN", "Please wait before creating another game"))
+		return
+	}
+
+	// Per-user active game limit: max 2 waiting/active games
+	identity := client.IP
+	byUserID := false
+	if client.UserID != "" {
+		identity = client.UserID
+		byUserID = true
+	}
+	if gm.countActiveGamesByIdentity(identity, byUserID) >= maxActiveGamesPerUser {
+		client.SendMessage(NewErrorMessage("GAME_LIMIT_REACHED", "You already have the maximum number of active games"))
+		return
+	}
+
+	// Validate time control early (before expensive ops)
+	if data != nil && data.TimeControl != nil {
+		tc := data.TimeControl
+		if tc.InitialTime < 60 || tc.InitialTime > 10800 || tc.Increment < 0 || tc.Increment > 300 {
+			client.SendMessage(NewErrorMessage("INVALID_TIME_CONTROL", "Time control out of valid range"))
+			return
+		}
+	}
+
+	// Check game ceiling early to avoid wasted work when at capacity
+	gm.mu.RLock()
+	atCapacity := len(gm.games) >= maxGames
+	gm.mu.RUnlock()
+	if atCapacity {
+		client.SendMessage(NewErrorMessage("SERVER_FULL", "Server is at capacity, please try again later"))
+		return
+	}
+
 	gameID := generateGameID()
 
 	// Initialize server-side chess game for validation
@@ -371,20 +446,26 @@ func (gm *GameManager) CreateGame(client *Client, data *GameCreateData) {
 		chessGame:      chessGame,
 	}
 
-	// Set time control if provided (convert seconds to milliseconds)
 	if data != nil && data.TimeControl != nil {
-		tc := data.TimeControl
-		if tc.InitialTime < 60 || tc.InitialTime > 10800 || tc.Increment < 0 || tc.Increment > 300 {
-			client.SendMessage(NewErrorMessage("INVALID_TIME_CONTROL", "Time control out of valid range"))
-			return
-		}
-		game.TimeControl = tc
-		game.WhiteTimeMs = int64(tc.InitialTime) * 1000
-		game.BlackTimeMs = int64(tc.InitialTime) * 1000
+		game.TimeControl = data.TimeControl
+		game.WhiteTimeMs = int64(data.TimeControl.InitialTime) * 1000
+		game.BlackTimeMs = int64(data.TimeControl.InitialTime) * 1000
 	}
 
+	// Double-check ceiling under write lock to prevent TOCTOU race
 	gm.mu.Lock()
+	if len(gm.games) >= maxGames {
+		gm.mu.Unlock()
+		client.SendMessage(NewErrorMessage("SERVER_FULL", "Server is at capacity, please try again later"))
+		return
+	}
+	if gm.countActiveGamesLocked(identity, byUserID) >= maxActiveGamesPerUser {
+		gm.mu.Unlock()
+		client.SendMessage(NewErrorMessage("GAME_LIMIT_REACHED", "You already have the maximum number of active games"))
+		return
+	}
 	gm.games[gameID] = game
+	client.SetLastGameCreatedAt(time.Now())
 	gm.mu.Unlock()
 
 	// Associate client with game
@@ -516,14 +597,13 @@ func (gm *GameManager) JoinGame(client *Client, gameID string) {
 func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 	gm.mu.RLock()
 	game, exists := gm.games[data.GameID]
-	gm.mu.RUnlock()
-
 	if !exists {
+		gm.mu.RUnlock()
 		client.SendMessage(NewServerMessage(MsgTypeGameNotFound, nil))
 		return
 	}
-
 	game.mu.Lock()
+	gm.mu.RUnlock()
 	defer game.mu.Unlock()
 
 	// Check game is active
@@ -664,14 +744,13 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 func (gm *GameManager) HandleResign(client *Client, gameID string) {
 	gm.mu.RLock()
 	game, exists := gm.games[gameID]
-	gm.mu.RUnlock()
-
 	if !exists {
+		gm.mu.RUnlock()
 		client.SendMessage(NewServerMessage(MsgTypeGameNotFound, nil))
 		return
 	}
-
 	game.mu.Lock()
+	gm.mu.RUnlock()
 	defer game.mu.Unlock()
 
 	if game.Status != "active" {
@@ -869,7 +948,10 @@ func (gm *GameManager) GetActiveGameCount() int {
 	defer gm.mu.RUnlock()
 	count := 0
 	for _, g := range gm.games {
-		if g.Status == "active" {
+		g.mu.RLock()
+		active := g.Status == "active"
+		g.mu.RUnlock()
+		if active {
 			count++
 		}
 	}

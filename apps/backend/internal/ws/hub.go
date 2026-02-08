@@ -3,6 +3,7 @@ package ws
 import (
 	"encoding/json"
 	"sync"
+	"time"
 
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/metrics"
@@ -29,17 +30,25 @@ type Hub struct {
 
 	// Connection limiter callback for cleanup
 	onDisconnect func(ip string)
+
+	// Lobby broadcast batching
+	lobbyUpdateCh chan LobbyUpdateData
+	stopBatcher   chan struct{}
 }
 
-// NewHub creates a new Hub
-func NewHub() *Hub {
+// NewHub creates a new Hub. onDisconnect is called when a client disconnects (may be nil).
+func NewHub(onDisconnect func(ip string)) *Hub {
 	h := &Hub{
 		clients:          make(map[string]*Client),
 		Register:         make(chan *Client),
 		Unregister:       make(chan *Client),
 		lobbySubscribers: make(map[string]*Client),
+		lobbyUpdateCh:    make(chan LobbyUpdateData, 100),
+		stopBatcher:      make(chan struct{}),
+		onDisconnect:     onDisconnect,
 	}
 	h.games = NewGameManager(h)
+	go h.runLobbyBatcher()
 	return h
 }
 
@@ -100,11 +109,6 @@ func (h *Hub) GetClientCount() int {
 	return len(h.clients)
 }
 
-// SetOnDisconnect sets the callback for when a client disconnects
-func (h *Hub) SetOnDisconnect(fn func(ip string)) {
-	h.onDisconnect = fn
-}
-
 // SubscribeLobby adds a client to the lobby subscriber list and sends the current game list
 func (h *Hub) SubscribeLobby(client *Client) {
 	h.lobbyMu.Lock()
@@ -122,20 +126,76 @@ func (h *Hub) UnsubscribeLobby(client *Client) {
 	h.lobbyMu.Unlock()
 }
 
-// BroadcastLobbyUpdate sends a lobby update to all subscribers
+// BroadcastLobbyUpdate queues a lobby update for batched delivery to all subscribers.
 func (h *Hub) BroadcastLobbyUpdate(update LobbyUpdateData) {
-	msg := NewServerMessage(MsgTypeLobbyUpdate, update)
-	data, err := json.Marshal(msg)
-	if err != nil {
-		logger.Error("Failed to marshal lobby update", logger.F("error", err.Error()))
-		return
+	select {
+	case h.lobbyUpdateCh <- update:
+	default:
+		logger.Warn("Lobby update channel full, dropping update")
 	}
+}
 
-	h.lobbyMu.RLock()
-	defer h.lobbyMu.RUnlock()
+// runLobbyBatcher aggregates lobby updates over 250ms windows, deduplicating
+// add+remove of the same game within a single window.
+func (h *Hub) runLobbyBatcher() {
+	ticker := time.NewTicker(250 * time.Millisecond)
+	defer ticker.Stop()
 
-	for _, client := range h.lobbySubscribers {
-		client.SendJSON(data)
+	pending := make(map[string]LobbyUpdateData)
+
+	for {
+		select {
+		case update := <-h.lobbyUpdateCh:
+			gameID := update.GameID
+			if update.Game != nil {
+				gameID = update.Game.GameID
+			}
+			if gameID == "" {
+				continue
+			}
+
+			if existing, ok := pending[gameID]; ok {
+				if existing.Action != update.Action {
+					delete(pending, gameID)
+					continue
+				}
+			}
+			pending[gameID] = update
+
+		case <-ticker.C:
+			if len(pending) == 0 {
+				continue
+			}
+
+			h.lobbyMu.RLock()
+			if len(h.lobbySubscribers) == 0 {
+				h.lobbyMu.RUnlock()
+				for k := range pending {
+					delete(pending, k)
+				}
+				continue
+			}
+
+			for _, update := range pending {
+				msg := NewServerMessage(MsgTypeLobbyUpdate, update)
+				data, err := json.Marshal(msg)
+				if err != nil {
+					logger.Error("Failed to marshal batched lobby update", logger.F("error", err.Error()))
+					continue
+				}
+				for _, client := range h.lobbySubscribers {
+					client.SendJSON(data)
+				}
+			}
+			h.lobbyMu.RUnlock()
+
+			for k := range pending {
+				delete(pending, k)
+			}
+
+		case <-h.stopBatcher:
+			return
+		}
 	}
 }
 
