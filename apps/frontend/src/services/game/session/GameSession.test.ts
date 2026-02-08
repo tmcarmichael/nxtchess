@@ -191,6 +191,29 @@ describe('GameSession', () => {
       expect(session.currentState.capturedPieces.black.length).toBeGreaterThan(0);
     });
 
+    it('tracks en passant captures', () => {
+      const config = createTestConfig();
+      // White pawn on e5, black pawn just advanced to d5 — en passant available on d6
+      const epFen = 'rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3';
+      const state = createTestState({
+        fen: epFen,
+        viewFen: epFen,
+      });
+      const session = new GameSession(config, state);
+
+      const command: GameCommand = {
+        type: 'APPLY_MOVE',
+        payload: { from: 'e5', to: 'd6' }, // En passant capture
+      };
+
+      const result = session.applyCommand(command);
+
+      expect(result.success).toBe(true);
+      // White captures black pawn via en passant
+      expect(session.currentState.capturedPieces.black).toContain('bP');
+      expect(session.currentState.capturedPieces.black).toHaveLength(1);
+    });
+
     it('detects checkmate and ends game', () => {
       const config = createTestConfig();
       // Scholar's mate position - one move from checkmate
