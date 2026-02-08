@@ -1,0 +1,16 @@
+# Backend: format, vet, and test staged Go files
+gofiles=$(git diff --cached --name-only --diff-filter=ACM -- '*.go')
+if [ -n "$gofiles" ]; then
+  unformatted=$(gofmt -l $gofiles)
+  if [ -n "$unformatted" ]; then
+    gofmt -w $unformatted
+    git add $unformatted
+  fi
+  (cd apps/backend && go vet ./... && go test ./...)
+fi
+
+# Frontend: lint, type-check, and test staged files
+frontend_files=$(git diff --cached --name-only -- 'apps/frontend/')
+if [ -n "$frontend_files" ]; then
+  cd apps/frontend && npx lint-staged && npx tsc -b && npx vitest run --changed HEAD
+fi

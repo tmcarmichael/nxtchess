@@ -70,13 +70,13 @@ func (h *Hub) Run() {
 				delete(h.clients, client.ID)
 				metrics.WSConnectionsActive.Dec()
 
-				// Clean up lobby subscription BEFORE closing Send channel
-				// to prevent BroadcastLobbyUpdate from writing to a closed channel
+				// Clean up lobby subscription BEFORE closing the client
+				// to prevent BroadcastLobbyUpdate from sending to a closing client
 				h.lobbyMu.Lock()
 				delete(h.lobbySubscribers, client.ID)
 				h.lobbyMu.Unlock()
 
-				close(client.Send)
+				client.Close()
 
 				// Handle disconnect from any active game
 				if gameID := client.GetGameID(); gameID != "" {
