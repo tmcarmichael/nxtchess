@@ -202,9 +202,6 @@ export class GameSession {
   }): CommandResult {
     const { from, to, promotion } = payload;
 
-    // Check for capture before move using cached board (O(1) lookup)
-    const capturedPieceSymbol = this.boardCache.getPieceSymbol(to);
-
     // Attempt the move
     const move = this.chess.move({ from, to, promotion });
     if (!move) {
@@ -220,9 +217,11 @@ export class GameSession {
     // Sync BoardCache with new position
     this.boardCache.load(newFen);
 
-    // Update captured pieces
+    // Update captured pieces using chess.js move data (handles en passant correctly)
     let newCapturedPieces = { ...this._state.capturedPieces };
-    if (capturedPieceSymbol) {
+    if (move.captured) {
+      const capturedColor = move.color === 'w' ? 'b' : 'w';
+      const capturedPieceSymbol = capturedColor + move.captured.toUpperCase();
       newCapturedPieces = processCapturedPiece(capturedPieceSymbol, newCapturedPieces);
     }
 
@@ -540,12 +539,19 @@ export class GameSession {
       return { success: true, newState: this._state };
     }
 
-    // Reload chess from starting position and replay up to viewIndex
+    // Reload chess from starting position and replay up to viewIndex,
+    // recalculating captured pieces from chess.js move data
     const startingFen = this._config.startingFen ?? INITIAL_FEN;
     this.chess.load(startingFen);
+    let newCapturedPieces: { white: string[]; black: string[] } = { white: [], black: [] };
     for (let i = 0; i <= viewIndex; i++) {
       if (i >= 0 && i < this._state.moveHistory.length) {
-        this.chess.move(this._state.moveHistory[i]);
+        const move = this.chess.move(this._state.moveHistory[i]);
+        if (move?.captured) {
+          const capturedColor = move.color === 'w' ? 'b' : 'w';
+          const capturedPieceSymbol = capturedColor + move.captured.toUpperCase();
+          newCapturedPieces = processCapturedPiece(capturedPieceSymbol, newCapturedPieces);
+        }
       }
     }
 
@@ -555,11 +561,6 @@ export class GameSession {
 
     // Sync BoardCache with new position
     this.boardCache.load(newFen);
-
-    // Recalculate captured pieces from truncated history
-    const newCapturedPieces = { white: [] as string[], black: [] as string[] };
-    // Note: We'd need to replay all moves to accurately recalculate captures
-    // For now, we clear captures on truncation (they'll be rebuilt on new moves)
 
     this._state = {
       ...this._state,

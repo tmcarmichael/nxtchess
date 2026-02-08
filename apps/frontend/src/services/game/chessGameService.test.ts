@@ -1,9 +1,11 @@
 import { Chess } from 'chess.js';
 import { describe, it, expect } from 'vitest';
+import { type Square } from '../../types/chess';
 import {
   getOpponentSide,
   fenToBoard,
   getLegalMoves,
+  getLegalMoveCaptures,
   canMovePieceAt,
   isPawnPromotion,
   getCapture,
@@ -18,6 +20,7 @@ const AFTER_E4_FEN = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 
 const PROMOTION_FEN = '8/P7/8/8/8/8/8/4K2k w - - 0 1'; // White pawn on a7 ready to promote
 const BLACK_PROMOTION_FEN = '4K2k/8/8/8/8/8/p7/8 b - - 0 1'; // Black pawn on a2 ready to promote
 const CAPTURE_FEN = 'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2'; // e4 can capture d5
+const EN_PASSANT_FEN = 'rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3'; // White pawn e5, black pawn d5 (just advanced), en passant on d6
 
 describe('getOpponentSide', () => {
   it('returns black when given white', () => {
@@ -132,6 +135,35 @@ describe('getLegalMoves', () => {
     const moves = getLegalMoves(INITIAL_FEN, 'e7');
 
     expect(moves).toHaveLength(0);
+  });
+
+  it('includes en passant target square', () => {
+    const moves = getLegalMoves(EN_PASSANT_FEN, 'e5');
+
+    expect(moves).toContain('d6'); // En passant capture
+    expect(moves).toContain('e6'); // Normal push
+  });
+});
+
+describe('getLegalMoveCaptures', () => {
+  it('returns empty set for non-capture moves', () => {
+    const captures = getLegalMoveCaptures(INITIAL_FEN, 'e2');
+
+    expect(captures.size).toBe(0);
+  });
+
+  it('includes normal captures', () => {
+    const captures = getLegalMoveCaptures(CAPTURE_FEN, 'e4');
+
+    expect(captures.has('d5' as Square)).toBe(true);
+    expect(captures.size).toBe(1);
+  });
+
+  it('includes en passant as a capture', () => {
+    const captures = getLegalMoveCaptures(EN_PASSANT_FEN, 'e5');
+
+    expect(captures.has('d6' as Square)).toBe(true);
+    expect(captures.size).toBe(1); // Only d6 is a capture, e6 is a push
   });
 });
 
@@ -284,6 +316,20 @@ describe('executeMove', () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.captured).toBe('bP');
+    }
+  });
+
+  it('detects en passant captures', () => {
+    const chess = new Chess(EN_PASSANT_FEN);
+    const board = fenToBoard(EN_PASSANT_FEN);
+
+    const result = executeMove(chess, 'e5', 'd6', board);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.captured).toBe('bP');
+      // White pawn moved to d6, black d5 pawn removed
+      expect(result.newFen).toContain('3P4'); // White pawn on d6 (rank 6)
     }
   });
 

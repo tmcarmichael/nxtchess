@@ -193,9 +193,6 @@ export class BoardCache {
    * Returns the captured piece symbol if any.
    */
   move(from: Square, to: Square, promotion?: string): string | null {
-    // Get captured piece before move
-    const capturedPiece = this.getPieceSymbol(to);
-
     // Apply move via chess.js
     const result = this.chess.move({
       from: from as ChessSquare,
@@ -210,7 +207,12 @@ export class BoardCache {
     // Full sync after move (incremental update would be more complex)
     this.syncFromChess();
 
-    return capturedPiece;
+    // Use chess.js move result for captured piece (handles en passant correctly)
+    if (result.captured) {
+      const capturedColor = result.color === 'w' ? 'b' : 'w';
+      return capturedColor + result.captured.toUpperCase();
+    }
+    return null;
   }
 
   /**
