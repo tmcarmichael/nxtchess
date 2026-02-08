@@ -7,6 +7,11 @@ services:
       POSTGRES_DB: chess_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
     ports:
       - "5432:5432"
     volumes:
@@ -26,6 +31,11 @@ services:
     image: redis:7
     container_name: nxtchess_redis
     profiles: ["redis", "backend", "full"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
     ports:
       - "6379:6379"
 
@@ -37,10 +47,14 @@ services:
     profiles: ["backend", "full"]
     env_file: ./apps/backend/.env
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./apps/backend:/app
+      - go_build_cache:/root/.cache/go-build
+      - go_mod_cache:/go/pkg/mod
     ports:
       - "8080:8080"
     command: ["go", "run", "cmd/server/main.go"]
@@ -64,7 +78,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: nxtchess_prometheus
-    profiles: ["monitoring", "full"]
+    profiles: ["monitoring"]
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -77,7 +91,7 @@ services:
   loki:
     image: grafana/loki:3.0.0
     container_name: nxtchess_loki
-    profiles: ["monitoring", "full"]
+    profiles: ["monitoring"]
     volumes:
       - ./monitoring/loki.yml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki
@@ -88,7 +102,7 @@ services:
   promtail:
     image: grafana/promtail:3.0.0
     container_name: nxtchess_promtail
-    profiles: ["monitoring", "full"]
+    profiles: ["monitoring"]
     volumes:
       - ./monitoring/promtail.yml:/etc/promtail/config.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -99,7 +113,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: nxtchess_grafana
-    profiles: ["monitoring", "full"]
+    profiles: ["monitoring"]
     volumes:
       - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - ./monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
@@ -118,6 +132,8 @@ services:
 
 volumes:
   db_data:
+  go_build_cache:
+  go_mod_cache:
   prometheus_data:
   loki_data:
   grafana_data:
