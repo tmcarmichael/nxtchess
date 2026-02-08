@@ -164,14 +164,9 @@
   align-items: center;
   gap: var(--space-sm);
   cursor: pointer;
-  transition: opacity var(--transition-fast);
   background: none;
   border: none;
   padding: 0;
-}
-
-.userSection:hover {
-  opacity: 0.8;
 }
 
 .headerProfileIcon {
@@ -187,29 +182,33 @@
   letter-spacing: 0.02em;
   color: var(--accent);
   text-decoration: none;
+  transition: text-shadow var(--transition-fast);
 }
 
-.signOutText {
-  font-family: var(--font-body);
-  font-size: var(--text-base);
-  font-weight: 500;
-  padding-left: var(--space-md);
+.userSection:hover .usernameText {
+  text-shadow: 0 0 6px var(--accent-muted);
+}
+
+.signOutButton {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-xs) var(--space-md);
+  background: transparent;
+  border: 1px solid var(--error);
+  border-radius: var(--radius-sm);
   color: var(--error);
-  opacity: 0.7;
   cursor: pointer;
   transition:
-    opacity var(--transition-fast),
+    background var(--transition-fast),
     color var(--transition-fast);
-  background: none;
-  border: none;
-  padding-top: 0;
-  padding-bottom: 0;
-  padding-right: 0;
 }
 
-.signOutText:hover {
-  opacity: 1;
-  color: var(--error);
+.signOutButton:hover {
+  background: var(--error);
+  color: var(--surface-0);
 }
 
 .mobileMenuButton {
@@ -272,11 +271,13 @@
   animation: fadeIn var(--transition-fast) ease-out;
 }
 
-.userSectionTooltip {
+.profileIconTooltip {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.userSectionTooltip:hover::after {
+.profileIconTooltip:hover::after {
   content: attr(data-tooltip);
   position: absolute;
   background: var(--surface-3);
@@ -339,7 +340,7 @@
     display: none;
   }
 
-  .signOutText {
+  .signOutButton {
     display: none;
   }
 
