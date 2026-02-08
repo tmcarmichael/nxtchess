@@ -12,6 +12,7 @@ import type {
 
 interface UserAchievementsProps {
   username: string;
+  hideTitle?: boolean;
 }
 
 const categoryOrder: AchievementCategory[] = [
@@ -126,7 +127,9 @@ const UserAchievements = (props: UserAchievementsProps) => {
     <Show when={isLoaded()}>
       <div class={styles.userAchievementsContainer}>
         <div class={styles.userAchievementsHeader}>
-          <h3 class={styles.userAchievementsSectionTitle}>Achievements</h3>
+          <Show when={!props.hideTitle}>
+            <h3 class={styles.userAchievementsSectionTitle}>Achievements</h3>
+          </Show>
           <div class={styles.userAchievementsPointsBanner}>
             <span class={styles.userAchievementsPointsValue}>{totalPoints()}</span>
             <span class={styles.userAchievementsPointsLabel}>pts</span>
