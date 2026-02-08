@@ -28,6 +28,25 @@ interface RatingHistory {
   puzzle_history: RatingPoint[];
 }
 
+type RatingCategory = 'play' | 'puzzle';
+
+interface RatingCategoryOption {
+  value: RatingCategory;
+  label: string;
+  historyKey: keyof RatingHistory;
+  ratingAccessor: (profile: ViewedProfile) => number;
+}
+
+const RATING_CATEGORIES: RatingCategoryOption[] = [
+  { value: 'play', label: 'Play', historyKey: 'game_history', ratingAccessor: (p) => p.rating },
+  {
+    value: 'puzzle',
+    label: 'Puzzle',
+    historyKey: 'puzzle_history',
+    ratingAccessor: (p) => p.puzzleRating,
+  },
+];
+
 interface RecentGame {
   game_id: string;
   opponent: string;
@@ -51,6 +70,7 @@ const UserProfile = () => {
   const [notFound, setNotFound] = createSignal(false);
   const [fetchError, setFetchError] = createSignal(false);
   const [isMobile, setIsMobile] = createSignal(false);
+  const [activeCategory, setActiveCategory] = createSignal<RatingCategory>('play');
 
   let currentRequestVersion = 0;
 
@@ -144,19 +164,26 @@ const UserProfile = () => {
     )
   );
 
-  const chartOptions = () => {
+  const activeHistoryData = () => {
     const history = ratingHistory();
     if (!history) return null;
 
-    const allRatings = [
-      ...history.game_history.map((p) => p.rating),
-      ...history.puzzle_history.map((p) => p.rating),
-    ];
+    const category = RATING_CATEGORIES.find((c) => c.value === activeCategory());
+    if (!category) return null;
 
-    if (allRatings.length === 0) return null;
+    const data = history[category.historyKey];
+    if (!data || data.length === 0) return null;
 
-    const min = Math.min(...allRatings);
-    const max = Math.max(...allRatings);
+    return { category, data };
+  };
+
+  const chartOptions = () => {
+    const active = activeHistoryData();
+    if (!active) return null;
+
+    const ratings = active.data.map((p) => p.rating);
+    const min = Math.min(...ratings);
+    const max = Math.max(...ratings);
     const range = max - min;
     const padding = Math.max(50, Math.round(range * 0.1));
 
@@ -179,17 +206,14 @@ const UserProfile = () => {
         labels: { style: { colors: textColor, fontSize: '11px' } },
       },
       stroke: { width: 2, curve: 'smooth' as const },
-      markers: { size: allRatings.length < 20 ? 3 : 0 },
+      markers: { size: ratings.length < 20 ? 3 : 0 },
       tooltip: {
         theme: isDark ? ('dark' as const) : ('light' as const),
         x: { format: 'MMM dd, yyyy' },
       },
       theme: { mode: isDark ? ('dark' as const) : ('light' as const) },
-      legend: {
-        position: 'top' as const,
-        labels: { colors: isDark ? '#ccc' : '#333' },
-      },
-      colors: [isDark ? '#00ffd1' : '#009b7d', '#f87171'],
+      legend: { show: false },
+      colors: [isDark ? '#00ffd1' : '#009b7d'],
       grid: {
         borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
       },
@@ -197,32 +221,18 @@ const UserProfile = () => {
   };
 
   const chartSeries = () => {
-    const history = ratingHistory();
-    if (!history) return [];
+    const active = activeHistoryData();
+    if (!active) return [];
 
-    const series: { name: string; data: { x: number; y: number }[] }[] = [];
-
-    if (history.game_history.length > 0) {
-      series.push({
-        name: 'Game Rating',
-        data: history.game_history.map((p) => ({
+    return [
+      {
+        name: `${active.category.label} Rating`,
+        data: active.data.map((p) => ({
           x: new Date(p.created_at).getTime(),
           y: p.rating,
         })),
-      });
-    }
-
-    if (history.puzzle_history.length > 0) {
-      series.push({
-        name: 'Puzzle Rating',
-        data: history.puzzle_history.map((p) => ({
-          x: new Date(p.created_at).getTime(),
-          y: p.rating,
-        })),
-      });
-    }
-
-    return series;
+      },
+    ];
   };
 
   const resultClass = (result: string) => {
@@ -270,17 +280,6 @@ const UserProfile = () => {
               </p>
             </Show>
 
-            <div class={styles.userProfileRatings}>
-              <div class={styles.userProfileRatingItem}>
-                <span class={styles.userProfileRatingLabel}>Game Rating</span>
-                <span class={styles.userProfileRatingValue}>{viewedProfile()!.rating}</span>
-              </div>
-              <div class={styles.userProfileRatingItem}>
-                <span class={styles.userProfileRatingLabel}>Puzzle Rating</span>
-                <span class={styles.userProfileRatingValue}>{viewedProfile()!.puzzleRating}</span>
-              </div>
-            </div>
-
             <div class={styles.userProfileStats}>
               <div class={styles.userProfileStatItem}>
                 <span class={styles.userProfileStatLabel}>Played</span>
@@ -308,6 +307,25 @@ const UserProfile = () => {
 
             <div class={styles.userProfileGraph}>
               <h3 class={styles.userProfileSectionTitle}>Rating History</h3>
+              <div class={styles.userProfileCategorySelector}>
+                <For each={RATING_CATEGORIES}>
+                  {(category) => (
+                    <button
+                      class={styles.userProfileCategoryButton}
+                      classList={{
+                        [styles.userProfileCategoryButtonActive]:
+                          activeCategory() === category.value,
+                      }}
+                      onClick={() => setActiveCategory(category.value)}
+                    >
+                      <span class={styles.userProfileCategoryLabel}>{category.label}</span>
+                      <span class={styles.userProfileCategoryRating}>
+                        {category.ratingAccessor(viewedProfile()!)}
+                      </span>
+                    </button>
+                  )}
+                </For>
+              </div>
               <Show
                 when={chartSeries().length > 0}
                 fallback={
