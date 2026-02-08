@@ -11,7 +11,11 @@ interface UserState {
 
 interface UserActions {
   checkUserStatus: (navigateFn: (path: string) => void) => Promise<void>;
-  saveUsername: (newName: string, navigateFn: (path: string) => void) => Promise<void>;
+  saveUsername: (
+    newName: string,
+    navigateFn: (path: string) => void,
+    startingRating?: number
+  ) => Promise<void>;
   setIsLoggedIn: (val: boolean) => void;
   setUsername: (val: string) => void;
   fetchUserProfile: () => Promise<void>;
@@ -64,13 +68,22 @@ export const createUserStore = () => {
     }
   };
 
-  const saveUsername = async (newName: string, navigateFn: (path: string) => void) => {
+  const saveUsername = async (
+    newName: string,
+    navigateFn: (path: string) => void,
+    startingRating?: number
+  ) => {
     try {
+      const body: { username: string; starting_rating?: number } = { username: newName };
+      if (startingRating !== undefined) {
+        body.starting_rating = startingRating;
+      }
+
       const res = await fetch(`${BACKEND_URL}/set-username`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: newName }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const body = await res.json();
