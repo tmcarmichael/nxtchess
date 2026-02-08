@@ -39,36 +39,6 @@
   margin: 0 0 var(--space-lg) 0;
 }
 
-.userProfileRatings {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-2xl);
-  margin-bottom: var(--space-lg);
-}
-
-.userProfileRatingItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-xs);
-}
-
-.userProfileRatingLabel {
-  font-size: var(--text-sm);
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.userProfileRatingValue {
-  font-size: var(--text-2xl);
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
 .userProfileStats {
   display: flex;
   justify-content: center;
@@ -112,6 +82,58 @@
 
 .userProfileStatValueDraw {
   color: var(--text-secondary);
+}
+
+.userProfileCategorySelector {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.userProfileCategoryButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-width: 5.5rem;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.userProfileCategoryButton:hover:not(.userProfileCategoryButtonActive) {
+  background: var(--surface-4);
+  border-color: var(--border-default);
+}
+
+.userProfileCategoryButtonActive {
+  background: var(--accent-subtle);
+  border-color: var(--accent-muted);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.userProfileCategoryLabel {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.userProfileCategoryButtonActive .userProfileCategoryLabel {
+  color: var(--text-secondary);
+}
+
+.userProfileCategoryRating {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .userProfileLoading {
@@ -248,8 +270,17 @@
     font-size: var(--text-2xl);
   }
 
-  .userProfileRatings {
-    gap: var(--space-xl);
+  .userProfileCategorySelector {
+    gap: var(--space-xs);
+  }
+
+  .userProfileCategoryButton {
+    min-width: 4.5rem;
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .userProfileCategoryRating {
+    font-size: var(--text-lg);
   }
 
   .userProfileStats {
