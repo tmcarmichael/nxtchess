@@ -1,5 +1,6 @@
 .userProfileContainer {
-  width: 60rem;
+  width: 100%;
+  max-width: 60rem;
   margin: var(--space-2xl) auto;
   padding: var(--space-xl);
   background-color: var(--surface-2);
@@ -8,6 +9,7 @@
   font-family: var(--font-body);
   text-align: center;
   color: var(--text-secondary);
+  box-sizing: border-box;
 }
 
 .userProfileHeader {
@@ -31,11 +33,17 @@
   font-weight: 600;
 }
 
+.userProfileMemberSince {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-lg) 0;
+}
+
 .userProfileRatings {
   display: flex;
   justify-content: center;
   gap: var(--space-2xl);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 
 .userProfileRatingItem {
@@ -61,6 +69,51 @@
   color: var(--text-primary);
 }
 
+.userProfileStats {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2xl);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md) 0;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.userProfileStatItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.userProfileStatLabel {
+  font-size: var(--text-sm);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.userProfileStatValue {
+  font-size: var(--text-xl);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.userProfileStatValueWin {
+  color: var(--success);
+}
+
+.userProfileStatValueLoss {
+  color: var(--error);
+}
+
+.userProfileStatValueDraw {
+  color: var(--text-secondary);
+}
+
 .userProfileLoading {
   font-size: var(--text-lg);
   color: var(--text-muted);
@@ -68,9 +121,156 @@
 
 .userProfileGraph {
   margin-top: var(--space-md);
-  padding: var(--space-xl);
+  padding: var(--space-lg);
   background: var(--surface-3);
   border-radius: var(--radius-md);
+}
+
+.userProfileSectionTitle {
   font-size: var(--text-lg);
+  font-family: var(--font-display);
+  font-weight: 700;
   color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 var(--space-md) 0;
+}
+
+.userProfileEmptyState {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  padding: var(--space-xl) 0;
+}
+
+.userProfileRecentGames {
+  margin-top: var(--space-lg);
+}
+
+.userProfileGameList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.userProfileGameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-3);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+.userProfileGameRow:hover {
+  background: var(--surface-4);
+}
+
+.userProfileGameResult {
+  font-size: var(--text-sm);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  min-width: 3rem;
+  text-align: center;
+}
+
+.userProfileGameResultWin {
+  color: var(--success);
+}
+
+.userProfileGameResultLoss {
+  color: var(--error);
+}
+
+.userProfileGameResultDraw {
+  color: var(--text-secondary);
+}
+
+.userProfileGameOpponent {
+  flex: 1;
+  text-align: left;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+}
+
+.userProfileGameOpponentLink {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.userProfileGameOpponentLink:hover {
+  color: var(--accent);
+}
+
+.userProfileGameColor {
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+.userProfileGameColorWhite {
+  background: var(--piece-white);
+}
+
+.userProfileGameColorBlack {
+  background: var(--piece-black);
+}
+
+.userProfileGameDate {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .userProfileContainer {
+    margin: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+  }
+
+  .userProfileHeader {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .userProfileIcon {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .userProfileTitle {
+    font-size: var(--text-2xl);
+  }
+
+  .userProfileRatings {
+    gap: var(--space-xl);
+  }
+
+  .userProfileStats {
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+
+  .userProfileStatItem {
+    min-width: 4rem;
+  }
+
+  .userProfileGraph {
+    padding: var(--space-sm);
+  }
+
+  .userProfileGameRow {
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+  }
+
+  .userProfileGameDate {
+    display: none;
+  }
 }
