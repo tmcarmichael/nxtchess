@@ -1,3 +1,4 @@
+import { solvedPuzzleTracker } from './puzzleHistory';
 import type { Side, PuzzleCategory } from '../../types/game';
 
 export interface PuzzleDefinition {
@@ -611,8 +612,12 @@ function shuffle<T>(arr: T[]): T[] {
 
 const categoryQueues = new Map<string, PuzzleDefinition[]>();
 
-export function getRandomPuzzle(category: PuzzleCategory, excludeId?: string): PuzzleDefinition {
-  const key = category;
+export function getRandomPuzzle(
+  category: PuzzleCategory,
+  excludeId?: string,
+  rated?: boolean
+): PuzzleDefinition {
+  const key = rated ? `${category}:rated` : `${category}:casual`;
   let queue = categoryQueues.get(key);
 
   if (!queue || queue.length === 0) {
@@ -620,7 +625,22 @@ export function getRandomPuzzle(category: PuzzleCategory, excludeId?: string): P
       category === 'random'
         ? [...MATE_IN_1_PUZZLES, ...MATE_IN_2_PUZZLES, ...MATE_IN_3_PUZZLES]
         : ALL_PUZZLES[category];
-    queue = shuffle(source);
+
+    let candidates = shuffle(source);
+
+    if (rated) {
+      const ratedSolved = solvedPuzzleTracker.getSolvedIds(true);
+      const casualSolved = solvedPuzzleTracker.getSolvedIds(false);
+      const allSolved = new Set([...ratedSolved, ...casualSolved]);
+      if (allSolved.size > 0) {
+        const unseen = candidates.filter((p) => !allSolved.has(p.id));
+        if (unseen.length > 0) {
+          candidates = unseen;
+        }
+      }
+    }
+
+    queue = candidates;
     categoryQueues.set(key, queue);
   }
 
