@@ -19,6 +19,9 @@
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-sm);
   width: 100%;
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-md);
 }
 
 .settingOptionButton {
@@ -52,24 +55,24 @@
   display: flex;
   justify-content: center;
   gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-md);
 }
 
 .gamePhaseToggleButton {
   background: var(--surface-3);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  padding: var(--space-sm) var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
+  color: var(--text-muted);
   cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-  font-family: var(--font-body);
-  font-size: var(--text-md);
-  font-weight: 500;
+  transition: all var(--transition-fast);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  min-width: 100px;
 }
 
 .gamePhaseToggleButton:hover:not(:disabled) {

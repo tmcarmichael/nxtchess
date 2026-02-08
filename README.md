@@ -12,16 +12,19 @@ Real-time multiplayer chess with tactics, analysis, and training. Built for fast
 
 ## Features
 
-- **Multiplayer** - Real-time WebSocket games, shareable links, lobby, server-managed clocks
-- **Puzzles** — Mate-in-1/2/3 tactics with Elo-based difficulty and history
-- **Analysis** — Multi-line Stockfish analysis, plus FEN/PGN import
-- **Training** — Endgame drills with evaluation, hints, and scoring
-- **Profiles** — Ratings, charts, stats, and recent games
-- **Achievements** — Badge system with streaks and notifications
+- **Multiplayer**: Real-time WebSocket games, shareable links, lobby, server-managed clocks
+- **Puzzles**: Mate-in-1/2/3 tactics with Elo-based difficulty and history
+- **Analysis**: Multi-line Stockfish analysis, plus FEN/PGN import
+- **Training**: Endgame drills with evaluation, hints, and scoring
+- **Profiles**: Ratings, charts, stats, and recent games
+- **Achievements**: Badge system with streaks and notifications
 
 ## Quick Start
 
-**Prerequisites:** [Docker](https://www.docker.com/products/docker-desktop/) and [Just](https://github.com/casey/just#installation)
+**Prerequisites:**
+
+- [Docker](https://www.docker.com/products/docker-desktop/)
+- [Just](https://github.com/casey/just#installation)
 
 ```bash
 git clone https://github.com/tmcarmichael/nxtchess.git
@@ -30,6 +33,21 @@ just dev
 ```
 
 Open http://localhost:5173
+
+To spin up just the frontend without auth/db:
+
+**Prerequisites:**
+
+- [Node](https://nodejs.org/en/download) (16.10+)
+- Yarn: Already bundled with Node 16.10+, run: `corepack enable`
+
+```bash
+git clone https://github.com/tmcarmichael/nxtchess.git
+cd nxtchess
+cd apps/frontend
+yarn install
+yarn dev
+```
 
 ## Tech Stack
 
@@ -56,7 +74,7 @@ just mon-down               # Stop monitoring
 
 ## Architecture
 
-SolidJS frontend with Stockfish WASM for client-side analysis and AI play. Go backend handles WebSocket multiplayer, server-side move validation, and game state. Caddy reverse proxy with PostgreSQL for persistence and Redis for sessions. Prometheus collects backend metrics, Loki aggregates logs, Grafana provides dashboards.
+SolidJS PWA with Stockfish WASM for client-side analysis and AI play. Go backend handles WebSocket multiplayer with server-managed clocks, server-side move validation, and ELO-rated play. PostgreSQL for persistence, Redis for sessions, Caddy reverse proxy. Prometheus metrics, Loki log aggregation, and Grafana dashboards for observability.
 
 ## Roadmap
 
