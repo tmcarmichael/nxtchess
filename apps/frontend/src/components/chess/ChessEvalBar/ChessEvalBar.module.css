@@ -44,11 +44,15 @@
 
 .evalBarFill {
   position: absolute;
-  top: 0;
+  bottom: 0;
   width: 100%;
   height: var(--fill-percent, 50%);
   background: var(--piece-white);
   transition: height 0.3s ease-out;
+}
+
+.trackFlipped {
+  transform: scaleY(-1);
 }
 
 .evalScore {
@@ -134,6 +138,10 @@
     transition: width 0.3s ease-out;
   }
 
+  .trackFlipped {
+    transform: scaleX(-1);
+  }
+
   .evalScore {
     position: static;
     transform: none;
@@ -170,12 +178,16 @@
   }
 
   .evalBarFill {
-    top: 0;
+    bottom: 0;
     left: auto;
     width: 100%;
     height: var(--fill-percent, 50%);
     background: var(--piece-white);
     transition: height 0.3s ease-out;
+  }
+
+  .trackFlipped {
+    transform: scaleY(-1);
   }
 
   .evalScore {
@@ -220,6 +232,10 @@
     height: 100%;
     background: var(--piece-white);
     transition: width 0.3s ease-out;
+  }
+
+  .trackFlipped {
+    transform: scaleX(-1);
   }
 
   .evalScore {

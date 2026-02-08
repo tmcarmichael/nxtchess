@@ -285,6 +285,7 @@ export class StockfishEngine {
     }
 
     const cmds = Array.isArray(commands) ? commands : [commands];
+    let cleanupListeners: (() => void) | null = null;
 
     const promise = new Promise<T>((resolve, reject) => {
       const onMessage = (e: MessageEvent) => {
@@ -293,6 +294,7 @@ export class StockfishEngine {
         if (result !== null && result !== undefined) {
           this.worker?.removeEventListener('message', onMessage);
           this.worker?.removeEventListener('error', onError);
+          cleanupListeners = null;
           resolve(result);
         }
       };
@@ -300,7 +302,13 @@ export class StockfishEngine {
       const onError = (e: ErrorEvent) => {
         this.worker?.removeEventListener('message', onMessage);
         this.worker?.removeEventListener('error', onError);
+        cleanupListeners = null;
         reject(new EngineError(`${this.config.name} error: ${e.message}`, 'WORKER_ERROR'));
+      };
+
+      cleanupListeners = () => {
+        this.worker?.removeEventListener('message', onMessage);
+        this.worker?.removeEventListener('error', onError);
       };
 
       this.worker!.addEventListener('message', onMessage);
@@ -312,7 +320,12 @@ export class StockfishEngine {
     });
 
     const timeout = timeoutMs ?? this.config.operationTimeoutMs;
-    return this.withTimeout(promise, timeout, `${this.config.name} operation timed out`);
+    try {
+      return await this.withTimeout(promise, timeout, `${this.config.name} operation timed out`);
+    } catch (err) {
+      cleanupListeners?.();
+      throw err;
+    }
   }
 
   /**

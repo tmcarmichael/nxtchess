@@ -88,6 +88,18 @@
   transform: translateY(0);
 }
 
+.endModalActions .reviewButton {
+  background: var(--accent);
+  color: var(--surface-1);
+  border-color: var(--accent);
+}
+
+.endModalActions .reviewButton:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  filter: brightness(1.15);
+}
+
 @media (max-width: 639px) {
   .endHeading {
     font-size: var(--text-lg);

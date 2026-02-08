@@ -1,0 +1,182 @@
+.summaryContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+}
+
+.sectionTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.accuracyRow {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+}
+
+.accuracyRing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  position: relative;
+}
+
+.ringSvg {
+  width: 64px;
+  height: 64px;
+  transform: rotate(-90deg);
+}
+
+.ringTrack {
+  fill: none;
+  stroke: var(--surface-4);
+  stroke-width: 5;
+}
+
+.ringFill {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s ease-out;
+}
+
+.ringWhite {
+  stroke: var(--text-primary);
+}
+
+.ringBlack {
+  stroke: var(--accent);
+}
+
+.accuracyValue {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -70%);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.accuracyLabel {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.distributionSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.distributionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.distributionLabel {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 40px;
+}
+
+.qualityBar {
+  flex: 1;
+  display: flex;
+  height: 8px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--surface-3);
+}
+
+.qualitySegment {
+  height: 100%;
+  min-width: 2px;
+  transition: width 0.3s ease-out;
+}
+
+.legendRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  justify-content: center;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+}
+
+.legendText {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.best {
+  background-color: var(--move-best);
+}
+
+.excellent {
+  background-color: var(--move-excellent);
+}
+
+.good {
+  background-color: var(--move-good);
+}
+
+.inaccuracy {
+  background-color: var(--move-inaccuracy);
+}
+
+.mistake {
+  background-color: var(--move-mistake);
+}
+
+.blunder {
+  background-color: var(--move-blunder);
+}
+
+@media (max-width: 639px) {
+  .summaryContainer {
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+  }
+
+  .accuracyRow {
+    gap: var(--space-lg);
+  }
+
+  .ringSvg {
+    width: 56px;
+    height: 56px;
+  }
+
+  .accuracyValue {
+    font-size: var(--text-sm);
+  }
+
+  .legendRow {
+    gap: var(--space-xs);
+  }
+}

@@ -10,6 +10,7 @@ type ExtendedGameOverReason = GameOverReason | 'trainingOpeningComplete';
 interface ChessEndModalProps {
   onClose: () => void;
   onPlayAgain: () => void;
+  onReviewGame?: () => void;
   gameOverReason: ExtendedGameOverReason;
   gameWinner: GameWinner;
 }
@@ -123,7 +124,13 @@ const getGameOverInfoPlay = (reason: ExtendedGameOverReason, winner: GameWinner)
 };
 
 const ChessEndModal: Component<ChessEndModalProps> = (props) => {
-  const [local] = splitProps(props, ['onClose', 'onPlayAgain', 'gameOverReason', 'gameWinner']);
+  const [local] = splitProps(props, [
+    'onClose',
+    'onPlayAgain',
+    'onReviewGame',
+    'gameOverReason',
+    'gameWinner',
+  ]);
   const { chess } = useGameContext();
 
   const isMultiplayer = () => chess.state.opponentType === 'human';
@@ -178,6 +185,11 @@ const ChessEndModal: Component<ChessEndModalProps> = (props) => {
       <h2 class={styles.endHeading}>{getGameOverInfo().heading}</h2>
       <p class={styles.endMessage}>{getGameOverInfo().message}</p>
       <div class={styles.endModalActions}>
+        <Show when={local.onReviewGame}>
+          <button class={styles.reviewButton} onClick={() => local.onReviewGame?.()}>
+            Review Game
+          </button>
+        </Show>
         <button onClick={() => local.onPlayAgain()}>
           {isMultiplayer() ? 'New Game' : 'Play Again'}
         </button>

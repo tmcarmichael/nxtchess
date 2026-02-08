@@ -4,6 +4,8 @@ import { PlayGameProvider, usePlayGame } from '../../../store/game/PlayGameConte
 import { type StartGameOptions, type MultiplayerGameOptions } from '../../../types/game';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
 import GameContainer from '../../game/GameContainer/GameContainer';
+import ReviewControlPanel from '../../review/ReviewControlPanel/ReviewControlPanel';
+import ReviewNavigationPanel from '../../review/ReviewNavigationPanel/ReviewNavigationPanel';
 import PlayControlPanel from '../PlayControlPanel/PlayControlPanel';
 import PlayHub from '../PlayHub/PlayHub';
 import PlayNavigationPanel from '../PlayNavigationPanel/PlayNavigationPanel';
@@ -18,7 +20,7 @@ const PlayContainerInner: ParentComponent = () => {
   const params = useParams<{ gameId?: string }>();
   const navigate = useNavigate();
   const location = useLocation<LocationState>();
-  const { chess, multiplayer, actions } = usePlayGame();
+  const { chess, multiplayer, actions, review } = usePlayGame();
 
   createEffect(
     on(
@@ -72,17 +74,32 @@ const PlayContainerInner: ParentComponent = () => {
   );
 
   const isIdle = () => chess.state.lifecycle === 'idle' && !params.gameId;
+  const isReviewing = () => review.phase() !== 'idle';
 
   return (
     <Show when={!isIdle()} fallback={<PlayHub />}>
       <GameContainer
         layout="three-column"
         showModal={false}
-        leftPanel={<PlayNavigationPanel />}
-        boardContent={
-          <ChessBoardController onRequestNewGame={() => navigate('/play', { replace: true })} />
+        leftPanel={
+          <Show when={isReviewing()} fallback={<PlayNavigationPanel />}>
+            <ReviewNavigationPanel />
+          </Show>
         }
-        rightPanel={<PlayControlPanel />}
+        boardContent={
+          <ChessBoardController
+            onRequestNewGame={() => {
+              actions.exitGame();
+              navigate('/play', { replace: true });
+            }}
+            onReviewGame={() => review.startReview()}
+          />
+        }
+        rightPanel={
+          <Show when={isReviewing()} fallback={<PlayControlPanel />}>
+            <ReviewControlPanel />
+          </Show>
+        }
       />
     </Show>
   );

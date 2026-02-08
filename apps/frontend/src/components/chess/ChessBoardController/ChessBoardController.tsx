@@ -39,12 +39,18 @@ import { useMoveAnimation } from './hooks/useMoveAnimation';
 interface ChessBoardControllerProps {
   onRequestNewGame?: () => void;
   onRestartGame?: () => void;
+  onReviewGame?: () => void;
   /** Getter function to check if auto-restart should happen (re-evaluated at trigger time) */
   autoRestartOnEnd?: () => boolean;
 }
 
 const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props) => {
-  const [local] = splitProps(props, ['onRequestNewGame', 'onRestartGame', 'autoRestartOnEnd']);
+  const [local] = splitProps(props, [
+    'onRequestNewGame',
+    'onRestartGame',
+    'onReviewGame',
+    'autoRestartOnEnd',
+  ]);
   const { chess, engine, multiplayer, timer, ui, actions, derived } = useGameContext();
   const navigate = useNavigate();
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
@@ -60,7 +66,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     to: Square;
     color: Side;
   } | null>(null);
-  const [showEndModal, setShowEndModal] = createSignal(false);
+  const showEndModal = () => ui.state.showEndModal;
   // Premove state
   const [premove, setPremove] = createSignal<{
     from: Square;
@@ -151,11 +157,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     onFirst: actions.jumpToFirstMove,
     onLast: actions.jumpToLastMove,
     onFlip: actions.flipBoard,
-    enabled: () =>
-      !chess.state.isGameOver ||
-      chess.state.mode === 'training' ||
-      chess.state.mode === 'puzzle' ||
-      chess.state.mode === 'analysis',
+    enabled: () => true,
   });
 
   // Helper to generate game result message for toast
@@ -219,7 +221,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
                 local.onRestartGame?.();
               } else {
                 dismissToast();
-                setShowEndModal(true);
+                ui.showEndModal();
               }
             }, 800);
           } else if (chess.state.mode === 'puzzle') {
@@ -228,10 +230,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
           } else if (derived.allowBothSides()) {
             // Analyze mode: no toast or modal - user can navigate history and play alternatives
           } else {
-            setShowEndModal(true);
+            setTimeout(() => {
+              if (!derived.isReviewing?.()) ui.showEndModal();
+            }, 600);
           }
         } else if (!isGameOver) {
-          setShowEndModal(false);
+          ui.hideEndModal();
           // Clear toast when new game starts
           if (gameResultToast()) {
             dismissToast();
@@ -304,13 +308,10 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   );
 
   const resetViewIfNeeded = () => {
-    // In analyze mode (allowBothSides), skip resetting view
-    // The user should be able to play from historical positions
-    // Truncation is handled in the analyze actions layer
     if (derived.allowBothSides()) return;
+    if (derived.isReviewing?.()) return;
 
     if (chess.derived.isViewingHistory()) {
-      // Jump to latest move to reset view
       chess.jumpToMoveIndex(chess.state.moveHistory.length - 1);
     }
   };
@@ -778,7 +779,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   };
 
   const handlePlayAgain = () => {
-    setShowEndModal(false);
+    ui.hideEndModal();
     // Use restart callback if available (training mode), otherwise open new game modal
     if (local.onRestartGame) {
       local.onRestartGame();
@@ -804,7 +805,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   const handleCloseEndGame = () => {
     // In training/puzzle mode, just close the modal so user can review moves
     if (chess.state.mode === 'training' || chess.state.mode === 'puzzle') {
-      setShowEndModal(false);
+      ui.hideEndModal();
       return;
     }
     // For other modes, exit and go home
@@ -823,6 +824,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
             <Show when={derived.showEvalBar()}>
               <ChessEvalBar
                 evalScore={derived.getEvalScore ? derived.getEvalScore() : evalScore()}
+                flipped={ui.state.boardView === 'b'}
               />
             </Show>
             <div class={styles.chessBoardContainer}>
@@ -928,6 +930,14 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
         <ChessEndModal
           onClose={handleCloseEndGame}
           onPlayAgain={handlePlayAgain}
+          onReviewGame={
+            local.onReviewGame
+              ? () => {
+                  ui.hideEndModal();
+                  local.onReviewGame?.();
+                }
+              : undefined
+          }
           gameOverReason={chess.state.gameOverReason}
           gameWinner={chess.state.gameWinner}
         />

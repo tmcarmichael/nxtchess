@@ -1,6 +1,17 @@
-import { createContext, useContext, onCleanup, createMemo, batch, type JSX } from 'solid-js';
+import {
+  createContext,
+  createEffect,
+  useContext,
+  on,
+  onCleanup,
+  createMemo,
+  createSignal,
+  batch,
+  type JSX,
+} from 'solid-js';
 import { pushAchievementToasts } from '../../components/common/AchievementToast/AchievementToast';
 import { sessionManager } from '../../services/game/session/SessionManager';
+import { startGameReview } from '../../services/review/gameReviewService';
 import { DEBUG } from '../../shared/utils/debug';
 import { computeMaterialDiff } from '../../types/chess';
 import { useUserStore } from '../user/UserContext';
@@ -13,6 +24,8 @@ import { createTimerStore } from './stores/createTimerStore';
 import { createUIStore } from './stores/createUIStore';
 import { UnifiedGameContextInstance, type UnifiedGameContext } from './useGameContext';
 import type { PlayGameContextValue } from './types';
+import type { MoveEvaluation } from '../../types/moveQuality';
+import type { EvalPoint, ReviewHandle, ReviewPhase, ReviewProgress, ReviewSummary } from '../../types/review';
 
 const PlayGameContext = createContext<PlayGameContextValue>();
 
@@ -115,8 +128,6 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
             userActions.setRating(playerRating);
           }
         }
-
-        ui.showEndModal();
       });
 
       const playerAchievements =
@@ -152,7 +163,117 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     material,
   };
 
+  const [reviewPhase, setReviewPhase] = createSignal<ReviewPhase>('idle');
+  const [reviewProgress, setReviewProgress] = createSignal<ReviewProgress | null>(null);
+  const [reviewSummary, setReviewSummary] = createSignal<ReviewSummary | null>(null);
+  const [reviewEvaluations, setReviewEvaluations] = createSignal<MoveEvaluation[]>([]);
+  const [reviewEvalHistory, setReviewEvalHistory] = createSignal<EvalPoint[]>([]);
+  let reviewHandle: ReviewHandle | null = null;
+
+  const [moveTimesMs, setMoveTimesMs] = createSignal<number[]>([]);
+  let lastMoveTimestamp = 0;
+
+  createEffect(
+    on(
+      () => chess.state.lifecycle,
+      (lifecycle) => {
+        if (lifecycle === 'playing') {
+          lastMoveTimestamp = Date.now();
+          setMoveTimesMs([]);
+        }
+        if (lifecycle !== 'ended' && reviewPhase() !== 'idle') {
+          reviewHandle?.abort();
+          reviewHandle = null;
+          batch(() => {
+            setReviewPhase('idle');
+            setReviewProgress(null);
+            setReviewSummary(null);
+            setReviewEvaluations([]);
+            setReviewEvalHistory([]);
+          });
+        }
+      }
+    )
+  );
+
+  createEffect(
+    on(
+      () => chess.state.moveHistory.length,
+      (newLen, prevLen) => {
+        if (prevLen !== undefined && newLen > prevLen && lastMoveTimestamp > 0) {
+          const delta = Date.now() - lastMoveTimestamp;
+          setMoveTimesMs((prev) => [...prev, delta]);
+          lastMoveTimestamp = Date.now();
+        }
+      }
+    )
+  );
+
+  const startReview = () => {
+    ui.hideEndModal();
+    setReviewPhase('analyzing');
+    setReviewProgress(null);
+    setReviewSummary(null);
+    setReviewEvaluations([]);
+    setReviewEvalHistory([]);
+
+    reviewHandle = startGameReview({
+      moves: [...chess.state.moveHistory],
+      playerColor: chess.state.playerColor,
+      moveTimesMs: moveTimesMs(),
+      onProgress: (progress) => setReviewProgress(progress),
+      onMoveEvaluated: (evaluation) => {
+        batch(() => {
+          setReviewEvaluations((prev) => [...prev, evaluation]);
+          setReviewEvalHistory((prev) => [
+            ...prev,
+            {
+              moveIndex: evaluation.moveIndex,
+              evalAfter: evaluation.evalAfter,
+              san: evaluation.san,
+              side: evaluation.side,
+              quality: evaluation.quality,
+              moveTimeMs: evaluation.moveTimeMs,
+            },
+          ]);
+        });
+        chess.jumpToMoveIndex(evaluation.moveIndex);
+      },
+      onComplete: (summary) => {
+        batch(() => {
+          setReviewPhase('complete');
+          setReviewSummary(summary);
+        });
+      },
+    });
+  };
+
+  const exitReview = () => {
+    reviewHandle?.abort();
+    reviewHandle = null;
+    chess.jumpToMoveIndex(chess.state.moveHistory.length - 1);
+    ui.showEndModal();
+    batch(() => {
+      setReviewPhase('idle');
+      setReviewProgress(null);
+      setReviewSummary(null);
+      setReviewEvaluations([]);
+      setReviewEvalHistory([]);
+    });
+  };
+
+  const review = {
+    phase: reviewPhase,
+    progress: reviewProgress,
+    summary: reviewSummary,
+    evaluations: reviewEvaluations,
+    evalHistory: reviewEvalHistory,
+    startReview,
+    exitReview,
+  };
+
   onCleanup(() => {
+    reviewHandle?.abort();
     timer.stop();
     engine.terminate();
     ui.cleanup();
@@ -167,6 +288,7 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     multiplayer,
     actions,
     derived,
+    review,
   };
 
   // Unified context for shared components like ChessBoardController
@@ -204,8 +326,16 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
       isEngineLoading: derived.isEngineLoading,
       hasEngineError: derived.hasEngineError,
       isMultiplayer: derived.isMultiplayer,
-      showEvalBar: () => false,
+      showEvalBar: () => reviewPhase() !== 'idle',
       allowBothSides: () => false,
+      isReviewing: () => reviewPhase() !== 'idle',
+      getEvalScore: () => {
+        if (reviewPhase() === 'idle') return null;
+        const viewIndex = chess.state.viewMoveIndex;
+        const evals = reviewEvaluations();
+        const evalForMove = evals.find((e) => e.moveIndex === viewIndex);
+        return evalForMove?.evalAfter ?? null;
+      },
     },
   };
 

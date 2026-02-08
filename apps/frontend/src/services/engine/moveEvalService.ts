@@ -201,5 +201,5 @@ class MoveEvalService {
   }
 }
 
-// Export singleton instance
+export { MoveEvalService };
 export const moveEvalService = new MoveEvalService();

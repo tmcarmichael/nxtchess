@@ -88,9 +88,12 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
         move.promotion as PromotionPiece | undefined
       );
 
-      if (!chess.state.isGameOver) {
-        afterMoveChecks();
+      if (chess.state.isGameOver) {
+        timer.stop();
+        return;
       }
+
+      afterMoveChecks();
     } catch (err) {
       if (DEBUG) console.error('AI move failed:', err);
     }
@@ -178,11 +181,14 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       timer.addIncrement(playerSide);
     }
 
-    if (!chess.state.isGameOver) {
-      afterMoveChecks();
+    if (chess.state.isGameOver) {
+      timer.stop();
+      return;
     }
 
-    if (!chess.state.isGameOver && chess.state.currentTurn !== chess.state.playerColor) {
+    afterMoveChecks();
+
+    if (chess.state.currentTurn !== chess.state.playerColor) {
       performAIMove();
     }
   };

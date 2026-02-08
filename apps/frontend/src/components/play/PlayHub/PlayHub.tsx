@@ -19,6 +19,13 @@ const PlayHub: Component = () => {
   const [joinLink, setJoinLink] = createSignal('');
   const [joinError, setJoinError] = createSignal<string | null>(null);
   const [isJoining, setIsJoining] = createSignal(false);
+  const [loadingDots, setLoadingDots] = createSignal(1);
+
+  const dotInterval = setInterval(() => {
+    setLoadingDots((prev) => (prev >= 3 ? 1 : prev + 1));
+  }, 500);
+
+  onCleanup(() => clearInterval(dotInterval));
 
   onMount(() => {
     lobby.subscribe();
@@ -109,7 +116,13 @@ const PlayHub: Component = () => {
           <h2 class={styles.lobbyTitle}>Open Games</h2>
           <Show
             when={!lobby.state.isLoading}
-            fallback={<p class={styles.lobbyEmpty}>Loading...</p>}
+            fallback={
+              <p class={styles.lobbyEmpty}>
+                Loading
+                {'.'.repeat(loadingDots())}
+                <span style={{ visibility: 'hidden' }}>{'.'.repeat(3 - loadingDots())}</span>
+              </p>
+            }
           >
             <Show
               when={lobby.state.games.length > 0}
