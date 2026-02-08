@@ -108,13 +108,15 @@ func (r *MessageRateLimiter) IsBlocked() bool {
 
 // Client represents a single WebSocket connection
 type Client struct {
-	ID       string
-	UserID   string // Empty for anonymous users
-	Username string // Empty for anonymous users
-	IP       string // Client IP for connection limiting
-	Hub      *Hub
-	Conn     *websocket.Conn
-	Send     chan []byte
+	ID        string
+	UserID    string // Empty for anonymous users
+	Username  string // Empty for anonymous users
+	IP        string // Client IP for connection limiting
+	Hub       *Hub
+	Conn      *websocket.Conn
+	Send      chan []byte
+	done      chan struct{} // closed when client is shutting down
+	closeOnce sync.Once
 
 	// Current game this client is in (if any)
 	GameID string
@@ -135,8 +137,17 @@ func NewClient(id string, userID string, hub *Hub, conn *websocket.Conn) *Client
 		Hub:         hub,
 		Conn:        conn,
 		Send:        make(chan []byte, 256),
+		done:        make(chan struct{}),
 		rateLimiter: NewMessageRateLimiter(),
 	}
+}
+
+// Close signals the client to stop accepting messages.
+// Safe to call multiple times from any goroutine.
+func (c *Client) Close() {
+	c.closeOnce.Do(func() {
+		close(c.done)
+	})
 }
 
 // GetGameID returns the current game ID (thread-safe)
@@ -226,16 +237,12 @@ func (c *Client) WritePump() {
 
 	for {
 		select {
-		case message, ok := <-c.Send:
-			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				// Hub closed the channel
-				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
+		case <-c.done:
+			c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+			return
 
-			// Send each message as a separate WebSocket frame
-			// This ensures each message is a valid JSON object that can be parsed independently
+		case message := <-c.Send:
+			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
 				logger.Debug("WritePump write error", logger.F("clientId", c.ID, "error", err.Error()))
 				return
@@ -251,16 +258,11 @@ func (c *Client) WritePump() {
 	}
 }
 
-// trySend attempts to send data to the client's channel, recovering from panics
-// if the channel has been closed (e.g., during concurrent disconnect).
+// trySend attempts to send data to the client's send buffer.
+// Returns immediately if the client is closed or the buffer is full.
 func (c *Client) trySend(data []byte) {
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Debug("Send to closed client channel", logger.F("clientId", c.ID))
-		}
-	}()
-
 	select {
+	case <-c.done:
 	case c.Send <- data:
 	default:
 		logger.Warn("Client send buffer full", logger.F("clientId", c.ID))

@@ -33,7 +33,7 @@ type GameState struct {
 	LastMoveAt      time.Time // when the clock started for current player
 	CreatedAt       time.Time
 	Rated           bool
-	CreatorUsername  string
+	CreatorUsername string
 	CreatorRating   int
 	chessGame       *chess.Game   // Server-side chess validation
 	stopClock       chan struct{} // signal to stop the clock goroutine
@@ -144,9 +144,11 @@ func (gm *GameManager) startClock(game *GameState) {
 	go gm.runClock(game)
 }
 
-// runClock is the goroutine that manages the game clock
+// runClock is the goroutine that manages the game clock.
+// State is read/written under game.mu, then the lock is released
+// before performing any I/O (sending messages, finalizing ratings).
 func (gm *GameManager) runClock(game *GameState) {
-	ticker := time.NewTicker(100 * time.Millisecond) // Tick every 100ms for precision
+	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	lastUpdate := time.Now()
@@ -164,14 +166,11 @@ func (gm *GameManager) runClock(game *GameState) {
 				return
 			}
 
-			// Calculate elapsed time since last tick
 			elapsed := now.Sub(lastTick).Milliseconds()
 			lastTick = now
 
-			// Determine whose clock to decrement
 			isWhiteTurn := game.chessGame.IsWhiteTurn()
 
-			// Decrement the active player's time
 			if isWhiteTurn {
 				game.WhiteTimeMs -= elapsed
 				if game.WhiteTimeMs < 0 {
@@ -186,7 +185,6 @@ func (gm *GameManager) runClock(game *GameState) {
 
 			// Check for timeout (flag fall)
 			if (isWhiteTurn && game.WhiteTimeMs <= 0) || (!isWhiteTurn && game.BlackTimeMs <= 0) {
-				// Time's up!
 				winner := "black"
 				if !isWhiteTurn {
 					winner = "white"
@@ -198,39 +196,50 @@ func (gm *GameManager) runClock(game *GameState) {
 				game.clockRunning = false
 				metrics.WSGamesActive.Dec()
 
-				logger.Info("Game ended by timeout", logger.F("gameId", game.ID, "winner", winner))
-
-				endedData := gm.finalizeGame(game)
-
-				if game.WhitePlayer != nil {
-					game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
-				}
-				if game.BlackPlayer != nil {
-					game.BlackPlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
-				}
-
+				info := captureGameEndInfo(game)
+				whitePlayer := game.WhitePlayer
+				blackPlayer := game.BlackPlayer
 				game.mu.Unlock()
+
+				logger.Info("Game ended by timeout", logger.F("gameId", info.gameID, "winner", winner))
+
+				endedData := gm.finalizeGame(info)
+
+				if whitePlayer != nil {
+					whitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+				}
+				if blackPlayer != nil {
+					blackPlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+				}
+
 				return
 			}
 
-			// Send time update every second (or so)
+			// Capture time update data under lock, send after release
+			var timeUpdate *TimeUpdateData
+			var whitePlayer, blackPlayer *Client
 			if now.Sub(lastUpdate) >= time.Second {
 				lastUpdate = now
-				timeUpdate := TimeUpdateData{
+				timeUpdate = &TimeUpdateData{
 					GameID:    game.ID,
 					WhiteTime: int(game.WhiteTimeMs),
 					BlackTime: int(game.BlackTimeMs),
 				}
-
-				if game.WhitePlayer != nil {
-					game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeTimeUpdate, timeUpdate))
-				}
-				if game.BlackPlayer != nil {
-					game.BlackPlayer.SendMessage(NewServerMessage(MsgTypeTimeUpdate, timeUpdate))
-				}
+				whitePlayer = game.WhitePlayer
+				blackPlayer = game.BlackPlayer
 			}
 
 			game.mu.Unlock()
+
+			if timeUpdate != nil {
+				msg := NewServerMessage(MsgTypeTimeUpdate, *timeUpdate)
+				if whitePlayer != nil {
+					whitePlayer.SendMessage(msg)
+				}
+				if blackPlayer != nil {
+					blackPlayer.SendMessage(msg)
+				}
+			}
 		}
 	}
 }
@@ -244,6 +253,41 @@ func (game *GameState) stopClockGoroutine() {
 	}
 }
 
+// gameEndInfo captures the state needed for post-game finalization
+// (rating updates, achievements) without holding the game mutex.
+type gameEndInfo struct {
+	gameID       string
+	result       string
+	resultReason string
+	rated        bool
+	whiteUID     string
+	blackUID     string
+	moveHistory  []string
+	chessGame    *chess.Game
+}
+
+// captureGameEndInfo snapshots game state for finalization.
+// Must be called with game.mu held. The caller releases the lock
+// before passing the snapshot to finalizeGame.
+func captureGameEndInfo(game *GameState) gameEndInfo {
+	info := gameEndInfo{
+		gameID:       game.ID,
+		result:       game.Result,
+		resultReason: game.ResultReason,
+		rated:        game.Rated,
+		chessGame:    game.chessGame,
+	}
+	if game.WhitePlayer != nil {
+		info.whiteUID = game.WhitePlayer.UserID
+	}
+	if game.BlackPlayer != nil {
+		info.blackUID = game.BlackPlayer.UserID
+	}
+	info.moveHistory = make([]string, len(game.MoveHistory))
+	copy(info.moveHistory, game.MoveHistory)
+	return info
+}
+
 // generateGameID creates a random game ID
 func generateGameID() string {
 	bytes := make([]byte, 8)
@@ -254,46 +298,39 @@ func generateGameID() string {
 	return hex.EncodeToString(bytes)
 }
 
-func (gm *GameManager) finalizeGame(game *GameState) GameEndedData {
+// finalizeGame performs post-game work (rating updates, achievements, DB persistence).
+// It must be called WITHOUT holding game.mu since it performs blocking I/O.
+func (gm *GameManager) finalizeGame(info gameEndInfo) GameEndedData {
 	endedData := GameEndedData{
-		GameID: game.ID,
-		Result: game.Result,
-		Reason: game.ResultReason,
+		GameID: info.gameID,
+		Result: info.result,
+		Reason: info.resultReason,
 	}
 
-	whiteUID := ""
-	blackUID := ""
-	if game.WhitePlayer != nil {
-		whiteUID = game.WhitePlayer.UserID
-	}
-	if game.BlackPlayer != nil {
-		blackUID = game.BlackPlayer.UserID
-	}
-
-	if whiteUID == "" || blackUID == "" || !game.Rated {
+	if info.whiteUID == "" || info.blackUID == "" || !info.rated {
 		return endedData
 	}
 
-	whiteRating, whiteGames, err := database.GetPlayerRatingInfo(whiteUID)
+	whiteRating, whiteGames, err := database.GetPlayerRatingInfo(info.whiteUID)
 	if err != nil {
-		logger.Error("Failed to get white player rating", logger.F("userID", whiteUID, "error", err.Error()))
+		logger.Error("Failed to get white player rating", logger.F("userID", info.whiteUID, "error", err.Error()))
 		return endedData
 	}
 
-	blackRating, blackGames, err := database.GetPlayerRatingInfo(blackUID)
+	blackRating, blackGames, err := database.GetPlayerRatingInfo(info.blackUID)
 	if err != nil {
-		logger.Error("Failed to get black player rating", logger.F("userID", blackUID, "error", err.Error()))
+		logger.Error("Failed to get black player rating", logger.F("userID", info.blackUID, "error", err.Error()))
 		return endedData
 	}
 
-	result := elo.ResultFromWinner(game.Result)
+	result := elo.ResultFromWinner(info.result)
 	rc := elo.Calculate(whiteRating, blackRating, result, whiteGames, blackGames)
 
-	pgn := strings.Join(game.MoveHistory, " ")
-	resultPGN := elo.ResultToPGN(game.Result)
+	pgn := strings.Join(info.moveHistory, " ")
+	resultPGN := elo.ResultToPGN(info.result)
 
-	if err := database.FinalizeGameResult(whiteUID, blackUID, pgn, resultPGN, rc.WhiteOld, rc.BlackOld, rc.WhiteNew, rc.BlackNew); err != nil {
-		logger.Error("Failed to finalize game result", logger.F("gameId", game.ID, "error", err.Error()))
+	if err := database.FinalizeGameResult(info.whiteUID, info.blackUID, pgn, resultPGN, rc.WhiteOld, rc.BlackOld, rc.WhiteNew, rc.BlackNew); err != nil {
+		logger.Error("Failed to finalize game result", logger.F("gameId", info.gameID, "error", err.Error()))
 		return endedData
 	}
 
@@ -303,40 +340,40 @@ func (gm *GameManager) finalizeGame(game *GameState) GameEndedData {
 	endedData.BlackRatingDelta = &rc.BlackDelta
 
 	logger.Info("Game finalized with ratings", logger.F(
-		"gameId", game.ID,
+		"gameId", info.gameID,
 		"whiteOld", rc.WhiteOld, "whiteNew", rc.WhiteNew,
 		"blackOld", rc.BlackOld, "blackNew", rc.BlackNew,
 	))
 
-	whiteWon := game.Result == "white"
-	blackWon := game.Result == "black"
-	isDraw := game.Result == "draw"
+	whiteWon := info.result == "white"
+	blackWon := info.result == "black"
+	isDraw := info.result == "draw"
 
-	moveCount := len(game.MoveHistory)
+	moveCount := len(info.moveHistory)
 
 	whiteCtx := achievements.GameContext{
-		InnerGame:   game.chessGame.InnerGame(),
-		Result:      game.Result,
-		Reason:      game.ResultReason,
+		InnerGame:   info.chessGame.InnerGame(),
+		Result:      info.result,
+		Reason:      info.resultReason,
 		PlayerColor: "white",
 		MoveCount:   moveCount,
 		NewRating:   rc.WhiteNew,
 		Won:         whiteWon,
 		Drew:        isDraw,
 	}
-	endedData.WhiteNewAchievements = achievements.CheckGameAchievements(whiteUID, whiteCtx)
+	endedData.WhiteNewAchievements = achievements.CheckGameAchievements(info.whiteUID, whiteCtx)
 
 	blackCtx := achievements.GameContext{
-		InnerGame:   game.chessGame.InnerGame(),
-		Result:      game.Result,
-		Reason:      game.ResultReason,
+		InnerGame:   info.chessGame.InnerGame(),
+		Result:      info.result,
+		Reason:      info.resultReason,
 		PlayerColor: "black",
 		MoveCount:   moveCount,
 		NewRating:   rc.BlackNew,
 		Won:         blackWon,
 		Drew:        isDraw,
 	}
-	endedData.BlackNewAchievements = achievements.CheckGameAchievements(blackUID, blackCtx)
+	endedData.BlackNewAchievements = achievements.CheckGameAchievements(info.blackUID, blackCtx)
 
 	return endedData
 }
@@ -433,17 +470,17 @@ func (gm *GameManager) CreateGame(client *Client, data *GameCreateData) {
 	}
 
 	game := &GameState{
-		ID:             gameID,
-		WhitePlayer:    client,
-		FEN:            initialFEN,
-		MoveHistory:    make([]string, 0),
-		MoveNum:        1,
-		Status:         "waiting",
-		CreatedAt:      time.Now(),
-		Rated:          rated,
+		ID:              gameID,
+		WhitePlayer:     client,
+		FEN:             initialFEN,
+		MoveHistory:     make([]string, 0),
+		MoveNum:         1,
+		Status:          "waiting",
+		CreatedAt:       time.Now(),
+		Rated:           rated,
 		CreatorUsername: creatorUsername,
-		CreatorRating:  creatorRating,
-		chessGame:      chessGame,
+		CreatorRating:   creatorRating,
+		chessGame:       chessGame,
 	}
 
 	if data != nil && data.TimeControl != nil {
@@ -504,56 +541,61 @@ func (gm *GameManager) JoinGame(client *Client, gameID string) {
 	}
 
 	game.mu.Lock()
-	defer game.mu.Unlock()
 	gm.mu.Unlock()
 
 	// Check if game is joinable
 	if game.Status != "waiting" {
+		game.mu.Unlock()
 		client.SendMessage(NewServerMessage(MsgTypeGameFull, nil))
 		return
 	}
 
 	// Check if it's the same player trying to join their own game
-	// For authenticated users, check UserID (persists across reconnects)
-	// For anonymous users, check connection ID
 	isSamePlayer := false
 	if game.WhitePlayer != nil {
 		if client.UserID != "" && game.WhitePlayer.UserID != "" {
-			// Both authenticated - compare UserID
 			isSamePlayer = game.WhitePlayer.UserID == client.UserID
 		} else {
-			// At least one anonymous - compare connection ID
 			isSamePlayer = game.WhitePlayer.ID == client.ID
 		}
 	}
 	if isSamePlayer {
+		game.mu.Unlock()
 		client.SendMessage(NewErrorMessage("SAME_PLAYER", "Cannot join your own game"))
 		return
 	}
 
-	// Add as black player
+	// Transition state under lock
 	game.BlackPlayer = client
 	game.Status = "active"
 	game.LastMoveAt = time.Now()
 	metrics.WSGamesActive.Inc()
-
-	// Associate client with game
 	client.SetGameID(gameID)
+
+	// Start the clock (sets fields on game, spawns goroutine — must hold lock)
+	gm.startClock(game)
+
+	// Capture data for messages before releasing lock
+	whitePlayer := game.WhitePlayer
+	whiteInfo := PlayerInfo{ID: whitePlayer.ID, Username: game.CreatorUsername, Rating: game.CreatorRating}
+	if whitePlayer.UserID != "" {
+		whiteInfo.ID = whitePlayer.UserID
+	}
+	fen := game.FEN
+	timeControl := game.TimeControl
+	whiteTimeMs := int(game.WhiteTimeMs)
+	blackTimeMs := int(game.BlackTimeMs)
+
+	game.mu.Unlock()
 
 	logger.Info("Player joined game", logger.F("gameId", gameID, "clientId", client.ID))
 
-	// Remove from lobby
 	gm.hub.BroadcastLobbyUpdate(LobbyUpdateData{
 		Action: "removed",
 		GameID: gameID,
 	})
 
-	// Build player info
-	whiteInfo := PlayerInfo{ID: game.WhitePlayer.ID, Username: game.CreatorUsername, Rating: game.CreatorRating}
-	if game.WhitePlayer.UserID != "" {
-		whiteInfo.ID = game.WhitePlayer.UserID
-	}
-
+	// DB call for joiner rating outside lock
 	joinerUsername := client.Username
 	if joinerUsername == "" {
 		joinerUsername = "Anonymous"
@@ -569,28 +611,23 @@ func (gm *GameManager) JoinGame(client *Client, gameID string) {
 		blackInfo.ID = client.UserID
 	}
 
-	// Notify the joining player
 	client.SendMessage(NewServerMessage(MsgTypeGameJoined, GameJoinedData{
 		GameID: gameID,
 		Color:  "black",
 	}))
 
-	// Notify both players that game has started
 	startedData := GameStartedData{
 		GameID:      gameID,
-		FEN:         game.FEN,
+		FEN:         fen,
 		WhitePlayer: whiteInfo,
 		BlackPlayer: blackInfo,
-		TimeControl: game.TimeControl,
-		WhiteTimeMs: int(game.WhiteTimeMs),
-		BlackTimeMs: int(game.BlackTimeMs),
+		TimeControl: timeControl,
+		WhiteTimeMs: whiteTimeMs,
+		BlackTimeMs: blackTimeMs,
 	}
 
-	game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeGameStarted, startedData))
+	whitePlayer.SendMessage(NewServerMessage(MsgTypeGameStarted, startedData))
 	client.SendMessage(NewServerMessage(MsgTypeGameStarted, startedData))
-
-	// Start the clock if time control is set
-	gm.startClock(game)
 }
 
 // HandleMove processes a move from a client
@@ -604,16 +641,17 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 	}
 	game.mu.Lock()
 	gm.mu.RUnlock()
-	defer game.mu.Unlock()
 
 	// Check game is active
 	if game.Status != "active" {
-		client.SendMessage(NewServerMessage(MsgTypeMoveRejected, MoveRejectedData{
+		rejectData := MoveRejectedData{
 			GameID:  data.GameID,
 			Reason:  "Game is not active",
 			FEN:     game.FEN,
 			MoveNum: game.MoveNum,
-		}))
+		}
+		game.mu.Unlock()
+		client.SendMessage(NewServerMessage(MsgTypeMoveRejected, rejectData))
 		return
 	}
 
@@ -623,29 +661,33 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 	isBlackPlayer := game.BlackPlayer != nil && game.BlackPlayer.ID == client.ID
 
 	if (isWhiteTurn && !isWhitePlayer) || (!isWhiteTurn && !isBlackPlayer) {
-		client.SendMessage(NewServerMessage(MsgTypeMoveRejected, MoveRejectedData{
+		rejectData := MoveRejectedData{
 			GameID:  data.GameID,
 			Reason:  "Not your turn",
 			FEN:     game.FEN,
 			MoveNum: game.MoveNum,
-		}))
+		}
+		game.mu.Unlock()
+		client.SendMessage(NewServerMessage(MsgTypeMoveRejected, rejectData))
 		return
 	}
 
-	// Validate move with chess library
+	// Validate move with chess library (CPU-only, no I/O)
 	result := game.chessGame.TryMove(data.From, data.To, data.Promotion)
 
 	if !result.Valid {
-		client.SendMessage(NewServerMessage(MsgTypeMoveRejected, MoveRejectedData{
+		rejectData := MoveRejectedData{
 			GameID:  data.GameID,
 			Reason:  result.ErrorMsg,
 			FEN:     game.FEN,
 			MoveNum: game.MoveNum,
-		}))
+		}
+		game.mu.Unlock()
+		client.SendMessage(NewServerMessage(MsgTypeMoveRejected, rejectData))
 		return
 	}
 
-	// Move was valid - update game state
+	// Move was valid — update game state under lock
 	moveNotation := data.From + data.To
 	if data.Promotion != "" {
 		moveNotation += data.Promotion
@@ -655,7 +697,6 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 	game.MoveNum = result.MoveNum
 	game.LastMoveAt = time.Now()
 
-	// Add increment to the player who just moved (if time control is set)
 	if game.TimeControl != nil && game.TimeControl.Increment > 0 {
 		incrementMs := int64(game.TimeControl.Increment) * 1000
 		if isWhitePlayer {
@@ -665,27 +706,8 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 		}
 	}
 
-	logger.Debug("Move made", logger.F(
-		"gameId", data.GameID,
-		"move", moveNotation,
-		"san", result.SAN,
-		"moveNum", game.MoveNum,
-		"isCheck", result.IsCheck,
-		"gameOver", result.GameOver,
-		"whiteTimeMs", game.WhiteTimeMs,
-		"blackTimeMs", game.BlackTimeMs,
-	))
-
-	// Get opponent reference
-	var opponent *Client
-	if isWhitePlayer {
-		opponent = game.BlackPlayer
-	} else {
-		opponent = game.WhitePlayer
-	}
-
-	// Send acceptance to moving player
-	client.SendMessage(NewServerMessage(MsgTypeMoveAccepted, MoveAcceptedData{
+	// Capture data for messages
+	accepted := MoveAcceptedData{
 		GameID:      data.GameID,
 		From:        data.From,
 		To:          data.To,
@@ -695,47 +717,80 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 		IsCheck:     result.IsCheck,
 		WhiteTimeMs: int(game.WhiteTimeMs),
 		BlackTimeMs: int(game.BlackTimeMs),
-	}))
-
-	// Send move to opponent
-	if opponent != nil {
-		opponent.SendMessage(NewServerMessage(MsgTypeOpponentMove, OpponentMoveData{
-			GameID:      data.GameID,
-			From:        data.From,
-			To:          data.To,
-			Promotion:   data.Promotion,
-			SAN:         result.SAN,
-			FEN:         game.FEN,
-			MoveNum:     game.MoveNum,
-			IsCheck:     result.IsCheck,
-			WhiteTimeMs: int(game.WhiteTimeMs),
-			BlackTimeMs: int(game.BlackTimeMs),
-		}))
 	}
 
-	// Check for game over (checkmate, stalemate, draw conditions)
+	opponentMoveData := OpponentMoveData{
+		GameID:      data.GameID,
+		From:        data.From,
+		To:          data.To,
+		Promotion:   data.Promotion,
+		SAN:         result.SAN,
+		FEN:         game.FEN,
+		MoveNum:     game.MoveNum,
+		IsCheck:     result.IsCheck,
+		WhiteTimeMs: int(game.WhiteTimeMs),
+		BlackTimeMs: int(game.BlackTimeMs),
+	}
+
+	var opponent *Client
+	if isWhitePlayer {
+		opponent = game.BlackPlayer
+	} else {
+		opponent = game.WhitePlayer
+	}
+
+	var gameOver bool
+	var info gameEndInfo
+	var whitePlayer, blackPlayer *Client
+
 	if result.GameOver {
 		game.Status = "ended"
 		game.Result = string(result.Result)
 		game.ResultReason = string(result.Reason)
 		metrics.WSGamesActive.Dec()
-
-		// Stop the clock
 		game.stopClockGoroutine()
 
+		info = captureGameEndInfo(game)
+		whitePlayer = game.WhitePlayer
+		blackPlayer = game.BlackPlayer
+		gameOver = true
+	}
+
+	game.mu.Unlock()
+
+	// All I/O below — no locks held
+
+	logger.Debug("Move made", logger.F(
+		"gameId", data.GameID,
+		"move", moveNotation,
+		"san", result.SAN,
+		"moveNum", accepted.MoveNum,
+		"isCheck", result.IsCheck,
+		"gameOver", result.GameOver,
+		"whiteTimeMs", accepted.WhiteTimeMs,
+		"blackTimeMs", accepted.BlackTimeMs,
+	))
+
+	client.SendMessage(NewServerMessage(MsgTypeMoveAccepted, accepted))
+
+	if opponent != nil {
+		opponent.SendMessage(NewServerMessage(MsgTypeOpponentMove, opponentMoveData))
+	}
+
+	if gameOver {
 		logger.Info("Game ended", logger.F(
 			"gameId", data.GameID,
-			"result", game.Result,
-			"reason", game.ResultReason,
+			"result", info.result,
+			"reason", info.resultReason,
 		))
 
-		endedData := gm.finalizeGame(game)
+		endedData := gm.finalizeGame(info)
 
-		if game.WhitePlayer != nil {
-			game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+		if whitePlayer != nil {
+			whitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 		}
-		if game.BlackPlayer != nil {
-			game.BlackPlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+		if blackPlayer != nil {
+			blackPlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 		}
 	}
 }
@@ -751,13 +806,12 @@ func (gm *GameManager) HandleResign(client *Client, gameID string) {
 	}
 	game.mu.Lock()
 	gm.mu.RUnlock()
-	defer game.mu.Unlock()
 
 	if game.Status != "active" {
+		game.mu.Unlock()
 		return
 	}
 
-	// Determine winner
 	isWhitePlayer := game.WhitePlayer != nil && game.WhitePlayer.ID == client.ID
 	winner := "white"
 	if isWhitePlayer {
@@ -768,19 +822,22 @@ func (gm *GameManager) HandleResign(client *Client, gameID string) {
 	game.Result = winner
 	game.ResultReason = "resignation"
 	metrics.WSGamesActive.Dec()
-
-	// Stop the clock
 	game.stopClockGoroutine()
+
+	info := captureGameEndInfo(game)
+	whitePlayer := game.WhitePlayer
+	blackPlayer := game.BlackPlayer
+	game.mu.Unlock()
 
 	logger.Info("Game ended by resignation", logger.F("gameId", gameID, "winner", winner))
 
-	endedData := gm.finalizeGame(game)
+	endedData := gm.finalizeGame(info)
 
-	if game.WhitePlayer != nil {
-		game.WhitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+	if whitePlayer != nil {
+		whitePlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 	}
-	if game.BlackPlayer != nil {
-		game.BlackPlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+	if blackPlayer != nil {
+		blackPlayer.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 	}
 }
 
@@ -794,16 +851,14 @@ func (gm *GameManager) LeaveGame(client *Client, gameID string) {
 	}
 
 	game.mu.Lock()
-	defer game.mu.Unlock()
 
-	// If game hasn't started, just delete it
 	if game.Status == "waiting" {
 		delete(gm.games, gameID)
+		game.mu.Unlock()
 		gm.mu.Unlock()
 		client.SetGameID("")
 		logger.Info("Game cancelled", logger.F("gameId", gameID))
 
-		// Remove from lobby
 		gm.hub.BroadcastLobbyUpdate(LobbyUpdateData{
 			Action: "removed",
 			GameID: gameID,
@@ -812,9 +867,11 @@ func (gm *GameManager) LeaveGame(client *Client, gameID string) {
 	}
 	gm.mu.Unlock()
 
-	// If game is active, treat as resignation
+	var info gameEndInfo
+	var opponent *Client
+	shouldFinalize := false
+
 	if game.Status == "active" {
-		// Determine winner
 		isWhitePlayer := game.WhitePlayer != nil && game.WhitePlayer.ID == client.ID
 		winner := "white"
 		if isWhitePlayer {
@@ -825,19 +882,21 @@ func (gm *GameManager) LeaveGame(client *Client, gameID string) {
 		game.Result = winner
 		game.ResultReason = "abandonment"
 		metrics.WSGamesActive.Dec()
-
-		// Stop the clock
 		game.stopClockGoroutine()
 
-		endedData := gm.finalizeGame(game)
-
-		var opponent *Client
+		info = captureGameEndInfo(game)
 		if isWhitePlayer {
 			opponent = game.BlackPlayer
 		} else {
 			opponent = game.WhitePlayer
 		}
+		shouldFinalize = true
+	}
 
+	game.mu.Unlock()
+
+	if shouldFinalize {
+		endedData := gm.finalizeGame(info)
 		if opponent != nil {
 			opponent.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 		}
@@ -856,11 +915,11 @@ func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
 	}
 
 	game.mu.Lock()
-	defer game.mu.Unlock()
 
 	// If game is waiting (creator disconnected before anyone joined), clean it up
 	if game.Status == "waiting" {
 		delete(gm.games, gameID)
+		game.mu.Unlock()
 		gm.mu.Unlock()
 		logger.Info("Waiting game removed on disconnect", logger.F("gameId", gameID))
 
@@ -872,7 +931,6 @@ func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
 	}
 	gm.mu.Unlock()
 
-	// Notify opponent of disconnect
 	var opponent *Client
 	isWhitePlayer := game.WhitePlayer != nil && game.WhitePlayer.ID == client.ID
 
@@ -882,11 +940,8 @@ func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
 		opponent = game.WhitePlayer
 	}
 
-	if opponent != nil && game.Status == "active" {
-		opponent.SendMessage(NewServerMessage(MsgTypeOpponentLeft, map[string]string{
-			"gameId": gameID,
-		}))
-	}
+	var info gameEndInfo
+	shouldFinalize := false
 
 	// For now, treat disconnect as immediate forfeit
 	// TODO: Add reconnection grace period
@@ -900,12 +955,22 @@ func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
 		game.Result = winner
 		game.ResultReason = "disconnection"
 		metrics.WSGamesActive.Dec()
-
-		// Stop the clock
 		game.stopClockGoroutine()
 
-		endedData := gm.finalizeGame(game)
+		info = captureGameEndInfo(game)
+		shouldFinalize = true
+	}
 
+	game.mu.Unlock()
+
+	if opponent != nil && shouldFinalize {
+		opponent.SendMessage(NewServerMessage(MsgTypeOpponentLeft, map[string]string{
+			"gameId": gameID,
+		}))
+	}
+
+	if shouldFinalize {
+		endedData := gm.finalizeGame(info)
 		if opponent != nil {
 			opponent.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 		}
