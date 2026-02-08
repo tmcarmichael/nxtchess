@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/achievements"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/elo"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/httpx"
@@ -81,9 +82,16 @@ func SubmitPuzzleResultHandler(w http.ResponseWriter, r *http.Request) {
 		"delta", rc.PlayerDelta,
 	))
 
+	puzzleCtx := achievements.PuzzleContext{
+		Solved:    req.Solved,
+		NewRating: rc.PlayerNew,
+	}
+	newAchievements := achievements.CheckPuzzleAchievements(userID, puzzleCtx)
+
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"new_rating":   rc.PlayerNew,
-		"rating_delta": rc.PlayerDelta,
-		"old_rating":   rc.PlayerOld,
+		"new_rating":       rc.PlayerNew,
+		"rating_delta":     rc.PlayerDelta,
+		"old_rating":       rc.PlayerOld,
+		"new_achievements": newAchievements,
 	})
 }

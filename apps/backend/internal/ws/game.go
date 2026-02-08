@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/achievements"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/chess"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/elo"
@@ -282,6 +283,36 @@ func (gm *GameManager) finalizeGame(game *GameState) GameEndedData {
 		"whiteOld", rc.WhiteOld, "whiteNew", rc.WhiteNew,
 		"blackOld", rc.BlackOld, "blackNew", rc.BlackNew,
 	))
+
+	whiteWon := game.Result == "white"
+	blackWon := game.Result == "black"
+	isDraw := game.Result == "draw"
+
+	moveCount := len(game.MoveHistory)
+
+	whiteCtx := achievements.GameContext{
+		InnerGame:   game.chessGame.InnerGame(),
+		Result:      game.Result,
+		Reason:      game.ResultReason,
+		PlayerColor: "white",
+		MoveCount:   moveCount,
+		NewRating:   rc.WhiteNew,
+		Won:         whiteWon,
+		Drew:        isDraw,
+	}
+	endedData.WhiteNewAchievements = achievements.CheckGameAchievements(whiteUID, whiteCtx)
+
+	blackCtx := achievements.GameContext{
+		InnerGame:   game.chessGame.InnerGame(),
+		Result:      game.Result,
+		Reason:      game.ResultReason,
+		PlayerColor: "black",
+		MoveCount:   moveCount,
+		NewRating:   rc.BlackNew,
+		Won:         blackWon,
+		Drew:        isDraw,
+	}
+	endedData.BlackNewAchievements = achievements.CheckGameAchievements(blackUID, blackCtx)
 
 	return endedData
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/tmcarmichael/nxtchess/apps/backend/internal/achievements"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/database"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/httpx"
 	"github.com/tmcarmichael/nxtchess/apps/backend/internal/logger"
@@ -36,16 +37,22 @@ func UserProfileHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Error("Failed to get game stats", logger.F("username", searchedUsername, "error", err.Error()))
 	}
 
+	achievementPoints, err := database.GetAchievementPoints(user.UserID)
+	if err != nil {
+		logger.Error("Failed to get achievement points", logger.F("username", searchedUsername, "error", err.Error()))
+	}
+
 	resp := models.PublicProfile{
-		Username:     user.Username,
-		Rating:       user.Rating,
-		PuzzleRating: user.PuzzleRating,
-		ProfileIcon:  user.ProfileIcon,
-		CreatedAt:    user.CreatedAt,
-		GamesPlayed:  gamesPlayed,
-		Wins:         wins,
-		Losses:       losses,
-		Draws:        draws,
+		Username:          user.Username,
+		Rating:            user.Rating,
+		PuzzleRating:      user.PuzzleRating,
+		ProfileIcon:       user.ProfileIcon,
+		CreatedAt:         user.CreatedAt,
+		GamesPlayed:       gamesPlayed,
+		Wins:              wins,
+		Losses:            losses,
+		Draws:             draws,
+		AchievementPoints: achievementPoints,
 	}
 
 	httpx.WriteJSON(w, http.StatusOK, resp)
@@ -148,13 +155,21 @@ func CheckUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	achievementPoints, _ := database.GetAchievementPoints(userID)
+
+	createdAt, _ := database.GetProfileCreatedAt(userID)
+	if !createdAt.IsZero() {
+		achievements.CheckLoyaltyAchievements(userID, createdAt)
+	}
+
 	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"authenticated": true,
-		"username_set":  true,
-		"username":      username,
-		"profile_icon":  profileIcon,
-		"rating":        rating,
-		"puzzle_rating": puzzleRating,
+		"authenticated":     true,
+		"username_set":      true,
+		"username":          username,
+		"profile_icon":      profileIcon,
+		"rating":            rating,
+		"puzzle_rating":     puzzleRating,
+		"achievement_points": achievementPoints,
 	})
 }
 
@@ -259,5 +274,97 @@ func SetProfileIconHandler(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{
 		"message": "Profile icon set successfully",
 		"icon":    req.Icon,
+	})
+}
+
+func UserAchievementsHandler(w http.ResponseWriter, r *http.Request) {
+	username := chi.URLParam(r, "username")
+	if username == "" {
+		httpx.WriteJSONError(w, http.StatusBadRequest, "username parameter is required")
+		return
+	}
+
+	userAchievements, totalPoints, err := database.GetUserAchievementsByUsername(username)
+	if err != nil {
+		logger.Error("Failed to get user achievements", logger.F("username", username, "error", err.Error()))
+		httpx.WriteJSONError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	if userAchievements == nil {
+		userAchievements = []database.UserAchievement{}
+	}
+
+	type achievementResponse struct {
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Category    string `json:"category"`
+		Rarity      string `json:"rarity"`
+		Points      int    `json:"points"`
+		Icon        string `json:"icon"`
+		UnlockedAt  string `json:"unlocked_at"`
+	}
+
+	var response []achievementResponse
+	for _, ua := range userAchievements {
+		def, ok := achievements.GetByID(ua.AchievementID)
+		if !ok {
+			continue
+		}
+		response = append(response, achievementResponse{
+			ID:          def.ID,
+			Name:        def.Name,
+			Description: def.Description,
+			Category:    def.Category,
+			Rarity:      string(def.Rarity),
+			Points:      def.Points,
+			Icon:        def.Icon,
+			UnlockedAt:  ua.UnlockedAt.Format("2006-01-02T15:04:05Z07:00"),
+		})
+	}
+
+	if response == nil {
+		response = []achievementResponse{}
+	}
+
+	allAchievements := achievements.GetAll()
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"achievements":    response,
+		"total_points":    totalPoints,
+		"total_unlocked":  len(response),
+		"total_available": len(allAchievements),
+	})
+}
+
+func AchievementCatalogHandler(w http.ResponseWriter, r *http.Request) {
+	allAchievements := achievements.GetAll()
+
+	type catalogEntry struct {
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Category    string `json:"category"`
+		Rarity      string `json:"rarity"`
+		Points      int    `json:"points"`
+		Icon        string `json:"icon"`
+	}
+
+	catalog := make([]catalogEntry, 0, len(allAchievements))
+	for _, a := range allAchievements {
+		catalog = append(catalog, catalogEntry{
+			ID:          a.ID,
+			Name:        a.Name,
+			Description: a.Description,
+			Category:    a.Category,
+			Rarity:      string(a.Rarity),
+			Points:      a.Points,
+			Icon:        a.Icon,
+		})
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"achievements": catalog,
 	})
 }

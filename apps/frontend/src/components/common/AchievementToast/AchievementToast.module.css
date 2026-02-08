@@ -1,0 +1,121 @@
+.achievementToastContainer {
+  position: fixed;
+  top: calc(var(--header-height) + var(--space-md));
+  right: var(--space-md);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  pointer-events: none;
+}
+
+.achievementToast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  animation: toastSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-width: 16rem;
+  max-width: 22rem;
+}
+
+.achievementToastIcon {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.achievementToastContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.achievementToastLabel {
+  font-size: var(--text-2xs);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.achievementToastName {
+  font-size: var(--text-base);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.achievementToastDescription {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.achievementToastPoints {
+  font-size: var(--text-sm);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--achievement-legendary);
+  flex-shrink: 0;
+}
+
+.achievementToastCommon {
+  border-color: var(--achievement-common);
+}
+
+.achievementToastUncommon {
+  border-color: var(--achievement-uncommon);
+}
+
+.achievementToastRare {
+  border-color: var(--achievement-rare);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 10px rgba(96, 165, 250, 0.15);
+}
+
+.achievementToastEpic {
+  border-color: var(--achievement-epic);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 14px rgba(167, 139, 250, 0.2);
+}
+
+.achievementToastLegendary {
+  border-color: var(--achievement-legendary);
+  box-shadow:
+    var(--shadow-lg),
+    0 0 18px rgba(251, 191, 36, 0.25);
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@media (max-width: 639px) {
+  .achievementToastContainer {
+    top: calc(var(--header-height-mobile) + var(--space-sm));
+    right: var(--space-sm);
+    left: var(--space-sm);
+  }
+
+  .achievementToast {
+    min-width: auto;
+    max-width: none;
+  }
+}

@@ -9,6 +9,7 @@ interface UserState {
   rating: number | null;
   puzzleRating: number | null;
   profileIcon: string;
+  achievementPoints: number | null;
 }
 
 interface UserActions {
@@ -35,6 +36,7 @@ export const createUserStore = () => {
     rating: null,
     puzzleRating: null,
     profileIcon: 'white-pawn',
+    achievementPoints: null,
   });
 
   const checkUserStatus = async (navigateFn: (path: string) => void) => {
@@ -48,6 +50,7 @@ export const createUserStore = () => {
         setState('rating', null);
         setState('puzzleRating', null);
         setState('profileIcon', 'white-pawn');
+        setState('achievementPoints', null);
         return;
       }
       const data = await res.json();
@@ -57,6 +60,7 @@ export const createUserStore = () => {
         setState('rating', null);
         setState('puzzleRating', null);
         setState('profileIcon', 'white-pawn');
+        setState('achievementPoints', null);
       } else if (!data.username_set) {
         setState('isLoggedIn', true);
         navigateFn('/username-setup');
@@ -71,6 +75,9 @@ export const createUserStore = () => {
         }
         if (data.puzzle_rating !== undefined) {
           setState('puzzleRating', data.puzzle_rating);
+        }
+        if (data.achievement_points !== undefined) {
+          setState('achievementPoints', data.achievement_points);
         }
       }
     } catch (err) {
@@ -183,6 +190,7 @@ export const createUserStore = () => {
     setState('rating', null);
     setState('puzzleRating', null);
     setState('profileIcon', 'white-pawn');
+    setState('achievementPoints', null);
   };
 
   const actions: UserActions = {

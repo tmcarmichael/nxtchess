@@ -1,4 +1,5 @@
 import { createContext, useContext, onCleanup, createMemo, batch, type JSX } from 'solid-js';
+import { pushAchievementToasts } from '../../components/common/AchievementToast/AchievementToast';
 import { sessionManager } from '../../services/game/session/SessionManager';
 import { DEBUG } from '../../shared/utils/debug';
 import { computeMaterialDiff } from '../../types/chess';
@@ -87,7 +88,16 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
 
   multiplayer.on(
     'game:ended',
-    ({ reason, winner, whiteRating, blackRating, whiteRatingDelta, blackRatingDelta }) => {
+    ({
+      reason,
+      winner,
+      whiteRating,
+      blackRating,
+      whiteRatingDelta,
+      blackRatingDelta,
+      whiteNewAchievements,
+      blackNewAchievements,
+    }) => {
       batch(() => {
         timer.stop();
         chess.endGame(reason, winner);
@@ -108,6 +118,12 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
 
         ui.showEndModal();
       });
+
+      const playerAchievements =
+        chess.state.playerColor === 'w' ? whiteNewAchievements : blackNewAchievements;
+      if (playerAchievements && playerAchievements.length > 0) {
+        pushAchievementToasts(playerAchievements);
+      }
     }
   );
 

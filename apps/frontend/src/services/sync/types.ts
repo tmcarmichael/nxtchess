@@ -88,6 +88,15 @@ export interface OpponentMoveData {
   blackTimeMs?: number;
 }
 
+export interface GameEndedAchievement {
+  id: string;
+  name: string;
+  description: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  points: number;
+  icon: string;
+}
+
 export interface GameEndedData {
   gameId: string;
   result: 'white' | 'black' | 'draw';
@@ -96,6 +105,8 @@ export interface GameEndedData {
   blackRating?: number;
   whiteRatingDelta?: number;
   blackRatingDelta?: number;
+  whiteNewAchievements?: GameEndedAchievement[];
+  blackNewAchievements?: GameEndedAchievement[];
 }
 
 export interface TimeUpdateData {

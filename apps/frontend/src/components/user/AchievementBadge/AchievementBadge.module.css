@@ -1,0 +1,124 @@
+.achievementBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-xs);
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  cursor: default;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+  min-width: 5.5rem;
+  max-width: 6.5rem;
+}
+
+.achievementBadge:hover {
+  transform: translateY(-2px);
+}
+
+.achievementBadgeIcon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.achievementBadgeName {
+  font-size: var(--text-2xs);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.achievementBadgePoints {
+  font-size: var(--text-2xs);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.achievementBadgeLocked {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.achievementBadgeLocked:hover {
+  transform: none;
+}
+
+.achievementBadgeCommon {
+  border-color: var(--achievement-common);
+}
+
+.achievementBadgeCommon:not(.achievementBadgeLocked):hover {
+  box-shadow: 0 0 8px rgba(136, 136, 136, 0.2);
+}
+
+.achievementBadgeUncommon {
+  border-color: var(--achievement-uncommon);
+}
+
+.achievementBadgeUncommon:not(.achievementBadgeLocked):hover {
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.25);
+}
+
+.achievementBadgeRare {
+  border-color: var(--achievement-rare);
+}
+
+.achievementBadgeRare:not(.achievementBadgeLocked):hover {
+  box-shadow: 0 0 14px rgba(96, 165, 250, 0.3);
+}
+
+.achievementBadgeEpic {
+  border-color: var(--achievement-epic);
+  box-shadow: 0 0 6px rgba(167, 139, 250, 0.15);
+}
+
+.achievementBadgeEpic:not(.achievementBadgeLocked):hover {
+  box-shadow: 0 0 18px rgba(167, 139, 250, 0.35);
+}
+
+.achievementBadgeLegendary {
+  border-color: var(--achievement-legendary);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
+  animation: legendaryPulse 3s ease-in-out infinite;
+}
+
+.achievementBadgeLegendary:not(.achievementBadgeLocked):hover {
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.4);
+}
+
+.achievementBadgeLocked.achievementBadgeLegendary {
+  animation: none;
+}
+
+@keyframes legendaryPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.35);
+  }
+}
+
+@media (max-width: 639px) {
+  .achievementBadge {
+    min-width: 4.5rem;
+    max-width: 5.5rem;
+    padding: var(--space-xs);
+  }
+
+  .achievementBadgeIcon {
+    font-size: 1.3rem;
+  }
+}

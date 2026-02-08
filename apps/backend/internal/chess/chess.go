@@ -285,6 +285,11 @@ func (g *Game) LegalMoves() []string {
 	return result
 }
 
+// InnerGame returns the underlying notnil/chess Game for advanced analysis
+func (g *Game) InnerGame() *chess.Game {
+	return g.game
+}
+
 // Clone creates a copy of the game
 func (g *Game) Clone() *Game {
 	newGame, _ := NewGameFromFEN(g.FEN())
