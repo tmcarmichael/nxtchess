@@ -34,7 +34,7 @@ Pre-warms Stockfish AI engine on app load. Terminates both AI and eval engines o
 Routes (all lazy-loaded via `routes.tsx`):
 
 - `/` → HomeContainer
-- `/play` → PlayContainer (multiplayer or vs AI)
+- `/play` → PlayContainer (lobby browser, multiplayer, or vs AI)
 - `/play/:gameId` → PlayContainer (join multiplayer game via URL)
 - `/training` → TrainingContainer (untimed practice with eval)
 - `/analyze` → AnalyzeContainer (position analysis with FEN/PGN import)
@@ -45,7 +45,7 @@ Routes (all lazy-loaded via `routes.tsx`):
 
 ### Component Organization
 
-**`chess/` (13 components)** — Core chess UI:
+**`chess/` (14 components)** — Core chess UI:
 
 - `ChessBoardController` — Main game controller with extracted hooks:
   - `hooks/useAudioFeedback.ts` — Move sounds, capture/check audio
@@ -64,6 +64,7 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `ChessEndModal` — Game result display
 - `ChessSideSelector` — Color selection UI
 - `ChessDifficultySlider` — AI difficulty picker
+- `TimeControlGrid` — Time control category selection (Bullet/Blitz/Rapid/Classical)
 
 **`game/` (8 components)** — Game layout:
 
@@ -76,11 +77,14 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `DifficultyDisplay` — Shows AI difficulty level
 - `PlayerColorDisplay` — Player color indicator
 
-**`play/` (5 components)** — Multiplayer mode:
+**`play/` (8 components)** — Multiplayer mode:
 
 - `PlayContainer` — Wraps with PlayGameProvider
-- `PlayControlPanel` — Multiplayer-specific controls
+- `PlayHub` — Lobby browser showing available games with real-time updates
 - `PlayModal` — Game creation/join interface
+- `PlayAIModal` — AI game setup (difficulty, color, time control)
+- `PlayCreateGameModal` — Multiplayer game creation (time control, rated/casual)
+- `PlayControlPanel` — Multiplayer-specific controls
 - `PlayNavigationPanel` — Move history navigation
 - `PlayResignModal` — Resignation confirmation
 
@@ -112,22 +116,26 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `HomeContainer` — Home page layout
 - `HomeSiteHero` — Hero section with floating chess pieces animation (gravitational spread) and CTA
 
-**`user/` (4 components)** — Auth & profile:
+**`user/` (6 components)** — Auth & profile:
 
 - `UserSignInModal` — OAuth login interface
 - `UsernameSetup` — Initial username entry
-- `UserProfile` — Player profile page
+- `UserProfile` — Player profile page with rating chart, game stats, achievements with collapsible sections (rating chart, game stats, achievements)
 - `ProfileIconPicker` — Avatar selector
+- `UserAchievements` — Achievement display with collapsible categories and rarity badges
+- `AchievementBadge` — Individual achievement badge renderer
 
-**`common/` (7 components)** — Shared layout:
+**`common/` (9 components)** — Shared layout:
 
-- `CommonSiteHeader` — Top navigation bar
+- `CommonSiteHeader` — Top navigation bar with active route indicators
 - `CommonSiteFooter` — Footer
 - `CommonErrorBoundary` — Error handling wrapper
 - `CommonNotFoundPage` — 404 page
 - `CommonMobileMenu` — Mobile navigation drawer
 - `CommonSettingsDropdown` — Theme toggle (dark/light) and sound control
 - `NetworkStatusBanner` — Online/offline indicator
+- `AchievementToast` — Achievement unlock notification toast
+- `FloatingPieces` — Animated chess pieces with gravitational spread (hero section)
 
 ### Component Patterns
 
@@ -154,13 +162,14 @@ Routes (all lazy-loaded via `routes.tsx`):
 
 #### Mode-Specific Game Stores (`store/game/`)
 
-Five independent SolidJS stores compose via context (NOT a monolithic store):
+Six independent SolidJS stores compose via context (NOT a monolithic store):
 
 1. **ChessStore** (`createChessStore.ts`) — FEN, move history, game state, player color, current turn, captured pieces, game lifecycle
 2. **TimerStore** (`createTimerStore.ts`) — White/black time in ms, time control, increment, 100ms tick precision
 3. **EngineStore** (`createEngineStore.ts`) — Engine status (idle/loading/ready/error), difficulty, AI side, play style
 4. **UIStore** (`createUIStore.ts`) — Board view perspective, modal visibility flags
 5. **MultiplayerStore** (`createMultiplayerStore.ts`) — Game ID, opponent info, connection state, typed event emission
+6. **LobbyStore** (`createLobbyStore.ts`) — Open games list, lobby WebSocket subscription, real-time updates
 
 #### Context Providers
 
@@ -229,7 +238,7 @@ Two separate Web Workers (ai/eval) prevent UCI command race conditions. Analysis
 
 - `GameSyncService.ts` — WebSocket client using ReconnectingWebSocket
 - `useGameSync.ts` — SolidJS integration hook
-- `types.ts` — Message types (GAME_CREATE, GAME_JOIN, MOVE, RESIGN, TIME_UPDATE, GAME_ENDED)
+- `types.ts` — Message types (GAME_CREATE, GAME_JOIN, MOVE, RESIGN, TIME_UPDATE, GAME_ENDED, LOBBY_SUBSCRIBE, LOBBY_UNSUBSCRIBE, LOBBY_LIST, LOBBY_UPDATE)
 
 #### Persistence Services (`services/persistence/`)
 
@@ -295,6 +304,17 @@ GameWinner = Side | 'draw' | null;
 GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | null;
 ```
 
+**achievements.ts:**
+
+```typescript
+AchievementRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+AchievementCategory = 'loyalty' | 'streaks' | 'rating' | 'chess_moments' | 'volume' | 'fun';
+Achievement { id, name, description, category, rarity, points, icon }
+UserAchievement extends Achievement { unlocked_at }
+AchievementUnlock { id, name, description, rarity, points, icon }  // minimal, for toast notifications
+AchievementsResponse { achievements[], total_points, total_unlocked, total_available }
+```
+
 **moveQuality.ts:**
 
 ```typescript
@@ -307,6 +327,7 @@ QUALITY_THRESHOLDS = { excellent: 20, good: 50, inaccuracy: 100, mistake: 200 };
 **Config:**
 
 - `constants.ts` — `TIME_VALUES_MINUTES`, `DIFFICULTY_VALUES_ELO` (6 UI levels: Beginner/Easy/Medium/Hard/Expert/Grandmaster mapping to internal 1-10)
+- `timeControls.ts` — Categorized time controls (Bullet/Blitz/Rapid/Classical) with 12 presets, default 5+3
 - `env.ts` — Environment variables (`VITE_BACKEND_URL`, `VITE_DEBUG`)
 
 **Hooks:**
