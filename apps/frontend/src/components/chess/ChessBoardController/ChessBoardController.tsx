@@ -12,12 +12,13 @@ import {
 } from 'solid-js';
 import { audioService } from '../../../services/audio/AudioService';
 import {
-  getLegalMoves,
-  getLegalMoveCaptures,
+  getLegalMoves as getLegalMovesFromFen,
+  getLegalMoveCaptures as getLegalMoveCapturesFromFen,
   getPremoveLegalMoves,
   prepareMove,
   normalizeCastlingTarget,
   getCastlingHintSquares,
+  CASTLING_DESTINATION_TO_ROOK,
 } from '../../../services/game/chessGameService';
 import { useKeyboardNavigation } from '../../../shared/hooks/useKeyboardNavigation';
 import { useGameContext } from '../../../store/game/useGameContext';
@@ -265,11 +266,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       () => {
         const dragState = draggedPiece();
         if (dragState && chess.derived.isPlayerTurn()) {
-          // Recalculate legal moves for the held piece based on new position
-          const fen = getMoveCalculationFen();
-          const newMoves = getLegalMoves(fen, dragState.square);
+          const newMoves = getLegalMoves(dragState.square);
           setHighlightedMoves(newMoves);
-          setCaptureSquares(getLegalMoveCaptures(fen, dragState.square));
+          setCaptureSquares(getLegalMoveCaptures(dragState.square));
         }
       }
     )
@@ -360,6 +359,39 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   // Get the FEN to use for move calculations - viewFen in analyze mode, fen otherwise
   const getMoveCalculationFen = () => {
     return derived.allowBothSides() ? chess.state.viewFen : chess.state.fen;
+  };
+
+  const isOnCurrentPosition = () => chess.state.viewFen === chess.state.fen;
+
+  const getLegalMoves = (square: Square): Square[] => {
+    if (!isOnCurrentPosition()) {
+      return getLegalMovesFromFen(getMoveCalculationFen(), square);
+    }
+    const session = chess.getSession();
+    if (!session) {
+      return getLegalMovesFromFen(chess.state.fen, square);
+    }
+    const moves = chess.getLegalMoves(square);
+    const piece = session.getPieceAt(square);
+    if (piece?.type === 'k') {
+      const withRooks = [...moves];
+      for (const target of moves) {
+        const rookSquare = CASTLING_DESTINATION_TO_ROOK[target];
+        if (rookSquare) withRooks.push(rookSquare);
+      }
+      return withRooks;
+    }
+    return moves;
+  };
+
+  const getLegalMoveCaptures = (square: Square): Set<Square> => {
+    if (!isOnCurrentPosition()) {
+      return getLegalMoveCapturesFromFen(getMoveCalculationFen(), square);
+    }
+    if (!chess.getSession()) {
+      return getLegalMoveCapturesFromFen(chess.state.fen, square);
+    }
+    return chess.getLegalMoveCaptures(square);
   };
 
   const getSquareFromCoordinates = (clientX: number, clientY: number): Square | null => {
@@ -478,12 +510,11 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     addDocumentDragListeners();
     e.preventDefault();
 
-    const fen = getMoveCalculationFen();
     const isPlayerTurn = derived.allowBothSides() || chess.derived.isPlayerTurn();
     const moves = isPlayerTurn
-      ? getLegalMoves(fen, square)
+      ? getLegalMoves(square)
       : getPremoveLegalMoves(chess.state.fen, square);
-    const captures = isPlayerTurn ? getLegalMoveCaptures(fen, square) : new Set<Square>();
+    const captures = isPlayerTurn ? getLegalMoveCaptures(square) : new Set<Square>();
     batch(() => {
       setSelectedSquare(square);
       setHighlightedMoves(moves);
@@ -534,15 +565,12 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
         setDragHoverSquare(null);
       });
       selectSquare(tracking.square);
-      const fen = getMoveCalculationFen();
       const isPlayerTurn = derived.allowBothSides() || chess.derived.isPlayerTurn();
       const moves = isPlayerTurn
-        ? getLegalMoves(fen, tracking.square)
+        ? getLegalMoves(tracking.square)
         : getPremoveLegalMoves(chess.state.fen, tracking.square);
       setHighlightedMoves(moves);
-      setCaptureSquares(
-        isPlayerTurn ? getLegalMoveCaptures(fen, tracking.square) : new Set<Square>()
-      );
+      setCaptureSquares(isPlayerTurn ? getLegalMoveCaptures(tracking.square) : new Set<Square>());
     }
   };
 
@@ -722,8 +750,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     const pm = premove();
     if (!pm) return;
 
-    // Premoves always use the current fen (not viewFen) since they execute on current position
-    const legalMoves = getLegalMoves(chess.state.fen, pm.from);
+    const legalMoves = getLegalMoves(pm.from);
     if (legalMoves.includes(pm.to)) {
       executeMove(pm.from, pm.to, pm.promotion);
     }
@@ -733,9 +760,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   const selectSquare = (square: Square) => {
     batch(() => {
       setSelectedSquare(square);
-      const fen = getMoveCalculationFen();
-      setHighlightedMoves(getLegalMoves(fen, square));
-      setCaptureSquares(getLegalMoveCaptures(fen, square));
+      setHighlightedMoves(getLegalMoves(square));
+      setCaptureSquares(getLegalMoveCaptures(square));
     });
   };
 

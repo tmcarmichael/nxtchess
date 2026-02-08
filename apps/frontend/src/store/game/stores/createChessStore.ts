@@ -1,6 +1,7 @@
 import { batch } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { fenToBoard, getOpponentSide } from '../../../services/game/chessGameService';
+import { findKingSquareFromFen } from '../../../services/game/fenUtils';
 import { canMakeMove } from '../../../services/game/gameLifecycle';
 import { sessionManager, type GameSession } from '../../../services/game/session/SessionManager';
 import { generateSessionId } from '../../../shared/utils/generateId';
@@ -131,6 +132,8 @@ export interface ChessStore {
   setPuzzleSolutionIndex: (index: number) => void;
   setPuzzleFeedback: (feedback: ChessState['puzzleFeedback']) => void;
   setRatingChange: (ratingChange: ChessState['ratingChange']) => void;
+  getLegalMoves: (square: Square) => Square[];
+  getLegalMoveCaptures: (square: Square) => Set<Square>;
   derived: {
     currentBoard: () => BoardSquare[];
     isPlayerTurn: () => boolean;
@@ -337,11 +340,8 @@ export const createChessStore = (): ChessStore => {
         setState('viewMoveIndex', state.moveHistory.length);
         setState('currentTurn', getOpponentSide(state.currentTurn));
         if (data.isCheck) {
-          const board = fenToBoard(data.serverFen);
           const currentTurn = data.serverFen.split(' ')[1] as Side;
-          const kingPiece = currentTurn === 'w' ? 'wK' : 'bK';
-          const kingSquare = board.find((sq) => sq.piece === kingPiece)?.square;
-          setState('checkedKingSquare', kingSquare ?? null);
+          setState('checkedKingSquare', findKingSquareFromFen(data.serverFen, currentTurn));
         } else {
           setState('checkedKingSquare', null);
         }
@@ -462,11 +462,8 @@ export const createChessStore = (): ChessStore => {
       setState('viewMoveIndex', state.moveHistory.length);
       setState('currentTurn', getOpponentSide(state.currentTurn));
       if (data.isCheck) {
-        const board = fenToBoard(data.fen);
         const currentTurn = data.fen.split(' ')[1] as Side;
-        const kingPiece = currentTurn === 'w' ? 'wK' : 'bK';
-        const kingSquare = board.find((sq) => sq.piece === kingPiece)?.square;
-        setState('checkedKingSquare', kingSquare ?? null);
+        setState('checkedKingSquare', findKingSquareFromFen(data.fen, currentTurn));
       } else {
         setState('checkedKingSquare', null);
       }
@@ -561,6 +558,16 @@ export const createChessStore = (): ChessStore => {
 
   const getSession = () => currentSession;
 
+  const emptyCaptures = new Set<Square>();
+
+  const getLegalMoves = (square: Square): Square[] => {
+    return currentSession?.getLegalMoves(square) ?? [];
+  };
+
+  const getLegalMoveCaptures = (square: Square): Set<Square> => {
+    return currentSession?.getLegalMoveCaptures(square) ?? emptyCaptures;
+  };
+
   return {
     state,
     startGame,
@@ -585,6 +592,8 @@ export const createChessStore = (): ChessStore => {
     setPuzzleSolutionIndex,
     setPuzzleFeedback,
     setRatingChange,
+    getLegalMoves,
+    getLegalMoveCaptures,
     derived,
     getSession,
   };

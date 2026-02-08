@@ -62,12 +62,14 @@ export class BoardCache {
   private chess: Chess;
   private pieces: (CachedPiece | null)[];
   private legalMovesCache: Map<Square, Square[]>;
+  private capturesCache: Map<Square, Set<Square>>;
   private _state: BoardCacheState;
 
   constructor(fen?: string) {
     this.chess = new Chess(fen);
     this.pieces = new Array(64).fill(null);
     this.legalMovesCache = new Map();
+    this.capturesCache = new Map();
     this._state = this.createEmptyState();
     this.syncFromChess();
   }
@@ -126,20 +128,39 @@ export class BoardCache {
   }
 
   getLegalMoves(square: Square): Square[] {
-    // Check cache first
     const cached = this.legalMovesCache.get(square);
     if (cached) return cached;
 
-    // Compute and cache
-    const moves = this.chess.moves({ square: square as ChessSquare, verbose: true });
-    const targets = moves.map((m) => m.to as Square);
-    this.legalMovesCache.set(square, targets);
+    this.computeAndCacheMoves(square);
+    return this.legalMovesCache.get(square)!;
+  }
 
-    return targets;
+  getLegalMoveCaptures(square: Square): Set<Square> {
+    const cached = this.capturesCache.get(square);
+    if (cached) return cached;
+
+    this.computeAndCacheMoves(square);
+    return this.capturesCache.get(square)!;
   }
 
   hasLegalMoves(square: Square): boolean {
     return this.getLegalMoves(square).length > 0;
+  }
+
+  private computeAndCacheMoves(square: Square): void {
+    const moves = this.chess.moves({ square: square as ChessSquare, verbose: true });
+    const targets: Square[] = [];
+    const captures = new Set<Square>();
+
+    for (const m of moves) {
+      targets.push(m.to as Square);
+      if (m.captured) {
+        captures.add(m.to as Square);
+      }
+    }
+
+    this.legalMovesCache.set(square, targets);
+    this.capturesCache.set(square, captures);
   }
 
   /**
@@ -234,6 +255,10 @@ export class BoardCache {
     return this.chess;
   }
 
+  refresh(): void {
+    this.syncFromChess();
+  }
+
   findKingSquare(color: Side): Square | null {
     const kingSymbol = color === 'w' ? 'wK' : 'bK';
     for (let i = 0; i < 64; i++) {
@@ -245,8 +270,8 @@ export class BoardCache {
   }
 
   private syncFromChess(): void {
-    // Clear caches
     this.legalMovesCache.clear();
+    this.capturesCache.clear();
 
     // Sync pieces from chess.js board
     const board = this.chess.board();
