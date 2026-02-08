@@ -1,0 +1,44 @@
+Stockfish Chess Engine - Third-Party Notice
+
+This project distributes unmodified Stockfish WASM binaries compiled by the
+stockfish.js project. Stockfish is licensed under the GNU General Public
+License v3 (GPLv3). See GPL-3.0.txt in this directory for the full license text.
+
+Stockfish is run in a dedicated WebWorker and communicates with NxtChess via
+UCI-style messages. No modifications have been made to the Stockfish source
+or its compiled WASM output. NxtChess's own source code (Apache 2.0) and the
+Stockfish engine (GPLv3) are separate, independent components.
+
+Component Details
+-----------------
+Engine:      Stockfish 16.1
+WASM port:   stockfish.js 16.1.0 by Nathan Rugg (nmrugg)
+License:     GNU General Public License v3 (GPLv3)
+Source:      https://github.com/nmrugg/stockfish.js
+Upstream:    https://github.com/official-stockfish/Stockfish
+
+Distributed Binaries
+--------------------
+The following WASM binaries are served from /stockfish/ in production:
+
+  stockfish-16.1.js          + stockfish-16.1.wasm          (multi-threaded)
+  stockfish-16.1-single.js   + stockfish-16.1-single.wasm   (single-threaded)
+  stockfish-16.1-lite-single.js + stockfish-16.1-lite-single.wasm (lite, 7MB)
+
+These binaries are copied unmodified from the stockfish.js npm package
+(github:nmrugg/stockfish.js) during the Vite build via vite-plugin-static-copy.
+
+Corresponding Source
+--------------------
+The corresponding source code for the Stockfish WASM binaries distributed
+with this project is available at:
+
+  https://github.com/nmrugg/stockfish.js (WASM build, tag/version 16.1.0)
+  https://github.com/official-stockfish/Stockfish (upstream C++ engine)
+
+Copyright and Attribution
+-------------------------
+Stockfish is developed by T. Romstad, M. Costalba, J. Kiiski, G. Linscott,
+and other contributors.
+
+stockfish.js WASM compilation (c) Chess.com, LLC and Nathan Rugg.
