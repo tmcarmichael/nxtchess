@@ -9,7 +9,6 @@ import {
   createEffect,
   on,
 } from 'solid-js';
-import { isPieceSide } from '../../../services/game/pieceUtils';
 import {
   type PieceType,
   type BoardSquare,
@@ -40,6 +39,7 @@ const PIECE_NAMES: Record<string, string> = {
 interface ChessBoardProps {
   board: () => BoardSquare[];
   highlightedMoves: () => Square[];
+  captureSquares: () => Set<Square>;
   selectedSquare: () => Square | null;
   draggedPiece: () => { square: Square; piece: string } | null;
   cursorPosition: () => { x: number; y: number };
@@ -67,6 +67,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
   const [local] = splitProps(props, [
     'board',
     'highlightedMoves',
+    'captureSquares',
     'selectedSquare',
     'draggedPiece',
     'cursorPosition',
@@ -161,6 +162,8 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     const castlingHints = local.castlingHintSquares();
     const hoverSquare = local.dragHoverSquare();
 
+    const captures = local.captureSquares();
+
     const renderSquare = (sq: BoardSquare): JSX.Element => {
       const file = sq.square[0];
       const rank = sq.square[1];
@@ -171,11 +174,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
       const isDragging = dragState?.square === sq.square;
       const isAnimating = animPiece?.to === sq.square;
       const isLastMove = last !== null && (last.from === sq.square || last.to === sq.square);
-      const isEnemyPiece =
-        isHighlighted &&
-        !!sq.piece &&
-        !!local.activePieceColor() &&
-        !isPieceSide(sq.piece, local.activePieceColor());
+      const isCapture = isHighlighted && captures.has(sq.square);
       const isCheckedKing = checkedSquare === sq.square;
       const isFlashingKing = flashSquare === sq.square;
       const isRightClickHighlighted = rightClickSet.has(sq.square);
@@ -223,7 +222,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
           {showRank && <span class={styles.rankLabel}>{rank}</span>}
           {isHighlighted && (
             <div
-              class={`${styles.legalMoveIndicator} ${isEnemyPiece ? styles.captureIndicator : ''}`}
+              class={`${styles.legalMoveIndicator} ${isCapture ? styles.captureIndicator : ''}`}
             />
           )}
           {sq.piece && (

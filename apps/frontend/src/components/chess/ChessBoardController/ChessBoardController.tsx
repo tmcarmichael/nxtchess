@@ -13,6 +13,7 @@ import {
 import { audioService } from '../../../services/audio/AudioService';
 import {
   getLegalMoves,
+  getLegalMoveCaptures,
   getPremoveLegalMoves,
   prepareMove,
   normalizeCastlingTarget,
@@ -46,6 +47,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
   const { chess, engine, multiplayer, timer, ui, actions, derived } = useGameContext();
   const navigate = useNavigate();
   const [highlightedMoves, setHighlightedMoves] = createSignal<Square[]>([]);
+  const [captureSquares, setCaptureSquares] = createSignal<Set<Square>>(new Set());
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [draggedPiece, setDraggedPiece] = createSignal<{ square: Square; piece: string } | null>(
     null
@@ -267,6 +269,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
           const fen = getMoveCalculationFen();
           const newMoves = getLegalMoves(fen, dragState.square);
           setHighlightedMoves(newMoves);
+          setCaptureSquares(getLegalMoveCaptures(fen, dragState.square));
         }
       }
     )
@@ -476,13 +479,15 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     e.preventDefault();
 
     const fen = getMoveCalculationFen();
-    const moves =
-      derived.allowBothSides() || chess.derived.isPlayerTurn()
-        ? getLegalMoves(fen, square)
-        : getPremoveLegalMoves(chess.state.fen, square);
+    const isPlayerTurn = derived.allowBothSides() || chess.derived.isPlayerTurn();
+    const moves = isPlayerTurn
+      ? getLegalMoves(fen, square)
+      : getPremoveLegalMoves(chess.state.fen, square);
+    const captures = isPlayerTurn ? getLegalMoveCaptures(fen, square) : new Set<Square>();
     batch(() => {
       setSelectedSquare(square);
       setHighlightedMoves(moves);
+      setCaptureSquares(captures);
       setDraggedPiece({ square, piece });
       setCursorPosition({ x: e.clientX, y: e.clientY });
     });
@@ -530,11 +535,14 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       });
       selectSquare(tracking.square);
       const fen = getMoveCalculationFen();
-      const moves =
-        derived.allowBothSides() || chess.derived.isPlayerTurn()
-          ? getLegalMoves(fen, tracking.square)
-          : getPremoveLegalMoves(chess.state.fen, tracking.square);
+      const isPlayerTurn = derived.allowBothSides() || chess.derived.isPlayerTurn();
+      const moves = isPlayerTurn
+        ? getLegalMoves(fen, tracking.square)
+        : getPremoveLegalMoves(chess.state.fen, tracking.square);
       setHighlightedMoves(moves);
+      setCaptureSquares(
+        isPlayerTurn ? getLegalMoveCaptures(fen, tracking.square) : new Set<Square>()
+      );
     }
   };
 
@@ -727,6 +735,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       setSelectedSquare(square);
       const fen = getMoveCalculationFen();
       setHighlightedMoves(getLegalMoves(fen, square));
+      setCaptureSquares(getLegalMoveCaptures(fen, square));
     });
   };
 
@@ -738,6 +747,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
       setDragHoverSquare(null);
       setSelectedSquare(null);
       setHighlightedMoves([]);
+      setCaptureSquares(new Set<Square>());
     });
   };
 
@@ -793,6 +803,7 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
               <ChessBoard
                 board={chess.derived.currentBoard}
                 highlightedMoves={highlightedMoves}
+                captureSquares={captureSquares}
                 selectedSquare={selectedSquare}
                 draggedPiece={draggedPiece}
                 cursorPosition={cursorPosition}
