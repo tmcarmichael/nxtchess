@@ -127,8 +127,8 @@ func TestNewSecureCookie_Prod(t *testing.T) {
 	if cookie.Secure != true {
 		t.Error("expected Secure to be true in prod")
 	}
-	if cookie.SameSite != http.SameSiteNoneMode {
-		t.Errorf("expected SameSite=None, got %v", cookie.SameSite)
+	if cookie.SameSite != http.SameSiteLaxMode {
+		t.Errorf("expected SameSite=Lax, got %v", cookie.SameSite)
 	}
 }
 

@@ -122,7 +122,7 @@ func main() {
 	r.Group(func(pub chi.Router) {
 		pub.Use(apiRateLimiter.Middleware)
 		pub.Use(middleware.SmallBodyLimit) // 64KB limit for JSON API
-		pub.Get("/profile/{username}", controllers.UserProfileHandler)
+		pub.Get("/api/profile/{username}", controllers.UserProfileHandler)
 
 		// Training API routes
 		pub.Get("/api/training/endgame/random", controllers.GetRandomEndgamePosition)

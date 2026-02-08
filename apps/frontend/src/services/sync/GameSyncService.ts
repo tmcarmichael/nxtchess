@@ -31,7 +31,11 @@ const DEFAULT_CONFIG: SyncServiceConfig = {
 };
 
 function buildWsUrl(backendUrl: string): string {
-  if (!backendUrl) return '';
+  if (!backendUrl) {
+    const loc = window.location;
+    const protocol = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${loc.host}/ws`;
+  }
   const url = new URL(backendUrl);
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
   url.pathname = '/ws';
