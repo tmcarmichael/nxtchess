@@ -1,0 +1,64 @@
+.timeControlGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.timeControlCategory {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.categoryLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.categoryOptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xs);
+}
+
+.timeControlButton {
+  padding: var(--space-sm) var(--space-xs);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.timeControlButton:hover:not(.timeControlButtonActive) {
+  background: var(--surface-4);
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+}
+
+.timeControlButtonActive {
+  background: var(--accent-subtle);
+  border-color: var(--accent-muted);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+@media (max-width: 639px) {
+  .categoryOptions {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .timeControlButton {
+    font-size: var(--text-sm);
+    padding: var(--space-xs);
+  }
+}

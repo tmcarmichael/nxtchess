@@ -18,6 +18,7 @@ export interface ClientMessage {
 
 export interface GameCreateData {
   timeControl?: TimeControl;
+  rated?: boolean;
 }
 
 export interface GameJoinData {
@@ -100,7 +101,7 @@ export interface GameEndedAchievement {
 export interface GameEndedData {
   gameId: string;
   result: 'white' | 'black' | 'draw';
-  reason: 'checkmate' | 'resignation' | 'timeout' | 'stalemate' | 'agreement';
+  reason: string;
   whiteRating?: number;
   blackRating?: number;
   whiteRatingDelta?: number;
@@ -129,6 +130,25 @@ export interface ServerMessage {
   data?: unknown;
 }
 
+export interface LobbyGameInfo {
+  gameId: string;
+  creator: string;
+  creatorRating?: number;
+  timeControl?: TimeControl;
+  rated: boolean;
+  createdAt: number;
+}
+
+export interface LobbyListData {
+  games: LobbyGameInfo[];
+}
+
+export interface LobbyUpdateData {
+  action: 'added' | 'removed';
+  game?: LobbyGameInfo;
+  gameId?: string;
+}
+
 // Message type constants (matching backend)
 export const MsgType = {
   // Client → Server
@@ -138,6 +158,10 @@ export const MsgType = {
   GAME_LEAVE: 'GAME_LEAVE',
   MOVE: 'MOVE',
   RESIGN: 'RESIGN',
+
+  // Client → Server (lobby)
+  LOBBY_SUBSCRIBE: 'LOBBY_SUBSCRIBE',
+  LOBBY_UNSUBSCRIBE: 'LOBBY_UNSUBSCRIBE',
 
   // Server → Client
   PONG: 'PONG',
@@ -153,6 +177,10 @@ export const MsgType = {
   OPPONENT_MOVE: 'OPPONENT_MOVE',
   OPPONENT_LEFT: 'OPPONENT_LEFT',
   TIME_UPDATE: 'TIME_UPDATE',
+
+  // Server → Client (lobby)
+  LOBBY_LIST: 'LOBBY_LIST',
+  LOBBY_UPDATE: 'LOBBY_UPDATE',
 } as const;
 
 export type SyncEventType =
@@ -168,6 +196,8 @@ export type SyncEventType =
   | 'game:opponent_move'
   | 'game:opponent_left'
   | 'game:time_update'
+  | 'lobby:list'
+  | 'lobby:update'
   | 'error';
 
 export interface SyncEvent {

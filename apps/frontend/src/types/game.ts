@@ -1,7 +1,17 @@
 export type Side = 'w' | 'b';
 export type SideSelection = Side | 'random';
 export type GameWinner = Side | 'draw' | null;
-export type GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | null;
+export type GameOverReason =
+  | 'checkmate'
+  | 'stalemate'
+  | 'time'
+  | 'resignation'
+  | 'disconnection'
+  | 'abandonment'
+  | 'insufficient_material'
+  | 'threefold_repetition'
+  | 'fifty_move_rule'
+  | null;
 export type GamePhase = 'opening' | 'middlegame' | 'endgame' | null;
 export type GameMode = 'play' | 'training' | 'analysis' | 'puzzle';
 export type PuzzleCategory = 'mate-in-1' | 'mate-in-2' | 'mate-in-3' | 'random';
@@ -37,4 +47,5 @@ export interface MultiplayerGameOptions {
   mode: GameMode;
   newTimeControl?: number;
   increment?: number;
+  rated?: boolean;
 }

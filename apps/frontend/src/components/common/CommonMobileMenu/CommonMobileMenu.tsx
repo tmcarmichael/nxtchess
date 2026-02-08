@@ -34,7 +34,6 @@ const FOOTER_LINKS = [
 
 type CommonMobileMenuProps = {
   onClose: () => void;
-  onShowPlayModal: () => void;
   onShowTrainingModal: () => void;
   onShowPuzzleModal: () => void;
   onShowSignInModal: () => void;
@@ -68,11 +67,9 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
     if (item.route) {
       navigate(
         item.route,
-        location.pathname === item.route ? { state: { reset: Date.now() } } : undefined
+        location.pathname.startsWith(item.route) ? { state: { reset: Date.now() } } : undefined
       );
       props.onClose();
-    } else if (item.showPlayModal) {
-      props.onShowPlayModal();
     } else if (item.showTrainingModal) {
       props.onShowTrainingModal();
     } else if (item.showPuzzleModal) {
@@ -110,7 +107,12 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
           <For each={NAV_ITEMS}>
             {(item) => (
               <button
-                class={styles.navItem}
+                classList={{
+                  [styles.navItem]: true,
+                  [styles.navItemActive]:
+                    !!(item.route || item.activeRoute) &&
+                    location.pathname.startsWith((item.route || item.activeRoute)!),
+                }}
                 onClick={() => handleNavClick(item)}
                 disabled={item.variant === 'upcoming'}
               >

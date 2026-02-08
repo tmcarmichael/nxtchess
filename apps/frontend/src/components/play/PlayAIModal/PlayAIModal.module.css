@@ -1,0 +1,111 @@
+.settingRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.settingLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.difficultyGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.difficultyButton {
+  padding: var(--space-sm) var(--space-xs);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.difficultyButton:hover:not(.difficultyButtonActive) {
+  background: var(--surface-4);
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+}
+
+.difficultyButtonActive {
+  background: var(--accent-subtle);
+  border-color: var(--accent-muted);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.modalActions {
+  margin-top: var(--space-xl);
+}
+
+.startButton {
+  padding: var(--space-sm) var(--space-xl);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, var(--accent-muted), var(--accent));
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 0 20px var(--accent-glow);
+  animation: pulseGlow 3s ease-in-out infinite;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 255, 209, 0.35);
+  }
+}
+
+.startButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 255, 209, 0.3);
+}
+
+@media (max-width: 639px) {
+  .settingRow {
+    margin-bottom: var(--space-sm);
+  }
+
+  .difficultyGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .difficultyButton {
+    font-size: var(--text-sm);
+    padding: var(--space-xs);
+  }
+
+  .modalActions {
+    margin-top: var(--space-lg);
+  }
+
+  .startButton {
+    width: 100%;
+    padding: var(--space-md);
+  }
+}

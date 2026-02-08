@@ -23,6 +23,10 @@ type Hub struct {
 	// Game manager for game-related operations
 	games *GameManager
 
+	// Lobby subscribers
+	lobbySubscribers map[string]*Client
+	lobbyMu          sync.RWMutex
+
 	// Connection limiter callback for cleanup
 	onDisconnect func(ip string)
 }
@@ -30,9 +34,10 @@ type Hub struct {
 // NewHub creates a new Hub
 func NewHub() *Hub {
 	h := &Hub{
-		clients:    make(map[string]*Client),
-		Register:   make(chan *Client),
-		Unregister: make(chan *Client),
+		clients:          make(map[string]*Client),
+		Register:         make(chan *Client),
+		Unregister:       make(chan *Client),
+		lobbySubscribers: make(map[string]*Client),
 	}
 	h.games = NewGameManager(h)
 	return h
@@ -45,16 +50,24 @@ func (h *Hub) Run() {
 		case client := <-h.Register:
 			h.mu.Lock()
 			h.clients[client.ID] = client
+			clientCount := len(h.clients)
 			h.mu.Unlock()
 			metrics.WSConnectionsActive.Inc()
-			logger.Info("Client connected", logger.F("clientId", client.ID, "totalClients", len(h.clients)))
+			logger.Info("Client connected", logger.F("clientId", client.ID, "totalClients", clientCount))
 
 		case client := <-h.Unregister:
 			h.mu.Lock()
 			if _, ok := h.clients[client.ID]; ok {
 				delete(h.clients, client.ID)
-				close(client.Send)
 				metrics.WSConnectionsActive.Dec()
+
+				// Clean up lobby subscription BEFORE closing Send channel
+				// to prevent BroadcastLobbyUpdate from writing to a closed channel
+				h.lobbyMu.Lock()
+				delete(h.lobbySubscribers, client.ID)
+				h.lobbyMu.Unlock()
+
+				close(client.Send)
 
 				// Handle disconnect from any active game
 				if gameID := client.GetGameID(); gameID != "" {
@@ -66,8 +79,9 @@ func (h *Hub) Run() {
 					h.onDisconnect(client.IP)
 				}
 			}
+			clientCount := len(h.clients)
 			h.mu.Unlock()
-			logger.Info("Client disconnected", logger.F("clientId", client.ID, "totalClients", len(h.clients)))
+			logger.Info("Client disconnected", logger.F("clientId", client.ID, "totalClients", clientCount))
 		}
 	}
 }
@@ -89,6 +103,40 @@ func (h *Hub) GetClientCount() int {
 // SetOnDisconnect sets the callback for when a client disconnects
 func (h *Hub) SetOnDisconnect(fn func(ip string)) {
 	h.onDisconnect = fn
+}
+
+// SubscribeLobby adds a client to the lobby subscriber list and sends the current game list
+func (h *Hub) SubscribeLobby(client *Client) {
+	h.lobbyMu.Lock()
+	h.lobbySubscribers[client.ID] = client
+	h.lobbyMu.Unlock()
+
+	games := h.games.GetWaitingGames()
+	client.SendMessage(NewServerMessage(MsgTypeLobbyList, LobbyListData{Games: games}))
+}
+
+// UnsubscribeLobby removes a client from the lobby subscriber list
+func (h *Hub) UnsubscribeLobby(client *Client) {
+	h.lobbyMu.Lock()
+	delete(h.lobbySubscribers, client.ID)
+	h.lobbyMu.Unlock()
+}
+
+// BroadcastLobbyUpdate sends a lobby update to all subscribers
+func (h *Hub) BroadcastLobbyUpdate(update LobbyUpdateData) {
+	msg := NewServerMessage(MsgTypeLobbyUpdate, update)
+	data, err := json.Marshal(msg)
+	if err != nil {
+		logger.Error("Failed to marshal lobby update", logger.F("error", err.Error()))
+		return
+	}
+
+	h.lobbyMu.RLock()
+	defer h.lobbyMu.RUnlock()
+
+	for _, client := range h.lobbySubscribers {
+		client.SendJSON(data)
+	}
 }
 
 // HandleMessage routes a message to the appropriate handler
@@ -140,6 +188,12 @@ func (h *Hub) HandleMessage(client *Client, msg *ClientMessage) {
 			return
 		}
 		h.games.LeaveGame(client, data.GameID)
+
+	case MsgTypeLobbySubscribe:
+		h.SubscribeLobby(client)
+
+	case MsgTypeLobbyUnsubscribe:
+		h.UnsubscribeLobby(client)
 
 	default:
 		client.SendMessage(NewErrorMessage("UNKNOWN_TYPE", "Unknown message type: "+msg.Type))

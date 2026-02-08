@@ -108,12 +108,13 @@ func (r *MessageRateLimiter) IsBlocked() bool {
 
 // Client represents a single WebSocket connection
 type Client struct {
-	ID     string
-	UserID string // Empty for anonymous users
-	IP     string // Client IP for connection limiting
-	Hub    *Hub
-	Conn   *websocket.Conn
-	Send   chan []byte
+	ID       string
+	UserID   string // Empty for anonymous users
+	Username string // Empty for anonymous users
+	IP       string // Client IP for connection limiting
+	Hub      *Hub
+	Conn     *websocket.Conn
+	Send     chan []byte
 
 	// Current game this client is in (if any)
 	GameID string
@@ -233,6 +234,22 @@ func (c *Client) WritePump() {
 	}
 }
 
+// trySend attempts to send data to the client's channel, recovering from panics
+// if the channel has been closed (e.g., during concurrent disconnect).
+func (c *Client) trySend(data []byte) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Debug("Send to closed client channel", logger.F("clientId", c.ID))
+		}
+	}()
+
+	select {
+	case c.Send <- data:
+	default:
+		logger.Warn("Client send buffer full", logger.F("clientId", c.ID))
+	}
+}
+
 // SendMessage sends a server message to this client
 func (c *Client) SendMessage(msg *ServerMessage) {
 	data, err := json.Marshal(msg)
@@ -240,20 +257,10 @@ func (c *Client) SendMessage(msg *ServerMessage) {
 		logger.Error("Failed to marshal message", logger.F("error", err.Error()))
 		return
 	}
-
-	select {
-	case c.Send <- data:
-	default:
-		// Buffer full, client is slow
-		logger.Warn("Client send buffer full", logger.F("clientId", c.ID))
-	}
+	c.trySend(data)
 }
 
 // SendJSON sends raw JSON data to this client
 func (c *Client) SendJSON(data []byte) {
-	select {
-	case c.Send <- data:
-	default:
-		logger.Warn("Client send buffer full", logger.F("clientId", c.ID))
-	}
+	c.trySend(data)
 }

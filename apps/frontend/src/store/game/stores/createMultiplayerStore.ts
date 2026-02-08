@@ -77,7 +77,7 @@ export interface MultiplayerStore {
   connect: () => void;
   disconnect: () => void;
   // Game actions
-  createGame: (timeControl: number, increment?: number) => void;
+  createGame: (timeControl: number, increment?: number, rated?: boolean) => void;
   joinGame: (gameId: string) => void;
   sendMove: (from: string, to: string, promotion?: string) => void;
   resign: () => void;
@@ -202,6 +202,11 @@ export const createMultiplayerStore = (): MultiplayerStore => {
         else if (data.reason === 'stalemate') reason = 'stalemate';
         else if (data.reason === 'timeout') reason = 'time';
         else if (data.reason === 'resignation') reason = 'resignation';
+        else if (data.reason === 'disconnection') reason = 'disconnection';
+        else if (data.reason === 'abandonment') reason = 'abandonment';
+        else if (data.reason === 'insufficient_material') reason = 'insufficient_material';
+        else if (data.reason === 'threefold_repetition') reason = 'threefold_repetition';
+        else if (data.reason === 'fifty_move_rule') reason = 'fifty_move_rule';
 
         setState('gameId', null);
         events.emit('game:ended', {
@@ -213,6 +218,18 @@ export const createMultiplayerStore = (): MultiplayerStore => {
           blackRatingDelta: data.blackRatingDelta,
           whiteNewAchievements: data.whiteNewAchievements,
           blackNewAchievements: data.blackNewAchievements,
+        });
+        break;
+      }
+
+      case 'game:not_found':
+      case 'game:full': {
+        batch(() => {
+          setState('gameId', null);
+          setState('isWaiting', false);
+        });
+        events.emit('game:error', {
+          message: event.type === 'game:not_found' ? 'Game not found' : 'Game is full',
         });
         break;
       }
@@ -257,12 +274,15 @@ export const createMultiplayerStore = (): MultiplayerStore => {
     setState('isConnected', false);
   };
 
-  const createGame = (timeControl: number, increment = 0) => {
+  const createGame = (timeControl: number, increment = 0, rated = false) => {
     connect();
-    gameSyncService.createGame({
-      initialTime: timeControl * 60,
-      increment,
-    });
+    gameSyncService.createGame(
+      {
+        initialTime: timeControl * 60,
+        increment,
+      },
+      rated
+    );
     setState('isWaiting', true);
   };
 
