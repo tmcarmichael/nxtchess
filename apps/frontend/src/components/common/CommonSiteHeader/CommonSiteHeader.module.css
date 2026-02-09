@@ -10,9 +10,9 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding-left: max(var(--space-xl), var(--safe-area-left));
   padding-right: max(var(--space-xl), var(--safe-area-right));
 }
@@ -152,7 +152,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  flex-shrink: 0;
+  justify-self: end;
 }
 
 .userSection {
