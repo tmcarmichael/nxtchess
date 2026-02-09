@@ -8,6 +8,8 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const backendTarget = process.env.BACKEND_PROXY_URL || 'http://localhost:8080';
+
 export default defineConfig({
   plugins: [
     solid(),
@@ -204,6 +206,17 @@ export default defineConfig({
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'credentialless',
+    },
+    hmr: {
+      clientPort: 5173,
+    },
+    proxy: {
+      '/api': backendTarget,
+      '/auth': backendTarget,
+      '/ws': { target: backendTarget, ws: true },
+      '/check-username': backendTarget,
+      '/set-username': backendTarget,
+      '/set-profile-icon': backendTarget,
     },
   },
 });
