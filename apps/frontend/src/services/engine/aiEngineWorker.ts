@@ -1,9 +1,8 @@
 import { engineService } from './engineService';
 import { StockfishEngine, EngineError } from './StockfishEngine';
 
-// Configuration
-const ENGINE_THINK_TIME_MS = 1000; // How long engine thinks per move
 const ENGINE_MOVE_TIMEOUT_MS = 15000; // 15 seconds for computing a move
+const DEFAULT_THINK_TIME_MS = 1000;
 
 // Re-export EngineError for backwards compatibility
 export { EngineError };
@@ -61,9 +60,9 @@ export const initAiEngine = async (elo: number): Promise<void> => {
   }
 };
 
-const getBestMove = (fen: string): Promise<string> => {
+const getBestMove = (fen: string, thinkTimeMs: number): Promise<string> => {
   return aiEngine.sendCommand(
-    [`position fen ${fen}`, `go movetime ${ENGINE_THINK_TIME_MS}`],
+    [`position fen ${fen}`, `go movetime ${thinkTimeMs}`],
     (data) => {
       if (data.startsWith('bestmove')) {
         const [, best] = data.split(' ');
@@ -86,8 +85,8 @@ const parseMoveString = (moveStr: string) => {
  * Compute an AI move for single-game mode (backward compatibility).
  * For multi-game support, use engineService.computeAiMove(gameId, fen).
  */
-export const computeAiMove = async (fen: string) => {
-  const moveStr = await getBestMove(fen);
+export const computeAiMove = async (fen: string, thinkTimeMs = DEFAULT_THINK_TIME_MS) => {
+  const moveStr = await getBestMove(fen, thinkTimeMs);
   return parseMoveString(moveStr);
 };
 
