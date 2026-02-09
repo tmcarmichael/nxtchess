@@ -12,5 +12,5 @@ fi
 # Frontend: lint, type-check, and test staged files
 frontend_files=$(git diff --cached --name-only -- 'apps/frontend/')
 if [ -n "$frontend_files" ]; then
-  cd apps/frontend && npx lint-staged && npx tsc -b && npx vitest run --changed HEAD
+  cd apps/frontend && npx lint-staged && yarn lint && npx tsc -b && npx vitest run --changed HEAD
 fi
