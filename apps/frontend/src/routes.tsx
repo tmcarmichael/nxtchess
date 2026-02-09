@@ -10,6 +10,7 @@ const AnalyzeContainer = lazy(
   () => import('./components/analyze/AnalyzeContainer/AnalyzeContainer')
 );
 const PuzzleContainer = lazy(() => import('./components/puzzle/PuzzleContainer/PuzzleContainer'));
+const ReviewContainer = lazy(() => import('./components/review/ReviewContainer/ReviewContainer'));
 const UsernameSetup = lazy(() => import('./components/user/UsernameSetup/UsernameSetup'));
 const UserProfile = lazy(() => import('./components/user/UserProfile/UserProfile'));
 const NotFoundPage = lazy(
@@ -23,6 +24,7 @@ export const routes: RouteDefinition[] = [
   { path: '/training', component: TrainingContainer },
   { path: '/analyze', component: AnalyzeContainer },
   { path: '/puzzles', component: PuzzleContainer },
+  { path: '/review', component: ReviewContainer },
   { path: '/username-setup', component: UsernameSetup },
   { path: '/profile/:username', component: UserProfile },
   { path: '*', component: NotFoundPage },

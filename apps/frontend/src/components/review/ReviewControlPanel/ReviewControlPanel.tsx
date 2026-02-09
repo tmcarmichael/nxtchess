@@ -5,7 +5,11 @@ import ReviewProgressBar from '../ReviewProgressBar/ReviewProgressBar';
 import ReviewSummaryPanel from '../ReviewSummaryPanel/ReviewSummaryPanel';
 import styles from './ReviewControlPanel.module.css';
 
-const ReviewControlPanel: Component = () => {
+interface ReviewControlPanelProps {
+  onExit?: () => void;
+}
+
+const ReviewControlPanel: Component<ReviewControlPanelProps> = (props) => {
   const { chess, actions, review } = usePlayGame();
 
   const isComplete = () => review.phase() === 'complete';
@@ -35,7 +39,16 @@ const ReviewControlPanel: Component = () => {
       </div>
 
       <div class={styles.controlPanelFooter}>
-        <button class={styles.exitButton} onClick={() => review.exitReview()}>
+        <button
+          class={styles.exitButton}
+          onClick={() => {
+            if (props.onExit) {
+              props.onExit();
+            } else {
+              review.exitReview();
+            }
+          }}
+        >
           Exit Review
         </button>
       </div>

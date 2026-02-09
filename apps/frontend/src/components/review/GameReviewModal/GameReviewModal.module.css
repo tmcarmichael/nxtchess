@@ -1,0 +1,98 @@
+.inputSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  text-align: left;
+}
+
+.fieldLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+}
+
+.textArea {
+  width: 100%;
+  min-height: 220px;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  resize: vertical;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.textArea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ghost);
+}
+
+.textArea::placeholder {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.sideSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.errorMessage {
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--error);
+  background: var(--error-subtle);
+  border: 1px solid var(--error-muted);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.reviewButton {
+  align-self: center;
+  margin-top: var(--space-lg);
+  padding: var(--space-sm) var(--space-xl);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--surface-0);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+  min-width: 160px;
+}
+
+.reviewButton:hover {
+  background: var(--accent-bright);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-ghost);
+}
+
+.reviewButton:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 639px) {
+  .textArea {
+    min-height: 160px;
+    font-size: var(--text-base);
+  }
+
+  .reviewButton {
+    width: 100%;
+  }
+}
