@@ -1,4 +1,3 @@
-import { DEBUG } from '../../shared/utils/debug';
 import {
   ResilientEngine,
   type ResilientEngineConfig,
@@ -131,10 +130,8 @@ export class EnginePool {
       for (const handler of this.eventHandlers) {
         try {
           handler(event);
-        } catch (err) {
-          if (DEBUG) {
-            console.error('EnginePool: Event handler error:', err);
-          }
+        } catch {
+          // Event handler error - non-fatal
         }
       }
     });
@@ -312,10 +309,7 @@ export class EnginePool {
     if (this.config.resetOnRelease && engine.isInitialized) {
       try {
         await engine.resetForNewGame();
-      } catch (err) {
-        if (DEBUG) {
-          console.warn('EnginePool: Failed to reset engine, terminating:', err);
-        }
+      } catch {
         engine.terminate();
         return;
       }

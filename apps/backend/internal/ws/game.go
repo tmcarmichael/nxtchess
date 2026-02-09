@@ -760,17 +760,6 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 
 	// All I/O below — no locks held
 
-	logger.Debug("Move made", logger.F(
-		"gameId", data.GameID,
-		"move", moveNotation,
-		"san", result.SAN,
-		"moveNum", accepted.MoveNum,
-		"isCheck", result.IsCheck,
-		"gameOver", result.GameOver,
-		"whiteTimeMs", accepted.WhiteTimeMs,
-		"blackTimeMs", accepted.BlackTimeMs,
-	))
-
 	client.SendMessage(NewServerMessage(MsgTypeMoveAccepted, accepted))
 
 	if opponent != nil {

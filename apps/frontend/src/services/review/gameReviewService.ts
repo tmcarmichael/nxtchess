@@ -1,5 +1,4 @@
 import { Chess } from 'chess.js';
-import { DEBUG } from '../../shared/utils/debug';
 import { classifyMoveQuality } from '../../types/moveQuality';
 import { StockfishEngine } from '../engine/StockfishEngine';
 import type { Side } from '../../types/game';
@@ -91,11 +90,6 @@ function evaluatePosition(engine: StockfishEngine, fen: string): Promise<number>
       if (settled) return;
       settled = true;
       removeListener();
-      if (DEBUG)
-        console.warn(
-          '[Review] Evaluation timed out for FEN:',
-          fen.split(' ').slice(0, 2).join(' ')
-        );
       reject(new Error('Evaluation timed out'));
     }, REVIEW_EVAL_TIMEOUT_MS);
 
@@ -149,7 +143,6 @@ async function createReviewEngine(): Promise<StockfishEngine> {
     operationTimeoutMs: REVIEW_EVAL_TIMEOUT_MS,
   });
   await engine.init();
-  if (DEBUG) console.warn('[Review] Engine initialized');
   return engine;
 }
 
@@ -169,7 +162,6 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
   for (const san of config.moves) {
     const result = chess.move(san);
     if (!result) {
-      if (DEBUG) console.error('[Review] Invalid move in history:', san);
       config.onComplete(computeSummary([], []));
       return { abort: () => {} };
     }
@@ -177,7 +169,6 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
   }
 
   const totalMoves = config.moves.length;
-  if (DEBUG) console.warn(`[Review] Starting review of ${totalMoves} moves`);
 
   if (totalMoves === 0) {
     const summary = computeSummary([], []);
@@ -188,8 +179,7 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
   const run = async () => {
     try {
       reviewEngine = await createReviewEngine();
-    } catch (err) {
-      if (DEBUG) console.error('[Review] Failed to init engine:', err);
+    } catch {
       reviewEngine = null;
       config.onComplete(computeSummary([], []));
       return;
@@ -200,9 +190,8 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
     const allEvalHistory: EvalPoint[] = [];
     let consecutiveFailures = 0;
 
-    const getEval = async (fen: string, label: string): Promise<number | null> => {
+    const getEval = async (fen: string): Promise<number | null> => {
       if (evalCache.has(fen)) {
-        if (DEBUG) console.warn(`[Review] ${label}: cached = ${evalCache.get(fen)}`);
         return evalCache.get(fen)!;
       }
       if (!reviewEngine || aborted) return null;
@@ -212,18 +201,11 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
         const score = await evaluatePosition(reviewEngine, fen);
         evalCache.set(fen, score);
         consecutiveFailures = 0;
-        if (DEBUG) console.warn(`[Review] ${label}: score = ${score}`);
         return score;
-      } catch (err) {
+      } catch {
         consecutiveFailures++;
-        if (DEBUG)
-          console.warn(
-            `[Review] ${label} failed (${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES}):`,
-            err
-          );
 
         if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-          if (DEBUG) console.warn('[Review] Too many failures, reinitializing engine...');
           reviewEngine.terminate();
           try {
             reviewEngine = await createReviewEngine();
@@ -231,10 +213,8 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
             await syncEngine(reviewEngine);
             const score = await evaluatePosition(reviewEngine, fen);
             evalCache.set(fen, score);
-            if (DEBUG) console.warn(`[Review] ${label}: score after reinit = ${score}`);
             return score;
-          } catch (reinitErr) {
-            if (DEBUG) console.error('[Review] Engine reinit failed:', reinitErr);
+          } catch {
             reviewEngine = null;
             return null;
           }
@@ -252,12 +232,9 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
         const isPlayerMove = side === config.playerColor;
         const san = config.moves[i];
 
-        if (DEBUG)
-          console.warn(`[Review] Evaluating move ${i + 1}/${totalMoves}: ${san} (${side})`);
-
-        const evalBefore = await getEval(fenPositions[i], `move ${i + 1} before`);
+        const evalBefore = await getEval(fenPositions[i]);
         if (aborted) break;
-        const evalAfter = await getEval(fenPositions[i + 1], `move ${i + 1} after`);
+        const evalAfter = await getEval(fenPositions[i + 1]);
         if (aborted) break;
 
         let cpLoss: number | null = null;
@@ -297,8 +274,8 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
 
         try {
           config.onMoveEvaluated(evaluation);
-        } catch (cbErr) {
-          if (DEBUG) console.warn('[Review] onMoveEvaluated callback error:', cbErr);
+        } catch {
+          // Callback error - non-fatal
         }
         try {
           config.onProgress({
@@ -306,11 +283,10 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
             totalMoves,
             percentComplete: Math.round(((i + 1) / totalMoves) * 100),
           });
-        } catch (cbErr) {
-          if (DEBUG) console.warn('[Review] onProgress callback error:', cbErr);
+        } catch {
+          // Callback error - non-fatal
         }
-      } catch (err) {
-        if (DEBUG) console.warn(`[Review] Failed to evaluate move ${i}:`, err);
+      } catch {
         try {
           config.onProgress({
             currentMove: i + 1,
@@ -326,12 +302,11 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
     }
 
     if (!aborted) {
-      if (DEBUG) console.warn('[Review] Analysis complete');
       const summary = computeSummary(allEvaluations, allEvalHistory);
       try {
         config.onComplete(summary);
-      } catch (cbErr) {
-        if (DEBUG) console.warn('[Review] onComplete callback error:', cbErr);
+      } catch {
+        // Callback error - non-fatal
       }
     }
 
@@ -343,7 +318,6 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
 
   return {
     abort: () => {
-      if (DEBUG) console.warn('[Review] Aborting review');
       aborted = true;
       reviewEngine?.terminate();
       reviewEngine = null;

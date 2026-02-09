@@ -1,4 +1,3 @@
-import { DEBUG } from '../../shared/utils/debug';
 import { engineService } from './engineService';
 import { StockfishEngine, EngineError } from './StockfishEngine';
 
@@ -120,11 +119,7 @@ const performEvaluation = async (fen: string, depth?: number): Promise<number> =
     );
 
     return result;
-  } catch (err) {
-    // Evaluation errors are non-critical, return neutral score
-    if (DEBUG) {
-      console.warn('Evaluation failed:', err instanceof Error ? err.message : err);
-    }
+  } catch {
     return 0;
   }
 };
@@ -160,10 +155,6 @@ const processPendingEval = async () => {
  */
 export const getEvaluation = async (fen: string, depth?: number): Promise<number> => {
   if (!evalEngine.isInitialized) {
-    // Return 0 instead of throwing - evaluation is non-critical
-    if (DEBUG) {
-      console.warn('Eval engine not initialized, returning neutral evaluation');
-    }
     return 0;
   }
 

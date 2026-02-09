@@ -1,5 +1,4 @@
 import { Chess } from 'chess.js';
-import { DEBUG } from '../../shared/utils/debug';
 import { StockfishEngine, detectEngineVariant, type EngineVariant } from './StockfishEngine';
 
 export interface EngineLine {
@@ -156,10 +155,8 @@ class AnalysisEngineService {
         },
         ENGINE_ANALYSIS_TIMEOUT_MS
       );
-    } catch (err) {
-      if (DEBUG) {
-        console.warn('Analysis error:', err);
-      }
+    } catch {
+      // Analysis error - return current or default result
     }
 
     return (

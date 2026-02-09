@@ -12,7 +12,6 @@ import {
 import { pushAchievementToasts } from '../../components/common/AchievementToast/AchievementToast';
 import { sessionManager } from '../../services/game/session/SessionManager';
 import { startGameReview } from '../../services/review/gameReviewService';
-import { DEBUG } from '../../shared/utils/debug';
 import { computeMaterialDiff } from '../../types/chess';
 import { useUserStore } from '../user/UserContext';
 import { createCoreActions } from './actions/createCoreActions';
@@ -144,13 +143,9 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     }
   );
 
-  multiplayer.on('game:opponent_left', () => {
-    if (DEBUG) console.warn('Opponent left the game');
-  });
+  multiplayer.on('game:opponent_left', () => {});
 
-  multiplayer.on('game:error', ({ message }) => {
-    if (DEBUG) console.error('Game sync error:', message);
-  });
+  multiplayer.on('game:error', () => {});
 
   const coreActions = createCoreActions({ chess, ui });
   const actions = createPlayActions({ chess, timer, engine, multiplayer, ui }, coreActions);

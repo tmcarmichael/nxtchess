@@ -1,5 +1,3 @@
-import { DEBUG } from '../../shared/utils/debug';
-
 export type EngineErrorCode =
   | 'INIT_TIMEOUT'
   | 'OPERATION_TIMEOUT'
@@ -192,8 +190,7 @@ export class StockfishEngine {
       // This ensures the WASM file is always found regardless of bundling
       this.worker = new Worker(enginePath);
 
-      this.worker.onerror = (e) => {
-        if (DEBUG) console.error(`${this.config.name} worker error:`, e);
+      this.worker.onerror = () => {
         this._isInitialized = false;
       };
 

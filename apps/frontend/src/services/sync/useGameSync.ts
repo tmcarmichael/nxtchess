@@ -1,5 +1,4 @@
 import { createSignal, onCleanup, type Accessor } from 'solid-js';
-import { DEBUG } from '../../shared/utils/debug';
 import { gameSyncService } from './GameSyncService';
 import type { ConnectionState, SyncEvent, TimeControl } from './types';
 import type { Square, PromotionPiece } from '../../types/chess';
@@ -121,8 +120,6 @@ export function useGameSync(): UseGameSyncResult {
     const gameId = currentGameId();
     if (gameId) {
       gameSyncService.sendMove(gameId, from, to, promotion);
-    } else {
-      if (DEBUG) console.warn('useGameSync: No active game');
     }
   };
 

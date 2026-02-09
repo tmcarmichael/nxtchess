@@ -12,7 +12,6 @@ import {
   type TrainingMetadata,
   type GameStateForTermination,
 } from '../../../services/training';
-import { DEBUG } from '../../../shared/utils/debug';
 import type { Square, PromotionPiece } from '../../../types/chess';
 import type { Side, StartGameOptions, GamePhase } from '../../../types/game';
 import type { ChessStore } from '../stores/createChessStore';
@@ -223,8 +222,8 @@ export const createTrainingActions = (
       if (!chess.state.isGameOver) {
         afterMoveChecks();
       }
-    } catch (err) {
-      if (DEBUG) console.error('AI move failed:', err);
+    } catch {
+      // AI move failed - non-fatal
     }
   };
 
@@ -384,12 +383,6 @@ export const createTrainingActions = (
         }
 
         // Position is invalid - add to exclusion list and retry
-        if (DEBUG) {
-          console.warn(
-            `Invalid position fetched (${validationError}), retrying...`,
-            resolved.metadata.positionId
-          );
-        }
         if (resolved.metadata.positionId) {
           excludeIds.push(resolved.metadata.positionId);
         }
@@ -449,7 +442,6 @@ export const createTrainingActions = (
         performAIMove();
       }
     } catch (err) {
-      if (DEBUG) console.error('Training initialization failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to start training';
       chess.setInitError(errorMessage);
       chess.setLifecycle(transition('initializing', 'ENGINE_ERROR'));

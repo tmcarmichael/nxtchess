@@ -1,7 +1,6 @@
 import { getOpponentSide } from '../../../services/game/chessGameService';
 import { transition, canMakeMove } from '../../../services/game/gameLifecycle';
 import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../../shared/config/constants';
-import { DEBUG } from '../../../shared/utils/debug';
 import type { Square, PromotionPiece } from '../../../types/chess';
 import type { Side, StartGameOptions, MultiplayerGameOptions } from '../../../types/game';
 import type { ChessStore } from '../stores/createChessStore';
@@ -94,8 +93,8 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       }
 
       afterMoveChecks();
-    } catch (err) {
-      if (DEBUG) console.error('AI move failed:', err);
+    } catch {
+      // AI move failed - non-fatal
     }
   };
 
@@ -145,9 +144,7 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
     chess.setLifecycle(transition('idle', 'START_GAME'));
 
     if (mode !== 'play') {
-      engine.initEval().catch((err) => {
-        if (DEBUG) console.warn('Eval engine init failed (non-critical):', err);
-      });
+      engine.initEval().catch(() => {});
     }
 
     try {
@@ -165,8 +162,7 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
       if (side === 'b') {
         performAIMove();
       }
-    } catch (err) {
-      if (DEBUG) console.error('Engine initialization failed:', err);
+    } catch {
       chess.setLifecycle(transition('initializing', 'ENGINE_ERROR'));
     }
   };

@@ -1,5 +1,4 @@
 import { createEffect, onCleanup, createSignal, type Accessor } from 'solid-js';
-import { DEBUG } from '../../shared/utils/debug';
 import { type GameSession } from '../game/session/GameSession';
 import { gamePersistence } from './GamePersistence';
 
@@ -63,7 +62,6 @@ export function createAutoPersist(
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown save error');
       setLastError(error);
-      if (DEBUG) console.error('Auto-persist save failed:', error);
     }
   };
 
@@ -118,9 +116,7 @@ export function createAutoPersist(
     // Final save on unmount
     const session = getSession();
     if (session && isEnabled()) {
-      gamePersistence.saveSession(session).catch((err) => {
-        if (DEBUG) console.error('Failed to save session on cleanup:', err);
-      });
+      gamePersistence.saveSession(session).catch(() => {});
     }
   });
 
@@ -153,8 +149,7 @@ export async function recoverActiveSession(): Promise<SessionRecoveryResult> {
       session,
       wasRecovered: session !== null,
     };
-  } catch (err) {
-    if (DEBUG) console.error('Failed to recover session:', err);
+  } catch {
     return { session: null, wasRecovered: false };
   }
 }
@@ -165,8 +160,7 @@ export async function recoverActiveSession(): Promise<SessionRecoveryResult> {
 export async function loadPersistedSession(sessionId: string): Promise<GameSession | null> {
   try {
     return await gamePersistence.loadSession(sessionId);
-  } catch (err) {
-    if (DEBUG) console.error('Failed to load persisted session:', err);
+  } catch {
     return null;
   }
 }
@@ -180,8 +174,7 @@ export async function cleanupOldSessions(
 ): Promise<number> {
   try {
     return await gamePersistence.clearOldSessions(maxAgeMs);
-  } catch (err) {
-    if (DEBUG) console.error('Failed to cleanup old sessions:', err);
+  } catch {
     return 0;
   }
 }

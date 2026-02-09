@@ -1,4 +1,3 @@
-import { DEBUG } from '../../shared/utils/debug';
 import type { GameLifecycle } from '../../types/game';
 
 // Re-export for backward compatibility
@@ -53,11 +52,6 @@ export const transition = (
 ): GameLifecycle => {
   const nextState = TRANSITIONS[currentState][event];
   if (nextState === undefined) {
-    if (DEBUG) {
-      console.warn(
-        `Invalid game lifecycle transition: ${currentState} + ${event}. Staying in ${currentState}.`
-      );
-    }
     return currentState;
   }
   return nextState;

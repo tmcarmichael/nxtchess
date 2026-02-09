@@ -209,7 +209,6 @@ func (c *Client) ReadPump() {
 				// Close connection for blocked clients
 				break
 			}
-			logger.Debug("Message rate limited", logger.F("clientId", c.ID))
 			c.SendMessage(NewErrorMessage("RATE_LIMITED", "Too many messages. Please slow down."))
 			continue
 		}
@@ -244,14 +243,12 @@ func (c *Client) WritePump() {
 		case message := <-c.Send:
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
-				logger.Debug("WritePump write error", logger.F("clientId", c.ID, "error", err.Error()))
 				return
 			}
 
 		case <-ticker.C:
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				logger.Debug("WritePump ping error", logger.F("clientId", c.ID, "error", err.Error()))
 				return
 			}
 		}

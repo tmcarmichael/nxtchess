@@ -1,5 +1,4 @@
 import { BACKEND_URL } from '../../shared/config/env';
-import { DEBUG } from '../../shared/utils/debug';
 import { ReconnectingWebSocket, type ConnectionState } from '../network/ReconnectingWebSocket';
 import { MsgType as MT } from './types';
 import type {
@@ -93,7 +92,6 @@ export class GameSyncService {
     }
 
     if (!this.config.serverUrl) {
-      if (DEBUG) console.error('GameSyncService: No server URL configured');
       return;
     }
 
@@ -340,7 +338,7 @@ export class GameSyncService {
       }
 
       default:
-        if (DEBUG) console.warn('GameSyncService: Unknown message type:', type);
+        break;
     }
   }
 
@@ -384,8 +382,8 @@ export class GameSyncService {
     for (const handler of this.eventHandlers) {
       try {
         handler(event);
-      } catch (err) {
-        if (DEBUG) console.error('GameSyncService: Event handler error:', err);
+      } catch {
+        // Event handler error - non-fatal
       }
     }
   }

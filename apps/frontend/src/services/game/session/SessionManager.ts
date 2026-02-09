@@ -1,4 +1,3 @@
-import { DEBUG } from '../../../shared/utils/debug';
 import { GameSession } from './GameSession';
 import type {
   GameSessionConfig,
@@ -87,9 +86,6 @@ export class SessionManager {
     }
 
     if (!this.sessions.has(sessionId)) {
-      if (DEBUG) {
-        console.warn(`SessionManager: Cannot set active session - session ${sessionId} not found`);
-      }
       return false;
     }
 
@@ -158,8 +154,8 @@ export class SessionManager {
     for (const handler of this.eventHandlers) {
       try {
         handler(event);
-      } catch (err) {
-        if (DEBUG) console.error('SessionManager: Event handler error:', err);
+      } catch {
+        // Event handler error - non-fatal
       }
     }
   }
