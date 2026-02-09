@@ -24,7 +24,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   padding: var(--space-sm);
 }
 
@@ -40,10 +40,10 @@
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: 600;
-  background: var(--surface-3);
-  border: 1px solid var(--border-subtle);
+  background: transparent;
+  border: 1px solid var(--error);
   border-radius: var(--radius-md);
-  color: var(--text-secondary);
+  color: var(--error);
   cursor: pointer;
   transition:
     background var(--transition-fast),
@@ -51,12 +51,13 @@
 }
 
 .exitButton:hover {
-  background: var(--surface-4);
-  color: var(--text-primary);
+  background: var(--error);
+  color: var(--surface-0);
 }
 
 .exitButton:active {
-  background: var(--surface-4);
+  background: var(--error);
+  color: var(--surface-0);
   transform: scale(0.97);
 }
 

@@ -20,11 +20,9 @@ const ReviewEvalGraph: Component<ReviewEvalGraphProps> = (props) => {
       const heightPx = Math.max(2, (Math.abs(clamped) / EVAL_CLAMP) * MID_Y);
       const isWhiteAdvantage = clamped >= 0;
       const topPx = isWhiteAdvantage ? MID_Y - heightPx : MID_Y;
+      const isWhite = p.side === 'w';
 
-      let color = 'var(--accent)';
-      if (p.quality === 'blunder') color = 'var(--move-blunder)';
-      else if (p.quality === 'mistake') color = 'var(--move-mistake)';
-      else if (p.quality === 'inaccuracy') color = 'var(--move-inaccuracy)';
+      const color = isWhite ? 'var(--text-secondary)' : 'var(--text-muted)';
 
       return {
         moveIndex: p.moveIndex,
@@ -64,7 +62,15 @@ const ReviewEvalGraph: Component<ReviewEvalGraphProps> = (props) => {
 
   return (
     <div class={styles.evalGraphContainer}>
-      <div class={styles.evalGraphHeader}>Evaluation</div>
+      <div class={styles.evalGraphHeader}>
+        <span>Evaluation</span>
+        <span class={styles.evalLegend}>
+          <span class={styles.evalLegendDot} style={{ background: 'var(--text-secondary)' }} />
+          <span class={styles.evalLegendLabel}>W</span>
+          <span class={styles.evalLegendDot} style={{ background: 'var(--text-muted)' }} />
+          <span class={styles.evalLegendLabel}>B</span>
+        </span>
+      </div>
       <div class={styles.graphArea} style={{ height: `${GRAPH_HEIGHT}px` }}>
         <div class={styles.midLine} />
         <div class={styles.barContainer}>
@@ -106,7 +112,7 @@ const ReviewEvalGraph: Component<ReviewEvalGraphProps> = (props) => {
                   style={{
                     height: `${bar.heightPx}px`,
                     top: `${bar.topPx}px`,
-                    background: bar.isWhite ? 'var(--text-muted)' : 'var(--text-secondary)',
+                    background: bar.isWhite ? 'var(--text-secondary)' : 'var(--text-muted)',
                     opacity: bar.isCurrent ? '1' : '0.6',
                   }}
                 />

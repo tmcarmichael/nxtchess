@@ -7,12 +7,39 @@
 }
 
 .evalGraphHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: var(--space-sm) var(--space-md) 0;
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.evalLegend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.evalLegendDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+}
+
+.evalLegendLabel {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0;
+  margin-right: 4px;
+}
+
+.evalLegendLabel:last-child {
+  margin-right: 0;
 }
 
 .graphArea {
@@ -61,6 +88,10 @@
   right: 10%;
   border-radius: 1px;
   transition: opacity 0.15s ease;
+}
+
+.graphArea + .evalGraphHeader {
+  margin-top: var(--space-md);
 }
 
 .timingGraphArea {
