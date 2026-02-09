@@ -10,7 +10,7 @@ import {
   getEvaluation,
   terminateEvalEngine,
 } from '../../../services/engine/evalEngineWorker';
-import { DIFFICULTY_VALUES_ELO } from '../../../shared/config/constants';
+import { DIFFICULTY_VALUES_ELO, DIFFICULTY_THINK_TIME_MS } from '../../../shared/config/constants';
 import { DEBUG } from '../../../shared/utils/debug';
 import type { Side } from '../../../types/game';
 
@@ -82,7 +82,8 @@ export const createEngineStore = (): EngineStore => {
     if (state.status !== 'ready') return null;
     setState('isThinking', true);
     try {
-      const move = await computeAiMove(fen);
+      const thinkTimeMs = DIFFICULTY_THINK_TIME_MS[state.difficulty - 1] ?? 1000;
+      const move = await computeAiMove(fen, thinkTimeMs);
       // Convert null to undefined for promotion
       return {
         from: move.from,
