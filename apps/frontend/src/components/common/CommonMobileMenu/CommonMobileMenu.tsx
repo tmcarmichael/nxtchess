@@ -36,6 +36,7 @@ type CommonMobileMenuProps = {
   onClose: () => void;
   onShowTrainingModal: () => void;
   onShowPuzzleModal: () => void;
+  onShowGameReviewModal: () => void;
   onShowSignInModal: () => void;
   onSignOut: () => void;
 };
@@ -74,6 +75,8 @@ const CommonMobileMenu: Component<CommonMobileMenuProps> = (props) => {
       props.onShowTrainingModal();
     } else if (item.showPuzzleModal) {
       props.onShowPuzzleModal();
+    } else if (item.hasDropdown) {
+      props.onShowGameReviewModal();
     } else {
       props.onClose();
     }

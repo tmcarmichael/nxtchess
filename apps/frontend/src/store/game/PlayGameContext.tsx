@@ -217,6 +217,7 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     setReviewSummary(null);
     setReviewEvaluations([]);
     setReviewEvalHistory([]);
+    chess.jumpToMoveIndex(0);
 
     reviewHandle = startGameReview({
       moves: [...chess.state.moveHistory],
