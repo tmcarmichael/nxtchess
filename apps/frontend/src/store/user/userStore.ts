@@ -1,6 +1,5 @@
 import { createStore } from 'solid-js/store';
 import { BACKEND_URL } from '../../shared/config/env';
-import { DEBUG } from '../../shared/utils/debug';
 
 const AUTH_CACHE_KEY = 'nxtchess:auth';
 
@@ -127,8 +126,8 @@ export const createUserStore = () => {
           achievementPoints: data.achievement_points ?? null,
         });
       }
-    } catch (err) {
-      if (DEBUG) console.error('Error checking username:', err);
+    } catch {
+      // Auth check failed - non-fatal
     } finally {
       setState('isCheckingAuth', false);
     }
@@ -139,51 +138,41 @@ export const createUserStore = () => {
     navigateFn: (path: string) => void,
     startingRating?: number
   ) => {
-    try {
-      const body: { username: string; starting_rating?: number } = { username: newName };
-      if (startingRating !== undefined) {
-        body.starting_rating = startingRating;
-      }
-
-      const res = await fetch(`${BACKEND_URL}/set-username`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const body = await res.json();
-        throw new Error(body.error || 'An error occurred.');
-      }
-      setState('isLoggedIn', true);
-      setState('username', newName);
-      navigateFn(`/profile/${newName}`);
-    } catch (err) {
-      if (DEBUG) console.error('Error saving username:', err);
-      throw err;
+    const body: { username: string; starting_rating?: number } = { username: newName };
+    if (startingRating !== undefined) {
+      body.starting_rating = startingRating;
     }
+
+    const res = await fetch(`${BACKEND_URL}/set-username`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const body = await res.json();
+      throw new Error(body.error || 'An error occurred.');
+    }
+    setState('isLoggedIn', true);
+    setState('username', newName);
+    navigateFn(`/profile/${newName}`);
   };
 
   const fetchUserProfile = async () => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/profile/${state.username}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Failed to fetch profile: ${res.status} - ${text}`);
-      }
-      const data = await res.json();
-      setState('rating', data.rating);
-      if (data.puzzle_rating !== undefined) {
-        setState('puzzleRating', data.puzzle_rating);
-      }
-      if (data.profile_icon) {
-        setState('profileIcon', data.profile_icon);
-      }
-    } catch (err) {
-      if (DEBUG) console.error('Error fetching user profile:', err);
-      throw err;
+    const res = await fetch(`${BACKEND_URL}/api/profile/${state.username}`, {
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to fetch profile: ${res.status} - ${text}`);
+    }
+    const data = await res.json();
+    setState('rating', data.rating);
+    if (data.puzzle_rating !== undefined) {
+      setState('puzzleRating', data.puzzle_rating);
+    }
+    if (data.profile_icon) {
+      setState('profileIcon', data.profile_icon);
     }
   };
 
@@ -204,22 +193,17 @@ export const createUserStore = () => {
   };
 
   const setProfileIcon = async (icon: string) => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/set-profile-icon`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ icon }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to set profile icon');
-      }
-      setState('profileIcon', icon);
-    } catch (err) {
-      if (DEBUG) console.error('Error setting profile icon:', err);
-      throw err;
+    const res = await fetch(`${BACKEND_URL}/set-profile-icon`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ icon }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Failed to set profile icon');
     }
+    setState('profileIcon', icon);
   };
 
   const logout = async () => {
@@ -228,8 +212,8 @@ export const createUserStore = () => {
         method: 'POST',
         credentials: 'include',
       });
-    } catch (err) {
-      if (DEBUG) console.error('Error during logout:', err);
+    } catch {
+      // Logout API call failed - reset state anyway
     }
     // Reset all state regardless of API success
     setState('isLoggedIn', false);

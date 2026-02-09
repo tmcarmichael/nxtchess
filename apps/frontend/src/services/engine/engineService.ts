@@ -1,4 +1,3 @@
-import { DEBUG } from '../../shared/utils/debug';
 import { enginePool } from './EnginePool';
 import { type ResilientEngine } from './ResilientEngine';
 import { EngineError } from './StockfishEngine';
@@ -65,9 +64,6 @@ class EngineService {
     const engine = await this.getOrInitEvalEngine(gameId);
 
     if (!engine.isInitialized) {
-      if (DEBUG) {
-        console.warn('Eval engine not initialized, returning neutral evaluation');
-      }
       return 0;
     }
 
@@ -105,10 +101,7 @@ class EngineService {
       );
 
       return result;
-    } catch (err) {
-      if (DEBUG) {
-        console.warn('Evaluation failed:', err instanceof Error ? err.message : err);
-      }
+    } catch {
       return 0;
     }
   }

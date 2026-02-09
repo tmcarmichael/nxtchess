@@ -1,4 +1,3 @@
-import { DEBUG } from '../../shared/utils/debug';
 import {
   classifyMoveQuality,
   type MoveEvaluation,
@@ -190,8 +189,6 @@ class MoveEvalService {
     while (this.isProcessing || this.pendingRequests.length > 0) {
       // Check for timeout to prevent indefinite hang if engine gets stuck
       if (Date.now() - startTime > maxWaitMs) {
-        if (DEBUG) console.warn('waitForPendingEvaluations timed out, forcing clear');
-        // Force clear pending state to prevent hang
         this.pendingRequests = [];
         this.isProcessing = false;
         return;

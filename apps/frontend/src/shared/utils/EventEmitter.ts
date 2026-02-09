@@ -2,8 +2,6 @@
  * Type-safe event emitter for decoupled communication between stores.
  */
 
-import { DEBUG } from './debug';
-
 type EventHandler<T> = (data: T) => void;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,8 +31,8 @@ export class TypedEventEmitter<Events extends Record<string, any>> {
     this.listeners.get(event)?.forEach((handler) => {
       try {
         handler(data);
-      } catch (err) {
-        if (DEBUG) console.error(`Error in event handler for '${String(event)}':`, err);
+      } catch {
+        // Event handler error - non-fatal
       }
     });
   }

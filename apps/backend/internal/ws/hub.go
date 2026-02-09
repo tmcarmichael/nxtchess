@@ -201,8 +201,6 @@ func (h *Hub) runLobbyBatcher() {
 
 // HandleMessage routes a message to the appropriate handler
 func (h *Hub) HandleMessage(client *Client, msg *ClientMessage) {
-	logger.Debug("Message received", logger.F("clientId", client.ID, "type", msg.Type))
-
 	switch msg.Type {
 	case MsgTypePing:
 		client.SendMessage(NewServerMessage(MsgTypePong, nil))

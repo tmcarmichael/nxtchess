@@ -1,4 +1,3 @@
-import { DEBUG } from '../../shared/utils/debug';
 import { StockfishEngine, EngineError, type EngineConfig } from './StockfishEngine';
 
 export type EngineState =
@@ -314,10 +313,8 @@ export class ResilientEngine {
     for (const handler of this.eventHandlers) {
       try {
         handler(event);
-      } catch (err) {
-        if (DEBUG) {
-          console.error('ResilientEngine: Event handler error:', err);
-        }
+      } catch {
+        // Event handler error - non-fatal
       }
     }
   }

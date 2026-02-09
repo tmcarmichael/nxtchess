@@ -63,14 +63,6 @@ func RequestLogger(next http.Handler) http.Handler {
 		start := time.Now()
 		requestID := RequestIDFromContext(r.Context())
 
-		logger.Debug("Request started",
-			logger.F(
-				"requestId", requestID,
-				"method", r.Method,
-				"path", r.URL.Path,
-			),
-		)
-
 		// Wrap response writer to capture status code
 		wrapped := &statusResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 

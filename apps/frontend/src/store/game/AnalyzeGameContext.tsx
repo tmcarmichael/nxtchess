@@ -15,7 +15,6 @@ import {
   type EngineInfo,
 } from '../../services/engine/analysisEngineService';
 import { sessionManager } from '../../services/game/session/SessionManager';
-import { DEBUG } from '../../shared/utils/debug';
 import { computeMaterialDiff } from '../../types/chess';
 import { createAnalyzeActions } from './actions/createAnalyzeActions';
 import { createCoreActions } from './actions/createCoreActions';
@@ -56,9 +55,7 @@ export const AnalyzeGameProvider = (props: { children: JSX.Element }) => {
 
   // Initialize analysis engine on mount
   onMount(() => {
-    analysisEngine.init().catch(() => {
-      if (DEBUG) console.warn('Analysis engine init failed');
-    });
+    analysisEngine.init().catch(() => {});
   });
 
   // Track current analysis FEN to avoid stale updates

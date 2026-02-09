@@ -11,7 +11,6 @@ import {
   terminateEvalEngine,
 } from '../../../services/engine/evalEngineWorker';
 import { DIFFICULTY_VALUES_ELO, DIFFICULTY_THINK_TIME_MS } from '../../../shared/config/constants';
-import { DEBUG } from '../../../shared/utils/debug';
 import type { Side } from '../../../types/game';
 
 export type EngineStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -68,11 +67,8 @@ export const createEngineStore = (): EngineStore => {
   const initEval = async () => {
     try {
       await initEvalEngine();
-    } catch (e) {
+    } catch {
       // Eval engine is non-critical - game continues without evaluation bar
-      if (DEBUG) {
-        console.warn('Eval engine init failed (non-critical):', e);
-      }
     }
   };
 
@@ -113,7 +109,6 @@ export const createEngineStore = (): EngineStore => {
 
   const retry = async (onSuccess?: () => void) => {
     if (!pendingRetryConfig) {
-      if (DEBUG) console.warn('No pending engine config to retry');
       return;
     }
 

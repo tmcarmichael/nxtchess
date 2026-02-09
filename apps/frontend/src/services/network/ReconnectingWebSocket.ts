@@ -1,5 +1,3 @@
-import { DEBUG } from '../../shared/utils/debug';
-
 export interface ReconnectConfig {
   /** Maximum number of reconnection attempts before giving up */
   maxAttempts: number;
@@ -71,7 +69,6 @@ export class ReconnectingWebSocket {
     }
 
     if (!this.url) {
-      if (DEBUG) console.error('ReconnectingWebSocket: No URL configured');
       return;
     }
 
@@ -83,8 +80,7 @@ export class ReconnectingWebSocket {
       this.ws.onclose = (event) => this.handleClose(event);
       this.ws.onerror = (event) => this.handleError(event);
       this.ws.onmessage = (event) => this.handleMessage(event);
-    } catch (err) {
-      if (DEBUG) console.error('ReconnectingWebSocket: Failed to create WebSocket:', err);
+    } catch {
       this.scheduleReconnect();
     }
   }
@@ -122,8 +118,7 @@ export class ReconnectingWebSocket {
       const message = typeof data === 'string' ? data : JSON.stringify(data);
       this.ws.send(message);
       return true;
-    } catch (err) {
-      if (DEBUG) console.error('ReconnectingWebSocket: Failed to send message:', err);
+    } catch {
       return false;
     }
   }
@@ -175,7 +170,6 @@ export class ReconnectingWebSocket {
   }
 
   private handleError(event: Event): void {
-    if (DEBUG) console.error('ReconnectingWebSocket: WebSocket error:', event);
     this.callbacks.onError?.(event);
   }
 
@@ -191,11 +185,6 @@ export class ReconnectingWebSocket {
 
   private scheduleReconnect(): void {
     if (this.attemptCount >= this.config.maxAttempts) {
-      if (DEBUG) {
-        console.warn(
-          `ReconnectingWebSocket: Max reconnection attempts (${this.config.maxAttempts}) reached`
-        );
-      }
       this.setState('disconnected');
       return;
     }
@@ -204,11 +193,6 @@ export class ReconnectingWebSocket {
     this.attemptCount++;
 
     const delay = this.calculateBackoffDelay();
-    if (DEBUG) {
-      console.warn(
-        `ReconnectingWebSocket: Reconnecting in ${delay}ms (attempt ${this.attemptCount}/${this.config.maxAttempts})`
-      );
-    }
 
     this.reconnectTimeout = setTimeout(() => {
       if (this.state === 'reconnecting') {

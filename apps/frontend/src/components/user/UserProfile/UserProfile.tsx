@@ -2,7 +2,6 @@ import { A, useParams } from '@solidjs/router';
 import { SolidApexCharts } from 'solid-apexcharts';
 import { createEffect, createSignal, For, on, onCleanup, onMount, Show } from 'solid-js';
 import { BACKEND_URL } from '../../../shared/config/env';
-import { DEBUG } from '../../../shared/utils/debug';
 import { useSettings } from '../../../store/settings/SettingsContext';
 import { getRatingIcon } from '../ProfileIconPicker/ProfileIconPicker';
 import UserAchievements from '../UserAchievements/UserAchievements';
@@ -142,9 +141,8 @@ const UserProfile = () => {
             }
             setIsLoading(false);
           })
-          .catch((err) => {
+          .catch(() => {
             if (requestVersion !== currentRequestVersion) return;
-            if (DEBUG) console.error('Error fetching profile:', err);
             setFetchError(true);
             setIsLoading(false);
           });
