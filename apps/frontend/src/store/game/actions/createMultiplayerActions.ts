@@ -51,6 +51,17 @@ export const createMultiplayerActions = (
     multiplayer.joinGame(gameId);
   };
 
+  const reconnectToGame = (gameId: string, playerColor: Side) => {
+    timer.stop();
+    ui.hideEndModal();
+
+    chess.resetForMultiplayer('play');
+    chess.setPlayerColor(playerColor);
+    ui.setBoardView(playerColor);
+
+    multiplayer.reconnectGame(gameId);
+  };
+
   const applyMultiplayerMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
     if (chess.state.opponentType !== 'human' || !multiplayer.state.gameId) {
       return;
@@ -87,6 +98,7 @@ export const createMultiplayerActions = (
     // Multiplayer actions
     startMultiplayerGame,
     joinMultiplayerGame,
+    reconnectToGame,
     applyMultiplayerMove,
     resignMultiplayer,
     handleTimeOut,

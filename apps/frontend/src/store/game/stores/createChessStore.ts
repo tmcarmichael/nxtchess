@@ -582,10 +582,7 @@ export const createChessStore = (): ChessStore => {
       }
 
       if (chessInstance.inCheck()) {
-        setState(
-          'checkedKingSquare',
-          findKingSquareFromFen(fen, currentTurn as Side)
-        );
+        setState('checkedKingSquare', findKingSquareFromFen(fen, currentTurn as Side));
       } else {
         setState('checkedKingSquare', null);
       }

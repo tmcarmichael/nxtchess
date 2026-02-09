@@ -28,18 +28,21 @@ go build -o server cmd/server/main.go  # Build binary
 2. Load config from environment
 3. Initialize logger
 4. Connect to PostgreSQL (with pool)
-5. Connect to Redis
-6. Register OAuth providers
-7. Create WebSocket hub + handler
-8. Create rate limiters
-9. Register routes
-10. Start HTTP server with graceful shutdown (15s timeout)
+5. Run database migrations (unless `SKIP_MIGRATIONS=true`)
+6. Connect to Redis
+7. Register OAuth providers
+8. Create WebSocket hub + handler (with connection limiter)
+9. Create rate limiters
+10. Register Prometheus metrics
+11. Register routes
+12. Start HTTP server with graceful shutdown (15s timeout)
 
 **Routes:**
 
 | Group | Middleware | Endpoints |
 |-------|-----------|-----------|
 | Health | None | `GET /health`, `/health/live`, `/health/ready` |
+| Metrics | InternalOnly | `GET /metrics` (Prometheus) |
 | WebSocket | None | `GET /ws` |
 | OAuth | AuthRateLimiter (10/min) | `GET /auth/{google,github,discord}/{login,callback}` |
 | Logout | AuthRateLimiter, SmallBodyLimit | `POST /auth/logout` |
@@ -88,14 +91,14 @@ internal/
 ├── metrics/                    # Prometheus instrumentation
 │   └── metrics.go               # HTTP, WS, DB metric collectors (CounterVec, HistogramVec, Gauge)
 ├── middleware/                  # HTTP middleware
-│   ├── cors.go                  # CORS headers
 │   ├── security.go              # Security headers
 │   ├── recovery.go              # Panic recovery
 │   ├── bodylimit.go             # Request size limits
 │   ├── session.go               # Redis session auth
 │   ├── ratelimit.go             # Token bucket per-IP
-│   ├── requestid.go             # Request ID tracing
-│   └── metrics.go               # Prometheus HTTP request instrumentation
+│   ├── requestid.go             # Request ID + request logging with duration
+│   ├── metrics.go               # Prometheus HTTP request instrumentation
+│   └── internal.go              # InternalOnly: restrict to private IPs / trusted proxies
 ├── models/                      # Data structures
 │   ├── profile.go               # Profile, PublicProfile
 │   ├── game.go                  # Game model
@@ -125,7 +128,6 @@ internal/chess/chess_test.go              # Move validation, check/checkmate/sta
 internal/elo/elo_test.go                  # ELO rating calculation (multiplayer + puzzle)
 internal/httpx/httpx_test.go              # JSON response helpers, cookie creation, IP extraction
 internal/middleware/bodylimit_test.go      # Request size enforcement
-internal/middleware/cors_test.go           # CORS header validation
 internal/middleware/ratelimit_test.go      # Token bucket rate limiting
 internal/middleware/recovery_test.go       # Panic recovery behavior
 internal/middleware/requestid_test.go      # Request ID generation and propagation
@@ -171,14 +173,15 @@ if err := validation.ValidateUsername(username); err != nil {
 ### Middleware Stack
 
 Applied outermost to innermost:
-1. **CORS** - Cross-origin from `FRONTEND_URL` only, credentials enabled
+1. **RequestID** - 16-char hex ID per request, X-Request-ID header
 2. **Metrics** - Prometheus HTTP request count and duration per route/method/status
-3. **RequestID** - 16-char hex ID per request, X-Request-ID header
+3. **RequestLogger** - Request logging with method, path, status, and duration
 4. **Recovery** - Panic handling, hides details in production
 5. **Security** - Headers (CSP, HSTS, X-Frame-Options, etc.)
 6. **BodyLimit** - 1MB default, 64KB for JSON APIs
 7. **RateLimiter** - Per route group, token bucket algorithm
 8. **Session** - Authentication for protected routes
+9. **InternalOnly** - Restricts `/metrics` to private IPs and trusted proxies
 
 ### Health Checks
 - `GET /health` - Full health with DB/Redis status (JSON)
@@ -396,6 +399,7 @@ Connect to `ws://localhost:8080/ws` for multiplayer games. Session cookie is opt
 | `MOVE` | `{gameId, from, to, promotion?}` | Make a move (e.g., "e2" → "e4") |
 | `RESIGN` | `{gameId}` | Resign from game |
 | `GAME_LEAVE` | `{gameId}` | Leave/cancel waiting game |
+| `GAME_RECONNECT` | `{gameId}` | Attempt to rejoin a disconnected game |
 | `LOBBY_SUBSCRIBE` | none | Subscribe to lobby updates |
 | `LOBBY_UNSUBSCRIBE` | none | Unsubscribe from lobby updates |
 
@@ -408,11 +412,16 @@ Connect to `ws://localhost:8080/ws` for multiplayer games. Session cookie is opt
 | `GAME_CREATED` | `{gameId, color}` | Waiting for opponent |
 | `GAME_JOINED` | `{gameId, color}` | Joined, waiting for start |
 | `GAME_STARTED` | `{gameId, fen, whitePlayer, blackPlayer, timeControl?, times}` | Game active |
+| `GAME_NOT_FOUND` | `{gameId}` | Requested game does not exist |
+| `GAME_FULL` | `{gameId}` | Requested game already has two players |
 | `MOVE_ACCEPTED` | `{gameId, from, to, san, fen, moveNum, isCheck?, times}` | Move valid |
 | `MOVE_REJECTED` | `{gameId, reason, fen, moveNum}` | Move invalid |
 | `OPPONENT_MOVE` | `{gameId, from, to, san, fen, moveNum, isCheck?, times}` | Opponent moved |
 | `GAME_ENDED` | `{gameId, result, reason, whiteRating?, blackRating?, whiteRatingDelta?, blackRatingDelta?, whiteNewAchievements?, blackNewAchievements?}` | Game over with rating changes and achievement unlocks |
 | `OPPONENT_LEFT` | `{gameId}` | Opponent disconnected |
+| `GAME_RECONNECTED` | `{gameId, color, fen, moveHistory, whiteTimeMs, blackTimeMs, timeControl?, opponent, rated}` | Full game state after successful reconnection |
+| `OPPONENT_DISCONNECTED` | `{gameId}` | Opponent lost connection (20s grace period starts) |
+| `OPPONENT_RECONNECTED` | `{gameId}` | Opponent restored connection |
 | `TIME_UPDATE` | `{gameId, whiteTime, blackTime}` | Clock state (every 1s) |
 | `LOBBY_LIST` | `{games: LobbyGameInfo[]}` | Current list of waiting games |
 | `LOBBY_UPDATE` | `{action, game?, gameId?}` | Game added/removed from lobby |
@@ -459,6 +468,12 @@ Uses `internal/chess` package (wraps `github.com/notnil/chess`):
 4. Players alternate: `MOVE` → sender gets `MOVE_ACCEPTED`, opponent gets `OPPONENT_MOVE`
 5. Both receive `TIME_UPDATE` every second
 6. Game ends: both receive `GAME_ENDED` with result, reason, rating deltas, and achievement unlocks
+
+### Reconnection Flow
+1. Player disconnects → server starts 20-second grace period
+2. After grace period elapses without reconnection → opponent receives `OPPONENT_DISCONNECTED`
+3. Disconnected player sends `GAME_RECONNECT` with gameId → receives `GAME_RECONNECTED` with full state (FEN, move history as UCI, clock times, opponent info)
+4. Opponent receives `OPPONENT_RECONNECTED` → game resumes normally
 
 ## Training API
 
