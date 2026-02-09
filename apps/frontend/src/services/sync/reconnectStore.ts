@@ -9,7 +9,7 @@ interface ActiveGameInfo {
 
 export function saveActiveGame(info: ActiveGameInfo): void {
   try {
-    sessionStorage.setItem(RECONNECT_KEY, JSON.stringify(info));
+    window.sessionStorage.setItem(RECONNECT_KEY, JSON.stringify(info));
   } catch {
     /* noop */
   }
@@ -17,7 +17,7 @@ export function saveActiveGame(info: ActiveGameInfo): void {
 
 export function loadActiveGame(): ActiveGameInfo | null {
   try {
-    const raw = sessionStorage.getItem(RECONNECT_KEY);
+    const raw = window.sessionStorage.getItem(RECONNECT_KEY);
     if (raw) return JSON.parse(raw);
   } catch {
     /* noop */
@@ -27,7 +27,7 @@ export function loadActiveGame(): ActiveGameInfo | null {
 
 export function clearActiveGame(): void {
   try {
-    sessionStorage.removeItem(RECONNECT_KEY);
+    window.sessionStorage.removeItem(RECONNECT_KEY);
   } catch {
     /* noop */
   }
