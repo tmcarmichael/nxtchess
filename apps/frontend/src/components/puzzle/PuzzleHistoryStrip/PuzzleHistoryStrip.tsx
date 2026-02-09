@@ -49,8 +49,14 @@ function parseFenToGrid(fen: string): (string | null)[][] {
   return grid;
 }
 
-const MiniBoard: Component<{ fen: string }> = (props) => {
-  const grid = () => parseFenToGrid(props.fen);
+const MiniBoard: Component<{ fen: string; flipped?: boolean }> = (props) => {
+  const grid = () => {
+    const rows = parseFenToGrid(props.fen);
+    if (props.flipped) {
+      return [...rows].reverse().map((row) => [...row].reverse());
+    }
+    return rows;
+  };
 
   return (
     <div class={styles.miniBoard}>
@@ -111,8 +117,15 @@ const PuzzleHistoryStrip: Component<PuzzleHistoryStripProps> = (props) => {
                 </button>
                 <Show when={hoveredIndex() === index()}>
                   <div class={styles.previewTooltip}>
-                    <MiniBoard fen={attempt.fen} />
+                    <MiniBoard fen={attempt.fen} flipped={attempt.playerSide === 'b'} />
                     <span class={styles.previewLabel}>
+                      <span
+                        class={styles.sideIndicator}
+                        classList={{
+                          [styles.sideIndicatorWhite]: attempt.playerSide === 'w',
+                          [styles.sideIndicatorBlack]: attempt.playerSide === 'b',
+                        }}
+                      />
                       {CATEGORY_LABELS[attempt.category] || attempt.category}
                     </span>
                   </div>
