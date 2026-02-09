@@ -8,10 +8,6 @@ A multiplayer chess PWA with game review, puzzles, training, and analysis. Built
 
 [**Live build**](https://nxtchess.up.railway.app/) deployed on Railway.
 
----
-
-## Screenshots
-
 |                    Game Review                     |                     Puzzles                     |                     Profile                     |
 | :------------------------------------------------: | :---------------------------------------------: | :---------------------------------------------: |
 | ![Game Review](docs/screenshots/review-2-8-26.png) | ![Puzzles](docs/screenshots/puzzles-2-8-26.png) | ![Profile](docs/screenshots/profile-2-8-26.png) |
