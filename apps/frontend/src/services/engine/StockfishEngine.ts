@@ -285,7 +285,7 @@ export class StockfishEngine {
     }
 
     const cmds = Array.isArray(commands) ? commands : [commands];
-    let cleanupListeners: (() => void) | null = null;
+    let cleanupListeners: (() => void) | null = null as (() => void) | null;
 
     const promise = new Promise<T>((resolve, reject) => {
       const onMessage = (e: MessageEvent) => {

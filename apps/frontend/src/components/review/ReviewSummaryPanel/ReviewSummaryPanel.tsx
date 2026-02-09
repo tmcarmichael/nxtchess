@@ -9,7 +9,14 @@ interface ReviewSummaryPanelProps {
   playerColor: Side;
 }
 
-const QUALITY_ORDER: MoveQuality[] = ['best', 'excellent', 'good', 'inaccuracy', 'mistake', 'blunder'];
+const QUALITY_ORDER: MoveQuality[] = [
+  'best',
+  'excellent',
+  'good',
+  'inaccuracy',
+  'mistake',
+  'blunder',
+];
 
 const QUALITY_LABELS: Record<MoveQuality, string> = {
   best: 'Best',
@@ -35,9 +42,12 @@ const AccuracyRing: Component<{ accuracy: number; label: string; side: 'white' |
           cy="32"
           r="28"
           class={styles.ringFill}
-          classList={{ [styles.ringWhite]: props.side === 'white', [styles.ringBlack]: props.side === 'black' }}
-          stroke-dasharray={circumference}
-          stroke-dashoffset={offset()}
+          classList={{
+            [styles.ringWhite]: props.side === 'white',
+            [styles.ringBlack]: props.side === 'black',
+          }}
+          stroke-dasharray={String(circumference)}
+          stroke-dashoffset={String(offset())}
         />
       </svg>
       <div class={styles.accuracyValue}>{props.accuracy.toFixed(1)}%</div>
@@ -88,16 +98,8 @@ const ReviewSummaryPanel: Component<ReviewSummaryPanelProps> = (props) => {
         <div class={styles.summaryContainer}>
           <div class={styles.sectionTitle}>Accuracy</div>
           <div class={styles.accuracyRow}>
-            <AccuracyRing
-              accuracy={summary().whiteAccuracy}
-              label="White"
-              side="white"
-            />
-            <AccuracyRing
-              accuracy={summary().blackAccuracy}
-              label="Black"
-              side="black"
-            />
+            <AccuracyRing accuracy={summary().whiteAccuracy} label="White" side="white" />
+            <AccuracyRing accuracy={summary().blackAccuracy} label="Black" side="black" />
           </div>
 
           <div class={styles.distributionSection}>

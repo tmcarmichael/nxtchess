@@ -6,7 +6,8 @@
   justify-content: center;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
-  height: 90vh;
+  min-height: 85vh;
+  padding: var(--space-2xl) var(--space-md);
   overflow: hidden;
   gap: var(--space-xl);
 }
@@ -65,37 +66,10 @@
   max-width: 400px;
 }
 
-.playNowButton {
-  position: relative;
-  z-index: 1;
-  padding: var(--space-md) var(--space-2xl);
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-  background: transparent;
-  border: 2px solid var(--accent);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition:
-    transform var(--transition-base),
-    box-shadow var(--transition-base),
-    background var(--transition-base),
-    color var(--transition-base);
-  box-shadow: 0 0 20px var(--accent-ghost);
-}
-
-.playNowButton:hover {
-  transform: translateY(-3px);
-  background: var(--accent);
-  color: var(--surface-0);
-  box-shadow:
-    0 0 40px var(--accent-muted),
-    0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.playNowButton:active {
-  transform: translateY(-1px);
+@media (max-width: 639px) {
+  .hero {
+    min-height: 90vh;
+    padding: var(--space-xl) var(--space-sm);
+    gap: var(--space-lg);
+  }
 }
