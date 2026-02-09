@@ -106,9 +106,7 @@ const ReviewEvalGraph: Component<ReviewEvalGraphProps> = (props) => {
                   style={{
                     height: `${bar.heightPx}px`,
                     top: `${bar.topPx}px`,
-                    background: bar.isWhite
-                      ? 'var(--text-muted)'
-                      : 'var(--text-secondary)',
+                    background: bar.isWhite ? 'var(--text-muted)' : 'var(--text-secondary)',
                     opacity: bar.isCurrent ? '1' : '0.6',
                   }}
                 />
