@@ -124,6 +124,7 @@ export interface ChessStore {
   setLifecycle: (lifecycle: GameLifecycle) => void;
   setPlayerColor: (color: Side) => void;
   resetForMultiplayer: (gameMode: GameMode) => void;
+  hydrateFromReconnect: (fen: string, moveHistory: string[]) => void;
   setInitError: (error: string | null) => void;
   // Training move evaluations
   updateMoveEvaluation: (evaluation: MoveEvaluation) => void;
@@ -529,6 +530,68 @@ export const createChessStore = (): ChessStore => {
     currentSession = null;
   };
 
+  const hydrateFromReconnect = (fen: string, moveHistory: string[]) => {
+    const chessInstance = new Chess();
+    const sanHistory: string[] = [];
+    const capturedW: string[] = [];
+    const capturedB: string[] = [];
+
+    for (const uci of moveHistory) {
+      const from = uci.slice(0, 2);
+      const to = uci.slice(2, 4);
+      const promotion = uci.length > 4 ? uci.slice(4) : undefined;
+      const result = chessInstance.move({ from, to, promotion });
+      if (result) {
+        sanHistory.push(result.san);
+        if (result.captured) {
+          const capturedColor = result.color === 'w' ? 'b' : 'w';
+          const piece = capturedColor + result.captured.toUpperCase();
+          if (capturedColor === 'w') {
+            capturedW.push(piece);
+          } else {
+            capturedB.push(piece);
+          }
+        }
+      }
+    }
+
+    const currentTurn = fen.split(' ')[1] === 'w' ? 'w' : 'b';
+
+    batch(() => {
+      setState('fen', fen);
+      setState('viewFen', fen);
+      setState('currentTurn', currentTurn as Side);
+      setState('moveHistory', sanHistory);
+      setState('viewMoveIndex', sanHistory.length - 1);
+      setState('isGameOver', false);
+      setState('gameOverReason', null);
+      setState('gameWinner', null);
+      setState('lifecycle', 'playing');
+      setState('moveError', null);
+      setState('capturedWhite', capturedW);
+      setState('capturedBlack', capturedB);
+
+      if (moveHistory.length > 0) {
+        const last = moveHistory[moveHistory.length - 1];
+        setState('lastMove', {
+          from: last.slice(0, 2) as Square,
+          to: last.slice(2, 4) as Square,
+        });
+      } else {
+        setState('lastMove', null);
+      }
+
+      if (chessInstance.inCheck()) {
+        setState(
+          'checkedKingSquare',
+          findKingSquareFromFen(fen, currentTurn as Side)
+        );
+      } else {
+        setState('checkedKingSquare', null);
+      }
+    });
+  };
+
   // Training move evaluation methods
   const updateMoveEvaluation = (evaluation: MoveEvaluation) => {
     // Find and update existing evaluation, or add new one
@@ -604,6 +667,7 @@ export const createChessStore = (): ChessStore => {
     setPlayerColor,
     setInitError,
     resetForMultiplayer,
+    hydrateFromReconnect,
     updateMoveEvaluation,
     clearMoveEvaluations,
     removeMoveEvaluationsFromIndex,

@@ -38,7 +38,15 @@ type GameState struct {
 	chessGame       *chess.Game   // Server-side chess validation
 	stopClock       chan struct{} // signal to stop the clock goroutine
 	clockRunning    bool          // whether the clock is currently ticking
-	mu              sync.RWMutex
+
+	whiteUserID          string      // persistent user identity for reconnection
+	blackUserID          string      // persistent user identity for reconnection
+	whiteDisconnected    bool        // whether white player is disconnected
+	blackDisconnected    bool        // whether black player is disconnected
+	whiteDisconnectTimer *time.Timer // grace period timer for white
+	blackDisconnectTimer *time.Timer // grace period timer for black
+
+	mu sync.RWMutex
 }
 
 // Initial FEN for standard chess
@@ -50,6 +58,7 @@ const (
 	maxGames              = 1000
 	gameCreateCooldown    = 10 * time.Second
 	maxActiveGamesPerUser = 2
+	reconnectGracePeriod  = 20 * time.Second
 )
 
 // GameManager manages all active games
@@ -107,6 +116,9 @@ func (gm *GameManager) garbageCollect() {
 						(wasWaiting && now.Sub(game.CreatedAt) > waitingGameTimeout)
 					game.mu.RUnlock()
 					if stillExpired {
+						game.mu.Lock()
+						game.stopDisconnectTimers()
+						game.mu.Unlock()
 						delete(gm.games, id)
 						if wasWaiting {
 							lobbyRemovals = append(lobbyRemovals, id)
@@ -195,6 +207,7 @@ func (gm *GameManager) runClock(game *GameState) {
 				game.ResultReason = "timeout"
 				game.clockRunning = false
 				metrics.WSGamesActive.Dec()
+				game.stopDisconnectTimers()
 
 				info := captureGameEndInfo(game)
 				whitePlayer := game.WhitePlayer
@@ -253,6 +266,19 @@ func (game *GameState) stopClockGoroutine() {
 	}
 }
 
+// stopDisconnectTimers cancels any active reconnection grace period timers.
+// Must be called with game.mu held.
+func (game *GameState) stopDisconnectTimers() {
+	if game.whiteDisconnectTimer != nil {
+		game.whiteDisconnectTimer.Stop()
+		game.whiteDisconnectTimer = nil
+	}
+	if game.blackDisconnectTimer != nil {
+		game.blackDisconnectTimer.Stop()
+		game.blackDisconnectTimer = nil
+	}
+}
+
 // gameEndInfo captures the state needed for post-game finalization
 // (rating updates, achievements) without holding the game mutex.
 type gameEndInfo struct {
@@ -277,12 +303,8 @@ func captureGameEndInfo(game *GameState) gameEndInfo {
 		rated:        game.Rated,
 		chessGame:    game.chessGame,
 	}
-	if game.WhitePlayer != nil {
-		info.whiteUID = game.WhitePlayer.UserID
-	}
-	if game.BlackPlayer != nil {
-		info.blackUID = game.BlackPlayer.UserID
-	}
+	info.whiteUID = game.whiteUserID
+	info.blackUID = game.blackUserID
 	info.moveHistory = make([]string, len(game.MoveHistory))
 	copy(info.moveHistory, game.MoveHistory)
 	return info
@@ -480,6 +502,7 @@ func (gm *GameManager) CreateGame(client *Client, data *GameCreateData) {
 		Rated:           rated,
 		CreatorUsername: creatorUsername,
 		CreatorRating:   creatorRating,
+		whiteUserID:    client.UserID,
 		chessGame:       chessGame,
 	}
 
@@ -545,6 +568,16 @@ func (gm *GameManager) JoinGame(client *Client, gameID string) {
 
 	// Check if game is joinable
 	if game.Status != "waiting" {
+		// If the game is active and this client is a disconnected player, redirect to reconnect
+		if game.Status == "active" && client.UserID != "" {
+			isDisconnectedPlayer := (game.whiteDisconnected && game.whiteUserID == client.UserID) ||
+				(game.blackDisconnected && game.blackUserID == client.UserID)
+			if isDisconnectedPlayer {
+				game.mu.Unlock()
+				gm.HandleReconnect(client, gameID)
+				return
+			}
+		}
 		game.mu.Unlock()
 		client.SendMessage(NewServerMessage(MsgTypeGameFull, nil))
 		return
@@ -567,6 +600,7 @@ func (gm *GameManager) JoinGame(client *Client, gameID string) {
 
 	// Transition state under lock
 	game.BlackPlayer = client
+	game.blackUserID = client.UserID
 	game.Status = "active"
 	game.LastMoveAt = time.Now()
 	metrics.WSGamesActive.Inc()
@@ -749,6 +783,7 @@ func (gm *GameManager) HandleMove(client *Client, data *MoveData) {
 		game.ResultReason = string(result.Reason)
 		metrics.WSGamesActive.Dec()
 		game.stopClockGoroutine()
+		game.stopDisconnectTimers()
 
 		info = captureGameEndInfo(game)
 		whitePlayer = game.WhitePlayer
@@ -812,6 +847,7 @@ func (gm *GameManager) HandleResign(client *Client, gameID string) {
 	game.ResultReason = "resignation"
 	metrics.WSGamesActive.Dec()
 	game.stopClockGoroutine()
+	game.stopDisconnectTimers()
 
 	info := captureGameEndInfo(game)
 	whitePlayer := game.WhitePlayer
@@ -872,6 +908,7 @@ func (gm *GameManager) LeaveGame(client *Client, gameID string) {
 		game.ResultReason = "abandonment"
 		metrics.WSGamesActive.Dec()
 		game.stopClockGoroutine()
+		game.stopDisconnectTimers()
 
 		info = captureGameEndInfo(game)
 		if isWhitePlayer {
@@ -920,21 +957,31 @@ func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
 	}
 	gm.mu.Unlock()
 
-	var opponent *Client
-	isWhitePlayer := game.WhitePlayer != nil && game.WhitePlayer.ID == client.ID
+	// Identify player by both pointer check and persistent UserID to handle double-fire
+	isWhitePlayer := (game.WhitePlayer != nil && game.WhitePlayer.ID == client.ID) ||
+		(client.UserID != "" && game.whiteUserID == client.UserID)
+	isBlackPlayer := (game.BlackPlayer != nil && game.BlackPlayer.ID == client.ID) ||
+		(client.UserID != "" && game.blackUserID == client.UserID)
 
-	if isWhitePlayer {
-		opponent = game.BlackPlayer
-	} else {
-		opponent = game.WhitePlayer
+	if !isWhitePlayer && !isBlackPlayer {
+		game.mu.Unlock()
+		return
 	}
 
-	var info gameEndInfo
-	shouldFinalize := false
+	if game.Status != "active" {
+		game.mu.Unlock()
+		return
+	}
 
-	// For now, treat disconnect as immediate forfeit
-	// TODO: Add reconnection grace period
-	if game.Status == "active" {
+	// Anonymous users: immediate forfeit (no stable identity for reconnection)
+	if client.UserID == "" {
+		var opponent *Client
+		if isWhitePlayer {
+			opponent = game.BlackPlayer
+		} else {
+			opponent = game.WhitePlayer
+		}
+
 		winner := "white"
 		if isWhitePlayer {
 			winner = "black"
@@ -946,23 +993,247 @@ func (gm *GameManager) HandleDisconnect(client *Client, gameID string) {
 		metrics.WSGamesActive.Dec()
 		game.stopClockGoroutine()
 
-		info = captureGameEndInfo(game)
-		shouldFinalize = true
-	}
+		info := captureGameEndInfo(game)
+		game.mu.Unlock()
 
-	game.mu.Unlock()
+		if opponent != nil {
+			opponent.SendMessage(NewServerMessage(MsgTypeOpponentLeft, map[string]string{
+				"gameId": gameID,
+			}))
+		}
 
-	if opponent != nil && shouldFinalize {
-		opponent.SendMessage(NewServerMessage(MsgTypeOpponentLeft, map[string]string{
-			"gameId": gameID,
-		}))
-	}
-
-	if shouldFinalize {
 		endedData := gm.finalizeGame(info)
 		if opponent != nil {
 			opponent.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
 		}
+		return
+	}
+
+	// Authenticated users: grace period for reconnection
+	// Guard against double-disconnect (e.g., WebSocket close fires twice)
+	if isWhitePlayer && game.whiteDisconnected {
+		game.mu.Unlock()
+		return
+	}
+	if !isWhitePlayer && game.blackDisconnected {
+		game.mu.Unlock()
+		return
+	}
+
+	var opponent *Client
+	if isWhitePlayer {
+		game.WhitePlayer = nil
+		game.whiteDisconnected = true
+		opponent = game.BlackPlayer
+		game.whiteDisconnectTimer = time.AfterFunc(reconnectGracePeriod, func() {
+			gm.handleGracePeriodExpiry(gameID, "white")
+		})
+		logger.Info("White player disconnected, grace period started", logger.F("gameId", gameID))
+	} else {
+		game.BlackPlayer = nil
+		game.blackDisconnected = true
+		opponent = game.WhitePlayer
+		game.blackDisconnectTimer = time.AfterFunc(reconnectGracePeriod, func() {
+			gm.handleGracePeriodExpiry(gameID, "black")
+		})
+		logger.Info("Black player disconnected, grace period started", logger.F("gameId", gameID))
+	}
+
+	game.mu.Unlock()
+
+	if opponent != nil {
+		opponent.SendMessage(NewServerMessage(MsgTypeOpponentDisconnected, map[string]string{
+			"gameId": gameID,
+		}))
+	}
+}
+
+// handleGracePeriodExpiry forfeits a disconnected player after the grace period expires
+func (gm *GameManager) handleGracePeriodExpiry(gameID string, disconnectedColor string) {
+	gm.mu.RLock()
+	game, exists := gm.games[gameID]
+	if !exists {
+		gm.mu.RUnlock()
+		return
+	}
+	game.mu.Lock()
+	gm.mu.RUnlock()
+
+	if game.Status != "active" {
+		game.mu.Unlock()
+		return
+	}
+
+	// Check if the player reconnected during the grace period
+	if disconnectedColor == "white" && !game.whiteDisconnected {
+		game.mu.Unlock()
+		return
+	}
+	if disconnectedColor == "black" && !game.blackDisconnected {
+		game.mu.Unlock()
+		return
+	}
+
+	winner := "black"
+	if disconnectedColor == "black" {
+		winner = "white"
+	}
+
+	game.Status = "ended"
+	game.Result = winner
+	game.ResultReason = "disconnection"
+	metrics.WSGamesActive.Dec()
+	game.stopClockGoroutine()
+
+	if disconnectedColor == "white" {
+		game.whiteDisconnectTimer = nil
+		game.whiteDisconnected = false
+	} else {
+		game.blackDisconnectTimer = nil
+		game.blackDisconnected = false
+	}
+
+	info := captureGameEndInfo(game)
+
+	var opponent *Client
+	if winner == "white" {
+		opponent = game.WhitePlayer
+	} else {
+		opponent = game.BlackPlayer
+	}
+	game.mu.Unlock()
+
+	logger.Info("Grace period expired, game forfeited", logger.F("gameId", gameID, "disconnected", disconnectedColor))
+
+	endedData := gm.finalizeGame(info)
+	if opponent != nil {
+		opponent.SendMessage(NewServerMessage(MsgTypeOpponentLeft, map[string]string{
+			"gameId": gameID,
+		}))
+		opponent.SendMessage(NewServerMessage(MsgTypeGameEnded, endedData))
+	}
+}
+
+// HandleReconnect handles a client reconnecting to an active game
+func (gm *GameManager) HandleReconnect(client *Client, gameID string) {
+	if client.UserID == "" {
+		client.SendMessage(NewErrorMessage("RECONNECT_FAILED", "Must be authenticated to reconnect"))
+		return
+	}
+
+	gm.mu.RLock()
+	game, exists := gm.games[gameID]
+	if !exists {
+		gm.mu.RUnlock()
+		client.SendMessage(NewServerMessage(MsgTypeGameNotFound, nil))
+		return
+	}
+	game.mu.Lock()
+	gm.mu.RUnlock()
+
+	if game.Status != "active" {
+		game.mu.Unlock()
+		client.SendMessage(NewServerMessage(MsgTypeGameNotFound, nil))
+		return
+	}
+
+	// Match by UserID to determine which player this is
+	var isWhite bool
+	var matched bool
+
+	if game.whiteDisconnected && game.whiteUserID == client.UserID {
+		isWhite = true
+		matched = true
+	} else if game.blackDisconnected && game.blackUserID == client.UserID {
+		isWhite = false
+		matched = true
+	}
+
+	if !matched {
+		game.mu.Unlock()
+		client.SendMessage(NewErrorMessage("RECONNECT_FAILED", "You are not a disconnected player in this game"))
+		return
+	}
+
+	// Cancel grace timer and swap client pointer
+	client.SetGameID(gameID)
+	if isWhite {
+		if game.whiteDisconnectTimer != nil {
+			game.whiteDisconnectTimer.Stop()
+			game.whiteDisconnectTimer = nil
+		}
+		game.whiteDisconnected = false
+		game.WhitePlayer = client
+	} else {
+		if game.blackDisconnectTimer != nil {
+			game.blackDisconnectTimer.Stop()
+			game.blackDisconnectTimer = nil
+		}
+		game.blackDisconnected = false
+		game.BlackPlayer = client
+	}
+
+	// Build reconnection response
+	color := "black"
+	if isWhite {
+		color = "white"
+	}
+
+	var opponent *Client
+	opponentInfo := PlayerInfo{}
+	if isWhite {
+		opponent = game.BlackPlayer
+	} else {
+		opponent = game.WhitePlayer
+	}
+	if opponent != nil {
+		opponentInfo.Username = opponent.Username
+		if opponent.UserID != "" {
+			opponentInfo.ID = opponent.UserID
+		} else {
+			opponentInfo.ID = opponent.ID
+		}
+	}
+
+	moveHistory := make([]string, len(game.MoveHistory))
+	copy(moveHistory, game.MoveHistory)
+
+	reconnectData := GameReconnectedData{
+		GameID:      gameID,
+		Color:       color,
+		FEN:         game.FEN,
+		MoveHistory: moveHistory,
+		WhiteTimeMs: int(game.WhiteTimeMs),
+		BlackTimeMs: int(game.BlackTimeMs),
+		TimeControl: game.TimeControl,
+		Opponent:    opponentInfo,
+		Rated:       game.Rated,
+	}
+
+	// Check if the opponent is still disconnected so we can inform the reconnecting player
+	opponentDisconnected := false
+	if isWhite && game.blackDisconnected {
+		opponentDisconnected = true
+	} else if !isWhite && game.whiteDisconnected {
+		opponentDisconnected = true
+	}
+
+	game.mu.Unlock()
+
+	logger.Info("Player reconnected", logger.F("gameId", gameID, "color", color, "userId", client.UserID))
+
+	client.SendMessage(NewServerMessage(MsgTypeGameReconnected, reconnectData))
+
+	if opponentDisconnected {
+		client.SendMessage(NewServerMessage(MsgTypeOpponentDisconnected, map[string]string{
+			"gameId": gameID,
+		}))
+	}
+
+	if opponent != nil {
+		opponent.SendMessage(NewServerMessage(MsgTypeOpponentReconnected, map[string]string{
+			"gameId": gameID,
+		}))
 	}
 }
 

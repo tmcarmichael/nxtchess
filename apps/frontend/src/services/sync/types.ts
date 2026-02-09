@@ -120,6 +120,26 @@ export interface OpponentLeftData {
   gameId: string;
 }
 
+export interface GameReconnectedData {
+  gameId: string;
+  color: 'white' | 'black';
+  fen: string;
+  moveHistory: string[];
+  whiteTimeMs: number;
+  blackTimeMs: number;
+  timeControl?: TimeControl;
+  opponent: PlayerInfo;
+  rated: boolean;
+}
+
+export interface OpponentDisconnectedData {
+  gameId: string;
+}
+
+export interface OpponentReconnectedData {
+  gameId: string;
+}
+
 export interface ErrorData {
   code: string;
   message: string;
@@ -159,6 +179,9 @@ export const MsgType = {
   MOVE: 'MOVE',
   RESIGN: 'RESIGN',
 
+  // Client → Server (reconnection)
+  GAME_RECONNECT: 'GAME_RECONNECT',
+
   // Client → Server (lobby)
   LOBBY_SUBSCRIBE: 'LOBBY_SUBSCRIBE',
   LOBBY_UNSUBSCRIBE: 'LOBBY_UNSUBSCRIBE',
@@ -178,6 +201,11 @@ export const MsgType = {
   OPPONENT_LEFT: 'OPPONENT_LEFT',
   TIME_UPDATE: 'TIME_UPDATE',
 
+  // Server → Client (reconnection)
+  GAME_RECONNECTED: 'GAME_RECONNECTED',
+  OPPONENT_DISCONNECTED: 'OPPONENT_DISCONNECTED',
+  OPPONENT_RECONNECTED: 'OPPONENT_RECONNECTED',
+
   // Server → Client (lobby)
   LOBBY_LIST: 'LOBBY_LIST',
   LOBBY_UPDATE: 'LOBBY_UPDATE',
@@ -196,6 +224,9 @@ export type SyncEventType =
   | 'game:opponent_move'
   | 'game:opponent_left'
   | 'game:time_update'
+  | 'game:reconnected'
+  | 'game:opponent_disconnected'
+  | 'game:opponent_reconnected'
   | 'lobby:list'
   | 'lobby:update'
   | 'error';

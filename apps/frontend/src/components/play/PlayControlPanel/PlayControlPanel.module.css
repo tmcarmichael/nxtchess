@@ -1,3 +1,32 @@
+.disconnectBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--warning-bg, rgba(255, 165, 0, 0.1));
+  border: 1px solid var(--warning, #f0a030);
+  border-radius: var(--radius-md);
+  color: var(--warning, #f0a030);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  margin-bottom: var(--space-sm);
+}
+
+.disconnectCountdown {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  min-width: 2.2em;
+  text-align: center;
+  padding: 0.1em 0.4em;
+  background: var(--warning, #f0a030);
+  color: var(--surface-1, #1a1a2e);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+}
+
 .playControlPanel {
   display: flex;
   width: 100%;

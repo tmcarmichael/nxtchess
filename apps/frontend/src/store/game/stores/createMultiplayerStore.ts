@@ -12,7 +12,10 @@ import type {
   OpponentMoveData,
   GameEndedData,
   GameEndedAchievement,
+  GameReconnectedData,
   TimeUpdateData,
+  TimeControl,
+  PlayerInfo,
 } from '../../../services/sync/types';
 import type { Side, GameWinner, GameOverReason } from '../../../types/game';
 
@@ -56,6 +59,19 @@ export interface MultiplayerEvents {
     blackNewAchievements?: GameEndedAchievement[];
   };
   'game:opponent_left': void;
+  'game:reconnected': {
+    gameId: string;
+    playerColor: Side;
+    fen: string;
+    moveHistory: string[];
+    whiteTimeMs: number;
+    blackTimeMs: number;
+    timeControl?: TimeControl;
+    opponent: PlayerInfo;
+    rated: boolean;
+  };
+  'game:opponent_disconnected': void;
+  'game:opponent_reconnected': void;
   'game:error': { message: string };
 }
 
@@ -79,6 +95,7 @@ export interface MultiplayerStore {
   // Game actions
   createGame: (timeControl: number, increment?: number, rated?: boolean) => void;
   joinGame: (gameId: string) => void;
+  reconnectGame: (gameId: string) => void;
   sendMove: (from: string, to: string, promotion?: string) => void;
   resign: () => void;
   leave: () => void;
@@ -239,6 +256,38 @@ export const createMultiplayerStore = (): MultiplayerStore => {
         break;
       }
 
+      case 'game:reconnected': {
+        const data = event.data as GameReconnectedData;
+        const playerColor: Side = data.color === 'white' ? 'w' : 'b';
+        batch(() => {
+          setState('gameId', data.gameId);
+          setState('opponentUsername', data.opponent.username ?? null);
+          setState('isWaiting', false);
+        });
+        events.emit('game:reconnected', {
+          gameId: data.gameId,
+          playerColor,
+          fen: data.fen,
+          moveHistory: data.moveHistory,
+          whiteTimeMs: data.whiteTimeMs,
+          blackTimeMs: data.blackTimeMs,
+          timeControl: data.timeControl,
+          opponent: data.opponent,
+          rated: data.rated,
+        });
+        break;
+      }
+
+      case 'game:opponent_disconnected': {
+        events.emit('game:opponent_disconnected', undefined as unknown as void);
+        break;
+      }
+
+      case 'game:opponent_reconnected': {
+        events.emit('game:opponent_reconnected', undefined as unknown as void);
+        break;
+      }
+
       case 'error': {
         const data = event.data as { message: string };
         events.emit('game:error', { message: data.message });
@@ -292,6 +341,12 @@ export const createMultiplayerStore = (): MultiplayerStore => {
     setState({ gameId, isWaiting: true });
   };
 
+  const reconnectGame = (gameId: string) => {
+    connect();
+    gameSyncService.reconnectGame(gameId);
+    setState({ gameId, isWaiting: false });
+  };
+
   const sendMove = (from: string, to: string, promotion?: string) => {
     if (state.gameId) {
       gameSyncService.sendMove(state.gameId, from, to, promotion);
@@ -339,6 +394,7 @@ export const createMultiplayerStore = (): MultiplayerStore => {
     disconnect,
     createGame,
     joinGame,
+    reconnectGame,
     sendMove,
     resign,
     leave,
