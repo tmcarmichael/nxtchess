@@ -247,6 +247,14 @@ func (h *Hub) HandleMessage(client *Client, msg *ClientMessage) {
 		}
 		h.games.LeaveGame(client, data.GameID)
 
+	case MsgTypeGameReconnect:
+		var data GameReconnectData
+		if err := json.Unmarshal(msg.Data, &data); err != nil {
+			client.SendMessage(NewErrorMessage("INVALID_DATA", "Invalid reconnect data"))
+			return
+		}
+		h.games.HandleReconnect(client, data.GameID)
+
 	case MsgTypeLobbySubscribe:
 		h.SubscribeLobby(client)
 

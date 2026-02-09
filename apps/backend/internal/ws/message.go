@@ -20,6 +20,9 @@ const (
 	MsgTypeMove   = "MOVE"
 	MsgTypeResign = "RESIGN"
 
+	// Reconnection
+	MsgTypeGameReconnect = "GAME_RECONNECT"
+
 	// Lobby
 	MsgTypeLobbySubscribe   = "LOBBY_SUBSCRIBE"
 	MsgTypeLobbyUnsubscribe = "LOBBY_UNSUBSCRIBE"
@@ -48,6 +51,11 @@ const (
 	MsgTypeOpponentMove = "OPPONENT_MOVE"
 	MsgTypeOpponentLeft = "OPPONENT_LEFT"
 	MsgTypeTimeUpdate   = "TIME_UPDATE"
+
+	// Reconnection responses
+	MsgTypeGameReconnected      = "GAME_RECONNECTED"
+	MsgTypeOpponentDisconnected = "OPPONENT_DISCONNECTED"
+	MsgTypeOpponentReconnected  = "OPPONENT_RECONNECTED"
 
 	// Lobby responses
 	MsgTypeLobbyList   = "LOBBY_LIST"
@@ -181,6 +189,24 @@ type OpponentMoveData struct {
 // ResignData is sent by client to resign
 type ResignData struct {
 	GameID string `json:"gameId"`
+}
+
+// GameReconnectData is sent by client to reconnect to a game
+type GameReconnectData struct {
+	GameID string `json:"gameId"`
+}
+
+// GameReconnectedData is sent to client with full game state on reconnection
+type GameReconnectedData struct {
+	GameID      string       `json:"gameId"`
+	Color       string       `json:"color"`
+	FEN         string       `json:"fen"`
+	MoveHistory []string     `json:"moveHistory"`
+	WhiteTimeMs int          `json:"whiteTimeMs"`
+	BlackTimeMs int          `json:"blackTimeMs"`
+	TimeControl *TimeControl `json:"timeControl,omitempty"`
+	Opponent    PlayerInfo   `json:"opponent"`
+	Rated       bool         `json:"rated"`
 }
 
 // TimeUpdateData is sent periodically to update clocks

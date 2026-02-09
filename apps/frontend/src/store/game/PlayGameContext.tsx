@@ -12,6 +12,7 @@ import {
 import { pushAchievementToasts } from '../../components/common/AchievementToast/AchievementToast';
 import { sessionManager } from '../../services/game/session/SessionManager';
 import { startGameReview } from '../../services/review/gameReviewService';
+import { saveActiveGame, clearActiveGame } from '../../services/sync/reconnectStore';
 import { computeMaterialDiff } from '../../types/chess';
 import { useUserStore } from '../user/UserContext';
 import { createCoreActions } from './actions/createCoreActions';
@@ -60,11 +61,12 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
     });
   });
 
-  multiplayer.on('game:started', ({ whiteTimeMs, blackTimeMs }) => {
+  multiplayer.on('game:started', ({ gameId, whiteTimeMs, blackTimeMs }) => {
     batch(() => {
       chess.setLifecycle('playing');
       timer.sync(whiteTimeMs, blackTimeMs);
     });
+    saveActiveGame({ gameId, playerColor: chess.state.playerColor });
     // Don't start local timer for multiplayer - server TIME_UPDATE is authoritative
   });
 
@@ -116,9 +118,11 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
       whiteNewAchievements,
       blackNewAchievements,
     }) => {
+      clearActiveGame();
       batch(() => {
         timer.stop();
         chess.endGame(reason, winner);
+        ui.setOpponentDisconnected(false);
 
         if (
           whiteRating !== undefined &&
@@ -144,6 +148,27 @@ export const PlayGameProvider = (props: { children: JSX.Element }) => {
   );
 
   multiplayer.on('game:opponent_left', () => {});
+
+  multiplayer.on(
+    'game:reconnected',
+    ({ gameId, playerColor, fen, moveHistory, whiteTimeMs, blackTimeMs }) => {
+      batch(() => {
+        chess.setPlayerColor(playerColor);
+        ui.setBoardView(playerColor);
+        chess.hydrateFromReconnect(fen, moveHistory);
+        timer.sync(whiteTimeMs, blackTimeMs);
+      });
+      saveActiveGame({ gameId, playerColor });
+    }
+  );
+
+  multiplayer.on('game:opponent_disconnected', () => {
+    ui.setOpponentDisconnected(true);
+  });
+
+  multiplayer.on('game:opponent_reconnected', () => {
+    ui.setOpponentDisconnected(false);
+  });
 
   multiplayer.on('game:error', () => {});
 

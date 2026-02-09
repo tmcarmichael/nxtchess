@@ -35,6 +35,7 @@ export interface SinglePlayerActions extends CoreActions {
 export interface MultiplayerActions extends CoreActions {
   startMultiplayerGame: (options: MultiplayerGameOptions) => Promise<void>;
   joinMultiplayerGame: (gameId: string) => void;
+  reconnectToGame: (gameId: string, playerColor: Side) => void;
   applyMultiplayerMove: (from: Square, to: Square, promotion?: PromotionPiece) => void;
   resignMultiplayer: () => void;
   handleTimeOut: (winner: Side) => void;

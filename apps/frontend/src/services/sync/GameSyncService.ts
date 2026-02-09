@@ -13,6 +13,7 @@ import type {
   MoveRejectedData,
   OpponentMoveData,
   GameEndedData,
+  GameReconnectedData,
   TimeUpdateData,
   OpponentLeftData,
   ErrorData,
@@ -150,6 +151,13 @@ export class GameSyncService {
     if (this.currentGameId === gameId) {
       this.currentGameId = null;
     }
+  }
+
+  reconnectGame(gameId: string): void {
+    this.send({
+      type: MT.GAME_RECONNECT,
+      data: { gameId },
+    });
   }
 
   sendMove(gameId: string, from: string, to: string, promotion?: string): void {
@@ -292,6 +300,35 @@ export class GameSyncService {
         this.emitEvent({
           type: 'game:opponent_left',
           data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.GAME_RECONNECTED: {
+        const payload = data as GameReconnectedData;
+        this.currentGameId = payload.gameId;
+        this.emitEvent({
+          type: 'game:reconnected',
+          data: payload,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.OPPONENT_DISCONNECTED: {
+        this.emitEvent({
+          type: 'game:opponent_disconnected',
+          data,
+          timestamp: Date.now(),
+        });
+        break;
+      }
+
+      case MT.OPPONENT_RECONNECTED: {
+        this.emitEvent({
+          type: 'game:opponent_reconnected',
+          data,
           timestamp: Date.now(),
         });
         break;

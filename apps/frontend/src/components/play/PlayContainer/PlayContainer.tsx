@@ -1,5 +1,6 @@
 import { useParams, useNavigate, useLocation } from '@solidjs/router';
-import { createEffect, on, Show, type ParentComponent } from 'solid-js';
+import { createEffect, on, onCleanup, Show, type ParentComponent } from 'solid-js';
+import { loadActiveGame, clearActiveGame } from '../../../services/sync/reconnectStore';
 import { PlayGameProvider, usePlayGame } from '../../../store/game/PlayGameContext';
 import { type StartGameOptions, type MultiplayerGameOptions } from '../../../types/game';
 import ChessBoardController from '../../chess/ChessBoardController/ChessBoardController';
@@ -56,7 +57,13 @@ const PlayContainerInner: ParentComponent = () => {
           !multiplayer.state.isWaiting &&
           chess.state.lifecycle !== 'playing'
         ) {
-          actions.joinMultiplayerGame(gameId);
+          const activeGame = loadActiveGame();
+          if (activeGame && activeGame.gameId === gameId) {
+            actions.reconnectToGame(gameId, activeGame.playerColor);
+          } else {
+            clearActiveGame();
+            actions.joinMultiplayerGame(gameId);
+          }
         }
       }
     )
@@ -72,6 +79,15 @@ const PlayContainerInner: ParentComponent = () => {
       }
     )
   );
+
+  const unsub = multiplayer.on('game:error', () => {
+    if (chess.state.lifecycle !== 'playing' && chess.state.lifecycle !== 'ended') {
+      clearActiveGame();
+      actions.exitGame();
+      navigate('/play', { replace: true });
+    }
+  });
+  onCleanup(unsub);
 
   const isIdle = () => chess.state.lifecycle === 'idle' && !params.gameId;
   const isReviewing = () => review.phase() !== 'idle';

@@ -7,6 +7,7 @@ interface UIState {
   showEndModal: boolean;
   showResignModal: boolean;
   trainingFocusMode: boolean;
+  opponentDisconnected: boolean;
 }
 
 export interface UIStore {
@@ -18,6 +19,7 @@ export interface UIStore {
   showResignModal: () => void;
   hideResignModal: () => void;
   setFocusMode: (enabled: boolean) => void;
+  setOpponentDisconnected: (disconnected: boolean) => void;
   cleanup: () => void;
 }
 
@@ -33,6 +35,7 @@ export const createUIStore = (options?: UIStoreOptions): UIStore => {
     showEndModal: false,
     showResignModal: false,
     trainingFocusMode: options?.initialFocusMode ?? false,
+    opponentDisconnected: false,
   });
 
   let focusModeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -43,6 +46,9 @@ export const createUIStore = (options?: UIStoreOptions): UIStore => {
   const hideEndModal = () => setState('showEndModal', false);
   const showResignModal = () => setState('showResignModal', true);
   const hideResignModal = () => setState('showResignModal', false);
+
+  const setOpponentDisconnected = (disconnected: boolean) =>
+    setState('opponentDisconnected', disconnected);
 
   const setFocusMode = (enabled: boolean) => {
     // Debounce to prevent rapid toggle spam
@@ -71,6 +77,7 @@ export const createUIStore = (options?: UIStoreOptions): UIStore => {
     showResignModal,
     hideResignModal,
     setFocusMode,
+    setOpponentDisconnected,
     cleanup,
   };
 };

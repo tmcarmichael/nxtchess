@@ -1,5 +1,6 @@
 import { getOpponentSide } from '../../../services/game/chessGameService';
 import { transition, canMakeMove } from '../../../services/game/gameLifecycle';
+import { clearActiveGame } from '../../../services/sync/reconnectStore';
 import { TRAINING_OPENING_MOVE_THRESHOLD } from '../../../shared/config/constants';
 import type { Square, PromotionPiece } from '../../../types/chess';
 import type { Side, StartGameOptions, MultiplayerGameOptions } from '../../../types/game';
@@ -241,6 +242,16 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
     multiplayer.joinGame(gameId);
   };
 
+  const reconnectToGame = (gameId: string, playerColor: Side) => {
+    timer.stop();
+    ui.hideEndModal();
+
+    chess.resetForMultiplayer('play');
+    chess.setPlayerColor(playerColor);
+    ui.setBoardView(playerColor);
+    multiplayer.reconnectGame(gameId);
+  };
+
   const applyMultiplayerMove = (from: Square, to: Square, promotion?: PromotionPiece) => {
     if (chess.state.opponentType !== 'human' || !multiplayer.state.gameId) {
       return;
@@ -258,6 +269,7 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
 
   const exitGame = () => {
     timer.stop();
+    clearActiveGame();
 
     // Clean up multiplayer state if in a game OR waiting for opponent
     if (multiplayer.state.gameId || multiplayer.state.isWaiting) {
@@ -287,6 +299,7 @@ export const createPlayActions = (stores: PlayStores, coreActions: CoreActions):
     // Multiplayer actions
     startMultiplayerGame,
     joinMultiplayerGame,
+    reconnectToGame,
     applyMultiplayerMove,
     resignMultiplayer,
 
