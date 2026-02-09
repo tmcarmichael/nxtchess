@@ -4,16 +4,23 @@
 [![Stockfish](https://img.shields.io/badge/Stockfish-GPLv3-orange.svg)](LICENSES/GPL-3.0.txt)
 [![Status](https://img.shields.io/badge/status-beta-green)](#)
 
-Real-time multiplayer chess with tactics, analysis, and training. Built for fast, low-latency play in SolidJS + Go. Play instantly via shareable links or sign in to track progress.
+A multiplayer chess PWA with game review, puzzles, training, and analysis. Built for low-latency play in SolidJS + Go.
 
-[**Live Demo**](https://nxtchess.up.railway.app/) · [Report Bug](https://github.com/tmcarmichael/nxtchess/issues) · [Request Feature](https://github.com/tmcarmichael/nxtchess/issues)
+[**Live build**](https://nxtchess.up.railway.app/) deployed on Railway.
 
 ---
 
+## Screenshots
+
+|                    Game Review                     |                     Puzzles                     |                     Profile                     |
+| :------------------------------------------------: | :---------------------------------------------: | :---------------------------------------------: |
+| ![Game Review](docs/screenshots/review-2-8-26.png) | ![Puzzles](docs/screenshots/puzzles-2-8-26.png) | ![Profile](docs/screenshots/profile-2-8-26.png) |
+
 ## Features
 
-- **Multiplayer**: Real-time WebSocket games, shareable links, lobby, server-managed clocks
-- **Puzzles**: Mate-in-1/2/3 tactics with Elo-based difficulty and history
+- **Multiplayer**: Real-time WebSocket games, shareable links, lobby, server-managed clocks, reconnection with 20s grace period
+- **Game Review**: Post-game analysis with move-by-move evaluation, accuracy scoring, and eval graphs
+- **Puzzles**: Mate in 1/2/3, Elo-based difficulty and history
 - **Analysis**: Multi-line Stockfish analysis, plus FEN/PGN import
 - **Training**: Endgame drills with evaluation, hints, and scoring
 - **Profiles**: Ratings, charts, stats, and recent games
@@ -42,11 +49,7 @@ To spin up just the frontend without auth/db:
 - Yarn: Already bundled with Node 16.10+, run: `corepack enable`
 
 ```bash
-git clone https://github.com/tmcarmichael/nxtchess.git
-cd nxtchess
-cd apps/frontend
-yarn install
-yarn dev
+cd apps/frontend && yarn install && yarn dev
 ```
 
 ## Tech Stack
@@ -74,7 +77,9 @@ just mon-down               # Stop monitoring
 
 ## Architecture
 
-SolidJS PWA with Stockfish WASM for client-side analysis and AI play. Go backend handles WebSocket multiplayer with server-managed clocks, server-side move validation, and ELO-rated play. PostgreSQL for persistence, Redis for sessions, Caddy reverse proxy. Prometheus metrics, Loki log aggregation, and Grafana dashboards for observability.
+SolidJS PWA with Stockfish WASM for client-side analysis, AI play, and post-game review. Go backend handles WebSocket multiplayer with server-managed clocks, server-side move validation, Elo-rated play, and reconnection support.
+
+PostgreSQL for persistence, Redis for sessions, Caddy reverse proxy. Prometheus metrics, Loki log aggregation, and Grafana dashboards for observability.
 
 ## Roadmap
 
@@ -82,14 +87,13 @@ SolidJS PWA with Stockfish WASM for client-side analysis and AI play. Go backend
 
 - Syzygy tablebases integration (perfect endgame play)
 - Opening explorer with master game statistics
-- Post-game analysis with move classification
 - Themed puzzles (forks, pins, back rank mates) with spaced repetition
 - Middlegame training mode
 
 **Multiplayer & Competitive**
 
 - Tournaments (Swiss and arena formats)
-- ELO range filtering for lobby
+- Elo range filtering for lobby
 
 **Platform**
 

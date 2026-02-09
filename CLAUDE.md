@@ -6,11 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 NXT Chess is a **Progressive Web App (PWA)** for real-time multiplayer chess with AI training and analysis modes. Key features:
 
-- WebSocket-based multiplayer with shareable game links (`/play/:gameId`) and lobby browser
+- WebSocket-based multiplayer with shareable game links (`/play/:gameId`), lobby browser, and reconnection support (20s grace period)
 - Timed games with server-managed clocks (100ms precision) and ELO-rated play
+- Post-game review with move-by-move analysis, accuracy scoring, and evaluation graphs
 - Training mode with Stockfish evaluation and hints
 - Analysis mode with multi-line engine evaluation and FEN/PGN import
-- Puzzles with ELO-rated difficulty tracking (mate-in-1/2/3)
+- Puzzles with ELO-rated difficulty tracking (mate-in-1/2/3) and session history
 - Achievements system with 51 badges across 6 categories
 - Profile pages with rating history, game stats, and achievement showcase
 - Offline-capable with IndexedDB persistence
@@ -90,10 +91,11 @@ components/
 ├── play/            # Multiplayer: PlayContainer, PlayHub, PlayModal, PlayAIModal, PlayCreateGameModal, PlayControlPanel, PlayNavigationPanel, PlayResignModal
 ├── training/        # Training: TrainingContainer, TrainingModal, TrainingControlPanel, TrainingNavigationPanel
 ├── analyze/         # Analysis: AnalyzeContainer, AnalyzeEnginePanel, AnalyzeControlPanel, AnalyzeImportModal, AnalyzeNavigationPanel
-├── puzzle/          # Puzzles: PuzzleContainer, PuzzleModal, PuzzleControlPanel, PuzzleNavigationPanel, PuzzleFeedbackModal
-├── home/            # Landing page
+├── puzzle/          # Puzzles: PuzzleContainer, PuzzleModal, PuzzleControlPanel, PuzzleNavigationPanel, PuzzleFeedbackModal, PuzzleHistoryStrip
+├── review/          # Game review: ReviewContainer, ReviewSummaryPanel, ReviewEvalGraph, ReviewProgressBar, ReviewControlPanel, ReviewNavigationPanel, GameReviewModal
+├── home/            # Landing page: HomeContainer, HomeSiteHero, HomeQuickPlay
 ├── user/            # Auth & profile: UserSignInModal, UserProfile, UsernameSetup, ProfileIconPicker, UserAchievements, AchievementBadge
-└── common/          # Header, Footer, 404, ErrorBoundary, NetworkStatus, SettingsDropdown, AchievementToast, FloatingPieces
+└── common/          # Header, Footer, 404, ErrorBoundary, NetworkStatus, MobileMenu, SettingsDropdown, AchievementToast, FloatingPieces
 
 store/
 ├── game/            # Multi-store architecture
@@ -118,11 +120,12 @@ services/
 │   ├── gameLifecycle.ts      # State machine (idle → initializing → playing → ended)
 │   ├── BoardCache.ts         # O(1) board lookups, caches legal moves
 │   └── session/              # GameSession (command pattern) + SessionManager (singleton)
+├── review/          # gameReviewService (post-game move analysis, accuracy scoring)
 ├── network/         # ReconnectingWebSocket with exponential backoff
-├── sync/            # GameSyncService for multiplayer, useGameSync hook
+├── sync/            # GameSyncService, useGameSync hook, reconnectStore (session storage for active game tracking)
 ├── persistence/     # IndexedDB: GamePersistence + useAutoPersist (5s periodic, 1s debounced)
 ├── preferences/     # User settings storage
-├── puzzle/          # Puzzle data (mate-in-N definitions), setup move computation
+├── puzzle/          # Puzzle data (mate-in-N definitions), setup move computation, puzzleHistory (session tracking)
 ├── settings/        # SettingsService (theme/sound via localStorage)
 ├── training/        # Training mode logic
 │   ├── scenarios.ts          # Training scenario configurations (endgame themes, difficulty)
@@ -136,7 +139,7 @@ shared/
 ├── hooks/           # useKeyboardNavigation
 └── utils/           # Debug, ID generation, strings, EventEmitter, createFocusTrap
 
-types/               # chess.ts (Square, PieceType, Board), game.ts (Side, GameMode, etc.), moveQuality.ts, achievements.ts
+types/               # chess.ts (Square, PieceType, Board), game.ts (Side, GameMode, etc.), moveQuality.ts, achievements.ts, review.ts
 ```
 
 ### Backend Structure (apps/backend/)
@@ -159,7 +162,7 @@ internal/
 ├── httpx/           # JSON responses, secure cookies, client IP extraction
 ├── logger/          # Structured logging: levels (DEBUG/INFO/WARN/ERROR), JSON mode
 ├── metrics/         # Prometheus metrics: HTTP requests, WS connections, DB queries
-├── middleware/      # CORS, recovery, security headers, session, rate limit, body limit, request ID, metrics
+├── middleware/      # Recovery, security headers, session, rate limit, body limit, request ID + logging, metrics, internal-only
 ├── migrate/         # Database migrations runner (golang-migrate)
 ├── models/          # Data structures: Profile, PublicProfile, Game, EndgamePosition, RatingPoint, RecentGame
 ├── sessions/        # Redis session store (24h TTL)
@@ -267,7 +270,9 @@ Use blank lines to separate logical sections. Let function names, class names, a
 - **Context propagation**: Single context for entire OAuth flow with 30s timeout
 - **Read/write pumps**: Concurrent goroutines per WebSocket client
 - **Garbage collection**: Ended games (5min), waiting games (30min)
+- **Reconnection**: 20s grace period on disconnect, full state hydration on reconnect (FEN, move history, clocks)
 - **Prometheus metrics**: HTTP request count/duration, active WS connections/games, DB query duration via `internal/metrics`
+- **InternalOnly middleware**: Restricts `/metrics` to private IPs and trusted proxies
 
 ### WebSocket Protocol
 
@@ -277,9 +282,14 @@ Server → Client: { type: "MESSAGE_TYPE", data: { ... } }
 
 Game Lifecycle:
 GAME_CREATE → GAME_CREATED (gameId, color)
-GAME_JOIN → GAME_JOINED / GAME_STARTED (both players)
+GAME_JOIN → GAME_JOINED / GAME_STARTED (both players) / GAME_NOT_FOUND / GAME_FULL
 MOVE → MOVE_ACCEPTED / MOVE_REJECTED / OPPONENT_MOVE
 TIME_UPDATE (every 1s) / RESIGN / GAME_ENDED (includes rating deltas + achievement unlocks)
+
+Reconnection:
+GAME_RECONNECT → GAME_RECONNECTED (full state: gameId, color, fen, moveHistory, times, opponent, rated)
+OPPONENT_DISCONNECTED (20s grace period starts)
+OPPONENT_RECONNECTED (opponent restored connection)
 
 Lobby:
 LOBBY_SUBSCRIBE → LOBBY_LIST (all waiting games)
@@ -318,6 +328,7 @@ PuzzleCategory = 'mate-in-1' | 'mate-in-2' | 'mate-in-3' | 'random'
 MoveQuality = 'best' | 'excellent' | 'good' | 'inaccuracy' | 'mistake' | 'blunder'
 AchievementRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
 AchievementCategory = 'loyalty' | 'streaks' | 'rating' | 'chess_moments' | 'volume' | 'fun'
+ReviewPhase = 'idle' | 'analyzing' | 'complete'
 Square = 'a1' | 'a2' | ... (64 squares)
 PieceType = 'wP' | 'bP' | 'wN' | ... (white/black piece notation)
 ```
@@ -344,6 +355,17 @@ PieceType = 'wP' | 'bP' | 'wN' | ... (white/black piece notation)
 6. Opponent receives `OPPONENT_MOVE` with updated FEN and times
 7. Server manages clocks (100ms ticks), sends `TIME_UPDATE` every 1s
 8. Timeout/resign/checkmate → `GAME_ENDED` with rating deltas and achievement unlocks to both players
+9. Reconnection: `reconnectStore` saves active game to sessionStorage → on disconnect, `GAME_RECONNECT` → server sends `GAME_RECONNECTED` with full state → `hydrateFromReconnect()` rebuilds board
+
+### Post-Game Review
+
+1. Game ends (any mode with PGN) → user clicks "Review" → navigates to `/review` with PGN in location state
+2. `ReviewContainer` wraps with `PlayGameProvider`, loads PGN into chess store
+3. `gameReviewService` analyzes each position (800ms per move) with dedicated Stockfish engine
+4. Computes accuracy (win-percentage formula), move quality classification, eval history
+5. `ReviewSummaryPanel` shows white/black accuracy and quality distribution
+6. `ReviewEvalGraph` visualizes evaluation over the game
+7. User navigates moves to see per-move quality annotations
 
 ## Environment Setup
 
@@ -373,12 +395,13 @@ VITE_BACKEND_URL=http://localhost:8080
 ## Routing
 
 ```
-/                   → HomeContainer
+/                   → HomeContainer (quick play cards for instant game start)
 /play               → PlayContainer (lobby browser, vs AI, or create multiplayer)
 /play/:gameId       → PlayContainer (join multiplayer via URL)
 /training           → TrainingContainer (untimed practice with eval)
 /analyze            → AnalyzeContainer (position analysis with FEN/PGN import)
 /puzzles            → PuzzleContainer (mate-in-N tactics puzzles)
+/review             → ReviewContainer (post-game analysis with accuracy scoring)
 /username-setup     → UsernameSetup
 /profile/:username  → UserProfile
 *                   → 404
@@ -401,12 +424,12 @@ VITE_BACKEND_URL=http://localhost:8080
 - Filter by rating range (2000+, 2200+, 2500+)
 - Add to Analyze mode or include in Tools section
 
-**Post-Game Analysis with Move Classification**
+**Post-Game Analysis with Move Classification** *(implemented — review mode with accuracy scoring)*
 
-- Classify moves: Best, Good, Inaccuracy, Mistake, Blunder
-- Centipawn loss graph showing critical moments
-- Accuracy percentage per game
-- Extends existing analysisEngineService infrastructure
+- ~~Classify moves: Best, Good, Inaccuracy, Mistake, Blunder~~ (done — gameReviewService)
+- ~~Centipawn loss graph showing critical moments~~ (done — ReviewEvalGraph)
+- ~~Accuracy percentage per game~~ (done — win-percentage formula per side)
+- ~~Extends existing analysisEngineService infrastructure~~ (done — dedicated review engine)
 - Gamify post game analysis
 
 **Tactics Puzzles with Spaced Repetition** *(mate-in-1/2/3 implemented with ELO-rated puzzle tracking)*

@@ -39,6 +39,7 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `/training` → TrainingContainer (untimed practice with eval)
 - `/analyze` → AnalyzeContainer (position analysis with FEN/PGN import)
 - `/puzzles` → PuzzleContainer (mate-in-N tactics puzzles)
+- `/review` → ReviewContainer (post-game analysis with accuracy scoring, via PGN in location state)
 - `/username-setup` → UsernameSetup
 - `/profile/:username` → UserProfile
 - `*` → CommonNotFoundPage
@@ -110,11 +111,23 @@ Routes (all lazy-loaded via `routes.tsx`):
 - `PuzzleControlPanel` — Puzzle controls (next puzzle, category)
 - `PuzzleNavigationPanel` — Move history navigation for puzzle mode
 - `PuzzleFeedbackModal` — Correct/incorrect feedback after puzzle attempt
+- `PuzzleHistoryStrip` — Visual strip showing recent puzzle results with clear history action
 
-**`home/` (2 components)** — Landing page:
+**`review/` (7 components)** — Post-game review mode:
+
+- `ReviewContainer` — Wraps with PlayGameProvider, loads PGN from location state
+- `ReviewSummaryPanel` — White/black accuracy percentages and move quality distribution
+- `ReviewEvalGraph` — Evaluation graph visualization over the game
+- `ReviewProgressBar` — Analysis progress indicator during engine processing
+- `ReviewControlPanel` — Review controls (exit)
+- `ReviewNavigationPanel` — Move navigation for review mode
+- `GameReviewModal` — Modal for initiating game review
+
+**`home/` (3 components)** — Landing page:
 
 - `HomeContainer` — Home page layout
 - `HomeSiteHero` — Hero section with floating chess pieces animation (gravitational spread) and CTA
+- `HomeQuickPlay` — Quick-start cards for instant play (Bullet/Blitz/Rapid/Classical time controls, Mate-in-1/2/3 puzzles) with staggered animation
 
 **`user/` (6 components)** — Auth & profile:
 
@@ -164,11 +177,11 @@ Routes (all lazy-loaded via `routes.tsx`):
 
 Six independent SolidJS stores compose via context (NOT a monolithic store):
 
-1. **ChessStore** (`createChessStore.ts`) — FEN, move history, game state, player color, current turn, captured pieces, game lifecycle
+1. **ChessStore** (`createChessStore.ts`) — FEN, move history, game state, player color, current turn, captured pieces, game lifecycle, `hydrateFromReconnect()` for rebuilding state from UCI move history
 2. **TimerStore** (`createTimerStore.ts`) — White/black time in ms, time control, increment, 100ms tick precision
 3. **EngineStore** (`createEngineStore.ts`) — Engine status (idle/loading/ready/error), difficulty, AI side, play style
 4. **UIStore** (`createUIStore.ts`) — Board view perspective, modal visibility flags
-5. **MultiplayerStore** (`createMultiplayerStore.ts`) — Game ID, opponent info, connection state, typed event emission
+5. **MultiplayerStore** (`createMultiplayerStore.ts`) — Game ID, opponent info, connection state, typed event emission, reconnection events (`game:reconnected`, `game:opponent_disconnected`, `game:opponent_reconnected`)
 6. **LobbyStore** (`createLobbyStore.ts`) — Open games list, lobby WebSocket subscription, real-time updates
 
 #### Context Providers
@@ -230,15 +243,20 @@ Two separate Web Workers (ai/eval) prevent UCI command race conditions. Analysis
 - `SessionManager.ts` — Singleton managing multiple concurrent sessions
 - `types.ts` — Session type definitions
 
+#### Review Services (`services/review/`)
+
+- `gameReviewService.ts` — Post-game analysis engine: move-by-move evaluation (800ms per position), accuracy calculation via win-percentage formula, move quality classification, quality distribution stats, dedicated review engine with auto-recovery, progress callbacks, abortable analysis
+
 #### Network Services (`services/network/`)
 
 - `ReconnectingWebSocket.ts` — WebSocket with exponential backoff (max 5 attempts, message queuing)
 
 #### Sync Services (`services/sync/`)
 
-- `GameSyncService.ts` — WebSocket client using ReconnectingWebSocket
+- `GameSyncService.ts` — WebSocket client using ReconnectingWebSocket, includes reconnection protocol
 - `useGameSync.ts` — SolidJS integration hook
-- `types.ts` — Message types (GAME_CREATE, GAME_JOIN, MOVE, RESIGN, TIME_UPDATE, GAME_ENDED, LOBBY_SUBSCRIBE, LOBBY_UNSUBSCRIBE, LOBBY_LIST, LOBBY_UPDATE)
+- `reconnectStore.ts` — Session storage for active game tracking (`saveActiveGame`, `loadActiveGame`, `clearActiveGame`)
+- `types.ts` — Message types (GAME_CREATE, GAME_JOIN, MOVE, RESIGN, TIME_UPDATE, GAME_ENDED, GAME_RECONNECT, GAME_RECONNECTED, OPPONENT_DISCONNECTED, OPPONENT_RECONNECTED, LOBBY_SUBSCRIBE, LOBBY_UNSUBSCRIBE, LOBBY_LIST, LOBBY_UPDATE)
 
 #### Persistence Services (`services/persistence/`)
 
@@ -256,6 +274,7 @@ Two separate Web Workers (ai/eval) prevent UCI command race conditions. Analysis
 #### Puzzle Services (`services/puzzle/`)
 
 - `puzzleData.ts` — Client-side puzzle definitions (mate-in-1/2/3), shuffled queue with deduplication
+- `puzzleHistory.ts` — Session-scoped puzzle attempt tracking (max 20 entries), solved puzzle deduplication
 - `setupMoveComputer.ts` — Computes animated setup moves for puzzle initialization
 - `index.ts` — Barrel exports (`getRandomPuzzle`, `uciToFromTo`, `computeSetupMove`)
 
@@ -320,6 +339,17 @@ AchievementsResponse { achievements[], total_points, total_unlocked, total_avail
 ```typescript
 MoveQuality = 'best' | 'excellent' | 'good' | 'inaccuracy' | 'mistake' | 'blunder';
 QUALITY_THRESHOLDS = { excellent: 20, good: 50, inaccuracy: 100, mistake: 200 }; // centipawns
+```
+
+**review.ts:**
+
+```typescript
+ReviewPhase = 'idle' | 'analyzing' | 'complete';
+ReviewProgress { currentMove, totalMoves, percentComplete }
+EvalPoint { moveIndex, evalAfter, san, side, quality, moveTimeMs? }
+QualityDistribution = Record<MoveQuality, number>;
+ReviewSummary { whiteAccuracy, blackAccuracy, evaluations, evalHistory, qualityDistribution }
+ReviewHandle { abort() }  // abortable analysis control
 ```
 
 ### Shared Utilities (`src/shared/`)
@@ -414,6 +444,7 @@ Cross-Origin-Embedder-Policy: credentialless
 - `vite-plugin-pwa` for service worker and manifest generation
 - COOP/COEP headers configured in dev server
 - `vite-plugin-static-copy` for asset copying
+- Dev server proxy for backend routes (`/api`, `/auth`, `/ws`, `/check-username`, `/set-username`, `/set-profile-icon`) → `BACKEND_PROXY_URL` (default `http://localhost:8080`)
 
 ## Dependencies
 
