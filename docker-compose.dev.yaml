@@ -67,7 +67,8 @@ services:
     profiles: ["frontend", "full"]
     environment:
       VITE_DEBUG: "true"
-      VITE_BACKEND_URL: "http://localhost:8080"
+      VITE_BACKEND_URL: ""
+      BACKEND_PROXY_URL: "http://backend:8080"
     ports:
       - "5173:5173"
     volumes:
