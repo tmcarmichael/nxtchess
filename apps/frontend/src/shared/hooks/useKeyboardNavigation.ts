@@ -32,10 +32,10 @@ export const useKeyboardNavigation = (options: KeyboardNavigationOptions): void 
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         onNext();
-      } else if (e.key === 'Home') {
+      } else if (e.key === 'Home' || e.key === 'ArrowUp') {
         e.preventDefault();
         onFirst();
-      } else if (e.key === 'End') {
+      } else if (e.key === 'End' || e.key === 'ArrowDown') {
         e.preventDefault();
         onLast();
       } else if (e.key === 'f') {

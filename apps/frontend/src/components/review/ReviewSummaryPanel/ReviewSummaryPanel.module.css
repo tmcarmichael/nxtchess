@@ -1,7 +1,7 @@
 .summaryContainer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   padding: var(--space-sm) var(--space-md);
   background: var(--surface-2);
   border-radius: var(--radius-md);
@@ -30,8 +30,8 @@
 }
 
 .ringSvg {
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   transform: rotate(-90deg);
 }
 
@@ -58,9 +58,9 @@
 
 .accuracyValue {
   position: absolute;
-  top: 50%;
+  top: 40px;
   left: 50%;
-  transform: translate(-50%, -70%);
+  transform: translate(-50%, -50%);
   font-family: var(--font-display);
   font-size: var(--text-base);
   font-weight: 700;
@@ -79,6 +79,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  margin-top: var(--space-xs);
 }
 
 .distributionRow {
@@ -168,11 +169,12 @@
   }
 
   .ringSvg {
-    width: 56px;
-    height: 56px;
+    width: 68px;
+    height: 68px;
   }
 
   .accuracyValue {
+    top: 34px;
     font-size: var(--text-sm);
   }
 
