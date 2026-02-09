@@ -18,6 +18,7 @@
 }
 
 .headerLeft {
+  justify-self: start;
   font-family: var(--font-display);
   font-size: var(--text-3xl);
   font-weight: 700;
@@ -26,7 +27,6 @@
   cursor: pointer;
   transition: color var(--transition-fast);
   text-decoration: none;
-  flex-shrink: 0;
   background: none;
   border: none;
   padding: 0;
