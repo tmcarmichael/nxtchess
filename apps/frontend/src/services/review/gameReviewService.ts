@@ -53,10 +53,7 @@ function computeAccuracy(evaluations: MoveEvaluation[], side: Side): number {
   return Math.round((totalAccuracy / sideMoves.length) * 10) / 10;
 }
 
-function computeSummary(
-  evaluations: MoveEvaluation[],
-  evalHistory: EvalPoint[]
-): ReviewSummary {
+function computeSummary(evaluations: MoveEvaluation[], evalHistory: EvalPoint[]): ReviewSummary {
   const whiteDistribution = createEmptyDistribution();
   const blackDistribution = createEmptyDistribution();
 
@@ -94,7 +91,11 @@ function evaluatePosition(engine: StockfishEngine, fen: string): Promise<number>
       if (settled) return;
       settled = true;
       removeListener();
-      if (DEBUG) console.warn('[Review] Evaluation timed out for FEN:', fen.split(' ').slice(0, 2).join(' '));
+      if (DEBUG)
+        console.warn(
+          '[Review] Evaluation timed out for FEN:',
+          fen.split(' ').slice(0, 2).join(' ')
+        );
       reject(new Error('Evaluation timed out'));
     }, REVIEW_EVAL_TIMEOUT_MS);
 
@@ -215,7 +216,11 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
         return score;
       } catch (err) {
         consecutiveFailures++;
-        if (DEBUG) console.warn(`[Review] ${label} failed (${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES}):`, err);
+        if (DEBUG)
+          console.warn(
+            `[Review] ${label} failed (${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES}):`,
+            err
+          );
 
         if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
           if (DEBUG) console.warn('[Review] Too many failures, reinitializing engine...');
@@ -247,7 +252,8 @@ export function startGameReview(config: GameReviewConfig): ReviewHandle {
         const isPlayerMove = side === config.playerColor;
         const san = config.moves[i];
 
-        if (DEBUG) console.warn(`[Review] Evaluating move ${i + 1}/${totalMoves}: ${san} (${side})`);
+        if (DEBUG)
+          console.warn(`[Review] Evaluating move ${i + 1}/${totalMoves}: ${san} (${side})`);
 
         const evalBefore = await getEval(fenPositions[i], `move ${i + 1} before`);
         if (aborted) break;
