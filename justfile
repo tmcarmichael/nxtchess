@@ -30,9 +30,18 @@ default:
     @just --list
 
 # Build + run frontend, backend, db, redis (QUICK START)
-dev: init
+dev: init _clean-stale
     @echo "Starting containers (profile={{PROFILES}}) with {{compose_file}}..."
     docker compose -f {{compose_file}} --profile {{PROFILES}} up --build
+
+# Remove stale containers that conflict with container_name
+[unix]
+_clean-stale:
+    #!/usr/bin/env sh
+    docker compose -f {{compose_file}} --profile {{PROFILES}} down --remove-orphans 2>/dev/null || true
+    for name in $(docker compose -f {{compose_file}} --profile {{PROFILES}} config | grep 'container_name:' | awk '{print $2}'); do
+        docker rm -f "$name" 2>/dev/null || true
+    done
 
 # Build or rebuild Docker images
 build: init

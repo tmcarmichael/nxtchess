@@ -1,4 +1,4 @@
-ALTER TABLE profiles ADD COLUMN puzzle_rating INT NOT NULL DEFAULT 1200
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS puzzle_rating INT NOT NULL DEFAULT 1200
     CHECK (puzzle_rating >= 0 AND puzzle_rating <= 4000);
 
 CREATE TABLE IF NOT EXISTS puzzle_rating_history (
