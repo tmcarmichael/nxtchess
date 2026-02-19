@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -23,12 +24,12 @@ const oauthTimeout = 30 * time.Second
 
 // OAuthProvider defines the configuration for an OAuth provider
 type OAuthProvider struct {
-	Name           string
-	StateCookie    string
-	UserInfoURL    string
-	OAuthConfig    *oauth2.Config
-	AuthCodeOpts   []oauth2.AuthCodeOption
-	ExtractUserID  func(body []byte) (string, error)
+	Name          string
+	StateCookie   string
+	UserInfoURL   string
+	OAuthConfig   *oauth2.Config
+	AuthCodeOpts  []oauth2.AuthCodeOption
+	ExtractUserID func(body []byte) (string, error)
 }
 
 // providers stores initialized OAuth providers
@@ -60,12 +61,19 @@ func LoginHandler(providerName string, cfg *config.Config) http.HandlerFunc {
 			return
 		}
 
-		http.SetCookie(w, httpx.NewSecureCookie(cfg, provider.StateCookie, state, 600))
+		// Encode mobile flag in state so callback can redirect to custom scheme
+		isMobile := r.URL.Query().Get("mobile") == "true"
+		cookieState := state
+		if isMobile {
+			state = state + ":mobile"
+		}
+
+		http.SetCookie(w, httpx.NewSecureCookie(cfg, provider.StateCookie, cookieState, 600))
 
 		w.Header().Set("Cache-Control", "no-store")
 
 		authURL := provider.OAuthConfig.AuthCodeURL(state, provider.AuthCodeOpts...)
-		logger.Info("Redirecting to OAuth", logger.F("provider", providerName, "url", authURL))
+		logger.Info("Redirecting to OAuth", logger.F("provider", providerName, "mobile", isMobile))
 
 		http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
 	}
@@ -88,6 +96,12 @@ func CallbackHandler(providerName string, cfg *config.Config) http.HandlerFunc {
 		if stateParam == "" {
 			utils.AuthRedirectWithError(w, r, "Invalid authentication request", http.StatusBadRequest, cfg)
 			return
+		}
+
+		// Detect mobile flag encoded in state
+		isMobile := strings.HasSuffix(stateParam, ":mobile")
+		if isMobile {
+			stateParam = strings.TrimSuffix(stateParam, ":mobile")
 		}
 
 		stateCookie, err := r.Cookie(provider.StateCookie)
@@ -197,7 +211,15 @@ func CallbackHandler(providerName string, cfg *config.Config) http.HandlerFunc {
 			"provider", providerName,
 			"userID", userID,
 			"hasUsername", hasUsername,
+			"mobile", isMobile,
 		))
+
+		if isMobile {
+			// Redirect to custom URL scheme for mobile app
+			redirectURL := fmt.Sprintf("nxtchess://callback?token=%s&has_username=%t", sessionToken, hasUsername)
+			http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+			return
+		}
 
 		if hasUsername {
 			http.Redirect(w, r, cfg.FrontendURL+"/", http.StatusSeeOther)

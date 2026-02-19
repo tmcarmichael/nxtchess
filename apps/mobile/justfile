@@ -1,0 +1,31 @@
+set shell := ["sh", "-cu"]
+
+default:
+    @just --list
+
+# Run format check + analyze + test
+ci: fmt-check lint test
+
+# Format lib and test directories
+fmt:
+    dart format lib test
+
+# Check formatting without modifying files
+fmt-check:
+    dart format --output=none --set-exit-if-changed lib test
+
+# Run flutter analyze
+lint:
+    flutter analyze
+
+# Run all tests
+test:
+    flutter test
+
+# Run tests in watch mode
+test-watch:
+    flutter test --watch
+
+# Regenerate Freezed/JSON/Riverpod code
+codegen:
+    dart run build_runner build --delete-conflicting-outputs

@@ -14,6 +14,7 @@ import (
 )
 
 var puzzleRatingByCategory = map[string]int{
+	"mate-in-1": 800,
 	"mate-in-2": 1200,
 	"mate-in-3": 1600,
 }
@@ -37,7 +38,7 @@ func SubmitPuzzleResultHandler(w http.ResponseWriter, r *http.Request) {
 
 	puzzleRating, validCategory := puzzleRatingByCategory[req.Category]
 	if !validCategory {
-		httpx.WriteJSONError(w, http.StatusBadRequest, "Category must be mate-in-2 or mate-in-3")
+		httpx.WriteJSONError(w, http.StatusBadRequest, "Category must be mate-in-1, mate-in-2, or mate-in-3")
 		return
 	}
 

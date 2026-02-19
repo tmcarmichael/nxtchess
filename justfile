@@ -134,6 +134,27 @@ prod-restart: prod-build prod-down prod-up
 prod-status: _prod-check-env
     docker compose -f {{prod_compose_file}} --env-file {{prod_env_file}} ps
 
+# Format backend + frontend
+fmt:
+    @echo "Formatting backend..."
+    gofmt -w apps/backend/
+    @echo "Formatting frontend..."
+    (cd apps/frontend && npx prettier --write 'src/**/*.{ts,tsx}')
+
+# Lint backend + frontend
+lint:
+    @echo "Linting backend..."
+    (cd apps/backend && go vet ./...)
+    @echo "Linting frontend..."
+    (cd apps/frontend && yarn lint)
+
+# Test backend + frontend
+test:
+    @echo "Testing backend..."
+    (cd apps/backend && go test ./...)
+    @echo "Testing frontend..."
+    (cd apps/frontend && npx vitest run)
+
 # Full environment prep (docker check + env check)
 init: _check-docker _check-docker-daemon _check-env
     @echo "All dependencies checked. Dev env files exist."

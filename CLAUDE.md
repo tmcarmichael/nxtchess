@@ -4,18 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NXT Chess is a **Progressive Web App (PWA)** for real-time multiplayer chess with AI training and analysis modes. Key features:
+NXT Chess is a **Progressive Web App (PWA)** and **Flutter mobile app** for real-time multiplayer chess with AI training and analysis modes. Key features:
 
-- WebSocket-based multiplayer with shareable game links (`/play/:gameId`), lobby browser, and reconnection support (20s grace period)
+- WebSocket-based multiplayer with shareable game links (`/play/:gameId`), lobby browser (250ms batched updates), and reconnection support (20s grace period)
 - Timed games with server-managed clocks (100ms precision) and ELO-rated play
 - Post-game review with move-by-move analysis, accuracy scoring, and evaluation graphs
 - Training mode with Stockfish evaluation and hints
 - Analysis mode with multi-line engine evaluation and FEN/PGN import
 - Puzzles with ELO-rated difficulty tracking (mate-in-1/2/3) and session history
-- Achievements system with 51 badges across 6 categories
+- Achievements system with 49 badges across 6 categories
 - Profile pages with rating history, game stats, and achievement showcase
-- Offline-capable with IndexedDB persistence
-- Adaptive Stockfish engine (multi-threaded 69MB or single-threaded 7MB based on device)
+- Offline-capable with IndexedDB persistence (web) and shared_preferences (mobile)
+- Stockfish engine: lite-st (7MB single-threaded) for all web users; native multistockfish on mobile
+- Mobile OAuth via deep links (`nxtchess://callback`)
 
 ## App-Specific Documentation
 
@@ -23,6 +24,7 @@ For deeper details when working in a specific app:
 
 - [Frontend CLAUDE.md](apps/frontend/CLAUDE.md) - Component hierarchy, stores, services, PWA config
 - [Backend CLAUDE.md](apps/backend/CLAUDE.md) - Package structure, middleware, WebSocket protocol
+- Mobile app (`apps/mobile/`) - Flutter/Riverpod, full feature parity with web frontend
 
 ## Development Commands
 
@@ -48,6 +50,18 @@ yarn dev           # Vite dev server with HMR
 yarn build         # TypeScript + Vite production build
 yarn type:check    # Type checking only
 yarn format        # Prettier formatting
+yarn lint          # ESLint
+yarn test          # Vitest
+```
+
+### Mobile Commands (from apps/mobile/)
+
+```bash
+flutter run                     # Run debug build
+flutter test                    # Run 137+ tests
+flutter build apk               # Android release
+flutter build ios                # iOS release
+dart run build_runner build      # Regenerate freezed/riverpod code
 ```
 
 ### Monitoring
@@ -74,10 +88,14 @@ just prod-up                # Start production stack
 
 ### Tech Stack
 
-- **Frontend**: SolidJS + TypeScript + Vite + CSS Modules + PWA (vite-plugin-pwa)
-- **Backend**: Go (Chi router) + PostgreSQL + Redis + gorilla/websocket
-- **Chess**: chess.js (browser validation) + stockfish.js (Web Worker AI/eval) + notnil/chess (server validation)
+- **Frontend (Web)**: SolidJS + TypeScript + Vite + CSS Modules + PWA (vite-plugin-pwa)
+- **Frontend (Mobile)**: Flutter + Dart + Riverpod + freezed + go_router
+- **Backend**: Go 1.24 (Chi router) + PostgreSQL 15 + Redis 7 + gorilla/websocket
+- **Chess (Web)**: chess.js (browser validation) + stockfish.js (Web Worker AI/eval)
+- **Chess (Mobile)**: dartchess (validation) + chessground (board UI) + multistockfish (native engine)
+- **Chess (Server)**: notnil/chess (server validation)
 - **Infrastructure**: Docker Compose + Caddy (reverse proxy) + Nginx (static serving)
+- **CI/CD**: GitHub Actions (frontend lint/test + backend test)
 - **Monitoring**: Prometheus (metrics) + Loki (logs) + Grafana (dashboards)
 
 ### Frontend Structure (apps/frontend/src/)
@@ -86,8 +104,8 @@ just prod-up                # Start production stack
 @types/              # External library types (stockfish-js.d.ts)
 
 components/
-├── chess/           # Chess UI: ChessBoard, ChessBoardController (+ hooks/), ChessBoardArrows, ChessPiece, ChessClock, ChessEvalBar, TimeControlGrid
-├── game/            # Game layout: GameContainer, GameInfoPanel, GameNotation, MoveHistoryPanel, ButtonPanel, DifficultyDisplay
+├── chess/           # Chess UI: ChessBoard, ChessBoardController (+ hooks/), ChessBoardArrows, ChessPiece, ChessClock, ChessEvalBar, ChessEndModal, ChessGameModal, ChessPromotionModal, ChessDifficultySlider, ChessEngineOverlay, ChessMaterialDisplay, ChessSideSelector, TimeControlGrid
+├── game/            # Game layout: GameContainer, GameInfoPanel, GameNotation, MoveHistoryPanel, ButtonPanel, GamePanelButton, DifficultyDisplay, PlayerColorDisplay
 ├── play/            # Multiplayer: PlayContainer, PlayHub, PlayModal, PlayAIModal, PlayCreateGameModal, PlayControlPanel, PlayNavigationPanel, PlayResignModal
 ├── training/        # Training: TrainingContainer, TrainingModal, TrainingControlPanel, TrainingNavigationPanel
 ├── analyze/         # Analysis: AnalyzeContainer, AnalyzeEnginePanel, AnalyzeControlPanel, AnalyzeImportModal, AnalyzeNavigationPanel
@@ -111,14 +129,17 @@ services/
 │   ├── StockfishEngine.ts    # Low-level UCI protocol wrapper
 │   ├── ResilientEngine.ts    # Circuit breaker with auto-recovery
 │   ├── EnginePool.ts         # Multi-engine allocation per (purpose, gameId)
+│   ├── engineService.ts      # High-level engine service wrapping EnginePool
 │   ├── aiEngineWorker.ts     # AI move computation (Web Worker)
 │   ├── evalEngineWorker.ts   # Position evaluation (Web Worker)
 │   ├── analysisEngineService.ts  # Multi-line analysis for analyze mode (MultiPV)
 │   └── moveEvalService.ts    # Move quality evaluation for training hints
 ├── game/            # Game logic
-│   ├── chessGameService.ts   # Move validation, legal move computation
+│   ├── chessGameService.ts   # Move validation, legal moves, premove system
 │   ├── gameLifecycle.ts      # State machine (idle → initializing → playing → ended)
 │   ├── BoardCache.ts         # O(1) board lookups, caches legal moves
+│   ├── fenUtils.ts           # FEN parsing (turn, king square)
+│   ├── pieceUtils.ts         # Piece color/type helpers
 │   └── session/              # GameSession (command pattern) + SessionManager (singleton)
 ├── review/          # gameReviewService (post-game move analysis, accuracy scoring)
 ├── network/         # ReconnectingWebSocket with exponential backoff
@@ -148,10 +169,10 @@ types/               # chess.ts (Square, PieceType, Board), game.ts (Side, GameM
 cmd/server/main.go           # Entry point, route registration, graceful shutdown
 
 internal/
-├── auth/            # OAuth 2.0: oauth.go (handlers), providers.go (Google, GitHub, Discord)
+├── auth/            # OAuth 2.0: oauth.go (handlers + mobile deep link support), providers.go (Google, GitHub, Discord)
 ├── chess/           # Server-side validation wrapping notnil/chess
 ├── config/          # Environment config loader
-├── achievements/    # Achievement definitions (51 badges), checker logic, game analysis
+├── achievements/    # Achievement definitions (49 badges), checker logic, game analysis
 ├── controllers/     # HTTP handlers: auth.go, profile.go, training.go, puzzle.go
 ├── database/        # PostgreSQL: connection pooling, direct SQL queries (no ORM)
 │   ├── endgame.go   # Training position queries
@@ -175,6 +196,47 @@ internal/
 │   └── message.go   # Message types and payloads
 └── utils/           # Random strings, auth redirects
 ```
+
+### Mobile App Structure (apps/mobile/)
+
+```
+lib/
+├── main.dart                    # Entry point, initializes services, ProviderScope
+├── config/
+│   └── env.dart                 # Compile-time config (--dart-define): BACKEND_URL, ENV, DEBUG
+├── router/
+│   └── app_router.dart          # GoRouter: 4-tab StatefulShellRoute + full-screen routes
+├── models/                      # freezed immutable data classes (game_state, review_types, etc.)
+├── providers/                   # Riverpod providers/notifiers
+│   ├── chess_notifier.dart      # Central game state machine (mirrors web ChessStore)
+│   ├── play_game_controller.dart    # Multiplayer game controller
+│   ├── training_game_controller.dart
+│   ├── analyze_game_controller.dart
+│   ├── puzzle_game_controller.dart
+│   └── review_game_controller.dart
+├── services/
+│   ├── api_client.dart          # Dio HTTP client with cookie persistence
+│   ├── auth_service.dart        # OAuth via flutter_web_auth_2 (nxtchess:// deep link)
+│   ├── game_sync_service.dart   # WebSocket multiplayer (mirrors web GameSyncService)
+│   ├── reconnecting_websocket.dart  # Exponential backoff, message queuing
+│   ├── engine_service.dart      # Native multistockfish integration
+│   ├── audio_service.dart       # audioplayers sound effects
+│   ├── haptics_service.dart     # Platform haptic feedback
+│   └── review_service.dart      # Post-game analysis
+├── screens/                     # Full-screen route widgets
+│   ├── home/, play/, training/, analyze/, puzzles/, review/
+│   ├── profile/, settings/
+│   └── auth/                    # Username setup
+├── widgets/                     # Reusable UI components
+│   ├── chess_board.dart         # chessground-based board
+│   ├── eval_bar.dart, clock.dart, move_list.dart
+│   └── common/                  # Shared UI elements
+└── utils/                       # UCI parsing, PGN parsing, move quality classification
+
+test/                            # 137+ tests (chess_notifier, websocket, puzzles, etc.)
+```
+
+Platform config: Android `com.nxtchess.nxtchess` (Java 17, Gradle Kotlin DSL), iOS `com.nxtchess.nxtchess` (ProMotion support). Custom URL scheme `nxtchess://` for OAuth callbacks.
 
 ### Database Schema (db/)
 
@@ -226,13 +288,15 @@ lobby = createLobbyStore(); // Open games list, lobby subscription
 2. **ResilientEngine**: Circuit breaker (3 failures → open, 1min timeout), auto-recovery, command queuing
 3. **EnginePool**: Allocation per (purpose, gameId), max 4 engines, 1min idle timeout, eviction policy
 
-### Adaptive Engine Loading
+### Engine Loading
 
-Detects device capabilities at runtime:
+Three Stockfish variants exist but currently all web users get `lite-st`:
 
-- `full-mt` (69MB): Multi-threaded, requires SharedArrayBuffer + COOP/COEP headers
-- `full-st`: Single-threaded full version
-- `lite-st` (7MB): Single-threaded, mobile-optimized fallback
+- `full-mt` (69MB): Multi-threaded, requires SharedArrayBuffer + COOP/COEP headers (reserved for future "Power Mode")
+- `full-st`: Single-threaded full version (unused)
+- `lite-st` (7MB): Single-threaded, currently used for all web users
+
+Mobile app uses native `multistockfish` package (full multi-threaded engine).
 
 ### Session Layer (Command Pattern)
 
@@ -265,12 +329,15 @@ Use blank lines to separate logical sections. Let function names, class names, a
 ### Backend Patterns
 
 - **Structured logging**: `logger.Info("msg", logger.F("key", value, "key2", value2))`
-- **Token bucket rate limiting**: Auth (10/min), API (60/min), Strict (5/min)
+- **Token bucket rate limiting**: Auth (15/min burst 10), API (60/min burst 20), Strict (5/min burst 3)
 - **Nested locking**: GameManager RWMutex for map, GameState RWMutex for state
 - **Context propagation**: Single context for entire OAuth flow with 30s timeout
-- **Read/write pumps**: Concurrent goroutines per WebSocket client
-- **Garbage collection**: Ended games (5min), waiting games (30min)
-- **Reconnection**: 20s grace period on disconnect, full state hydration on reconnect (FEN, move history, clocks)
+- **Read/write pumps**: Concurrent goroutines per WebSocket client, 30msg/10s rate limit with 30s block after 3 violations
+- **Garbage collection**: Ended games (5min), waiting games (5min)
+- **Game limits**: 10s creation cooldown, max 2 active games per user/IP, 1000 total server capacity
+- **Reconnection**: 20s grace period on authenticated disconnect (anonymous = immediate forfeit), full state hydration on reconnect
+- **Mobile OAuth**: `?mobile=true` query param on login → redirects to `nxtchess://callback?token=<session>`
+- **Lobby batching**: 250ms batch window with deduplication (add+remove of same game cancels out)
 - **Prometheus metrics**: HTTP request count/duration, active WS connections/games, DB query duration via `internal/metrics`
 - **InternalOnly middleware**: Restricts `/metrics` to private IPs and trusted proxies
 
@@ -280,11 +347,16 @@ Use blank lines to separate logical sections. Let function names, class names, a
 Client → Server: { type: "MESSAGE_TYPE", data: { ... } }
 Server → Client: { type: "MESSAGE_TYPE", data: { ... } }
 
+Keepalive:
+PING → PONG (client sends every 30s)
+
 Game Lifecycle:
 GAME_CREATE → GAME_CREATED (gameId, color)
 GAME_JOIN → GAME_JOINED / GAME_STARTED (both players) / GAME_NOT_FOUND / GAME_FULL
+GAME_LEAVE → ends waiting/active game
 MOVE → MOVE_ACCEPTED / MOVE_REJECTED / OPPONENT_MOVE
 TIME_UPDATE (every 1s) / RESIGN / GAME_ENDED (includes rating deltas + achievement unlocks)
+OPPONENT_LEFT (player left without disconnecting)
 
 Reconnection:
 GAME_RECONNECT → GAME_RECONNECTED (full state: gameId, color, fen, moveHistory, times, opponent, rated)
@@ -294,7 +366,10 @@ OPPONENT_RECONNECTED (opponent restored connection)
 Lobby:
 LOBBY_SUBSCRIBE → LOBBY_LIST (all waiting games)
 LOBBY_UNSUBSCRIBE
-LOBBY_UPDATE (game added/removed broadcast to subscribers)
+LOBBY_UPDATE (game added/removed, 250ms batched with dedup)
+
+Future (defined, not yet implemented):
+MATCHMAKING_JOIN, MATCHMAKING_CANCEL → MATCHMAKING_WAITING, MATCHMAKING_MATCHED
 ```
 
 ### PWA Configuration
@@ -319,11 +394,13 @@ Applied in Caddy, Nginx, and Vite dev server.
 
 ```typescript
 Side = 'w' | 'b'
+SideSelection = Side | 'random'
 GameMode = 'play' | 'training' | 'analysis' | 'puzzle'
 OpponentType = 'ai' | 'human'
 RatedMode = 'rated' | 'casual'
 GameLifecycle = 'idle' | 'initializing' | 'playing' | 'error' | 'ended'
 GamePhase = 'opening' | 'middlegame' | 'endgame' | null
+GameOverReason = 'checkmate' | 'stalemate' | 'time' | 'resignation' | 'disconnection' | 'abandonment' | 'insufficient_material' | 'threefold_repetition' | 'fifty_move_rule' | null
 PuzzleCategory = 'mate-in-1' | 'mate-in-2' | 'mate-in-3' | 'random'
 MoveQuality = 'best' | 'excellent' | 'good' | 'inaccuracy' | 'mistake' | 'blunder'
 AchievementRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
@@ -381,6 +458,14 @@ VITE_BACKEND_URL=http://localhost:8080
 - `DATABASE_URL`, `REDIS_ADDR`, `REDIS_PASSWORD`
 - OAuth credentials (GOOGLE/GITHUB/DISCORD_CLIENT_ID/SECRET) for sign-in
 - `LOG_LEVEL=DEBUG`, `LOG_JSON=false` for development
+- `TRUSTED_PROXIES` (comma-separated CIDRs for InternalOnly middleware)
+- `SKIP_MIGRATIONS=true` to skip startup migrations
+
+**Mobile** (apps/mobile/): Configure via `--dart-define` flags:
+
+```bash
+flutter run --dart-define=BACKEND_URL=http://localhost:8080 --dart-define=ENV=development
+```
 
 ## Production Deployment
 
@@ -389,10 +474,20 @@ VITE_BACKEND_URL=http://localhost:8080
 - Caddy handles HTTPS/SSL via Let's Encrypt
 - COOP/COEP headers for SharedArrayBuffer
 - Resource limits: Backend 512MB/0.5CPU, Frontend 256MB/0.5CPU, DB 1GB/1CPU
+- Prod DB only gets `db/init.sql` — backend binary runs golang-migrate at startup for full schema
+- `backend.Dockerfile` (project root context) used for prod; `apps/backend/Dockerfile` for Railway
 
 **Railway**: Alternative deployment with `railway.toml` in each app directory.
 
+**CI/CD**: GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to `main`:
+
+- Frontend job: `yarn install --frozen-lockfile` → format:check → lint → type:check → test
+- Backend job: `go test -race -count=1 ./...`
+- Pre-commit hook: gofmt + go vet + go test; frontend lint-staged + lint + tsc + vitest
+
 ## Routing
+
+### Frontend Routes
 
 ```
 /                   → HomeContainer (quick play cards for instant game start)
@@ -407,7 +502,64 @@ VITE_BACKEND_URL=http://localhost:8080
 *                   → 404
 ```
 
+### Mobile Routes
+
+```
+/ (tab)             → Home (quick play)
+/play (tab)         → Play (lobby + AI)
+/play/:gameId       → Play (join multiplayer)
+/training (tab)     → Training
+/puzzles (tab)      → Puzzles
+/analyze            → Analyze (full-screen)
+/review             → Review (full-screen)
+/profile/:username  → Profile (full-screen)
+/settings           → Settings (full-screen)
+/auth/username-setup → Username setup
+```
+
+### Backend API Routes
+
+```
+GET  /health              → Full status (DB, Redis, WS clients) for private IPs; minimal for public
+GET  /health/live         → Liveness probe (always 200)
+GET  /health/ready        → Readiness probe (DB + Redis check)
+GET  /metrics             → Prometheus (InternalOnly middleware)
+GET  /ws                  → WebSocket upgrade
+
+GET  /auth/{provider}/login     → OAuth login (Google, GitHub, Discord) — supports ?mobile=true
+GET  /auth/{provider}/callback  → OAuth callback
+POST /auth/logout               → Clear session
+
+GET  /api/profile/{username}                 → Public profile
+GET  /api/profile/{username}/rating-history  → Game + puzzle rating history
+GET  /api/profile/{username}/recent-games    → Last 10 games
+GET  /api/profile/{username}/achievements    → User achievements
+GET  /api/achievements                       → Full achievement catalog
+GET  /api/training/endgame/random            → Random endgame position
+GET  /api/training/endgame/themes            → Available themes
+GET  /api/training/endgame/stats             → Position count by difficulty
+POST /api/puzzle/result                      → Submit puzzle result (auth required)
+
+GET  /check-username      → Auth status + username check (triggers loyalty achievements)
+POST /set-username        → Set username (optional starting_rating: 500/1000/1500)
+POST /set-profile-icon    → Update profile icon
+```
+
 ## Roadmap
+
+### Mobile App v1.0 (current milestone)
+
+**Flutter App** *(in active development — full feature parity with web)*
+
+- ~~All game modes: Play (AI + multiplayer), Training, Analysis, Puzzles, Review~~ (done)
+- ~~WebSocket multiplayer with reconnection~~ (done)
+- ~~Native Stockfish via multistockfish~~ (done)
+- ~~OAuth deep links (nxtchess:// URL scheme)~~ (done — backend supports ?mobile=true)
+- ~~Profile, achievements, rating history~~ (done)
+- ~~137+ tests~~ (done)
+- App Store / Play Store submission
+- Push notifications
+- App-specific CI job in GitHub Actions
 
 ### Training & Analysis
 
@@ -424,18 +576,14 @@ VITE_BACKEND_URL=http://localhost:8080
 - Filter by rating range (2000+, 2200+, 2500+)
 - Add to Analyze mode or include in Tools section
 
-**Post-Game Analysis with Move Classification** *(implemented — review mode with accuracy scoring)*
+**Gamify Post-Game Analysis**
 
-- ~~Classify moves: Best, Good, Inaccuracy, Mistake, Blunder~~ (done — gameReviewService)
-- ~~Centipawn loss graph showing critical moments~~ (done — ReviewEvalGraph)
-- ~~Accuracy percentage per game~~ (done — win-percentage formula per side)
-- ~~Extends existing analysisEngineService infrastructure~~ (done — dedicated review engine)
-- Gamify post game analysis
+- Post-game review is implemented (gameReviewService, accuracy scoring, eval graphs)
+- Add gamification layer (streaks, comparative accuracy, challenge modes)
 
-**Tactics Puzzles with Spaced Repetition** *(mate-in-1/2/3 implemented with ELO-rated puzzle tracking)*
+**Tactics Puzzles Expansion**
 
-- ~~Mate in 1, 2, 3 puzzle targets~~ (done)
-- ~~Puzzle ELO rating system~~ (done — separate puzzle_rating with history tracking)
+- Mate-in-1/2/3 with ELO-rated tracking is implemented
 - Themed puzzles (forks, pins, back rank mates)
 - SM-2 spaced repetition for failed puzzles
 - Server-side puzzle database
@@ -448,58 +596,26 @@ VITE_BACKEND_URL=http://localhost:8080
 
 ### Multiplayer & Competitive
 
-**Multiplayer Lobby** *(implemented — PlayHub with real-time lobby via WebSocket)*
+**Matchmaking** *(message stubs defined: MATCHMAKING_JOIN/CANCEL/WAITING/MATCHED)*
 
-- ~~Browse and join open games~~ (done)
-- ~~Filter by time control~~ (done — categorized Bullet/Blitz/Rapid/Classical)
 - ELO range based filtering for lobby
+- Auto-matching by rating bracket
 
 **Tournaments**
 
 - Swiss and arena formats
 - Scheduled events
 
-**Rated Play** *(implemented — ELO system for multiplayer + puzzles)*
-
-- ~~ELO-based matchmaking~~ (done — K-factor 40 for <10 games, 32 after)
-- ~~Rating history visualization~~ (done — profile chart with time range selector)
-- ELO range based option for lobby
-
-**Achievements** *(implemented — 51 badges across 6 categories)*
-
-- ~~Achievement definitions with rarity levels~~ (done — common/uncommon/rare/epic/legendary)
-- ~~Achievement checking on game end and puzzle solve~~ (done)
-- ~~Achievement toast notifications~~ (done)
-- ~~Profile achievement showcase~~ (done — collapsible categories)
-
 ### Platform
 
-**Profile Features** *(implemented — rating history, game stats, achievements)*
+**Profile Enhancements**
 
-- ~~Game history and statistics~~ (done — recent games, win/loss/draw counts)
-- ~~Rating history charts~~ (done — with time range selector)
-- ~~Achievement points and badges~~ (done)
 - Opening repertoire tracking
 
-**Mobile App**
+**Performance Monitoring**
 
-- Native wrapper or React Native port
-- Push notifications
-- PWA support
-
-**CI/CD**
-
-- Automated testing pipeline
-- Deployment automation
-- GitHub Actions
-
-**Observability** *(PLG stack implemented — Prometheus, Loki, Grafana with backend dashboard)*
-
-- ~~Grafana LGTM stack (Loki, Grafana, Tempo, Mimir)~~ → implemented as PLG
-- ~~Prometheus metrics~~ (HTTP requests, WS connections, DB queries)
-- ~~Grafana dashboards~~ (backend request rate, latency, active connections)
-- ~~Loki log aggregation~~ (via Promtail, Docker log driver)
-- Performance monitoring (frontend metrics, Core Web Vitals)
+- Frontend metrics, Core Web Vitals
+- Mobile app performance tracking
 
 ## Git Conventions
 

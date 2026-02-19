@@ -113,6 +113,10 @@ func NewHandler(hub *Hub, cfg *config.Config, connLimit *ConnectionLimiter) *Han
 			WriteBufferSize: 1024,
 			CheckOrigin: func(r *http.Request) bool {
 				origin := r.Header.Get("Origin")
+				// Allow no origin (native mobile apps, non-browser clients)
+				if origin == "" {
+					return true
+				}
 				// Allow configured frontend URL
 				if origin == cfg.FrontendURL {
 					return true
@@ -120,8 +124,7 @@ func NewHandler(hub *Hub, cfg *config.Config, connLimit *ConnectionLimiter) *Han
 				// In development, allow localhost variants
 				if !cfg.IsProd() {
 					return origin == "http://localhost:5173" ||
-						origin == "http://127.0.0.1:5173" ||
-						origin == ""
+						origin == "http://127.0.0.1:5173"
 				}
 				return false
 			},
