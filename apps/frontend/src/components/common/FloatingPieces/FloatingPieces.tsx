@@ -38,11 +38,6 @@ const FloatingPieces: Component = () => {
     };
   };
 
-  const spawnPiece = () => {
-    if (pieces().length >= 40) return;
-    setPieces((prev) => [...prev, createPiece(0)]);
-  };
-
   const removePiece = (id: number) => {
     setPieces((prev) => prev.filter((p) => p.id !== id));
   };
@@ -50,16 +45,25 @@ const FloatingPieces: Component = () => {
   const scheduleSpawn = () => {
     spawnTimeout = setTimeout(
       () => {
-        spawnPiece();
+        spawnPieceGuarded();
         scheduleSpawn();
       },
       400 + Math.random() * 600
     );
   };
 
+  const isMobile = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+  const initialCount = isMobile ? 10 : 35;
+  const maxCount = isMobile ? 15 : 40;
+
+  const spawnPieceGuarded = () => {
+    if (pieces().length >= maxCount) return;
+    setPieces((prev) => [...prev, createPiece(0)]);
+  };
+
   onMount(() => {
     const initial: FloatingPiece[] = [];
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < initialCount; i++) {
       const piece = createPiece(0);
       piece.delay = -(Math.random() * 0.85 * piece.duration);
       initial.push(piece);

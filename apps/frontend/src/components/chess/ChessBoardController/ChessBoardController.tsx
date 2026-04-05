@@ -133,6 +133,9 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     const piece = board.find((s) => s.square === sq)?.piece;
     if (!piece || piece[1] !== 'K') return new Set();
 
+    const kingHome = piece[0] === 'w' ? 'e1' : 'e8';
+    if (sq !== kingHome) return new Set();
+
     return getCastlingHintSquares(moves);
   });
 
@@ -374,7 +377,8 @@ const ChessBoardController: ParentComponent<ChessBoardControllerProps> = (props)
     }
     const moves = chess.getLegalMoves(square);
     const piece = session.getPieceAt(square);
-    if (piece?.type === 'k') {
+    const kingHome = piece?.color === 'w' ? 'e1' : 'e8';
+    if (piece?.type === 'k' && square === kingHome) {
       const withRooks = [...moves];
       for (const target of moves) {
         const rookSquare = CASTLING_DESTINATION_TO_ROOK[target];

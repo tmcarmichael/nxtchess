@@ -157,10 +157,21 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // Activate new service worker immediately for faster offline readiness
+        globIgnores: ['stockfish/**'],
         skipWaiting: true,
         clientsClaim: true,
         runtimeCaching: [
+          {
+            urlPattern: /\/stockfish\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'stockfish-cache',
+              expiration: {
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+                maxEntries: 10,
+              },
+            },
+          },
           {
             urlPattern: /\.wasm$/,
             handler: 'CacheFirst',
@@ -168,6 +179,7 @@ export default defineConfig({
               cacheName: 'wasm-cache',
               expiration: {
                 maxAgeSeconds: 60 * 60 * 24 * 30,
+                maxEntries: 10,
               },
             },
           },
@@ -177,6 +189,10 @@ export default defineConfig({
             options: {
               cacheName: 'api-cache',
               networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24,
+              },
             },
           },
         ],

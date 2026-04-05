@@ -30,9 +30,12 @@
 
 .progressFill {
   height: 100%;
+  width: 100%;
   background: var(--accent);
   border-radius: var(--radius-full);
-  transition: width 0.3s ease-out;
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left center;
+  transition: transform 0.3s ease-out;
 }
 
 .progressFillIndeterminate {

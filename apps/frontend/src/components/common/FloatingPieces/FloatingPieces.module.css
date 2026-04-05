@@ -7,7 +7,6 @@
   pointer-events: none;
   opacity: 0.03;
   z-index: 0;
-  will-change: translate, scale, rotate;
   animation:
     pieceTraverse var(--duration) linear var(--delay) forwards,
     pieceWobble var(--duration) linear var(--delay) forwards;
@@ -33,6 +32,12 @@
   100% {
     translate: calc(110vw - 50%) calc(-50% + var(--y-offset) * 0.15);
     scale: 0.05;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floatingPiece {
+    display: none;
   }
 }
 

@@ -1,8 +1,9 @@
 .userProfileContainer {
   width: 100%;
   max-width: 60rem;
-  margin: var(--space-2xl) auto;
+  margin: 0 auto var(--space-2xl);
   padding: var(--space-xl);
+  padding-top: calc(var(--header-height) + var(--safe-area-top) + var(--space-lg));
   background-color: var(--surface-2);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
@@ -139,7 +140,9 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .userProfileCategoryButton:hover:not(.userProfileCategoryButtonActive) {
@@ -202,7 +205,10 @@
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  transition: all var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .userProfileTimeRangeButton:hover:not(.userProfileTimeRangeButtonActive) {
@@ -306,8 +312,9 @@
 
 @media (max-width: 639px) {
   .userProfileContainer {
-    margin: var(--space-md);
+    margin: 0 var(--space-md) var(--space-md);
     padding: var(--space-md);
+    padding-top: calc(var(--header-height-mobile) + var(--safe-area-top) + var(--space-sm));
     border-radius: var(--radius-md);
   }
 

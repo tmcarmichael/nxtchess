@@ -57,10 +57,18 @@
   cursor: pointer;
   font-size: var(--text-lg);
   font-weight: 500;
-  transition: all var(--transition-base);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
 }
 
 .homeButton:hover {
   background-color: var(--surface-4);
   color: var(--text-primary);
+}
+
+@media (max-width: 639px) {
+  .errorContainer {
+    min-height: 250px;
+  }
 }

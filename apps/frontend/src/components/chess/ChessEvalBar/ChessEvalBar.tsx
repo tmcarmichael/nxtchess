@@ -71,7 +71,7 @@ const ChessEvalBar: Component<EvalBarProps> = (props) => {
   return (
     <div class={styles.evalBarContainer} role="img" aria-label={evalDescription()}>
       <div class={styles.evalBarTrack} classList={{ [styles.trackFlipped]: props.flipped }}>
-        <div class={styles.evalBarFill} style={{ '--fill-percent': `${whitePortion()}%` }} />
+        <div class={styles.evalBarFill} style={{ '--fill-scale': whitePortion() / 100 }} />
       </div>
       <div class={styles.evalScore}>
         <Show when={props.evalScore !== null} fallback="--">

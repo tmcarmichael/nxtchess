@@ -57,3 +57,10 @@
   height: 24px;
   cursor: default;
 }
+
+@media (max-width: 639px) {
+  .capturesContainer {
+    width: 100%;
+    max-width: 320px;
+  }
+}

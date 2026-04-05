@@ -89,7 +89,7 @@
 @media (max-width: 639px) {
   .textArea {
     min-height: 160px;
-    font-size: var(--text-base);
+    font-size: 1rem;
   }
 
   .reviewButton {

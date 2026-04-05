@@ -17,13 +17,41 @@
 }
 
 .evalBoardRow {
+  --board-size: min(
+    var(--board-max-size),
+    calc(100vw - 2 * var(--panel-width) - 2 * var(--space-xl) - 4 * var(--space-md)),
+    calc(100vh - 19rem)
+  );
+
   display: flex;
   flex-direction: row;
   align-items: flex-start;
 }
 
+@media (min-width: 1800px) {
+  .evalBoardRow {
+    --board-size: min(
+      var(--board-max-size),
+      calc(100vw - 2 * 420px - 2 * var(--space-xl) - 4 * var(--space-md)),
+      calc(100vh - 19rem)
+    );
+  }
+}
+
+@media (max-width: 1199px) {
+  .evalBoardRow {
+    --board-size: min(
+      var(--board-max-size),
+      calc(100vw - 2 * 320px - 2 * var(--space-lg) - 4 * var(--space-md)),
+      calc(100vh - 19rem)
+    );
+  }
+}
+
 @media (max-width: 1023px) {
   .evalBoardRow {
+    --board-size: min(600px, calc(100vw - 4rem));
+
     flex-direction: column;
     align-items: center;
   }
@@ -37,9 +65,19 @@
 }
 
 @media (max-width: 639px) {
+  .evalBoardRow {
+    --board-size: min(480px, calc(100vw - 2rem));
+  }
+
   .boardLayoutRow {
     flex-direction: column;
     align-items: center;
+  }
+}
+
+@media (max-width: 374px) {
+  .evalBoardRow {
+    --board-size: calc(100vw - 2rem);
   }
 }
 
@@ -160,7 +198,9 @@
   cursor: pointer;
   font-size: var(--text-base);
   font-weight: 500;
-  transition: all var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
   white-space: nowrap;
 }
 
@@ -191,7 +231,10 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--text-md);
-  transition: all var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .cancelWaitingButton:hover {

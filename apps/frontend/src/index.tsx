@@ -2,7 +2,7 @@ import { Router } from '@solidjs/router';
 import { render } from 'solid-js/web';
 import App from './App';
 import { routes } from './routes';
-import { initAiEngine, terminateAiEngine } from './services/engine/aiEngineWorker';
+import { terminateAiEngine } from './services/engine/aiEngineWorker';
 import { terminateEvalEngine } from './services/engine/evalEngineWorker';
 import { initOfflineSupport } from './services/offline/AssetPreloader';
 import { SettingsProvider } from './store/settings/SettingsContext';
@@ -11,9 +11,6 @@ import './index.css';
 
 // Initialize offline support - preloads critical assets, fonts, and WASM
 initOfflineSupport();
-
-// Pre-warm the Stockfish engine immediately on app load.
-initAiEngine(600).catch(() => {});
 
 // Terminate engines when user leaves the site
 window.addEventListener('beforeunload', () => {

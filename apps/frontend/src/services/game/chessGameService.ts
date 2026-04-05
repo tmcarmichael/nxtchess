@@ -97,7 +97,8 @@ export const getLegalMoves = (fen: string, square: Square): Square[] => {
 
   // When a king can castle, also highlight the rook square as a valid destination
   const piece = chess.get(square as ChessSquare);
-  if (piece?.type === 'k') {
+  const kingHome = piece?.color === 'w' ? 'e1' : 'e8';
+  if (piece?.type === 'k' && square === kingHome) {
     for (const target of [...targets]) {
       const rookSquare = CASTLING_DESTINATION_TO_ROOK[target];
       if (rookSquare) {
@@ -146,7 +147,8 @@ export const getPremoveLegalMoves = (fen: string, square: Square): Square[] => {
 
   // When a king can castle, also include the rook square as a valid premove destination
   const piece = chess.get(square as ChessSquare);
-  if (piece?.type === 'k') {
+  const kingHome = piece?.color === 'w' ? 'e1' : 'e8';
+  if (piece?.type === 'k' && square === kingHome) {
     for (const target of [...legalSquares]) {
       const rookSquare = CASTLING_DESTINATION_TO_ROOK[target];
       if (rookSquare) {

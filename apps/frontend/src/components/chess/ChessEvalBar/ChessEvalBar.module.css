@@ -4,11 +4,7 @@
   align-items: center;
   justify-content: flex-start;
 
-  height: min(
-    var(--board-max-size),
-    calc(100vw - 2 * var(--panel-width) - 2 * var(--space-xl) - 4 * var(--space-md)),
-    calc(100vh - 19rem)
-  );
+  height: var(--board-size);
   position: relative;
 
   margin-top: var(--space-md);
@@ -46,9 +42,11 @@
   position: absolute;
   bottom: 0;
   width: 100%;
-  height: var(--fill-percent, 50%);
+  height: 100%;
   background: var(--piece-white);
-  transition: height 0.3s ease-out;
+  transform: scaleY(var(--fill-scale, 0.5));
+  transform-origin: bottom center;
+  transition: transform 0.3s ease-out;
 }
 
 .trackFlipped {
@@ -82,30 +80,10 @@
   color: var(--accent);
 }
 
-@media (min-width: 1800px) {
-  .evalBarContainer {
-    height: min(
-      var(--board-max-size),
-      calc(100vw - 2 * 420px - 2 * var(--space-xl) - 4 * var(--space-md)),
-      calc(100vh - 19rem)
-    );
-  }
-}
-
-@media (max-width: 1199px) {
-  .evalBarContainer {
-    height: min(
-      var(--board-max-size),
-      calc(100vw - 2 * 320px - 2 * var(--space-lg) - 4 * var(--space-md)),
-      calc(100vh - 19rem)
-    );
-  }
-}
-
 @media (max-width: 1023px) {
   .evalBarContainer {
     flex-direction: row;
-    width: min(600px, calc(100vw - 2rem));
+    width: var(--board-size);
     height: auto;
     gap: var(--space-sm);
     padding: var(--space-sm) 0;
@@ -132,10 +110,12 @@
   .evalBarFill {
     top: auto;
     left: 0;
-    width: var(--fill-percent, 50%);
+    width: 100%;
     height: 100%;
     background: var(--piece-white);
-    transition: width 0.3s ease-out;
+    transform: scaleX(var(--fill-scale, 0.5));
+    transform-origin: left center;
+    transition: transform 0.3s ease-out;
   }
 
   .trackFlipped {
@@ -154,7 +134,7 @@
   .evalBarContainer {
     flex-direction: column;
     width: auto;
-    height: min(600px, calc(100vw - 2rem));
+    height: var(--board-size);
     gap: 0;
     padding: 0;
     margin-top: var(--space-md);
@@ -181,9 +161,11 @@
     bottom: 0;
     left: auto;
     width: 100%;
-    height: var(--fill-percent, 50%);
+    height: 100%;
     background: var(--piece-white);
-    transition: height 0.3s ease-out;
+    transform: scaleY(var(--fill-scale, 0.5));
+    transform-origin: bottom center;
+    transition: transform 0.3s ease-out;
   }
 
   .trackFlipped {
@@ -201,7 +183,7 @@
 @media (max-width: 639px) {
   .evalBarContainer {
     flex-direction: row;
-    width: min(480px, calc(100vw - 1rem));
+    width: var(--board-size);
     height: auto;
     gap: var(--space-sm);
     padding: var(--space-sm) 0;
@@ -228,10 +210,12 @@
   .evalBarFill {
     top: auto;
     left: 0;
-    width: var(--fill-percent, 50%);
+    width: 100%;
     height: 100%;
     background: var(--piece-white);
-    transition: width 0.3s ease-out;
+    transform: scaleX(var(--fill-scale, 0.5));
+    transform-origin: left center;
+    transition: transform 0.3s ease-out;
   }
 
   .trackFlipped {

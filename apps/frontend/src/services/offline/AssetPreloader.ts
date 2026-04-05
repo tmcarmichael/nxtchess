@@ -67,38 +67,10 @@ export function preloadWasm(): Promise<void> {
 }
 
 /**
- * Preloads self-hosted font files.
- * Called after critical assets to avoid competing for bandwidth.
- */
-export function preloadFonts(): void {
-  const fonts = [
-    '/fonts/outfit-variable.woff2', // Variable font covers weights 300-700
-    '/fonts/space-mono-400.woff2',
-    '/fonts/space-mono-700.woff2',
-  ];
-
-  fonts.forEach((url) => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'font';
-    link.type = 'font/woff2';
-    link.href = url;
-    link.crossOrigin = 'anonymous';
-    document.head.appendChild(link);
-  });
-}
-
-/**
  * Initializes all offline asset preloading.
  * Call this once at app bootstrap.
  */
 export function initOfflineSupport(): void {
-  // 1. Preload critical images immediately (highest priority)
   preloadCriticalAssets();
-
-  // 2. Preload fonts (high priority, needed for render)
-  preloadFonts();
-
-  // 3. Start WASM fetch (larger file, runs in parallel)
   preloadWasm();
 }

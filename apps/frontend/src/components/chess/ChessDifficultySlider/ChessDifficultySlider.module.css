@@ -64,19 +64,10 @@
   border-radius: var(--radius-sm);
 }
 
-.difficultySliderInput::-ms-track {
-  height: 6px;
-  background: transparent;
-  color: transparent;
-  border: none;
-}
-
-.difficultySliderInput::-ms-fill-lower {
-  background: var(--text-muted);
-  border-radius: var(--radius-sm);
-}
-
-.difficultySliderInput::-ms-fill-upper {
-  background: var(--text-muted);
-  border-radius: var(--radius-sm);
+@media (pointer: coarse) {
+  .difficultySliderInput::-webkit-slider-thumb {
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
+    margin-top: -19px;
+  }
 }

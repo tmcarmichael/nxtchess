@@ -1,12 +1,11 @@
 import {
-  type JSX,
   splitProps,
   Index,
   Show,
   type Component,
   createMemo,
   createSignal,
-  createEffect,
+  createRenderEffect,
   on,
 } from 'solid-js';
 import {
@@ -114,7 +113,7 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
     null
   );
 
-  createEffect(
+  createRenderEffect(
     on(
       () => local.animatingMove(),
       (anim) => {
@@ -148,96 +147,6 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
 
   // Ghost piece rendering is handled inline with <Show> for fine-grained
   // reactivity — only the transform style updates per frame, no DOM churn.
-
-  const renderedSquares = () => {
-    const selected = local.selectedSquare();
-    const dragState = local.draggedPiece();
-    const last = local.lastMove();
-    const checkedSquare = local.checkedKingSquare();
-    const squares = memoizedBoardSquares();
-    const premove = local.premoveSquares();
-    const animPiece = animatingPiece();
-    const flashSquare = local.flashKingSquare();
-    const rightClickSet = local.rightClickHighlights();
-    const castlingHints = local.castlingHintSquares();
-    const hoverSquare = local.dragHoverSquare();
-
-    const captures = local.captureSquares();
-
-    const renderSquare = (sq: BoardSquare): JSX.Element => {
-      const file = sq.square[0];
-      const rank = sq.square[1];
-      const isCastlingHint = castlingHints.has(sq.square);
-      const isCastlingHintHover = isCastlingHint && hoverSquare === sq.square;
-      const isHighlighted = highlightSet().has(sq.square) && !isCastlingHint;
-      const isSelected = selected === sq.square;
-      const isDragging = dragState?.square === sq.square;
-      const isAnimating = animPiece?.to === sq.square;
-      const isLastMove = last !== null && (last.from === sq.square || last.to === sq.square);
-      const isCapture = isHighlighted && captures.has(sq.square);
-      const isCheckedKing = checkedSquare === sq.square;
-      const isFlashingKing = flashSquare === sq.square;
-      const isRightClickHighlighted = rightClickSet.has(sq.square);
-      const isPremove =
-        premove !== null && (premove.from === sq.square || premove.to === sq.square);
-      const isLightSquare = (file.charCodeAt(0) - 97 + parseInt(rank, 10)) % 2 === 0;
-      const view = local.boardView();
-      const showFile = (view === 'w' && rank === '1') || (view === 'b' && rank === '8');
-      const showRank = (view === 'w' && file === 'h') || (view === 'b' && file === 'a');
-
-      const pieceOpacity = isDragging ? 0.5 : isAnimating ? 0 : 1;
-
-      const pieceName = sq.piece ? PIECE_NAMES[sq.piece] || sq.piece : null;
-      const squareLabel = pieceName ? `${sq.square}, ${pieceName}` : `${sq.square}, empty`;
-
-      return (
-        <div
-          data-square={sq.square}
-          role="gridcell"
-          aria-label={squareLabel}
-          aria-selected={isSelected}
-          tabIndex={isSelected ? 0 : -1}
-          classList={{
-            [styles.square]: true,
-            [styles.lightSquare]: isLightSquare,
-            [styles.darkSquare]: !isLightSquare,
-            [styles.selectedSquare]: isSelected,
-            [styles.lastMoveHighlight]: isLastMove,
-            [styles.checkedKing]: isCheckedKing,
-            [styles.flashKing]: isFlashingKing,
-            [styles.premoveHighlight]: isPremove,
-            [styles.castlingHint]: isCastlingHint,
-            [styles.castlingHintHover]: isCastlingHintHover,
-            [styles.rightClickHighlight]: isRightClickHighlighted,
-          }}
-          onMouseDown={(e) => {
-            if (e.button === 2) local.onSquareRightMouseDown(sq.square);
-          }}
-          onMouseUp={(e) => {
-            if (e.button === 2) local.onSquareRightMouseUp(sq.square);
-          }}
-          onMouseEnter={() => local.onSquareMouseEnter(sq.square)}
-        >
-          {showFile && <span class={styles.fileLabel}>{file}</span>}
-          {showRank && <span class={styles.rankLabel}>{rank}</span>}
-          {isHighlighted && (
-            <div
-              class={`${styles.legalMoveIndicator} ${isCapture ? styles.captureIndicator : ''}`}
-            />
-          )}
-          {sq.piece && (
-            <Piece
-              type={sq.piece as PieceType}
-              style={{ opacity: pieceOpacity, transition: 'opacity 0.05s ease' }}
-            />
-          )}
-        </div>
-      );
-    };
-
-    // eslint-disable-next-line solid/reactivity -- square() is called within Index's tracked callback
-    return <Index each={squares}>{(square) => renderSquare(square())}</Index>;
-  };
 
   const renderAnimatingPiece = () => {
     const animPiece = animatingPiece();
@@ -287,7 +196,91 @@ const ChessBoard: Component<ChessBoardProps> = (props) => {
       </div>
       <div class={styles.boardWrapper}>
         <div class={styles.board} role="grid" aria-label="Chess board">
-          {renderedSquares()}
+          <Index each={memoizedBoardSquares()}>
+            {(sq) => {
+              const isLightSquare = () => {
+                const f = sq().square[0];
+                const r = sq().square[1];
+                return (f.charCodeAt(0) - 97 + parseInt(r, 10)) % 2 === 0;
+              };
+
+              const showFile = () => {
+                const r = sq().square[1];
+                const v = local.boardView();
+                return (v === 'w' && r === '1') || (v === 'b' && r === '8');
+              };
+
+              const showRank = () => {
+                const f = sq().square[0];
+                const v = local.boardView();
+                return (v === 'w' && f === 'h') || (v === 'b' && f === 'a');
+              };
+
+              const pieceOpacity = () => {
+                if (local.draggedPiece()?.square === sq().square) return 0.5;
+                if (local.animatingMove()?.to === sq().square) return 0;
+                return 1;
+              };
+
+              const squareLabel = () => {
+                const piece = sq().piece;
+                const name = piece ? PIECE_NAMES[piece] || piece : null;
+                return name ? `${sq().square}, ${name}` : `${sq().square}, empty`;
+              };
+
+              return (
+                <div
+                  data-square={sq().square}
+                  role="gridcell"
+                  aria-label={squareLabel()}
+                  aria-selected={local.selectedSquare() === sq().square}
+                  tabIndex={local.selectedSquare() === sq().square ? 0 : -1}
+                  classList={{
+                    [styles.square]: true,
+                    [styles.lightSquare]: isLightSquare(),
+                    [styles.darkSquare]: !isLightSquare(),
+                    [styles.selectedSquare]: local.selectedSquare() === sq().square,
+                    [styles.lastMoveHighlight]: (() => {
+                      const last = local.lastMove();
+                      return (
+                        last !== null && (last.from === sq().square || last.to === sq().square)
+                      );
+                    })(),
+                    [styles.checkedKing]: local.checkedKingSquare() === sq().square,
+                    [styles.flashKing]: local.flashKingSquare() === sq().square,
+                    [styles.premoveHighlight]: (() => {
+                      const pm = local.premoveSquares();
+                      return pm !== null && (pm.from === sq().square || pm.to === sq().square);
+                    })(),
+                    [styles.castlingHint]: local.castlingHintSquares().has(sq().square),
+                    [styles.castlingHintHover]:
+                      local.castlingHintSquares().has(sq().square) &&
+                      local.dragHoverSquare() === sq().square,
+                    [styles.rightClickHighlight]: local.rightClickHighlights().has(sq().square),
+                  }}
+                  onMouseDown={(e) => {
+                    if (e.button === 2) local.onSquareRightMouseDown(sq().square);
+                  }}
+                  onMouseUp={(e) => {
+                    if (e.button === 2) local.onSquareRightMouseUp(sq().square);
+                  }}
+                  onMouseEnter={() => local.onSquareMouseEnter(sq().square)}
+                >
+                  {showFile() && <span class={styles.fileLabel}>{sq().square[0]}</span>}
+                  {showRank() && <span class={styles.rankLabel}>{sq().square[1]}</span>}
+                  {highlightSet().has(sq().square) &&
+                    !local.castlingHintSquares().has(sq().square) && (
+                      <div
+                        class={`${styles.legalMoveIndicator} ${local.captureSquares().has(sq().square) ? styles.captureIndicator : ''}`}
+                      />
+                    )}
+                  {sq().piece && (
+                    <Piece type={sq().piece as PieceType} style={{ opacity: pieceOpacity() }} />
+                  )}
+                </div>
+              );
+            }}
+          </Index>
           <ChessBoardArrows
             arrows={local.rightClickArrows}
             previewArrow={local.previewArrow}

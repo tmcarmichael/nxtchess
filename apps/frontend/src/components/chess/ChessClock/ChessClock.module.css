@@ -65,3 +65,16 @@
     opacity: 0.7;
   }
 }
+
+@media (max-width: 639px) {
+  .gameClock {
+    min-width: 100px;
+    width: 100px;
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .clockTimeDisplay {
+    font-size: var(--text-xl);
+    min-width: 6ch;
+  }
+}

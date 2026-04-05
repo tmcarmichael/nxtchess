@@ -39,7 +39,7 @@ const ReviewProgressBar: Component<ReviewProgressBarProps> = (props) => {
           <div
             class={styles.progressFill}
             classList={{ [styles.progressFillIndeterminate]: isInitializing() }}
-            style={{ width: isInitializing() ? undefined : `${percent()}%` }}
+            style={{ '--progress': isInitializing() ? undefined : percent() / 100 }}
           />
         </div>
       </div>

@@ -20,7 +20,6 @@
     transition:
       transform var(--transition-fast),
       filter var(--transition-fast);
-    will-change: transform;
   }
 
   .chessPiece:hover {

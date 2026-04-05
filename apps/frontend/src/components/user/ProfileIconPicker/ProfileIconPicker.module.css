@@ -65,3 +65,13 @@
   font-size: var(--text-base);
   color: var(--error);
 }
+
+@media (max-width: 639px) {
+  .iconGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .pickerContainer {
+    padding: var(--space-md);
+  }
+}

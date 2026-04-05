@@ -5,10 +5,10 @@
   gap: var(--space-sm);
   width: 100%;
   padding: var(--space-sm) var(--space-md);
-  background: var(--warning-bg, rgba(255, 165, 0, 0.1));
-  border: 1px solid var(--warning, #f0a030);
+  background: var(--warning-subtle);
+  border: 1px solid var(--warning);
   border-radius: var(--radius-md);
-  color: var(--warning, #f0a030);
+  color: var(--warning);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: 500;
@@ -21,8 +21,8 @@
   min-width: 2.2em;
   text-align: center;
   padding: 0.1em 0.4em;
-  background: var(--warning, #f0a030);
-  color: var(--surface-1, #1a1a2e);
+  background: var(--warning);
+  color: var(--surface-1);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
 }

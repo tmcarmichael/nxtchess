@@ -1,4 +1,4 @@
-import { For, Show, createMemo, createEffect, on, type Component } from 'solid-js';
+import { Index, Show, createMemo, createEffect, on, type Component } from 'solid-js';
 import GameNotation from '../GameNotation/GameNotation';
 import styles from './MoveHistoryPanel.module.css';
 import type { MoveQuality, MoveEvaluation } from '../../../types/moveQuality';
@@ -25,12 +25,7 @@ const MoveHistoryPanel: Component<MoveHistoryPanelProps> = (props) => {
       () => {
         requestAnimationFrame(() => {
           if (!movesContainerRef) return;
-          const lastRow = movesContainerRef.querySelector(':scope > * > :last-child');
-          if (lastRow) {
-            lastRow.scrollIntoView({ block: 'end' });
-          } else {
-            movesContainerRef.scrollTop = movesContainerRef.scrollHeight;
-          }
+          movesContainerRef.scrollTop = movesContainerRef.scrollHeight;
         });
       }
     )
@@ -151,17 +146,17 @@ const MoveHistoryPanel: Component<MoveHistoryPanelProps> = (props) => {
       <div class={styles.navigationPanelHeader}>Move History</div>
       <div class={styles.movesContainer} ref={movesContainerRef}>
         <div class={styles.movesGrid}>
-          <For each={movesRows()}>
+          <Index each={movesRows()}>
             {(rowData) => (
               <MoveRow
-                turnNumber={rowData.turnNumber}
-                whiteMove={rowData.whiteMove}
-                blackMove={rowData.blackMove}
-                whiteIndex={rowData.whiteIndex}
-                blackIndex={rowData.blackIndex}
+                turnNumber={rowData().turnNumber}
+                whiteMove={rowData().whiteMove}
+                blackMove={rowData().blackMove}
+                whiteIndex={rowData().whiteIndex}
+                blackIndex={rowData().blackIndex}
               />
             )}
-          </For>
+          </Index>
         </div>
       </div>
       <div class={styles.arrowButtons}>

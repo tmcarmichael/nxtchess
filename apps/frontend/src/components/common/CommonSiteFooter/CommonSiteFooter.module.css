@@ -11,8 +11,6 @@
   background: var(--surface-chrome);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow-lg);
   max-width: 500px;
   z-index: var(--z-footer);
@@ -50,4 +48,15 @@
 
 .footerList a:active {
   color: var(--text-secondary);
+}
+
+@media (max-width: 639px) {
+  .footerRoot {
+    gap: var(--space-sm);
+    padding: var(--space-xs) var(--space-md);
+  }
+
+  .footerList {
+    gap: var(--space-md);
+  }
 }

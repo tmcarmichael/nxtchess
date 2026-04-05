@@ -1,0 +1,36 @@
+# Stockfish WASM binaries (139MB)
+apps/frontend/public/stockfish/
+*.wasm
+
+# Build artifacts
+dist/
+apps/frontend/dist/
+apps/mobile/build/
+coverage/
+
+# Generated Dart code (freezed/riverpod)
+apps/mobile/lib/**/*.freezed.dart
+apps/mobile/lib/**/*.g.dart
+
+# Large assets
+*.woff
+*.woff2
+*.ttf
+*.eot
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.svg
+
+# Lock files (large, low signal)
+yarn.lock
+pubspec.lock
+
+# Monitoring/infra configs
+monitoring/
+
+# Flutter/Dart build caches
+.dart_tool/
+.pub-cache/

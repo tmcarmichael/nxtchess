@@ -1,4 +1,4 @@
-import { createSignal, createEffect, on, type Accessor } from 'solid-js';
+import { createSignal, createRenderEffect, on, type Accessor } from 'solid-js';
 import type { Square } from '../../../../types/chess';
 
 interface AnimatingMove {
@@ -22,7 +22,7 @@ export function useMoveAnimation(params: {
   const ANIMATION_DURATION = 500;
   const [animatingMove, setAnimatingMove] = createSignal<AnimatingMove | null>(null);
 
-  createEffect(
+  createRenderEffect(
     on(params.moveHistoryLength, (length, prevLength) => {
       if (prevLength === undefined || length <= prevLength) return;
       if (params.isViewingHistory()) return;

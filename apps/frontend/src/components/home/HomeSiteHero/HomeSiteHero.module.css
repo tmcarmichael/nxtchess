@@ -49,6 +49,7 @@
   color: var(--text-primary);
   text-transform: uppercase;
   text-align: center;
+  text-wrap: balance;
 }
 
 .heroTitle span {
@@ -63,13 +64,22 @@
   font-weight: 400;
   color: var(--text-secondary);
   text-align: center;
+  text-wrap: balance;
   max-width: 400px;
 }
 
 @media (max-width: 639px) {
   .hero {
-    min-height: 90vh;
+    min-height: 90dvh;
     padding: var(--space-xl) var(--space-sm);
     gap: var(--space-lg);
+  }
+
+  .heroTitle {
+    font-size: clamp(2rem, 10vw, 4rem);
+  }
+
+  .heroTagline {
+    font-size: var(--text-md);
   }
 }

@@ -17,7 +17,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-default);
   background: var(--surface-4);
@@ -41,4 +43,11 @@
 .sideSelectorButtonActive {
   background: var(--accent-subtle);
   border-color: var(--accent-muted);
+}
+
+@media (max-width: 639px) {
+  .sideSelectorButton {
+    width: 60px;
+    height: 60px;
+  }
 }

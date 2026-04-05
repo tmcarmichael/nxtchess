@@ -7,8 +7,6 @@
   padding-top: var(--safe-area-top);
   z-index: var(--z-header);
   background: var(--surface-chrome);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
   display: grid;
   grid-template-columns: 1fr auto 1fr;

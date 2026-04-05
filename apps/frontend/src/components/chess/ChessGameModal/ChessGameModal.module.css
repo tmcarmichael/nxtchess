@@ -72,6 +72,7 @@
   color: var(--text-primary);
   letter-spacing: -0.02em;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .closeButton {
@@ -159,16 +160,24 @@
     max-width: 100%;
     margin: 0;
     padding: var(--space-md);
+    padding-bottom: max(var(--space-md), var(--safe-area-bottom));
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     max-height: 90dvh;
   }
 
   .modalContentMd {
     padding: var(--space-lg);
+    padding-bottom: max(var(--space-lg), var(--safe-area-bottom));
+  }
+
+  .modalContentSm {
+    max-width: 100%;
   }
 
   .closeButton {
     top: var(--space-sm);
     right: var(--space-sm);
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
   }
 }

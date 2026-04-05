@@ -34,7 +34,10 @@
   border-radius: var(--radius-md);
   color: var(--text-muted);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
   white-space: nowrap;
 }
 
@@ -68,7 +71,10 @@
   border-radius: var(--radius-md);
   color: var(--text-muted);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
   font-family: var(--font-display);
   font-size: var(--text-base);
   font-weight: 700;
@@ -118,10 +124,10 @@
 @keyframes pulseGlow {
   0%,
   100% {
-    box-shadow: 0 0 20px var(--accent-glow);
+    opacity: 0.85;
   }
   50% {
-    box-shadow: 0 0 40px rgba(0, 255, 209, 0.35);
+    opacity: 1;
   }
 }
 

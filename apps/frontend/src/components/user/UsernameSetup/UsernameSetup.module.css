@@ -70,7 +70,9 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .skillLevelButton:hover:not(.skillLevelButtonActive):not(:disabled) {

@@ -98,3 +98,10 @@
     text-align: center;
   }
 }
+
+@media (pointer: coarse) {
+  .dismissButton {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
+}

@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100dvh - 60px);
+  min-height: calc(100dvh - var(--header-height));
   width: 100vw;
   margin-left: calc(-50vw + 50%);
   padding: var(--space-xl) var(--space-md);
@@ -254,6 +254,10 @@
   .lobbyItem {
     gap: var(--space-sm);
     padding: var(--space-sm);
+  }
+
+  .joinInput {
+    font-size: 1rem;
   }
 
   .lobbyCategory {
